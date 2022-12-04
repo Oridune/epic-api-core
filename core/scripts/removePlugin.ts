@@ -3,7 +3,7 @@ import { join } from "path";
 import e from "validator";
 
 import { Select, Confirm } from "cliffy:prompt";
-import { Manager } from "@Core/common/manager.ts";
+import Manager from "@Core/common/manager.ts";
 
 export const removePlugin = async (options: {
   name: string;

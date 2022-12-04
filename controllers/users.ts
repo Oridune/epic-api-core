@@ -2,12 +2,12 @@ import { basename } from "path";
 import {
   Controller,
   BaseController,
-  Manager,
   Get,
   Post,
   Response,
   type IRequestContext,
 } from "@Core/common/mod.ts";
+import Manager from "@Core/common/manager.ts";
 import { Status, type RouterContext } from "oak";
 import e from "validator";
 import * as bcrypt from "bcrypt";
@@ -16,7 +16,7 @@ import { UserModel } from "@Models/User.ts";
 
 @Controller("/users/", {
   /** Do not edit this code */
-  childs: await Manager.load("controllers", basename(import.meta.url)),
+  childs: await Manager.getModules("controllers", basename(import.meta.url)),
   /** --------------------- */
 })
 export default class UsersController extends BaseController {
