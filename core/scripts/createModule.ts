@@ -1,0 +1,175 @@
+import { parse } from "flags";
+import { join } from "path";
+import { exists } from "fs";
+import e from "validator";
+
+import { Input, Select, Confirm } from "cliffy:prompt";
+import { plural } from "pluralize";
+import { Manager } from "@Core/common/manager.ts";
+
+export enum ModuleType {
+  CONTROLLER = "controller",
+  MODEL = "model",
+  JOB = "job",
+  MIDDLEWARE = "middleware",
+}
+
+export const createModule = async (options: {
+  type: ModuleType;
+  name: string;
+  parent?: string;
+  template?: string;
+  templateDir?: string;
+  prompt?: boolean;
+}) => {
+  try {
+    const Options = await e
+      .object(
+        {
+          type: e
+            .optional(e.enum(Object.values(ModuleType)))
+            .default(async (ctx) =>
+              ctx.parent!.input.prompt
+                ? ((await Select.prompt({
+                    message: "What is the module type?",
+                    options: Object.values(ModuleType),
+                  })) as ModuleType)
+                : undefined
+            ),
+          name: e
+            .optional(e.string().matches(/^(-?[a-zA-Z0-9]+)+$/))
+            .default(async (ctx) =>
+              ctx.parent!.input.prompt
+                ? ((await Input.prompt({
+                    message: "What is the name of module?",
+                    validate: (value) => /^(-?([a-zA-Z0-9]+))+$/.test(value),
+                  })) as string)
+                : undefined
+            ),
+          parent: e
+            .optional(
+              e.in(async (ctx) =>
+                ctx.parent!.output.type === "controller"
+                  ? Array.from(await Manager.getSequence("controllers"))
+                  : []
+              )
+            )
+            .default(async (ctx) => {
+              const Parent =
+                ctx.parent!.input.prompt &&
+                ctx.parent!.output.type === "controller"
+                  ? await Select.prompt({
+                      message: "Choose a parent controller",
+                      options: [
+                        "none",
+                        ...(await Manager.getSequence("controllers")),
+                      ],
+                    })
+                  : undefined;
+
+              return Parent === "none" ? undefined : Parent;
+            }),
+          templateDir: e.optional(e.string()).default("templates"),
+          template: e
+            .optional(
+              e.in(
+                async (ctx) =>
+                  await Manager.getList(
+                    join(
+                      ctx.parent!.output.templateDir,
+                      ctx.parent!.output.type
+                    )
+                  )
+              )
+            )
+            .default(async (ctx) =>
+              ctx.parent!.input.prompt
+                ? await Select.prompt({
+                    message: "Choose a template",
+                    options: await Manager.getList(
+                      join(
+                        ctx.parent!.output.templateDir,
+                        ctx.parent!.output.type
+                      )
+                    ),
+                  })
+                : undefined
+            ),
+          moduleDir: e.any().custom((ctx) => plural(ctx.parent!.output.type)),
+          module: e.any().custom((ctx) => {
+            const Parent = ctx.parent!.output.parent?.split(".");
+            Parent?.pop();
+
+            return [
+              Parent?.join("."),
+              ctx.parent!.output.name,
+              ctx.parent!.output.template.split(".").pop(),
+            ]
+              .filter(Boolean)
+              .join(".");
+          }),
+          modulePath: e
+            .any()
+            .custom((ctx) =>
+              join(
+                Deno.cwd(),
+                ctx.parent!.output.moduleDir,
+                ctx.parent!.output.module
+              )
+            ),
+          templatePath: e
+            .any()
+            .custom((ctx) =>
+              join(
+                Deno.cwd(),
+                ctx.parent!.output.templateDir,
+                ctx.parent!.output.type,
+                ctx.parent!.output.template
+              )
+            ),
+        },
+        { allowUnexpectedProps: true }
+      )
+      .validate(options);
+
+    if (Options.name) {
+      if (
+        options.prompt &&
+        (await exists(Options.modulePath)) &&
+        !(await Confirm.prompt({
+          message: `Are you sure you want to re-create the module '${Options.name}'?`,
+        }))
+      )
+        return;
+
+      const Content = (await Deno.readTextFile(Options.templatePath))
+        .replaceAll(
+          "$_Name",
+          Options.name.charAt(0).toUpperCase() + Options.name.slice(1)
+        )
+        .replaceAll("$_name_s", plural(Options.name))
+        .replaceAll("$_name", Options.name);
+
+      await Deno.writeTextFile(Options.modulePath, Content);
+      await Manager.setSequence(Options.moduleDir, (seq) =>
+        seq.add(Options.module)
+      );
+    }
+
+    console.info("Module has been created successfully!");
+  } catch (error) {
+    console.error(error, error.issues);
+  }
+};
+
+if (import.meta.main) {
+  const { type, t, name, n, parent, p, template } = parse(Deno.args);
+
+  createModule({
+    type: type ?? t,
+    name: name ?? n,
+    parent: parent ?? p,
+    template,
+    prompt: true,
+  });
+}
