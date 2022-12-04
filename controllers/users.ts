@@ -12,7 +12,7 @@ import { Status, type RouterContext } from "oak";
 import e from "validator";
 import * as bcrypt from "bcrypt";
 
-import { UserModel } from "@Models/User.ts";
+import { UserModel } from "../models/user.ts";
 
 @Controller("/users/", {
   /** Do not edit this code */
