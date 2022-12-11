@@ -12,7 +12,7 @@ import { Status, type RouterContext } from "oak";
 import e from "validator";
 import * as bcrypt from "bcrypt";
 
-import { UserModel } from "../models/user.ts";
+import { UserModel } from "@Models/user.ts";
 
 @Controller("/users/", {
   /** Do not edit this code */
@@ -22,17 +22,6 @@ import { UserModel } from "../models/user.ts";
 export default class UsersController extends BaseController {
   @Post("/")
   async CreateUsers(ctx: IRequestContext<RouterContext<string>>) {
-    // Query Validation
-    const Query = await e
-      .object({}, { allowUnexpectedProps: true })
-      .validate(ctx.router.request.url.searchParams, { name: "users.query" });
-
-    /**
-     * It is recommended to keep the following validators in place even if you don't want to validate any data.
-     * It will prevent the client from injecting unexpected data into the request.
-     *
-     * */
-
     // Body Validation
     const Body = await e
       .object({

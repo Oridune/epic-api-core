@@ -71,6 +71,7 @@ export const deleteModule = async (options: {
     console.info("Module has been deleted successfully!");
   } catch (error) {
     console.error(error, error.issues);
+    throw error;
   }
 };
 

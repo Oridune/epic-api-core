@@ -1,7 +1,8 @@
+// deno-lint-ignore-file no-explicit-any
 import { Controller, BaseController, Response, Get } from "@Core/common/mod.ts";
 import Manager from "@Core/common/manager.ts";
 
-@Controller("/", {
+@Controller("/api/", {
   childs: [
     ...(await (
       await Manager.getPlugins()

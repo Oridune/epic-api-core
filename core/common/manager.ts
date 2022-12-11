@@ -36,9 +36,9 @@ export class Manager {
         ? sequence
         : [];
 
-    await Deno.writeFile(
+    await Deno.writeTextFile(
       SequencePath,
-      new TextEncoder().encode(JSON.stringify(Array.from(new Set(Sequence))))
+      JSON.stringify(Array.from(new Set(Sequence)))
     );
   }
 
@@ -49,6 +49,17 @@ export class Manager {
     if (await exists(TargetDir))
       for await (const Entry of Deno.readDir(TargetDir))
         if (!Entry.isDirectory) Items.push(Entry.name);
+
+    return Items;
+  }
+
+  public async getFoldersList(path: string): Promise<string[]> {
+    const TargetDir = join(this.CWD, path);
+    const Items: string[] = [];
+
+    if (await exists(TargetDir))
+      for await (const Entry of Deno.readDir(TargetDir))
+        if (Entry.isDirectory) Items.push(Entry.name);
 
     return Items;
   }

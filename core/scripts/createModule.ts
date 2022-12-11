@@ -159,6 +159,7 @@ export const createModule = async (options: {
     console.info("Module has been created successfully!");
   } catch (error) {
     console.error(error, error.issues);
+    throw error;
   }
 };
 
