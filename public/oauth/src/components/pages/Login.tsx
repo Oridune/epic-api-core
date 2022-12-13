@@ -37,7 +37,7 @@ export const LoginPage = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        minHeight: "90vh",
+        minHeight: "100vh",
       }}
     >
       <Box sx={{ maxWidth: 333 }}>
