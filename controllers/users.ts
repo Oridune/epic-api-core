@@ -11,8 +11,23 @@ import Manager from "@Core/common/manager.ts";
 import { Status, type RouterContext } from "oak";
 import e from "validator";
 import * as bcrypt from "bcrypt";
+import mongoose from "mongoose";
 
-import { UserModel } from "@Models/user.ts";
+import { Gender, IUser, UserModel } from "@Models/user.ts";
+import { AccessModel } from "../models/access.ts";
+import { AccountModel } from "../models/account.ts";
+import { IOauthApp, OauthAppModel } from "../models/oauth-app.ts";
+
+export const UsernameValidator = () =>
+  e.string().matches({
+    regex: /^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/,
+  });
+
+export const PasswordValidator = () =>
+  e.string().matches({
+    regex:
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=?|\s])[A-Za-z\d!@#$%^&*()_\-+=?|\s]{8,}$/,
+  });
 
 @Controller("/users/", {
   /** Do not edit this code */
@@ -20,32 +35,90 @@ import { UserModel } from "@Models/user.ts";
   /** --------------------- */
 })
 export default class UsersController extends BaseController {
-  @Post("/")
+  static async createUser(user: Partial<IUser>) {
+    const Session = await mongoose.startSession();
+
+    try {
+      Session.startTransaction();
+
+      const User = new UserModel(user);
+      const Account = new AccountModel({});
+      const Access = new AccessModel({
+        account: Account,
+        isOwned: true,
+        isPrimary: true,
+        role: "user",
+      });
+
+      User.accesses = [Access];
+      Account.createdBy = Account.createdFor = User;
+      Access.createdBy = Access.createdFor = User;
+
+      await Account.save({ session: Session });
+      await Access.save({ session: Session });
+      await User.save({ session: Session });
+
+      await Session.commitTransaction();
+
+      return User;
+    } catch (error) {
+      await Session.abortTransaction();
+      throw error;
+    }
+  }
+
+  @Post("/:oauthAppId/")
   async CreateUsers(ctx: IRequestContext<RouterContext<string>>) {
+    // Params Validation
+    const Params = await e
+      .object({
+        oauthAppId: e.string().throwsFatal(),
+        oauthApp: e.any().custom(async (ctx) => {
+          const App = await OauthAppModel.findOne({
+            _id: ctx.parent!.output.oauthAppId,
+          });
+
+          if (!App) throw new Error(`Invalid oauth app id!`);
+          return App;
+        }),
+      })
+      .validate(ctx.router.params, { name: "users.params" });
+
     // Body Validation
     const Body = await e
       .object({
+        oauthApp: e.value(Params.oauthApp),
         fname: e.string(),
         mname: e.optional(e.string()),
         lname: e.optional(e.string()),
-        username: e.string(),
-        password: e
-          .string({ throwsFatal: true })
-          .custom((ctx) =>
-            bcrypt.hash(ctx.output + ctx.parent!.output.username)
-          ),
+        username: UsernameValidator().custom(async (ctx) => {
+          if (await UserModel.exists({ username: ctx.output }))
+            throw "User already exists!";
+        }),
+        password: PasswordValidator().custom((ctx) =>
+          bcrypt.hash(ctx.parent!.output.username + ctx.output)
+        ),
+        gender: e.optional(e.in(Object.values(Gender))),
+        dob: e.optional(
+          e.number({ cast: true }).custom((ctx) => new Date(ctx.output))
+        ),
+        locale: e.optional(e.string()),
         tags: e.optional(e.array(e.string())),
       })
       .validate(await ctx.router.request.body({ type: "json" }).value, {
         name: "users.body",
       });
 
-    return Response.statusCode(Status.Created).data(
-      (await new UserModel(Body).save()).set("password", undefined)
-    );
+    const User = await UsersController.createUser(Body);
+
+    User.set("password", undefined);
+    User.set("oauthApp", undefined);
+    User.set("accesses", undefined);
+
+    return Response.statusCode(Status.Created).data(User);
   }
 
-  @Get("/")
+  @Get("/:oauthAppId/")
   async GetUsers(ctx: IRequestContext<RouterContext<string>>) {
     // Query Validation
     const Query = await e

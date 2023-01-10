@@ -1,4 +1,8 @@
 {
+  "id": "epic-api-core",
+  "name": "Epic API Core",
+  "description": "Add core features (Oauth2, Management Tools etc.) to the Epic application.",
+  "homepage": "https://oridune.com",
   "compilerOptions": {
     "emitDecoratorMetadata": true
   },
@@ -11,6 +15,9 @@
     "delete:module": "deno run -A ./core/scripts/deleteModule.ts",
     "add:plugin": "deno run -A ./core/scripts/addPlugin.ts",
     "remove:plugin": "deno run -A ./core/scripts/removePlugin.ts",
-    "update:core": "deno run -A ./core/scripts/updateCore.ts"
+    "update:core": "deno run -A ./core/scripts/updateCore.ts",
+    "create:template": "deno run -A ./core/scripts/createTemplate.ts",
+    "delete:template": "deno run -A ./core/scripts/deleteTemplate.ts",
+    "rename:module": "deno run -A ./core/scripts/renameModule.ts"
   }
 }

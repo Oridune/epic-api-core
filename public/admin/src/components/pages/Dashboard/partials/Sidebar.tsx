@@ -13,26 +13,38 @@ import {
   Typography,
 } from "@mui/material";
 import { grey } from "@mui/material/colors";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import Logo from "../../../../assets/logo.svg";
 
 export interface ListItemProps {
   label: string;
+  path: string;
   icon?: string;
   items?: ListItemProps[];
 }
 
 export const CustomListItem: React.FC<ListItemProps> = ({
   label,
+  path,
   icon,
   items,
 }) => {
-  const [Expanded, setExpanded] = React.useState(false);
+  const Location = useLocation();
+  const Navigate = useNavigate();
+  const Selected = Location.pathname.includes(path);
+  const [Expanded, setExpanded] = React.useState(Selected);
 
   return (
     <>
       <ListItem disablePadding sx={{ marginTop: 0.5 }}>
-        <ListItemButton onClick={() => setExpanded((_) => !_)}>
+        <ListItemButton
+          selected={!(items instanceof Array) && Selected}
+          onClick={() => {
+            if (items instanceof Array) setExpanded((_) => !_);
+            else Navigate(path);
+          }}
+        >
           {icon && (
             <ListItemIcon>
               <Icon>{icon}</Icon>
@@ -52,10 +64,20 @@ export const CustomListItem: React.FC<ListItemProps> = ({
       </ListItem>
       {items?.length && (
         <>
-          {items.map(({ label, icon }) => (
+          {items.map(({ label, path: _path, icon }) => (
             <Collapse key={label} in={Expanded} timeout="auto" unmountOnExit>
               <List dense disablePadding>
-                <ListItemButton sx={{ pl: 4 }}>
+                <ListItemButton
+                  selected={Selected && Location.pathname.includes(_path)}
+                  sx={{ marginTop: 0.5, pl: 4 }}
+                  onClick={() =>
+                    Navigate(
+                      `/${[path, _path]
+                        .map((p) => p.trim().replace(/^\/|\/$/g, ""))
+                        .join("/")}`
+                    )
+                  }
+                >
                   {icon && (
                     <ListItemIcon>
                       <Icon>{icon}</Icon>
@@ -122,51 +144,79 @@ export const SidebarPartial = () => {
           {[
             {
               label: "Overview",
+              path: "/overview",
               icon: "spa",
             },
             {
               label: "OAuth",
+              path: "/oauth",
               icon: "lock_person",
               items: [
                 {
-                  label: "All Users",
+                  label: "All Apps",
+                  path: "/all",
                 },
                 {
-                  label: "Users",
+                  label: "Apps",
+                  path: "/apps",
                 },
                 {
                   label: "Preferences",
+                  path: "/preferences",
+                },
+              ],
+            },
+            {
+              label: "Storage",
+              path: "/storage",
+              icon: "gallery_thumbnail",
+              items: [
+                {
+                  label: "View",
+                  path: "/view",
+                },
+                {
+                  label: "Preferences",
+                  path: "/preferences",
+                },
+              ],
+            },
+            {
+              label: "API",
+              path: "/api",
+              icon: "integration_instructions",
+              items: [
+                {
+                  label: "API Keys",
+                  path: "/keys",
+                },
+                {
+                  label: "Webhooks",
+                  path: "/webhooks",
+                },
+                {
+                  label: "Events",
+                  path: "/events",
+                },
+                {
+                  label: "Logs",
+                  path: "/logs",
                 },
               ],
             },
             {
               label: "Plugins",
-              icon: "settings_input_hdmi",
-            },
-            {
-              label: "API",
-              icon: "integration_instructions",
-              items: [
-                {
-                  label: "API Keys",
-                },
-                {
-                  label: "Webhooks",
-                },
-                {
-                  label: "Events",
-                },
-                {
-                  label: "Logs",
-                },
-              ],
+              path: "/plugins",
+              icon: "electrical_services",
             },
             {
               label: "Activity",
+              path: "/activity",
               icon: "history",
             },
             {
               label: "Settings",
+              path: "/settings",
               icon: "settings",
             },
           ].map((item) => (
@@ -181,17 +231,6 @@ export const SidebarPartial = () => {
                 <Icon>contact_support</Icon>
               </ListItemIcon>
               <ListItemText primary="Support" />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton component="a" href="#logout">
-              <ListItemIcon>
-                <Icon color="error">power_settings_new</Icon>
-              </ListItemIcon>
-              <ListItemText
-                primary="Logout"
-                primaryTypographyProps={{ color: "error" }}
-              />
             </ListItemButton>
           </ListItem>
         </List>

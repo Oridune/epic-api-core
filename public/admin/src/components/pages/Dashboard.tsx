@@ -1,13 +1,23 @@
 import { Box } from "@mui/system";
 import { Grid } from "@mui/material";
+import { Outlet } from "react-router-dom";
+
+import { useAuth } from "../hooks/auth";
 
 import { SidebarPartial } from "./Dashboard/partials/Sidebar";
-import { HeaderPartial } from "./Dashboard/partials/Header";
-
-import { OverviewPage } from "./Dashboard/pages/Overview";
+import { LoadingPage } from "./Dashboard/pages/Loading";
 
 export const DashboardPage = () => {
-  return (
+  const [Loading, Tokens] = useAuth();
+
+  if (!Loading && !Tokens && !import.meta.env.DEV) {
+    window.location.href = "/oauth/login/";
+    return <LoadingPage />;
+  }
+
+  return Loading ? (
+    <LoadingPage />
+  ) : (
     <Box sx={{ width: "100%", height: "100vh" }}>
       <Grid container>
         <Grid
@@ -22,8 +32,7 @@ export const DashboardPage = () => {
           <SidebarPartial />
         </Grid>
         <Grid item xs={12} md={10}>
-          <HeaderPartial />
-          <OverviewPage />
+          <Outlet />
         </Grid>
       </Grid>
     </Box>

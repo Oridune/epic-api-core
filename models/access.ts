@@ -9,6 +9,7 @@ export interface IAccess {
   isPrimary: boolean;
   isOwned: boolean;
   account: IAccount;
+  _id: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,6 +20,7 @@ export const AccessSchema = new mongoose.Schema(
     createdFor: { type: mongoose.Types.ObjectId, ref: "User" },
     role: { type: String, required: true },
     isPrimary: { type: Boolean, required: true },
+    isOwned: { type: Boolean, required: true },
     account: { type: mongoose.Types.ObjectId, ref: "Account" },
   },
   { timestamps: true, versionKey: false }

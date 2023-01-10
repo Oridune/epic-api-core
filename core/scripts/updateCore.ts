@@ -22,9 +22,28 @@ export const mergeConfig = async (dir: string) => {
     })
   ).default;
 
+  const ResultConfig = deepMerge(MainConfig, TempConfig);
+
+  delete ResultConfig.id;
+  delete ResultConfig.version;
+  delete ResultConfig.name;
+  delete ResultConfig.description;
+  delete ResultConfig.homepage;
+  delete ResultConfig.icon;
+  delete ResultConfig.author;
+  delete ResultConfig.keywords;
+  delete ResultConfig.donate;
+
   await Deno.writeTextFile(
     MainConfigPath,
-    JSON.stringify(deepMerge(MainConfig, TempConfig), undefined, 2)
+    JSON.stringify(
+      {
+        ...MainConfig,
+        ...ResultConfig,
+      },
+      undefined,
+      2
+    )
   );
 };
 
@@ -89,6 +108,7 @@ export const updateCore = async (options: {
       // Core Files
       for await (const Entry of expandGlob("core/**/*", {
         root: TempPath,
+        globstar: true,
       }))
         if (!Entry.isDirectory)
           Deno.copyFile(Entry.path, Entry.path.replace(TempPath, Deno.cwd()));
@@ -96,6 +116,7 @@ export const updateCore = async (options: {
       // Template Files
       for await (const Entry of expandGlob("templates/**/*", {
         root: TempPath,
+        globstar: true,
       }))
         if (!Entry.isDirectory)
           Deno.copyFile(Entry.path, Entry.path.replace(TempPath, Deno.cwd()));

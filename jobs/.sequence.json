@@ -1,1 +1,6 @@
-[]
+{
+  "sequence": [
+    "activity-events.ts",
+    "create-initial-oauth-app.ts"
+  ]
+}

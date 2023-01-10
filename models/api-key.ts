@@ -1,24 +1,15 @@
 import mongoose from "mongoose";
-import { IUser } from "@Models/user.ts";
-import { IAccount } from "@Models/account.ts";
-
-export enum ApiKeyType {
-  PUBLISHABLE = "publishable",
-  SECRET = "secret",
-}
+import { IUser } from "./user.ts";
 
 export enum ApiKeyStatus {
-  INVOKED = "invoked",
-  REVOKED = "revoked",
+  ACTIVE = "active",
+  BLOCKED = "blocked",
 }
-
 export interface IApiKey {
   createdBy: IUser;
-  account: IAccount;
-  type: ApiKeyType;
-  key: string;
+  secret: string;
   status: ApiKeyStatus;
-  expiresAt: Date;
+  _id: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,11 +17,8 @@ export interface IApiKey {
 export const ApiKeySchema = new mongoose.Schema(
   {
     createdBy: { type: mongoose.Types.ObjectId, ref: "User" },
-    account: { type: mongoose.Types.ObjectId, ref: "Account" },
-    type: { type: String, enum: ApiKeyType },
-    key: { type: String, required: true },
+    secret: { type: String, required: true },
     status: { type: String, enum: ApiKeyStatus },
-    expiresAt: { type: Date, required: true },
   },
   { timestamps: true, versionKey: false }
 );

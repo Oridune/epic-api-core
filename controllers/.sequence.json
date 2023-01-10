@@ -1,1 +1,8 @@
-["users.ts"]
+{
+  "sequence": [
+    "users.ts",
+    "oauth.ts",
+    "oauth.apps.ts",
+    "plugins.ts"
+  ]
+}

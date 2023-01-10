@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
+import { IOauthApp } from "@Models/oauth-app.ts";
 import { IAccess } from "@Models/access.ts";
-import { IAccount } from "@Models/account.ts";
+import { FileSchema, IFile } from "@Models/file.ts";
 
 export enum Gender {
   MALE = "male",
@@ -9,6 +10,7 @@ export enum Gender {
 }
 
 export interface IUser {
+  oauthApp: IOauthApp;
   fname: string;
   mname?: string;
   lname?: string;
@@ -16,7 +18,7 @@ export interface IUser {
   password: string;
   gender?: Gender;
   dob?: Date;
-  // avatar?: string;
+  avatar?: IFile;
   locale?: string;
   tags: string[];
   lastLogin: Date;
@@ -24,15 +26,15 @@ export interface IUser {
   failedLoginAttempts: number;
   requiresMfa: boolean;
   isBlocked: boolean;
-  isLocked: boolean;
-  account?: IAccount;
   accesses: IAccess[];
+  _id: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export const UserSchema = new mongoose.Schema(
   {
+    oauthApp: { type: mongoose.Types.ObjectId, ref: "OauthApp" },
     fname: { type: String, required: true },
     mname: String,
     lname: String,
@@ -40,6 +42,7 @@ export const UserSchema = new mongoose.Schema(
     password: { type: String, required: true, select: false },
     gender: { type: String, enum: Gender },
     dob: Date,
+    avatar: FileSchema,
     locale: String,
     tags: [String],
     lastLogin: Date,
@@ -47,8 +50,6 @@ export const UserSchema = new mongoose.Schema(
     failedLoginAttempts: { type: Number, default: 0 },
     requiresMfa: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
-    isLocked: { type: Boolean, default: false },
-    account: { type: mongoose.Types.ObjectId, ref: "Account" },
     accesses: [{ type: mongoose.Types.ObjectId, ref: "Access" }],
   },
   { timestamps: true, versionKey: false }

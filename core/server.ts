@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { join } from "path";
-import { Response, ApiServer, Env } from "@Core/common/mod.ts";
-import { MainController } from "@Core/controller.ts";
+import { Response, ApiServer, Env, EnvType } from "@Core/common/mod.ts";
+import { APIController } from "@Core/controller.ts";
 import { connectDatabase } from "@Core/database.ts";
 import Manager from "@Core/common/manager.ts";
 import {
@@ -16,28 +16,33 @@ import { CORS } from "oak:cors";
 import { gzip } from "oak:compress";
 import { RateLimiter } from "oak:limiter";
 import { requestIdMiddleware, getRequestIdKey } from "oak:requestId";
+import { ValidationException } from "validator";
 
 export const Port = parseInt(Env.get("PORT") || "8080");
 export const App = new AppServer();
 export const Router = new AppRouter();
 
 if (import.meta.main) {
+  await connectDatabase();
+
   for (const Plugin of await Manager.getPlugins())
-    for (const Folder of await Plugin.getFoldersList("public"))
+    for await (const Entry of Deno.readDir(join(Plugin.CWD, "public")))
+      if (Entry.isDirectory)
+        App.use(
+          StaticFiles(join(Plugin.CWD, "public", Entry.name, "www"), {
+            prefix: "/" + Entry.name,
+            errorFile: true,
+          })
+        );
+
+  for await (const Entry of Deno.readDir("public"))
+    if (Entry.isDirectory)
       App.use(
-        StaticFiles(join(Plugin.CWD, "public", Folder, "www"), {
-          prefix: "/" + Folder,
+        StaticFiles(join(Deno.cwd(), "public", Entry.name, "www"), {
+          prefix: "/" + Entry.name,
           errorFile: true,
         })
       );
-
-  for (const Folder of await Manager.getFoldersList("public"))
-    App.use(
-      StaticFiles(join(Deno.cwd(), "public", Folder, "www"), {
-        prefix: "/" + Folder,
-        errorFile: true,
-      })
-    );
 
   App.use(Logger.logger);
   App.use(Logger.responseTime);
@@ -50,7 +55,11 @@ if (import.meta.main) {
     try {
       await next();
     } catch (e) {
-      ctx.response.status = isHttpError(e) ? e.status : 500;
+      ctx.response.status = isHttpError(e)
+        ? e.status
+        : e instanceof ValidationException
+        ? 400
+        : 500;
       ctx.response.body = Response.statusCode(ctx.response.status)
         .messages(e.issues ?? [{ message: e.message }])
         .toObject();
@@ -74,31 +83,61 @@ if (import.meta.main) {
     })
   );
 
-  await new ApiServer(MainController).create((routes) =>
-    routes.forEach((route) => {
-      console.info(
-        "Route Added:",
-        route.options.method.toUpperCase(),
-        "\t",
-        route.endpoint
-      );
+  await new ApiServer(APIController).create(async (routes) => {
+    for (const Route of routes) {
+      if (!Env.is(EnvType.PRODUCTION))
+        console.info(
+          "Endpoint:",
+          Route.options.method.toUpperCase(),
+          "\t",
+          Route.endpoint
+        );
 
-      Router[route.options.method as "get"](
-        route.endpoint,
+      const ControllerOptions = Route.options.controller.getOptions();
+      const Middlewares = [
+        ...(typeof ControllerOptions?.middlewares === "function"
+          ? await ControllerOptions.middlewares()
+          : ControllerOptions?.middlewares ?? []),
+
+        ...(typeof Route.options.middlewares === "function"
+          ? await Route.options.middlewares()
+          : Route.options.middlewares ?? []),
+      ];
+
+      Router[Route.options.method as "get"](
+        Route.endpoint,
+        async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
+          ctx.state.requestId = ctx.state[getRequestIdKey()];
+          ctx.state.requestName = Route.options.name;
+
+          await next();
+        },
+        ...Middlewares,
         async (ctx: RouterContext<string>) => {
-          const Result = await route.options.requestHandler({
-            id: ctx.state[getRequestIdKey()],
+          const RequestContext = {
+            id: ctx.state.requestId,
             router: ctx,
-            options: route.options,
-          });
+            options: Route.options,
+          };
+
+          const Result = await Route.options.requestHandler(RequestContext);
+
+          dispatchEvent(
+            new CustomEvent(ctx.state.requestName, {
+              detail: {
+                ctx: RequestContext,
+                res: Result,
+              },
+            })
+          );
 
           ctx.response.body = (
             Result instanceof Response ? Result : Response.status(true)
           ).toObject();
         }
       );
-    })
-  );
+    }
+  });
 
   App.use(Router.routes());
   App.use(Router.allowedMethods());
@@ -124,6 +163,5 @@ if (import.meta.main) {
     })
   );
 
-  await connectDatabase();
   await App.listen({ port: Port });
 }

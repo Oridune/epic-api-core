@@ -1,1 +1,13 @@
-["user.ts","account.ts","access.ts","api-key.ts"]
+{
+  "sequence": [
+    "account.ts",
+    "access.ts",
+    "session.ts",
+    "user.ts",
+    "activity.ts",
+    "oauth-session.ts",
+    "api-key.ts",
+    "oauth-app.ts",
+    "file.ts"
+  ]
+}

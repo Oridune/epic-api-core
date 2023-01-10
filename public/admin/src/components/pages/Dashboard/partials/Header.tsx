@@ -12,8 +12,13 @@ import {
   Typography,
 } from "@mui/material";
 import { grey } from "@mui/material/colors";
+import { motion } from "framer-motion";
 
-export const HeaderPartial = () => {
+export interface HeaderPartialProps {
+  label: string;
+}
+
+export const HeaderPartial: React.FC<HeaderPartialProps> = ({ label }) => {
   const [AnchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const Open = Boolean(AnchorEl);
 
@@ -37,10 +42,21 @@ export const HeaderPartial = () => {
           height: "100%",
           display: "flex",
           alignItems: "center",
-          justifyContent: "end",
-          paddingX: 1,
+          paddingX: 2,
+          maxWidth: "72rem",
+          marginX: "auto",
         }}
       >
+        <Box sx={{ flexGrow: 1 }}>
+          <motion.div
+            animate={{ opacity: 1, x: 0, transition: { duration: 0.2 } }}
+            initial={{ opacity: 0, x: 15 }}
+          >
+            <Typography variant="h6" component="div">
+              {label}
+            </Typography>
+          </motion.div>
+        </Box>
         <Box>
           <Tooltip arrow placement="left" title="Notifications">
             <IconButton size="small" sx={{ ml: 2, bgcolor: grey["100"] }}>
@@ -121,6 +137,12 @@ export const HeaderPartial = () => {
                 <Icon color="error">power_settings_new</Icon>
               </ListItemIcon>
               <Typography color="error">Logout</Typography>
+            </MenuItem>
+            <MenuItem dense>
+              <ListItemIcon>
+                <Icon color="error">power_settings_new</Icon>
+              </ListItemIcon>
+              <Typography color="error">Logout All Devices</Typography>
             </MenuItem>
           </Menu>
         </Box>

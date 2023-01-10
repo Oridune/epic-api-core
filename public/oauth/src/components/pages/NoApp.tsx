@@ -1,7 +1,7 @@
 import { Divider, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 
-export const ErrorPage = () => (
+export const NoAppPage = () => (
   <Box
     sx={{
       display: "flex",
@@ -15,10 +15,12 @@ export const ErrorPage = () => (
       sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
     >
       <Typography component="h1" variant="h4">
-        <strong>404</strong>
+        <strong>Consent Error</strong>
       </Typography>
       <Divider sx={{ marginX: 2 }} orientation="vertical" flexItem />
-      <Typography>This page could not be found!</Typography>
+      <Typography>
+        We've encountered an issue while fetching the consent information!
+      </Typography>
     </Box>
   </Box>
 );
