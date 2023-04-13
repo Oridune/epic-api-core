@@ -11,7 +11,14 @@ export const OverviewPage = () => {
     <>
       <HeaderPartial label="Overview" />
       <Box sx={{ width: "100%", height: "calc(100vh - 60px)" }}>
-        <Box sx={{ paddingX: 2, maxWidth: "72rem", marginX: "auto" }}>
+        <Box
+          sx={{
+            paddingX: 2,
+            maxWidth: "72rem",
+            height: "100%",
+            marginX: "auto",
+          }}
+        >
           <Breadcrumbs
             separator={<NavigateNextIcon fontSize="small" />}
             aria-label="breadcrumb"
@@ -28,6 +35,9 @@ export const OverviewPage = () => {
             </Link>
             <Typography color="text.primary">Overview</Typography>
           </Breadcrumbs>
+          <Box
+            sx={{ marginY: 2, height: "calc(100% - 50px)", overflow: "auto" }}
+          ></Box>
         </Box>
       </Box>
     </>

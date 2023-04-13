@@ -13,12 +13,15 @@ import {
 } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import { motion } from "framer-motion";
+import { useAuth } from "../../../context/auth";
 
 export interface HeaderPartialProps {
   label: string;
 }
 
 export const HeaderPartial: React.FC<HeaderPartialProps> = ({ label }) => {
+  const { setTokens } = useAuth();
+
   const [AnchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const Open = Boolean(AnchorEl);
 
@@ -132,13 +135,25 @@ export const HeaderPartial: React.FC<HeaderPartialProps> = ({ label }) => {
               </ListItemIcon>
               Settings
             </MenuItem>
-            <MenuItem dense>
+            <MenuItem
+              dense
+              onClick={() => {
+                setTokens(null);
+                window.location.href = "/oauth/login/";
+              }}
+            >
               <ListItemIcon>
                 <Icon color="error">power_settings_new</Icon>
               </ListItemIcon>
               <Typography color="error">Logout</Typography>
             </MenuItem>
-            <MenuItem dense>
+            <MenuItem
+              dense
+              onClick={() => {
+                setTokens(null);
+                window.location.href = "/oauth/login/";
+              }}
+            >
               <ListItemIcon>
                 <Icon color="error">power_settings_new</Icon>
               </ListItemIcon>

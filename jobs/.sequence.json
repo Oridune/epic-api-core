@@ -1,6 +1,8 @@
 {
   "sequence": [
     "activity-events.ts",
-    "create-initial-oauth-app.ts"
+    "create-initial-oauth-app.ts",
+    "create-initial-oauth-scopes.ts",
+    "env-resolver.ts"
   ]
 }

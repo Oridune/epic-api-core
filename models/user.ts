@@ -9,7 +9,7 @@ export enum Gender {
   OTHER = "other",
 }
 
-export interface IUser {
+export interface IUser extends mongoose.Document {
   oauthApp: IOauthApp;
   fname: string;
   mname?: string;
@@ -27,14 +27,13 @@ export interface IUser {
   requiresMfa: boolean;
   isBlocked: boolean;
   accesses: IAccess[];
-  _id: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export const UserSchema = new mongoose.Schema(
+export const UserSchema = new mongoose.Schema<IUser>(
   {
-    oauthApp: { type: mongoose.Types.ObjectId, ref: "OauthApp" },
+    oauthApp: { type: mongoose.Types.ObjectId, ref: "oauth-app" },
     fname: { type: String, required: true },
     mname: String,
     lname: String,
@@ -50,9 +49,9 @@ export const UserSchema = new mongoose.Schema(
     failedLoginAttempts: { type: Number, default: 0 },
     requiresMfa: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
-    accesses: [{ type: mongoose.Types.ObjectId, ref: "Access" }],
+    accesses: [{ type: mongoose.Types.ObjectId, ref: "access" }],
   },
   { timestamps: true, versionKey: false }
 );
 
-export const UserModel = mongoose.model<IUser>("User", UserSchema);
+export const UserModel = mongoose.model<IUser>("user", UserSchema);

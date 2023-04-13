@@ -19,6 +19,7 @@ export enum ModuleType {
   MODEL = "model",
   JOB = "job",
   MIDDLEWARE = "middleware",
+  HOOK = "hook",
 }
 
 export const listTemplates = async (path: string, type: string) =>
@@ -82,6 +83,14 @@ export const createModule = async (options: {
 
               return Parent === "none" ? undefined : Parent;
             }),
+          fullName: e.any().custom((ctx) => {
+            const Parent = ctx.parent!.output.parent?.split(".");
+            Parent?.pop();
+
+            return [Parent?.join("-"), ctx.parent!.output.name]
+              .filter(Boolean)
+              .join("-");
+          }),
           templateDir: e.optional(e.string()).default("templates"),
           template: e
             .optional(
@@ -103,7 +112,9 @@ export const createModule = async (options: {
                   })
                 : undefined
             ),
-          moduleDir: e.any().custom((ctx) => plural(ctx.parent!.output.type)),
+          moduleDirName: e
+            .any()
+            .custom((ctx) => plural(ctx.parent!.output.type)),
           module: e.any().custom((ctx) => {
             const Parent = ctx.parent!.output.parent?.split(".");
             Parent?.pop();
@@ -116,14 +127,15 @@ export const createModule = async (options: {
               .filter(Boolean)
               .join(".");
           }),
+          moduleDir: e
+            .any()
+            .custom((ctx) =>
+              join(Deno.cwd(), ctx.parent!.output.moduleDirName)
+            ),
           modulePath: e
             .any()
             .custom((ctx) =>
-              join(
-                Deno.cwd(),
-                ctx.parent!.output.moduleDir,
-                ctx.parent!.output.module
-              )
+              join(ctx.parent!.output.moduleDir, ctx.parent!.output.module)
             ),
           templatePath: e
             .any()
@@ -139,7 +151,7 @@ export const createModule = async (options: {
       )
       .validate(options);
 
-    if (Options.name) {
+    if (Options.name && Options.fullName) {
       if (
         options.prompt &&
         (await exists(Options.modulePath)) &&
@@ -150,17 +162,35 @@ export const createModule = async (options: {
         return;
 
       const Content = (await Deno.readTextFile(Options.templatePath))
+        .replaceAll("$_fullNamePascal", pascalCase(Options.fullName))
         .replaceAll("$_namePascal", pascalCase(Options.name))
+
+        .replaceAll("$_fullNameCamel", camelCase(Options.fullName))
         .replaceAll("$_nameCamel", camelCase(Options.name))
+
+        .replaceAll("$_fullNameSnake", snakeCase(Options.fullName))
         .replaceAll("$_nameSnake", snakeCase(Options.name))
+
+        .replaceAll("$_fullNameKebab", paramCase(Options.fullName))
         .replaceAll("$_nameKebab", paramCase(Options.name))
+
+        .replaceAll("$_fullNamePath", pathCase(Options.fullName))
         .replaceAll("$_namePath", pathCase(Options.name))
+
+        .replaceAll("$_fullNamePlural", plural(Options.fullName))
         .replaceAll("$_namePlural", plural(Options.name))
+
+        .replaceAll("$_fullNameSingular", singular(Options.fullName))
         .replaceAll("$_nameSingular", singular(Options.name))
+
+        .replaceAll("$_fullName", Options.fullName)
         .replaceAll("$_name", Options.name);
 
+      if (!(await exists(Options.moduleDir)))
+        await Deno.mkdir(Options.moduleDir, { recursive: true });
+
       await Deno.writeTextFile(Options.modulePath, Content);
-      await Manager.setSequence(Options.moduleDir, (seq) =>
+      await Manager.setSequence(Options.moduleDirName, (seq) =>
         seq.add(Options.module)
       );
     }

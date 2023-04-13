@@ -39,17 +39,22 @@ export const createTemplate = async (options: {
             ctx.parent!.input.prompt
               ? ((await Input.prompt({
                   message:
-                    "What is the name of template? (In a filename format.)",
+                    "What is the name of template? (Full file name. E.g: blank.ts)",
                 })) as string)
               : undefined
           ),
+          fullName: e.any().custom((ctx) => ctx.parent?.output.name),
           content: e.optional(e.string()),
-          templateDir: e.optional(e.string()).default("templates"),
+          templateDirName: e.optional(e.string()).default("templates"),
+          templateDir: e
+            .any()
+            .custom((ctx) =>
+              join(Deno.cwd(), ctx.parent!.output.templateDirName)
+            ),
           templatePath: e
             .any()
             .custom((ctx) =>
               join(
-                Deno.cwd(),
                 ctx.parent!.output.templateDir,
                 `${ctx.parent!.output.type}.${ctx.parent!.output.name}`
               )
@@ -59,7 +64,7 @@ export const createTemplate = async (options: {
       )
       .validate(options);
 
-    if (Options.type && Options.name) {
+    if (Options.type && Options.name && Options.fullName) {
       const TemplateName = basename(Options.templatePath);
 
       if (
@@ -72,17 +77,35 @@ export const createTemplate = async (options: {
         return;
 
       const Content = (Options.content ?? "")
+        .replaceAll("$_fullNamePascal", pascalCase(Options.fullName))
         .replaceAll("$_namePascal", pascalCase(Options.name))
+
+        .replaceAll("$_fullNameCamel", camelCase(Options.fullName))
         .replaceAll("$_nameCamel", camelCase(Options.name))
+
+        .replaceAll("$_fullNameSnake", snakeCase(Options.fullName))
         .replaceAll("$_nameSnake", snakeCase(Options.name))
+
+        .replaceAll("$_fullNameKebab", paramCase(Options.fullName))
         .replaceAll("$_nameKebab", paramCase(Options.name))
+
+        .replaceAll("$_fullNamePath", pathCase(Options.fullName))
         .replaceAll("$_namePath", pathCase(Options.name))
+
+        .replaceAll("$_fullNamePlural", plural(Options.fullName))
         .replaceAll("$_namePlural", plural(Options.name))
+
+        .replaceAll("$_fullNameSingular", singular(Options.fullName))
         .replaceAll("$_nameSingular", singular(Options.name))
+
+        .replaceAll("$_fullName", Options.fullName)
         .replaceAll("$_name", Options.name);
 
+      if (!(await exists(Options.templateDir)))
+        await Deno.mkdir(Options.templateDir, { recursive: true });
+
       await Deno.writeTextFile(Options.templatePath, Content);
-      await Manager.setSequence(Options.templateDir, (seq) =>
+      await Manager.setSequence(Options.templateDirName, (seq) =>
         seq.add(TemplateName)
       );
     }

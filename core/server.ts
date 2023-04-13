@@ -18,14 +18,14 @@ import { RateLimiter } from "oak:limiter";
 import { requestIdMiddleware, getRequestIdKey } from "oak:requestId";
 import { ValidationException } from "validator";
 
-export const Port = parseInt(Env.get("PORT") || "8080");
+export const Port = parseInt((await Env.get("PORT")) || "8080");
 export const App = new AppServer();
 export const Router = new AppRouter();
 
 if (import.meta.main) {
   await connectDatabase();
 
-  for (const Plugin of await Manager.getPlugins())
+  for (const Plugin of await Manager.getActivePlugins())
     for await (const Entry of Deno.readDir(join(Plugin.CWD, "public")))
       if (Entry.isDirectory)
         App.use(
@@ -69,7 +69,7 @@ if (import.meta.main) {
   await Promise.all(
     [
       ...(await (
-        await Manager.getPlugins()
+        await Manager.getActivePlugins()
       ).reduce<Promise<any[]>>(
         async (list, manager) => [
           ...(await list),
@@ -83,13 +83,32 @@ if (import.meta.main) {
     })
   );
 
-  await new ApiServer(APIController).create(async (routes) => {
+  await new ApiServer(APIController).prepare(async (routes) => {
+    const Hooks = await Promise.all<
+      | {
+          pre?: (...args: any[]) => Promise<void>;
+          post?: (...args: any[]) => Promise<void>;
+        }
+      | undefined
+    >([
+      ...(await (
+        await Manager.getActivePlugins()
+      ).reduce<Promise<any[]>>(
+        async (list, manager) => [
+          ...(await list),
+          ...(await manager.getModules("hooks")),
+        ],
+        Promise.resolve([])
+      )),
+      ...(await Manager.getModules("hooks")),
+    ]);
+
     for (const Route of routes) {
       if (!Env.is(EnvType.PRODUCTION))
         console.info(
           "Endpoint:",
           Route.options.method.toUpperCase(),
-          "\t",
+          "\t\t",
           Route.endpoint
         );
 
@@ -120,7 +139,16 @@ if (import.meta.main) {
             options: Route.options,
           };
 
+          for (const Hook of Hooks)
+            await Hook?.pre?.(Route.scope, Route.options.name, RequestContext);
+
           const Result = await Route.options.requestHandler(RequestContext);
+
+          for (const Hook of Hooks)
+            await Hook?.post?.(Route.scope, Route.options.name, {
+              ctx: RequestContext,
+              res: Result,
+            });
 
           dispatchEvent(
             new CustomEvent(ctx.state.requestName, {
@@ -149,7 +177,7 @@ if (import.meta.main) {
   await Promise.all(
     [
       ...(await (
-        await Manager.getPlugins()
+        await Manager.getActivePlugins()
       ).reduce<Promise<any[]>>(
         async (list, manager) => [
           ...(await list),

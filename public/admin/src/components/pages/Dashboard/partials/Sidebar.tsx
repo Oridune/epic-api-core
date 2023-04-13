@@ -32,7 +32,10 @@ export const CustomListItem: React.FC<ListItemProps> = ({
 }) => {
   const Location = useLocation();
   const Navigate = useNavigate();
-  const Selected = Location.pathname.includes(path);
+  const Selected = new RegExp(`^/${path.replace(/^\/|\/$/g, "")}`).test(
+    Location.pathname
+  );
+
   const [Expanded, setExpanded] = React.useState(Selected);
 
   return (
@@ -64,15 +67,23 @@ export const CustomListItem: React.FC<ListItemProps> = ({
       </ListItem>
       {items?.length && (
         <>
-          {items.map(({ label, path: _path, icon }) => (
+          {items.map(({ label, path: subPath, icon }) => (
             <Collapse key={label} in={Expanded} timeout="auto" unmountOnExit>
               <List dense disablePadding>
                 <ListItemButton
-                  selected={Selected && Location.pathname.includes(_path)}
+                  selected={
+                    Selected &&
+                    new RegExp(
+                      `^${path.replace(/^\/|\/$/g, "")}/${subPath.replace(
+                        /^\/|\/$/g,
+                        ""
+                      )}`
+                    ).test(Location.pathname.replace(/^\/|\/$/g, ""))
+                  }
                   sx={{ marginTop: 0.5, pl: 4 }}
                   onClick={() =>
                     Navigate(
-                      `/${[path, _path]
+                      `/${[path, subPath]
                         .map((p) => p.trim().replace(/^\/|\/$/g, ""))
                         .join("/")}`
                     )
@@ -154,7 +165,7 @@ export const SidebarPartial = () => {
               items: [
                 {
                   label: "All Apps",
-                  path: "/all",
+                  path: "/all/apps",
                 },
                 {
                   label: "Apps",
@@ -182,14 +193,15 @@ export const SidebarPartial = () => {
               ],
             },
             {
+              label: "Plugins",
+              path: "/plugins",
+              icon: "electrical_services",
+            },
+            {
               label: "API",
               path: "/api",
               icon: "integration_instructions",
               items: [
-                {
-                  label: "API Keys",
-                  path: "/keys",
-                },
                 {
                   label: "Webhooks",
                   path: "/webhooks",
@@ -205,19 +217,24 @@ export const SidebarPartial = () => {
               ],
             },
             {
-              label: "Plugins",
-              path: "/plugins",
-              icon: "electrical_services",
+              label: "Settings",
+              path: "/settings",
+              icon: "settings",
+              items: [
+                {
+                  label: "General",
+                  path: "/general",
+                },
+                {
+                  label: "Profile",
+                  path: "/profile",
+                },
+              ],
             },
             {
               label: "Activity",
               path: "/activity",
               icon: "history",
-            },
-            {
-              label: "Settings",
-              path: "/settings",
-              icon: "settings",
             },
           ].map((item) => (
             <CustomListItem key={item.label} {...item} />

@@ -5,22 +5,21 @@ export enum ApiKeyStatus {
   ACTIVE = "active",
   BLOCKED = "blocked",
 }
-export interface IApiKey {
+export interface IApiKey extends mongoose.Document {
   createdBy: IUser;
   secret: string;
   status: ApiKeyStatus;
-  _id: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export const ApiKeySchema = new mongoose.Schema(
+export const ApiKeySchema = new mongoose.Schema<IApiKey>(
   {
-    createdBy: { type: mongoose.Types.ObjectId, ref: "User" },
+    createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
     secret: { type: String, required: true },
     status: { type: String, enum: ApiKeyStatus },
   },
   { timestamps: true, versionKey: false }
 );
 
-export const ApiKeyModel = mongoose.model<IApiKey>("ApiKey", ApiKeySchema);
+export const ApiKeyModel = mongoose.model<IApiKey>("api-key", ApiKeySchema);

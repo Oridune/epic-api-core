@@ -47,13 +47,11 @@ export const LoginSchema = e.object({
   password: e
     .string({
       messages: {
-        matchFailed:
-          "A password should be 8 characters long, must contain an uppercase, a lowercase, a number and a special character!",
+        typeError: "Please provide a valid password!",
+        smallerLength: "Password is required!",
       },
     })
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=?|\s])[A-Za-z\d!@#$%^&*()_\-+=?|\s]{8,}$/
-    ),
+    .length({ min: 1, max: 300 }),
   remember: e.or([e.string(), e.boolean()]).custom((ctx) => !!ctx.output),
 });
 
@@ -61,11 +59,11 @@ export const LoginPage = () => {
   const Navigate = useNavigate();
   const [Params] = useSearchParams();
 
-  const AppID = Params.get("appId");
   const CodeChallenge = Params.get("codeChallenge");
   const CodeChallengeMethod = Params.get("codeChallengeMethod");
+  const ReturnUrl = Params.get("returnUrl");
 
-  const { app, setAppId } = useOauthApp();
+  const { app } = useOauthApp();
 
   const [ShowPassword, setShowPassword] = React.useState(false);
   const [Loading, setLoading] = React.useState(false);
@@ -79,22 +77,19 @@ export const LoginPage = () => {
     resolver: ValidatorResolver(LoginSchema),
   });
 
-  React.useEffect(() => {
-    setAppId(AppID!);
-  }, [AppID]);
-
   const HandleLogin: SubmitHandler<InferOutput<typeof LoginSchema>> = async (
     data
   ) => {
     setLoading(true);
 
     try {
-      const Response = await axios.post(
+      const LoginResponse = await axios.post(
         "/api/oauth/local/",
         {
           oauthAppId: app!._id,
           codeChallenge: CodeChallenge ?? undefined,
           codeChallengeMethod: CodeChallengeMethod ?? undefined,
+          returnUrl: ReturnUrl ?? app!.consent.returnUrl ?? undefined,
           remember: data.remember,
         },
         {
@@ -106,12 +101,45 @@ export const LoginPage = () => {
         }
       );
 
-      if (Response.data.status)
-        window.location.href = app!.returnUrl.replace(
-          /{{\s*AUTH_CODE\s*}}/g,
-          Response.data.data.oauthCode.token
-        );
-      else setErrorMessage(Response.data.messages[0].message);
+      if (LoginResponse.data.status) {
+        if (false)
+          Navigate("/scopes/", {
+            state: {
+              appId: app!._id,
+              codeChallenge: CodeChallenge,
+              codeChallengeMethod: CodeChallengeMethod,
+              returnUrl: ReturnUrl,
+              ...LoginResponse.data.data,
+            },
+          });
+        else {
+          const ExchangeResponse = await axios.post(
+            "/api/oauth/exchange/authentication",
+            {
+              authenticationToken:
+                LoginResponse.data.data.authenticationToken.token,
+              scopes: (
+                LoginResponse.data.data.availableScopes as Array<{
+                  account: { _id: string };
+                }>
+              ).reduce(
+                (obj, access) => ({ ...obj, [access.account._id]: ["*"] }),
+                {}
+              ),
+            },
+            { baseURL: import.meta.env.VITE_API_HOST }
+          );
+
+          if (ExchangeResponse.data.status) {
+            const RedirectURL = ReturnUrl ?? app?.consent.returnUrl;
+            if (RedirectURL)
+              window.location.href = decodeURIComponent(RedirectURL).replace(
+                /{{\s*AUTH_CODE\s*}}/g,
+                ExchangeResponse.data.data.oauthCode.token
+              );
+          } else setErrorMessage(ExchangeResponse.data.messages?.[0]?.message);
+        }
+      } else setErrorMessage(LoginResponse.data.messages?.[0]?.message);
     } catch (error) {
       console.error(error);
       if (error instanceof AxiosError)
@@ -137,8 +165,23 @@ export const LoginPage = () => {
         }}
       >
         <Box sx={{ maxWidth: 333, paddingX: 1 }}>
-          <Box sx={{ display: "flex", justifyContent: "center", marginY: 2 }}>
-            <img width={50} height={50} src={Logo} alt="Logo" />
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              marginY: 2,
+              cursor: "pointer",
+            }}
+          >
+            <img
+              width={50}
+              height={50}
+              src={Logo}
+              alt="Logo"
+              onClick={() => {
+                window.location.href = app!.consent.homepageUrl;
+              }}
+            />
           </Box>
           <Typography component="h1" variant="h6" textAlign="center">
             Sign In to Continue
@@ -217,7 +260,7 @@ export const LoginPage = () => {
                   <InputLabel htmlFor="username">Username</InputLabel>
                   <OutlinedInput
                     id="username"
-                    label="username"
+                    label="Username"
                     type="text"
                     autoComplete="username"
                     error={!!errors.username?.message}
@@ -249,7 +292,7 @@ export const LoginPage = () => {
                   <InputLabel htmlFor="password">Password</InputLabel>
                   <OutlinedInput
                     id="password"
-                    label="password"
+                    label="Password"
                     type={ShowPassword ? "text" : "password"}
                     autoComplete="password"
                     endAdornment={
@@ -298,10 +341,7 @@ export const LoginPage = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     const Path = e.currentTarget.getAttribute("href")!;
-                    if (Path) {
-                      setLoading(true);
-                      setTimeout(() => Navigate(Path), 200);
-                    }
+                    if (Path) Navigate(Path);
                   }}
                   variant="body2"
                 >
@@ -329,8 +369,8 @@ export const LoginPage = () => {
             </Link>
           </Typography>
           <Copyright
-            name={app!.displayName}
-            href={app!.homepageUrl}
+            name={app!.name}
+            href={app!.consent.homepageUrl}
             typographyProps={{ sx: { mt: 8, mb: 4 } }}
           />
         </Box>

@@ -7,6 +7,11 @@ export interface ISequenceData {
   excludes?: string[];
 }
 
+export interface ISequenceDetail {
+  name: string;
+  enabled: boolean;
+}
+
 export class Manager {
   protected Ready = false;
   protected SupportedModuleExtensions = ["ts", "js"];
@@ -24,9 +29,14 @@ export class Manager {
   };
   public keywords!: string[];
   public donate?: string;
+  public enabled?: boolean;
 
   constructor(public CWD = Deno.cwd()) {}
 
+  /**
+   * Initialize the Manager (Required)
+   * @returns
+   */
   public async init() {
     const Config = (
       await import(`file:///${join(this.CWD, "deno.json")}`, {
@@ -50,6 +60,11 @@ export class Manager {
     return this;
   }
 
+  /**
+   * Read the raw sequence data from .sequence.json file
+   * @param path Path to the folder containing the sequence file.
+   * @returns
+   */
   public async getSequenceData(path: string): Promise<ISequenceData> {
     if (!this.Ready)
       throw new Error(`Manager instance has not been initialized yet!`);
@@ -61,15 +76,31 @@ export class Manager {
       try {
         const Sequence = JSON.parse(await Deno.readTextFile(SequencePath));
         if (Sequence instanceof Array) return { sequence: Sequence };
-        if (typeof Sequence === "object" && Sequence !== null) return Sequence;
-      } catch {
-        // Do nothing...
+        if (typeof Sequence === "object" && Sequence !== null) {
+          if (Sequence.excludes instanceof Array && Sequence.excludes.length) {
+            Sequence.excludes =
+              Sequence.sequence instanceof Array
+                ? Sequence.excludes.filter((name: string) =>
+                    Sequence.sequence.includes(name)
+                  )
+                : undefined;
+          }
+
+          return Sequence;
+        }
+      } catch (error) {
+        console.error(error);
       }
     }
 
     return {};
   }
 
+  /**
+   * Write/Overwrite a raw sequence file.
+   * @param path Path to the folder containing the sequence file.
+   * @param data Raw sequence data.
+   */
   public async setSequenceData(
     path: string,
     data:
@@ -92,6 +123,12 @@ export class Manager {
     await Deno.writeTextFile(SequencePath, JSON.stringify(Data, undefined, 2));
   }
 
+  /**
+   * Reads the sequence information from .sequence.json > sequence
+   * @param path Path to the folder containing the sequence file.
+   * @param options
+   * @returns
+   */
   public async getSequence(
     path: string,
     options?: { strict?: boolean }
@@ -107,6 +144,46 @@ export class Manager {
     return new Set(Sequence);
   }
 
+  /**
+   * Reads the excludes information from .sequence.json > excludes
+   * @param path Path to the folder containing the sequence file.
+   * @returns
+   */
+  public async getExcludes(path: string): Promise<Set<string>> {
+    if (!this.Ready)
+      throw new Error(`Manager instance has not been initialized yet!`);
+
+    const Data = await this.getSequenceData(path);
+    const Excludes = Data.excludes;
+
+    return new Set(Excludes);
+  }
+
+  /**
+   * Reads the sequence information in detail from .sequence.json > sequence
+   * @param path Path to the folder containing the sequence file.
+   * @returns
+   */
+  public async getDetailedSequence(
+    path: string
+  ): Promise<Array<ISequenceDetail>> {
+    if (!this.Ready)
+      throw new Error(`Manager instance has not been initialized yet!`);
+
+    const Data = await this.getSequenceData(path);
+    const Sequence = new Set(Data.sequence);
+
+    return Array.from(Sequence).map((name) => ({
+      name,
+      enabled: !Data.excludes?.includes(name),
+    }));
+  }
+
+  /**
+   * Write/Overwrite .sequence.json > sequence
+   * @param path Path to the folder containing the sequence file.
+   * @param sequence A Set of sequence data or a Callback that returns the Set of sequence data.
+   */
   public async setSequence(
     path: string,
     sequence:
@@ -128,6 +205,39 @@ export class Manager {
     });
   }
 
+  /**
+   * Write/Overwrite .sequence.json > excludes
+   * @param path Path to the folder containing the sequence file.
+   * @param excludes A Set of excludes data or a Callback that returns the Set of excludes data.
+   */
+  public async setExcludes(
+    path: string,
+    excludes:
+      | Set<string>
+      | ((excludes: Set<string>) => Set<string> | Promise<Set<string>>)
+  ) {
+    if (!this.Ready)
+      throw new Error(`Manager instance has not been initialized yet!`);
+
+    await this.setSequenceData(path, async (data) => {
+      data.excludes = (
+        typeof excludes === "function"
+          ? Array.from(await excludes(new Set<string>(data.excludes)))
+          : excludes instanceof Set
+          ? Array.from(excludes)
+          : []
+      ).filter((name) => data.sequence?.includes(name));
+
+      return data;
+    });
+  }
+
+  /**
+   * Gets all the default exported modules from a specified path
+   * @param path Path to the folder containing the modules.
+   * @param parent Name of a parent module.
+   * @returns
+   */
   public async getModules(path: string, parent?: string) {
     if (!this.Ready)
       throw new Error(`Manager instance has not been initialized yet!`);
@@ -161,17 +271,42 @@ export class Manager {
     ).filter(Boolean) as any[];
   }
 
+  /**
+   * Get a list of Active plugins
+   * @returns
+   */
+  public async getActivePlugins() {
+    return (await this.getPlugins()).filter((manager) => manager.enabled);
+  }
+
+  /**
+   * Get a list of all plugins
+   * @returns
+   */
   public async getPlugins() {
     if (!this.Ready)
       throw new Error(`Manager instance has not been initialized yet!`);
 
     return Promise.all(
-      Array.from(await this.getSequence("plugins", { strict: true })).map(
-        (path) => new Manager(join(this.CWD, "plugins", path)).init()
+      Array.from(await this.getDetailedSequence("plugins")).map(
+        async (detail) => {
+          const ManagerInstance = await new Manager(
+            join(this.CWD, "plugins", detail.name)
+          ).init();
+
+          ManagerInstance.id = detail.name;
+          ManagerInstance.enabled = detail.enabled;
+
+          return ManagerInstance;
+        }
       )
     );
   }
 
+  /**
+   * Converts the Class to a Normalized Object
+   * @returns
+   */
   public toJSON() {
     // deno-lint-ignore no-unused-vars
     const { CWD, Ready, SupportedModuleExtensions, ...object } = { ...this };

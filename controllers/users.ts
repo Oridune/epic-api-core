@@ -14,9 +14,9 @@ import * as bcrypt from "bcrypt";
 import mongoose from "mongoose";
 
 import { Gender, IUser, UserModel } from "@Models/user.ts";
-import { AccessModel } from "../models/access.ts";
-import { AccountModel } from "../models/account.ts";
-import { IOauthApp, OauthAppModel } from "../models/oauth-app.ts";
+import { AccessModel } from "@Models/access.ts";
+import { AccountModel } from "@Models/account.ts";
+import { OauthAppModel } from "@Models/oauth-app.ts";
 
 export const UsernameValidator = () =>
   e.string().matches({
@@ -30,12 +30,14 @@ export const PasswordValidator = () =>
   });
 
 @Controller("/users/", {
+  name: "users",
+
   /** Do not edit this code */
   childs: await Manager.getModules("controllers", basename(import.meta.url)),
   /** --------------------- */
 })
 export default class UsersController extends BaseController {
-  static async createUser(user: Partial<IUser>) {
+  static async create(user: Partial<IUser>) {
     const Session = await mongoose.startSession();
 
     try {
@@ -68,7 +70,7 @@ export default class UsersController extends BaseController {
   }
 
   @Post("/:oauthAppId/")
-  async CreateUsers(ctx: IRequestContext<RouterContext<string>>) {
+  async create(ctx: IRequestContext<RouterContext<string>>) {
     // Params Validation
     const Params = await e
       .object({
@@ -109,7 +111,7 @@ export default class UsersController extends BaseController {
         name: "users.body",
       });
 
-    const User = await UsersController.createUser(Body);
+    const User = await UsersController.create(Body);
 
     User.set("password", undefined);
     User.set("oauthApp", undefined);
@@ -119,7 +121,7 @@ export default class UsersController extends BaseController {
   }
 
   @Get("/:oauthAppId/")
-  async GetUsers(ctx: IRequestContext<RouterContext<string>>) {
+  async list(ctx: IRequestContext<RouterContext<string>>) {
     // Query Validation
     const Query = await e
       .object({}, { allowUnexpectedProps: true })

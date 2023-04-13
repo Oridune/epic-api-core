@@ -3,9 +3,10 @@ import { Controller, BaseController, Response, Get } from "@Core/common/mod.ts";
 import Manager from "@Core/common/manager.ts";
 
 @Controller("/api/", {
+  name: "api",
   childs: [
     ...(await (
-      await Manager.getPlugins()
+      await Manager.getActivePlugins()
     ).reduce<Promise<any[]>>(
       async (list, manager) => [
         ...(await list),
@@ -17,8 +18,8 @@ import Manager from "@Core/common/manager.ts";
   ],
 })
 export class APIController extends BaseController {
-  @Get()
-  public Home() {
+  @Get("/")
+  public home() {
     return Response.message("Hurry! The API is online!");
   }
 }

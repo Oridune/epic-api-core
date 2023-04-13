@@ -5,7 +5,7 @@ export const ErrorPage = () => (
   <Box
     sx={{
       display: "flex",
-      gap: "10px",
+      gap: 1,
       alignItems: "center",
       justifyContent: "center",
       width: "100%",

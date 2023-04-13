@@ -2,18 +2,17 @@
 import mongoose from "mongoose";
 import { IUser } from "./user.ts";
 
-export interface IActivity {
+export interface IActivity extends mongoose.Document {
   createdBy: IUser;
   subject: string;
   payload?: any;
-  _id: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export const ActivitySchema = new mongoose.Schema(
+export const ActivitySchema = new mongoose.Schema<IActivity>(
   {
-    createdBy: { type: mongoose.Types.ObjectId, ref: "User" },
+    createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
     subject: String,
     payload: Object,
   },
@@ -21,6 +20,6 @@ export const ActivitySchema = new mongoose.Schema(
 );
 
 export const ActivityModel = mongoose.model<IActivity>(
-  "Activity",
+  "activity",
   ActivitySchema
 );

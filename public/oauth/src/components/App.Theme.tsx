@@ -21,10 +21,10 @@ export const AppTheme = () => {
       theme={createTheme({
         palette: {
           primary: {
-            main: app?.metadata.consentPrimaryColor ?? "#9e9e9e",
+            main: app?.consent.primaryColor ?? "#9e9e9e",
           },
           secondary: {
-            main: app?.metadata.consentSecondaryColor ?? "#607d8b",
+            main: app?.consent.secondaryColor ?? "#607d8b",
           },
         },
         components: {

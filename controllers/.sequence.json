@@ -3,6 +3,7 @@
     "users.ts",
     "oauth.ts",
     "oauth.apps.ts",
-    "plugins.ts"
+    "admin.ts",
+    "admin.plugins.ts"
   ]
 }

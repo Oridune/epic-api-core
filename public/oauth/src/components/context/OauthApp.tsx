@@ -1,19 +1,23 @@
 import React from "react";
 import axios from "axios";
 
-export interface IOauthAppMetadata {
-  consentPrimaryColor: string;
-  consentSecondaryColor: string;
+export interface IOauthConsent {
+  primaryColor: string;
+  secondaryColor: string;
+  allowedHosts: string[];
+  returnUrl: string;
+  homepageUrl: string;
+  privacyPolicyUrl?: string;
+  termsAndConditionsUrl?: string;
+  supportUrl?: string;
 }
 
 export interface IOauthApp {
   _id: string;
   name: string;
-  displayName: string;
   description: string;
-  homepageUrl: string;
-  returnUrl: string;
-  metadata: IOauthAppMetadata;
+  consent: IOauthConsent;
+  metadata: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,8 +27,7 @@ export type TSetOauthApp = (appId?: string) => void;
 export const OauthAppContext = React.createContext<{
   app: IOauthApp | null;
   loading: boolean;
-  setAppId: TSetOauthApp;
-}>({ app: null, loading: false, setAppId: () => {} });
+}>({ app: null, loading: false });
 
 export const useOauthApp = () => React.useContext(OauthAppContext);
 
@@ -49,29 +52,24 @@ export const FetchOauthApp = async (appId: string) => {
 export const OauthAppProvider: React.FC<IOauthAppProviderProps> = ({
   children,
 }) => {
-  const [Loading, setLoading] = React.useState(true);
-  const [DefaultApp, setDefaultApp] = React.useState<IOauthApp | null>(null);
+  const AppID = new URLSearchParams(window.location.search).get("appId");
+
+  const [Loading, setLoading] = React.useState(!!AppID);
   const [App, setApp] = React.useState<IOauthApp | null>(null);
 
   React.useEffect(() => {
-    (async () => {
-      setDefaultApp(await FetchOauthApp("default"));
-      setLoading(false);
-    })();
+    if (AppID)
+      (async () => {
+        setApp(await FetchOauthApp(AppID));
+        setLoading(false);
+      })();
   }, []);
 
   return (
     <OauthAppContext.Provider
       value={{
-        app: App ?? DefaultApp,
+        app: App,
         loading: Loading,
-        setAppId: async (appId) => {
-          if (appId && appId !== "default") {
-            setLoading(true);
-            setApp(await FetchOauthApp(appId));
-            setLoading(false);
-          }
-        },
       }}
     >
       {children}

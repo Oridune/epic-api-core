@@ -1,23 +1,45 @@
+import React from "react";
 import { Box } from "@mui/system";
 import { Grid } from "@mui/material";
 import { Outlet } from "react-router-dom";
+import randomString from "randomized-string";
+import { encode as base64encode } from "base64-arraybuffer";
 
-import { useAuth } from "../hooks/auth";
+import { useAuth } from "../context/auth";
 
 import { SidebarPartial } from "./Dashboard/partials/Sidebar";
 import { LoadingPage } from "./Dashboard/pages/Loading";
 
-export const DashboardPage = () => {
-  const [Loading, Tokens] = useAuth();
+export const generateCodeChallenge = async (codeVerifier: string) =>
+  base64encode(
+    await window.crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(codeVerifier)
+    )
+  )
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
 
-  if (!Loading && !Tokens && !import.meta.env.DEV) {
-    window.location.href = "/oauth/login/";
+export const DashboardPage = () => {
+  const { isLoading, getTokens } = useAuth();
+
+  React.useEffect(() => {
+    Notification.requestPermission();
+  }, []);
+
+  if (isLoading) return <LoadingPage />;
+  else if (!getTokens() && !import.meta.env.DEV) {
+    const Verifier = randomString.generate(128);
+    localStorage.setItem("codeChallengeVerifier", Verifier);
+    generateCodeChallenge(Verifier).then((challenge) => {
+      window.location.href = `/oauth/login/?appId=default&codeChallengeMethod=sha256&codeChallenge=${challenge}`;
+    });
+
     return <LoadingPage />;
   }
 
-  return Loading ? (
-    <LoadingPage />
-  ) : (
+  return (
     <Box sx={{ width: "100%", height: "100vh" }}>
       <Grid container>
         <Grid

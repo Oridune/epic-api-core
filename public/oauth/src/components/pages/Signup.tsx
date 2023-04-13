@@ -59,9 +59,7 @@ export const SignupPage = () => {
   const Navigate = useNavigate();
   const [Params] = useSearchParams();
 
-  const AppID = Params.get("appId");
-
-  const { app, setAppId } = useOauthApp();
+  const { app } = useOauthApp();
 
   const [ShowPassword, setShowPassword] = React.useState(false);
   const [ShowConfirmPassword, setShowConfirmPassword] = React.useState(false);
@@ -75,10 +73,6 @@ export const SignupPage = () => {
   } = useForm<InferOutput<typeof SignupSchema>>({
     resolver: ValidatorResolver(SignupSchema),
   });
-
-  React.useEffect(() => {
-    setAppId(AppID!);
-  }, [AppID]);
 
   const HandleSignup: SubmitHandler<InferOutput<typeof SignupSchema>> = async (
     data
@@ -125,7 +119,15 @@ export const SignupPage = () => {
       >
         <Box sx={{ maxWidth: 333, paddingX: 1 }}>
           <Box sx={{ display: "flex", justifyContent: "center", marginY: 2 }}>
-            <img width={50} height={50} src={Logo} alt="Logo" />
+            <img
+              width={50}
+              height={50}
+              src={Logo}
+              alt="Logo"
+              onClick={() => {
+                window.location.href = app!.consent.homepageUrl;
+              }}
+            />
           </Box>
           <Typography component="h1" variant="h6" textAlign="center">
             Sign Up Quickly!
@@ -277,10 +279,7 @@ export const SignupPage = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     const Path = e.currentTarget.getAttribute("href")!;
-                    if (Path) {
-                      setLoading(true);
-                      setTimeout(() => Navigate(Path), 200);
-                    }
+                    if (Path) Navigate(Path);
                   }}
                   variant="body2"
                 >
@@ -308,8 +307,8 @@ export const SignupPage = () => {
             </Link>
           </Typography>
           <Copyright
-            name={app!.displayName}
-            href={app!.homepageUrl}
+            name={app!.name}
+            href={app!.consent.homepageUrl}
             typographyProps={{ sx: { mt: 8, mb: 4 } }}
           />
         </Box>

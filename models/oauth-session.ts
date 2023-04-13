@@ -6,33 +6,32 @@ export enum OauthProvider {
   LOCAL = "local",
 }
 
-export interface IOauthSession {
+export interface IOauthSession extends mongoose.Document {
   createdBy?: IUser;
   useragent?: string;
   oauthApp: IOauthApp;
   version: number;
   provider: OauthProvider;
-  scope?: string[];
+  scopes: Record<string, string[]>;
   expiresAt: Date;
-  _id: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export const OauthSessionSchema = new mongoose.Schema(
+export const OauthSessionSchema = new mongoose.Schema<IOauthSession>(
   {
-    createdBy: { type: mongoose.Types.ObjectId, ref: "User" },
+    createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
     useragent: String,
-    oauthApp: { type: mongoose.Types.ObjectId, ref: "OauthApp" },
+    oauthApp: { type: mongoose.Types.ObjectId, ref: "oauth-app" },
     version: Number,
     provider: { type: String, enum: OauthProvider },
-    scope: { type: [String] },
+    scopes: { type: Object, required: true },
     expiresAt: Date,
   },
   { timestamps: true, versionKey: false }
 );
 
 export const OauthSessionModel = mongoose.model<IOauthSession>(
-  "OauthSession",
+  "oauth-session",
   OauthSessionSchema
 );

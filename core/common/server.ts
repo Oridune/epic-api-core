@@ -5,6 +5,8 @@ import {
 } from "./controller/base.ts";
 
 export interface IRoute {
+  group: string;
+  scope: string;
   endpoint: string;
   options: IRouteOptions;
 }
@@ -15,53 +17,80 @@ export class ApiServer {
   protected async collectRoutes(
     controller: typeof BaseController,
     routes: IRoute[],
-    prefix = "/"
+    options: {
+      group: string;
+      prefix: string;
+    } = {
+      group: "/",
+      prefix: "/",
+    }
   ) {
-    const ResolvedPrefix = prefix.split("/").filter(Boolean);
+    const ResolvedGroup = options.group.split("/").filter(Boolean);
+    const ResolvedPrefix = options.prefix.split("/").filter(Boolean);
 
     const ControllerOptions = controller.getOptions();
 
     if (ControllerOptions) {
-      const ResolveControllerPrefix = ControllerOptions.prefix
+      const ResolvedControllerGroup = (ControllerOptions.group ?? "/")
+        .split("/")
+        .filter(Boolean);
+
+      const ResolvedControllerPrefix = ControllerOptions.prefix
         .split("/")
         .filter(Boolean);
 
       const RouteOptions = Object.values(controller.getRoutes());
 
       RouteOptions.forEach((options) => {
+        const GroupPath = [...ResolvedGroup, ...ResolvedControllerGroup].join(
+          "/"
+        );
+        const ResolvedGroupPath = GroupPath ? `/${GroupPath}` : "/";
+
         const ResolvedPath = options.path.split("/").filter(Boolean);
         const Endpoint = [
           ...ResolvedPrefix,
-          ...ResolveControllerPrefix,
+          ...ResolvedControllerPrefix,
           ...ResolvedPath,
         ].join("/");
         const ResolvedEndpoint = Endpoint ? `/${Endpoint}` : "/";
-        routes.push({ endpoint: ResolvedEndpoint, options });
+
+        routes.push({
+          group: ResolvedGroupPath,
+          scope: options.scope ?? ControllerOptions.name,
+          endpoint: ResolvedEndpoint,
+          options,
+        });
       });
 
       (ControllerOptions.childs instanceof Array
         ? ControllerOptions.childs
         : await ControllerOptions.childs()
       ).forEach((controller) =>
-        this.collectRoutes(
-          controller,
-          routes,
-          [...ResolvedPrefix, ...ResolveControllerPrefix].join("/")
-        )
+        this.collectRoutes(controller, routes, {
+          group: [...ResolvedGroup, ...ResolvedControllerGroup].join("/"),
+          prefix: [...ResolvedPrefix, ...ResolvedControllerPrefix].join("/"),
+        })
       );
     }
   }
 
   constructor(protected Controller: typeof BaseController) {}
 
-  async create(
+  /**
+   * Pass a callback function for preparing the server with your favorite API framework.
+   *
+   * Callback will be called with the routes array and controller options, you can use this information to create a server.
+   * @param callback
+   */
+  async prepare<T>(
     callback: (
       routes: IRoute[],
       options: IControllerOptions | null
-    ) => Promise<void> | void
+    ) => Promise<T> | T
   ) {
     if (!this.Routes.length)
       await this.collectRoutes(this.Controller, this.Routes);
-    await callback(this.Routes, this.Controller.getOptions());
+    return await callback(this.Routes, this.Controller.getOptions());
   }
 }

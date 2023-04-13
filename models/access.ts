@@ -2,28 +2,29 @@ import mongoose from "mongoose";
 import { IUser } from "@Models/user.ts";
 import { IAccount } from "@Models/account.ts";
 
-export interface IAccess {
+export interface IAccess extends mongoose.Document {
   createdBy: IUser;
   createdFor: IUser;
   role: string;
   isPrimary: boolean;
   isOwned: boolean;
   account: IAccount;
-  _id: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export const AccessSchema = new mongoose.Schema(
+export const AccessSchema = new mongoose.Schema<IAccess>(
   {
-    createdBy: { type: mongoose.Types.ObjectId, ref: "User" },
-    createdFor: { type: mongoose.Types.ObjectId, ref: "User" },
+    createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
+    createdFor: { type: mongoose.Types.ObjectId, ref: "user" },
     role: { type: String, required: true },
     isPrimary: { type: Boolean, required: true },
     isOwned: { type: Boolean, required: true },
-    account: { type: mongoose.Types.ObjectId, ref: "Account" },
+    account: { type: mongoose.Types.ObjectId, ref: "account" },
   },
   { timestamps: true, versionKey: false }
 );
 
-export const AccessModel = mongoose.model<IAccess>("Access", AccessSchema);
+AccessSchema.index({ createdFor: 1, account: 1 });
+
+export const AccessModel = mongoose.model<IAccess>("access", AccessSchema);

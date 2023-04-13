@@ -8,6 +8,8 @@
     "oauth-session.ts",
     "api-key.ts",
     "oauth-app.ts",
-    "file.ts"
+    "file.ts",
+    "oauth-scopes.ts",
+    "env.ts"
   ]
 }

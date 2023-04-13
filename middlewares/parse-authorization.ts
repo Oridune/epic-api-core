@@ -1,6 +1,7 @@
-import { type RouterContext } from "oak";
+import { type RouterContext, createHttpError, Status } from "oak";
 import e from "validator";
 import { decode } from "encoding/base64.ts";
+import OauthController, { OauthTokenType } from "@Controllers/oauth.ts";
 
 export const CredentialsValidator = () =>
   e
@@ -20,8 +21,15 @@ export default () =>
       const AuthType = Authorization[0].toLowerCase();
       const Token = Authorization[1];
 
-      if (AuthType === "bearer") {
-      } else if (AuthType === "basic")
+      if (AuthType === "bearer")
+        ctx.state.sessionInfo = await OauthController.verifySession({
+          type: OauthTokenType.ACCESS,
+          token: Token,
+          useragent: ctx.request.headers.get("User-Agent") ?? "",
+        }).catch((error) => {
+          throw createHttpError(Status.Unauthorized, error);
+        });
+      else if (AuthType === "basic")
         ctx.state.credentials = await CredentialsValidator().validate(Token, {
           name: "oauth.header.authorization",
         });
