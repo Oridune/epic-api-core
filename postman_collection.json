@@ -111,76 +111,6 @@
       ]
     },
     {
-      "name": "oauthApps",
-      "item": [
-        {
-          "name": "create",
-          "request": {
-            "url": "{{host}}/api/oauth/apps",
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": ""
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "list",
-          "request": {
-            "url": "{{host}}/api/oauth/apps",
-            "method": "GET",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": ""
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "getDefault",
-          "request": {
-            "url": "{{host}}/api/oauth/apps/default",
-            "method": "GET",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": ""
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "get",
-          "request": {
-            "url": "{{host}}/api/oauth/apps/:appId",
-            "method": "GET",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": ""
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "delete",
-          "request": {
-            "url": "{{host}}/api/oauth/apps/:appId",
-            "method": "DELETE",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": ""
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
       "name": "Admin",
       "item": [
         {
@@ -257,6 +187,76 @@
               "response": []
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "oauthApps",
+      "item": [
+        {
+          "name": "create",
+          "request": {
+            "url": "{{host}}/api/oauth/apps",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "list",
+          "request": {
+            "url": "{{host}}/api/oauth/apps",
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "getDefault",
+          "request": {
+            "url": "{{host}}/api/oauth/apps/default",
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get",
+          "request": {
+            "url": "{{host}}/api/oauth/apps/:appId",
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "url": "{{host}}/api/oauth/apps/:appId",
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          },
+          "response": []
         }
       ]
     }

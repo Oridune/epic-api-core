@@ -57,7 +57,7 @@ export const DefaultOauthAudience = await Env.get("DISPLAY_NAME");
   name: "oauth",
 
   /** Do not edit this code */
-  childs: await Manager.getModules("controllers", basename(import.meta.url)),
+  childs: () => Manager.getModules("controllers", basename(import.meta.url)),
   /** --------------------- */
 })
 export default class OauthController extends BaseController {
@@ -240,7 +240,7 @@ export default class OauthController extends BaseController {
 
     return {
       claims: Claims,
-      session: Session.toJSON(),
+      session: Session.toObject(),
     };
   }
 

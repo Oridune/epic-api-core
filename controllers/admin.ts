@@ -18,7 +18,7 @@ import { updateCore } from "@Core/scripts/updateCore.ts";
   name: "admin",
 
   /** Do not edit this code */
-  childs: await Manager.getModules("controllers", basename(import.meta.url)),
+  childs: () => Manager.getModules("controllers", basename(import.meta.url)),
   /** --------------------- */
 })
 export default class AdminController extends BaseController {

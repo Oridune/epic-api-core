@@ -20,7 +20,7 @@ import { DefaultOauthAppID } from "@Jobs/create-initial-oauth-app.ts";
   name: "oauthApps",
 
   /** Do not edit this code */
-  childs: await Manager.getModules("controllers", basename(import.meta.url)),
+  childs: () => Manager.getModules("controllers", basename(import.meta.url)),
   /** --------------------- */
 })
 export default class OauthAppsController extends BaseController {

@@ -32,7 +32,7 @@ export const PasswordValidator = () =>
   name: "users",
 
   /** Do not edit this code */
-  childs: await Manager.getModules("controllers", basename(import.meta.url)),
+  childs: () => Manager.getModules("controllers", basename(import.meta.url)),
   /** --------------------- */
 })
 export default class UsersController extends BaseController {
