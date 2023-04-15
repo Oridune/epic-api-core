@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import * as bcrypt from "bcrypt";
 import { IOauthApp } from "@Models/oauth-app.ts";
 import { IAccess } from "@Models/access.ts";
 import { FileSchema, IFile } from "@Models/file.ts";
@@ -53,5 +54,10 @@ export const UserSchema = new mongoose.Schema<IUser>(
   },
   { timestamps: true, versionKey: false }
 );
+
+UserSchema.pre("save", async function (next) {
+  this.password = await bcrypt.hash(this.username + this.password);
+  next();
+});
 
 export const UserModel = mongoose.model<IUser>("user", UserSchema);

@@ -10,7 +10,6 @@ import {
 import Manager from "@Core/common/manager.ts";
 import { Status, type RouterContext } from "oak";
 import e from "validator";
-import * as bcrypt from "bcrypt";
 import mongoose from "mongoose";
 
 import { Gender, IUser, UserModel } from "@Models/user.ts";
@@ -97,9 +96,7 @@ export default class UsersController extends BaseController {
           if (await UserModel.exists({ username: ctx.output }))
             throw "User already exists!";
         }),
-        password: PasswordValidator().custom((ctx) =>
-          bcrypt.hash(ctx.parent!.output.username + ctx.output)
-        ),
+        password: PasswordValidator(),
         gender: e.optional(e.in(Object.values(Gender))),
         dob: e.optional(
           e.number({ cast: true }).custom((ctx) => new Date(ctx.output))

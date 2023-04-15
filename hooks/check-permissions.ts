@@ -75,7 +75,14 @@ export default {
         e.error(
           `Unable to fetch the available scopes for the role '${Access!.role}'!`
         );
+
       AvailableScopes = Scopes?.scopes ?? [];
+
+      ctx.router.state.auth = {
+        userId: SessionInfo.session.createdBy,
+        accountId: AccountId,
+        role: Access!.role,
+      };
     } else {
       const UnauthenticatedRole = "unauthenticated";
       const Scopes = await OauthScopesModel.findOne(
@@ -87,13 +94,17 @@ export default {
         e.error(
           `Unable to fetch the available scopes for the role '${UnauthenticatedRole}'!`
         );
+
       AvailableScopes = Scopes?.scopes ?? [];
       RequestedScopes = ["*"];
     }
 
-    const Guard = new SecurityGuard(AvailableScopes, RequestedScopes);
+    ctx.router.state.guard = new SecurityGuard(
+      AvailableScopes,
+      RequestedScopes
+    );
 
-    if (!Guard.isPermitted(scope, name))
+    if (!ctx.router.state.guard.isPermitted(scope, name))
       throw createHttpError(
         Status.Unauthorized,
         `You are not permitted! Missing permission '${`${scope}.${name}`}'.`
