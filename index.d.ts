@@ -1,5 +1,3 @@
-/// <reference types="./plugins.d.ts" />
-
 import { SecurityGuard } from "@Lib/security-guard.ts";
 
 import "@Core/common/controller/base.ts";
