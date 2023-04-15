@@ -1,4 +1,3 @@
-import { basename } from "path";
 import {
   Controller,
   BaseController,
@@ -21,7 +20,7 @@ import { removePlugin } from "@Core/scripts/removePlugin.ts";
   name: "adminPlugins",
 
   /** Do not edit this code */
-  childs: () => Manager.getModules("controllers", basename(import.meta.url)),
+  childs: () => Manager.getModules("controllers", import.meta.url),
   /** --------------------- */
 })
 export default class AdminPluginsController extends BaseController {

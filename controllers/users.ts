@@ -1,4 +1,3 @@
-import { basename } from "path";
 import {
   Controller,
   BaseController,
@@ -32,7 +31,7 @@ export const PasswordValidator = () =>
   name: "users",
 
   /** Do not edit this code */
-  childs: () => Manager.getModules("controllers", basename(import.meta.url)),
+  childs: () => Manager.getModules("controllers", import.meta.url),
   /** --------------------- */
 })
 export default class UsersController extends BaseController {

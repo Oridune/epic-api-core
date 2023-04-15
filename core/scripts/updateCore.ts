@@ -105,6 +105,8 @@ export const updateCore = async (options: {
     const Status = await Process.status();
 
     if (Status.success) {
+      Process.close();
+
       // Update Core Files
       for await (const Entry of expandGlob("core/**/*", {
         root: TempPath,
@@ -149,9 +151,10 @@ export const updateCore = async (options: {
       await Deno.remove(TempPath, { recursive: true });
 
       console.info("Core has been updated successfully!");
-    } else throw new Error("We were unable to update the core!");
-
-    Process.close();
+    } else {
+      Process.close();
+      throw new Error("We were unable to update the core!");
+    }
   } catch (error) {
     console.error(error, error.issues);
     throw error;

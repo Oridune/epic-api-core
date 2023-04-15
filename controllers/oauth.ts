@@ -1,4 +1,3 @@
-import { basename } from "path";
 import {
   Controller,
   BaseController,
@@ -57,7 +56,7 @@ export const DefaultOauthAudience = await Env.get("DISPLAY_NAME");
   name: "oauth",
 
   /** Do not edit this code */
-  childs: () => Manager.getModules("controllers", basename(import.meta.url)),
+  childs: () => Manager.getModules("controllers", import.meta.url),
   /** --------------------- */
 })
 export default class OauthController extends BaseController {
