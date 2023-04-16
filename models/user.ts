@@ -56,7 +56,8 @@ export const UserSchema = new mongoose.Schema<IUser>(
 );
 
 UserSchema.pre("save", async function (next) {
-  this.password = await bcrypt.hash(this.username + this.password);
+  if (this.isNew)
+    this.password = await bcrypt.hash(this.username + this.password);
   next();
 });
 
