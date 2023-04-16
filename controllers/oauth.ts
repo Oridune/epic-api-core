@@ -162,6 +162,7 @@ export default class OauthController extends BaseController {
 
   static async createSession(opts: {
     provider: OauthProvider;
+    sessionId: string;
     userId: string;
     oauthAppId: string;
     useragent: string;
@@ -169,6 +170,7 @@ export default class OauthController extends BaseController {
     expiresInSeconds?: number;
   }) {
     const Session = new OauthSessionModel({
+      _id: new mongoose.Types.ObjectId(opts.sessionId),
       createdBy: new mongoose.Types.ObjectId(opts.userId),
       provider: opts.provider,
       useragent: opts.useragent,
@@ -245,6 +247,7 @@ export default class OauthController extends BaseController {
 
   static async createOauthAuthentication(opts: {
     provider: OauthProvider;
+    sessionId: string;
     userId: string;
     oauthAppId: string;
     codeChallenge?: string;
@@ -260,6 +263,7 @@ export default class OauthController extends BaseController {
   }) {
     const Payload = {
       provider: opts.provider,
+      sessionId: opts.sessionId,
       userId: opts.userId,
       oauthAppId: opts.oauthAppId,
       codeChallenge: opts.codeChallenge ?? null,
@@ -277,7 +281,7 @@ export default class OauthController extends BaseController {
         audience: opts.audience,
         expiresInSeconds:
           opts.expiresInSeconds ??
-          OauthController.DefaultOauthCodeExpirySeconds,
+          OauthController.DefaultOauthAuthenticationExpirySeconds,
       }),
     };
   }
@@ -426,6 +430,7 @@ export default class OauthController extends BaseController {
       return Response.data({
         ...(await OauthController.createOauthAuthentication({
           provider: OauthProvider.LOCAL,
+          sessionId: new mongoose.Types.ObjectId().toString(),
           userId: User._id,
           oauthAppId: Body.oauthApp._id,
           codeChallenge: Body.codeChallenge,
@@ -454,6 +459,8 @@ export default class OauthController extends BaseController {
           .any()
           .custom((ctx) =>
             OauthController.verifyOauthToken<{
+              provider: OauthProvider;
+              sessionId: string;
               userId: string;
               oauthAppId: string;
               codeChallenge: string;
@@ -476,6 +483,7 @@ export default class OauthController extends BaseController {
     // Create New Session
     const Session = await OauthController.createSession({
       provider: OauthProvider.LOCAL,
+      sessionId: Body.tokenPayload.sessionId,
       userId: Body.tokenPayload.userId,
       oauthAppId: Body.tokenPayload.oauthAppId,
       useragent: ctx.router.request.headers.get("User-Agent") ?? "",
