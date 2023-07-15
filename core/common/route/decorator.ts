@@ -1,8 +1,10 @@
 import {
   BaseController,
   IRouteOptions,
-  TRequestHandler,
+  TRequestHandlerFactory,
 } from "../controller/base.ts";
+import { Versioned } from "../versioned.ts";
+import { semverResolve } from "../semver.ts";
 
 export enum RequestMethod {
   GET = "get",
@@ -14,7 +16,7 @@ export enum RequestMethod {
 }
 
 export interface IRouteHandlerDescriptor extends PropertyDescriptor {
-  value?: TRequestHandler;
+  value?: TRequestHandlerFactory;
 }
 
 export const Route =
@@ -22,7 +24,7 @@ export const Route =
   (
     path = "/",
     options?: Partial<
-      Omit<IRouteOptions, "method" | "path" | "requestHandler">
+      Omit<IRouteOptions, "method" | "path" | "buildRequestHandler">
     > & { disabled?: boolean }
   ) =>
   // deno-lint-ignore no-explicit-any
@@ -37,6 +39,7 @@ export const Route =
         const ControllerRoutes = ControllerConstructor.getRoutes();
 
         if (typeof desc.value === "function") {
+          const Factory = desc.value;
           const Name = options?.name ?? key;
 
           ControllerRoutes[Name] = {
@@ -45,7 +48,54 @@ export const Route =
             scope: options?.scope,
             method,
             path,
-            requestHandler: desc.value,
+            buildRequestHandler: async (route, options) => {
+              const Handler = await Factory(route);
+
+              if (Handler instanceof Versioned) {
+                if (!options?.version) return;
+
+                const VersionMap = Handler.toMap();
+                const MapKeys = Array.from(VersionMap.keys());
+                const Versions = MapKeys.reduce<string[]>(
+                  (list, v) => [
+                    ...list,
+                    ...(v instanceof Array ? v : [v]).filter(
+                      (_) => typeof _ === "string"
+                    ),
+                  ],
+                  []
+                );
+
+                const Version = semverResolve(options.version, Versions, true);
+
+                if (!Version) return;
+
+                return {
+                  version: Version,
+                  object: VersionMap.get(
+                    MapKeys.find((key) =>
+                      key instanceof Array
+                        ? key.includes(Version)
+                        : key === Version
+                    )!
+                  ),
+                };
+              } else if (typeof Handler === "function")
+                return {
+                  version: "latest",
+                  object: {
+                    handler: Handler,
+                  },
+                };
+              else if (
+                typeof Handler === "object" &&
+                typeof Handler.handler === "function"
+              )
+                return {
+                  version: "latest",
+                  object: Handler,
+                };
+            },
             controller: target,
             middlewares: options?.middlewares ?? [],
           };

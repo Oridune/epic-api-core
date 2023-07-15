@@ -1,7 +1,8 @@
-// deno-lint-ignore-file no-explicit-any
+// deno-lint-ignore-file no-explicit-any no-empty-interface
 import { Reflect } from "reflect";
 import { RequestMethod } from "../route/decorator.ts";
-import { Response } from "../response.ts";
+import { Versioned } from "../versioned.ts";
+import { RawResponse, Response } from "../response.ts";
 
 export enum ControllerMetadataKey {
   OPTIONS = "options",
@@ -16,8 +17,8 @@ export interface IControllerOptions {
   group?: string;
   prefix: string;
   childs:
-    | typeof BaseController[]
-    | (() => typeof BaseController[] | Promise<typeof BaseController[]>);
+    | (typeof BaseController)[]
+    | (() => (typeof BaseController)[] | Promise<(typeof BaseController)[]>);
   middlewares: TMiddleware[] | (() => TMiddleware[] | Promise<TMiddleware[]>);
 }
 
@@ -27,23 +28,62 @@ export interface IRouteOptions {
   scope?: string;
   method: RequestMethod;
   path: string;
-  requestHandler: TRequestHandler;
+  buildRequestHandler: TBuildRequestHandler;
   controller: typeof BaseController;
   middlewares: TMiddleware[] | (() => TMiddleware[] | Promise<TMiddleware[]>);
 }
 
-export interface IRequestContext<RouterContext = any> {
-  id: string;
-  router: RouterContext & IRouterContextExtendor;
+export interface IRoute {
+  group: string;
+  scope: string;
+  endpoint: string;
   options: IRouteOptions;
 }
 
 export interface IRouterContextExtendor {}
 
+export interface IRequestHandlerObjectExtendor {}
+
+export interface IRequestContext<RouterContext = any> {
+  requestedVersion: string;
+  version: string;
+  id: string;
+  router: RouterContext & IRouterContextExtendor;
+  options: IRouteOptions;
+}
+
 export type TRequestHandler = (
   ctx: IRequestContext,
   ...args: any[]
-) => Promise<void | Response> | void | Response;
+) => Promise<void | RawResponse | Response> | void | RawResponse | Response;
+
+export type TRequestHandlerObject = IRequestHandlerObjectExtendor & {
+  handler: TRequestHandler;
+  [K: string]: any;
+};
+
+export type TRequestHandlerReturn =
+  | TRequestHandler
+  | TRequestHandlerObject
+  | Versioned
+  | Promise<TRequestHandler | TRequestHandlerObject | Versioned>;
+
+export type TRequestHandlerFactory = (route: IRoute) => TRequestHandlerReturn;
+
+export type TBuildRequestHandlerResult = {
+  version: string;
+  object: TRequestHandlerObject | void;
+};
+
+export type TBuildRequestHandler = (
+  route: IRoute,
+  options?: {
+    version?: string | null;
+  }
+) =>
+  | TBuildRequestHandlerResult
+  | void
+  | Promise<TBuildRequestHandlerResult | void>;
 
 export class BaseController {
   /**

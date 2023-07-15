@@ -24,108 +24,148 @@ import { DefaultOauthAppID } from "@Jobs/create-initial-oauth-app.ts";
 })
 export default class OauthAppsController extends BaseController {
   @Post("/")
-  async create(ctx: IRequestContext<RouterContext<string>>) {
-    // Body Validation
-    const Body = await e
-      .object({
-        name: e.string().length({ min: 2, max: 50 }),
-        description: e.optional(e.string().length(300)),
-        consent: e.object({
-          primaryColor: e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
-          secondaryColor: e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
-          allowedHosts: e.array(
-            e
-              .string()
-              .custom((ctx) => new URL(`https://${ctx.output}`).toString()),
+  public create() {
+    // Define Body Schema
+    const BodySchema = e.object({
+      name: e.string().length({ min: 2, max: 50 }),
+      description: e.optional(e.string().length(300)),
+      consent: e.object({
+        primaryColor: e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
+        secondaryColor: e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
+        allowedCallbackURLs: e
+          .array(
+            e.string().custom((ctx) => new URL(ctx.output).toString()),
             { cast: true, splitter: /\s*,\s*/ }
-          ),
-          homepageUrl: e
-            .string()
-            .custom((ctx) => new URL(ctx.output).toString()),
-          privacyPolicyUrl: e.optional(
-            e.string().custom((ctx) => new URL(ctx.output).toString())
-          ),
-          termsAndConditionsUrl: e.optional(
-            e.string().custom((ctx) => new URL(ctx.output).toString())
-          ),
-          supportUrl: e.optional(
-            e.string().custom((ctx) => new URL(ctx.output).toString())
-          ),
-        }),
-        metadata: e.optional(e.record(e.string())),
-      })
-      .validate(await ctx.router.request.body({ type: "json" }).value, {
-        name: "oauthApps.body",
-      });
+          )
+          .length({ min: 1 }),
+        homepageURL: e.string().custom((ctx) => new URL(ctx.output).toString()),
+        privacyPolicyURL: e.optional(
+          e.string().custom((ctx) => new URL(ctx.output).toString())
+        ),
+        termsAndConditionsURL: e.optional(
+          e.string().custom((ctx) => new URL(ctx.output).toString())
+        ),
+        supportURL: e.optional(
+          e.string().custom((ctx) => new URL(ctx.output).toString())
+        ),
+      }),
+      metadata: e.optional(e.record(e.string())),
+    });
 
-    const App = new OauthAppModel(Body);
-    await App.save();
+    return {
+      postman: {
+        body: BodySchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: "oauthApps.body" }
+        );
 
-    return Response.data(App).statusCode(Status.Created);
+        const App = new OauthAppModel(Body);
+        await App.save();
+
+        return Response.data(App).statusCode(Status.Created);
+      },
+    };
   }
 
   @Get("/")
-  async list(ctx: IRequestContext<RouterContext<string>>) {
-    // Query Validation
-    const Query = await e
-      .object(
-        {
-          limit: e.optional(e.number({ cast: true })).default(Infinity),
-          offset: e.optional(e.number({ cast: true })).default(0),
-        },
-        { allowUnexpectedProps: true }
-      )
-      .validate(Object.fromEntries(ctx.router.request.url.searchParams), {
-        name: "oauthApps.query",
-      });
-
-    return Response.data(
-      await OauthAppModel.find().skip(Query.offset).limit(Query.limit)
+  public list() {
+    // Define Query Schema
+    const QuerySchema = e.object(
+      {
+        limit: e.optional(e.number({ cast: true })).default(Infinity),
+        offset: e.optional(e.number({ cast: true })).default(0),
+      },
+      { allowUnexpectedProps: true }
     );
+
+    return {
+      postman: {
+        query: QuerySchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Query Validation
+        const Query = await QuerySchema.validate(
+          Object.fromEntries(ctx.router.request.url.searchParams),
+          { name: "oauthApps.query" }
+        );
+
+        return Response.data(
+          await OauthAppModel.find().skip(Query.offset).limit(Query.limit)
+        );
+      },
+    };
   }
 
   @Get("/default/")
-  async getDefault() {
-    const App = await OauthAppModel.findOne({ _id: DefaultOauthAppID });
-    if (!App) e.error("Default Oauth app not found!");
-    return Response.data(App!);
+  public getDefault() {
+    return {
+      handler: async () => {
+        const App = await OauthAppModel.findOne({ _id: DefaultOauthAppID });
+        if (!App) e.error("Default Oauth app not found!");
+        return Response.data(App!);
+      },
+    };
   }
 
   @Get("/:appId/")
-  async get(ctx: IRequestContext<RouterContext<string>>) {
-    // Params Validation
-    const Params = await e
-      .object({
-        appId: e.string().custom((ctx) => {
-          if (!mongoose.Types.ObjectId.isValid(ctx.output))
-            throw "Not a valid id!";
-        }),
-      })
-      .validate(ctx.router.params, { name: "oauthApps.params" });
+  public get() {
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      appId: e.string().custom((ctx) => {
+        if (!mongoose.Types.ObjectId.isValid(ctx.output))
+          throw "Not a valid id!";
+      }),
+    });
 
-    const App = await OauthAppModel.findOne({ _id: Params.appId });
-    if (!App) e.error("Oauth app not found!");
+    return {
+      postman: {
+        params: ParamsSchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: "oauthApps.params",
+        });
 
-    return Response.data(App!);
+        const App = await OauthAppModel.findOne({ _id: Params.appId });
+        if (!App) e.error("Oauth app not found!");
+
+        return Response.data(App!);
+      },
+    };
   }
 
   @Delete("/:appId/")
-  async delete(ctx: IRequestContext<RouterContext<string>>) {
-    // Params Validation
-    const Params = await e
-      .object({
-        appId: e.string().custom((ctx) => {
-          if (!mongoose.Types.ObjectId.isValid(ctx.output))
-            throw "Not a valid id!";
+  public delete() {
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      appId: e.string().custom((ctx) => {
+        if (!mongoose.Types.ObjectId.isValid(ctx.output))
+          throw "Not a valid id!";
 
-          if (DefaultOauthAppID.toString() === ctx.output)
-            throw "Cannot delete the default Oauth app!";
-        }),
-      })
-      .validate(ctx.router.params, { name: "oauthApps.params" });
+        if (DefaultOauthAppID.toString() === ctx.output)
+          throw "Cannot delete the default Oauth app!";
+      }),
+    });
 
-    await OauthAppModel.deleteOne({ _id: Params.appId });
+    return {
+      postman: {
+        params: ParamsSchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: "oauthApps.params",
+        });
 
-    return Response.status(true);
+        await OauthAppModel.deleteOne({ _id: Params.appId });
+
+        return Response.status(true);
+      },
+    };
   }
 }

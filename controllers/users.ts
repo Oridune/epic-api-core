@@ -14,7 +14,7 @@ import mongoose from "mongoose";
 import { Gender, IUser, UserModel } from "@Models/user.ts";
 import { AccessModel } from "@Models/access.ts";
 import { AccountModel } from "@Models/account.ts";
-import { OauthAppModel } from "@Models/oauth-app.ts";
+import { IOauthApp, OauthAppModel } from "@Models/oauth-app.ts";
 
 export const UsernameValidator = () =>
   e.string().matches({
@@ -68,72 +68,107 @@ export default class UsersController extends BaseController {
   }
 
   @Post("/:oauthAppId/")
-  async create(ctx: IRequestContext<RouterContext<string>>) {
-    // Params Validation
-    const Params = await e
-      .object({
-        oauthAppId: e.string().throwsFatal(),
-        oauthApp: e.any().custom(async (ctx) => {
-          const App = await OauthAppModel.findOne({
-            _id: ctx.parent!.output.oauthAppId,
-          });
+  public create() {
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      oauthAppId: e.string().throwsFatal(),
+      oauthApp: e.any().custom(async (ctx) => {
+        const App = await OauthAppModel.findOne({
+          _id: ctx.parent!.output.oauthAppId,
+        });
 
-          if (!App) throw new Error(`Invalid oauth app id!`);
-          return App;
-        }),
-      })
-      .validate(ctx.router.params, { name: "users.params" });
+        if (!App) throw new Error(`Invalid oauth app id!`);
+        return App;
+      }),
+    });
 
-    // Body Validation
-    const Body = await e
-      .object({
-        oauthApp: e.value(Params.oauthApp),
-        fname: e.string(),
-        mname: e.optional(e.string()),
-        lname: e.optional(e.string()),
-        username: UsernameValidator().custom(async (ctx) => {
-          if (await UserModel.exists({ username: ctx.output }))
-            throw "User already exists!";
-        }),
-        password: PasswordValidator(),
-        gender: e.optional(e.in(Object.values(Gender))),
-        dob: e.optional(
-          e.number({ cast: true }).custom((ctx) => new Date(ctx.output))
-        ),
-        locale: e.optional(e.string()),
-        tags: e.optional(e.array(e.string())),
-      })
-      .validate(await ctx.router.request.body({ type: "json" }).value, {
-        name: "users.body",
-      });
+    // Define Body Schema
+    const BodySchema = e.object({
+      oauthApp: e.any().custom((ctx) => ctx.context.oauthApp as IOauthApp),
+      fname: e.string(),
+      mname: e.optional(e.string()),
+      lname: e.optional(e.string()),
+      username: UsernameValidator().custom(async (ctx) => {
+        if (await UserModel.exists({ username: ctx.output }))
+          throw "User already exists!";
+      }),
+      password: PasswordValidator(),
+      gender: e.optional(e.in(Object.values(Gender))),
+      dob: e.optional(
+        e.number({ cast: true }).custom((ctx) => new Date(ctx.output))
+      ),
+      locale: e.optional(e.string()),
+      tags: e.optional(e.array(e.string())),
+    });
 
-    const User = await UsersController.create(Body);
+    return {
+      postman: {
+        params: ParamsSchema.toSample().data,
+        body: BodySchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: "users.params",
+        });
 
-    User.set("password", undefined);
-    User.set("oauthApp", undefined);
-    User.set("accesses", undefined);
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          {
+            name: "users.body",
+            context: {
+              oauthApp: Params.oauthApp,
+            },
+          }
+        );
 
-    return Response.statusCode(Status.Created).data(User);
+        const User = await UsersController.create(Body);
+
+        User.set("password", undefined);
+        User.set("oauthApp", undefined);
+        User.set("accesses", undefined);
+
+        return Response.statusCode(Status.Created).data(User);
+      },
+    };
   }
 
   @Get("/:oauthAppId/")
-  async list(ctx: IRequestContext<RouterContext<string>>) {
-    // Query Validation
-    const Query = await e
-      .object({}, { allowUnexpectedProps: true })
-      .validate(ctx.router.request.url.searchParams, { name: "users.query" });
+  public list() {
+    // Define Query Schema
+    const QuerySchema = e.object({}, { allowUnexpectedProps: true });
 
-    /**
-     * It is recommended to keep the following validators in place even if you don't want to validate any data.
-     * It will prevent the client from injecting unexpected data into the request.
-     *
-     * */
+    // Define Params Schema
+    const ParamsSchema = e.object({});
 
-    // Params Validation
-    const Params = await e
-      .object({})
-      .validate(ctx.router.params, { name: "users.params" });
+    return {
+      postman: {
+        query: QuerySchema.toSample().data,
+        params: ParamsSchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Query Validation
+        const Query = await QuerySchema.validate(
+          Object.fromEntries(ctx.router.request.url.searchParams),
+          { name: "users.query" }
+        );
 
-    return Response.data(await UserModel.find());
+        /**
+         * It is recommended to keep the following validators in place even if you don't want to validate any data.
+         * It will prevent the client from injecting unexpected data into the request.
+         *
+         * */
+
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: "users.params",
+        });
+
+        // Start coding here...
+
+        return Response.status(true);
+      },
+    };
   }
 }

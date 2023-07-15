@@ -34,7 +34,7 @@ export const StateSchema = e.object({
   appId: e.string(),
   codeChallenge: e.optional(e.string(), { nullish: true }),
   codeChallengeMethod: e.optional(e.string(), { nullish: true }),
-  returnUrl: e.optional(e.string(), { nullish: true }),
+  callbackURL: e.optional(e.string(), { nullish: true }),
   authenticationToken: e.any(),
   availableScopes: e.any(),
 });
@@ -89,7 +89,7 @@ export const ScopesPage = () => {
               appId: Location.state?.appId,
               codeChallenge: Location.state?.codeChallenge,
               codeChallengeMethod: Location.state?.codeChallengeMethod,
-              returnUrl: Location.state?.returnUrl,
+              callbackURL: Location.state?.callbackURL,
             })
               .filter((v) => v[1])
               .map((v) => v.join("="))
@@ -159,7 +159,7 @@ export const ScopesPage = () => {
               src={Logo}
               alt="Logo"
               onClick={() => {
-                window.location.href = app!.consent.homepageUrl;
+                window.location.href = app!.consent.homepageURL;
               }}
             />
           </Box>
@@ -207,7 +207,7 @@ export const ScopesPage = () => {
           </Typography>
           <Copyright
             name={app!.name}
-            href={app!.consent.homepageUrl}
+            href={app!.consent.homepageURL}
             typographyProps={{ sx: { mt: 8, mb: 4 } }}
           />
         </Box>

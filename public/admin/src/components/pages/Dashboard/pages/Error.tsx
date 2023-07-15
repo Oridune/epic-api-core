@@ -1,7 +1,12 @@
 import { Typography, Icon } from "@mui/material";
 import { Box } from "@mui/system";
 
-export const ErrorPage = () => (
+export interface IErrorPageProps {
+  code?: number;
+  message: string;
+}
+
+export const ErrorPage: React.FC<IErrorPageProps> = ({ code, message }) => (
   <Box
     sx={{
       display: "flex",
@@ -14,10 +19,15 @@ export const ErrorPage = () => (
   >
     <Icon fontSize="large">sd_card_alert</Icon>
     <Box>
-      <Typography component="h1" variant="h5">
-        <strong>404</strong>
+      {code && (
+        <Typography component="h1" variant="h5">
+          <strong>{code}</strong>
+        </Typography>
+      )}
+
+      <Typography variant="body2">
+        {message || "Unknown error occured!"}
       </Typography>
-      <Typography variant="body2">This page could not be found!</Typography>
     </Box>
   </Box>
 );

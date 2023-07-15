@@ -2,13 +2,11 @@ import {
   Controller,
   BaseController,
   Get,
-  Post,
   Response,
   type IRequestContext,
 } from "@Core/common/mod.ts";
 import Manager from "@Core/common/manager.ts";
-import { Status, type RouterContext } from "oak";
-import e from "validator";
+import { type RouterContext } from "oak";
 
 @Controller("/$_namePath/", {
   name: "$_fullNameCamel",
@@ -18,60 +16,17 @@ import e from "validator";
   /** --------------------- */
 })
 export default class $_fullNamePascalController extends BaseController {
-  @Post("/")
-  async create(ctx: IRequestContext<RouterContext<string>>) {
-    // Query Validation
-    const Query = await e
-      .object({}, { allowUnexpectedProps: true })
-      .validate(Object.fromEntries(ctx.router.request.url.searchParams), {
-        name: "$_fullNameCamel.query",
-      });
-
-    /**
-     * It is recommended to keep the following validators in place even if you don't want to validate any data.
-     * It will prevent the client from injecting unexpected data into the request.
-     *
-     * */
-
-    // Params Validation
-    const Params = await e
-      .object({})
-      .validate(ctx.router.params, { name: "$_fullNameCamel.params" });
-
-    // Body Validation
-    const Body = await e
-      .object({})
-      .validate(await ctx.router.request.body({ type: "json" }).value, {
-        name: "$_fullNameCamel.body",
-      });
-
-    // Start coding here...
-
-    return Response.statusCode(Status.Created);
-  }
-
   @Get("/")
-  async list(ctx: IRequestContext<RouterContext<string>>) {
-    // Query Validation
-    const Query = await e
-      .object({}, { allowUnexpectedProps: true })
-      .validate(Object.fromEntries(ctx.router.request.url.searchParams), {
-        name: "$_fullNameCamel.query",
-      });
+  public list() {
+    // This is a factory method that returns a request handler.
+    // Write any validation schemas or meta logic here.
+    // Information returned from this function can be used to generate docs etc.
 
-    /**
-     * It is recommended to keep the following validators in place even if you don't want to validate any data.
-     * It will prevent the client from injecting unexpected data into the request.
-     *
-     * */
+    return (ctx: IRequestContext<RouterContext<string>>) => {
+      // This function actually handles the request!
+      // Start coding here...
 
-    // Params Validation
-    const Params = await e
-      .object({})
-      .validate(ctx.router.params, { name: "$_fullNameCamel.params" });
-
-    // Start coding here...
-
-    return Response.status(true);
+      return Response.status(true);
+    };
   }
 }

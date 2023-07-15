@@ -4,12 +4,12 @@ import axios from "axios";
 export interface IOauthConsent {
   primaryColor: string;
   secondaryColor: string;
-  allowedHosts: string[];
-  returnUrl: string;
-  homepageUrl: string;
-  privacyPolicyUrl?: string;
-  termsAndConditionsUrl?: string;
-  supportUrl?: string;
+  allowedCallbackURLs: string[];
+  callbackURL: string;
+  homepageURL: string;
+  privacyPolicyURL?: string;
+  termsAndConditionsURL?: string;
+  supportURL?: string;
 }
 
 export interface IOauthApp {

@@ -1,7 +1,12 @@
 import { Divider, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 
-export const ErrorPage = () => (
+export interface IErrorPageProps {
+  code?: number;
+  message: string;
+}
+
+export const ErrorPage: React.FC<IErrorPageProps> = ({ code, message }) => (
   <Box
     sx={{
       display: "flex",
@@ -14,11 +19,15 @@ export const ErrorPage = () => (
       width="100%"
       sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
     >
-      <Typography component="h1" variant="h4">
-        <strong>404</strong>
-      </Typography>
-      <Divider sx={{ marginX: 2 }} orientation="vertical" flexItem />
-      <Typography>This page could not be found!</Typography>
+      {code && (
+        <>
+          <Typography component="h1" variant="h4">
+            <strong>{code}</strong>
+          </Typography>
+          <Divider sx={{ marginX: 2 }} orientation="vertical" flexItem />
+        </>
+      )}
+      <Typography>{message || "Unknown error occured!"}</Typography>
     </Box>
   </Box>
 );

@@ -235,7 +235,7 @@ export default class OauthController extends BaseController {
       throw new Error(`Your session is invalid!`);
 
     if (Session.version !== Claims.version) {
-      await Session.delete();
+      await Session.deleteOne();
       throw new Error(`Your session has been expired!`);
     }
 
@@ -351,242 +351,283 @@ export default class OauthController extends BaseController {
   }
 
   @Post("/local/")
-  async authenticate(ctx: IRequestContext<RouterContext<string>>) {
-    // Authorization Validation
-    const Credentials = await e
-      .object({
-        username: UsernameValidator(),
-        password: e.string(),
-      })
-      .validate(ctx.router.state.credentials, {
-        name: "oauth.credentials",
-      });
+  public authenticate() {
+    // Define Body Schema
+    const BodySchema = e.object({
+      oauthAppId: e.string().throwsFatal(),
+      oauthApp: e.any().custom(async (ctx) => {
+        const App = await OauthAppModel.findOne(
+          { _id: ctx.parent!.output.oauthAppId },
+          {
+            _id: 1,
+            consent: {
+              allowedCallbackURLs: 1,
+            },
+          }
+        );
 
-    // Body Validation
-    const Body = await e
-      .object({
-        oauthAppId: e.string().throwsFatal(),
-        oauthApp: e.any().custom(async (ctx) => {
-          const App = await OauthAppModel.findOne(
-            { _id: ctx.parent!.output.oauthAppId },
-            {
-              _id: 1,
-              consent: {
-                allowedHosts: 1,
-              },
-            }
-          );
-
-          if (!App) throw new Error("Invalid oauth app id!");
-          return App;
-        }),
-        codeChallenge: e.optional(e.string().length({ min: 1, max: 500 })),
-        codeChallengeMethod: e.optional(e.in(Object.values(OauthPKCEMethod))),
-        returnUrl: e.string().custom((ctx) => {
-          if (
-            !ctx.parent?.output.oauthApp.consent.allowedHosts.includes(
-              new URL(ctx.output).host
-            )
+        if (!App) throw new Error("Invalid oauth app id!");
+        return App;
+      }),
+      codeChallenge: e.optional(e.string().length({ min: 1, max: 500 })),
+      codeChallengeMethod: e.optional(e.in(Object.values(OauthPKCEMethod))),
+      callbackURL: e.string().custom((ctx) => {
+        if (
+          !ctx.parent?.output.oauthApp.consent.allowedCallbackURLs.includes(
+            new URL(ctx.output).toString()
           )
-            throw "Return host not allowed!";
-        }),
-        remember: e.optional(e.boolean({ cast: true })).default(false),
-      })
-      .validate(await ctx.router.request.body({ type: "json" }).value, {
-        name: "oauth.body",
-      });
+        )
+          throw "Return host not allowed!";
+      }),
+      remember: e.optional(e.boolean({ cast: true })).default(false),
+    });
 
-    const User = await UserModel.findOne(
-      { username: Credentials.username },
-      {
-        _id: 1,
-        username: 1,
-        password: 1,
-        failedLoginAttempts: 1,
-        loginCount: 1,
-        isBlocked: 1,
-      }
-    );
+    return {
+      postman: {
+        body: BodySchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Authorization Validation
+        const Credentials = await e
+          .object({
+            username: UsernameValidator(),
+            password: e.string(),
+          })
+          .validate(ctx.router.state.credentials, {
+            name: "oauth.credentials",
+          });
 
-    login: if (User) {
-      if (User.isBlocked)
-        return Response.status(false).message("You have been blocked!");
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: "oauth.body" }
+        );
 
-      // Authentication will always fail even if the password is correct, if multiple wrong attempts found!
-      if (
-        User.failedLoginAttempts > 5 ||
-        !(await bcrypt.compare(
-          Credentials.username + Credentials.password,
-          User.password
-        ))
-      )
-        break login;
+        const User = await UserModel.findOne(
+          { username: Credentials.username },
+          {
+            _id: 1,
+            username: 1,
+            password: 1,
+            failedLoginAttempts: 1,
+            loginCount: 1,
+            isBlocked: 1,
+          }
+        );
 
-      User.failedLoginAttempts = 0;
-      User.loginCount += 1;
+        login: if (User) {
+          if (User.isBlocked)
+            return Response.status(false).message("You have been blocked!");
 
-      await User.save();
+          // Authentication will always fail even if the password is correct, if multiple wrong attempts found!
+          if (
+            User.failedLoginAttempts > 5 ||
+            !(await bcrypt.compare(
+              Credentials.username + Credentials.password,
+              User.password
+            ))
+          )
+            break login;
 
-      return Response.data({
-        ...(await OauthController.createOauthAuthentication({
-          provider: OauthProvider.LOCAL,
-          sessionId: new mongoose.Types.ObjectId().toString(),
-          userId: User._id,
-          oauthAppId: Body.oauthApp._id,
-          codeChallenge: Body.codeChallenge,
-          codeChallengeMethod: Body.codeChallengeMethod,
-          remember: Body.remember,
-        })),
-        availableScopes: await OauthController.getAvailableScopes(User._id),
-      });
-    }
+          User.failedLoginAttempts = 0;
+          User.loginCount += 1;
 
-    await UserModel.updateOne(
-      { username: Credentials.username },
-      { $inc: { failedLoginAttempts: 1 } }
-    );
+          await User.save();
 
-    e.error("Invalid username or password!");
+          return Response.data({
+            ...(await OauthController.createOauthAuthentication({
+              provider: OauthProvider.LOCAL,
+              sessionId: new mongoose.Types.ObjectId().toString(),
+              userId: User._id,
+              oauthAppId: Body.oauthApp._id,
+              codeChallenge: Body.codeChallenge,
+              codeChallengeMethod: Body.codeChallengeMethod,
+              remember: Body.remember,
+            })),
+            availableScopes: await OauthController.getAvailableScopes(User._id),
+          });
+        }
+
+        await UserModel.updateOne(
+          { username: Credentials.username },
+          { $inc: { failedLoginAttempts: 1 } }
+        );
+
+        e.error("Invalid username or password!");
+      },
+    };
   }
 
   @Post("/exchange/authentication/")
-  async exchangeAuthentication(ctx: IRequestContext<RouterContext<string>>) {
-    // Body Validation
-    const Body = await e
-      .object({
-        authenticationToken: e.string().throwsFatal(),
-        tokenPayload: e
-          .any()
-          .custom((ctx) =>
-            OauthController.verifyOauthToken<{
-              provider: OauthProvider;
-              sessionId: string;
-              userId: string;
-              oauthAppId: string;
-              codeChallenge: string;
-              codeChallengeMethod: string;
-              remember: boolean;
-            }>({
-              type: OauthTokenType.AUTHENTICATION,
-              token: ctx.parent!.output.authenticationToken,
-            })
-          )
-          .throwsFatal(),
-        scopes: e.record(
-          e.array(e.string().matches(/\w+(\.\w+)*|^\*$/), { cast: true })
-        ),
-      })
-      .validate(await ctx.router.request.body({ type: "json" }).value, {
-        name: "oauth.body",
-      });
-
-    // Create New Session
-    const Session = await OauthController.createSession({
-      provider: OauthProvider.LOCAL,
-      sessionId: Body.tokenPayload.sessionId,
-      userId: Body.tokenPayload.userId,
-      oauthAppId: Body.tokenPayload.oauthAppId,
-      useragent: ctx.router.request.headers.get("User-Agent") ?? "",
-      scopes: Body.scopes,
+  public exchangeAuthentication() {
+    // Define Body Schema
+    const BodySchema = e.object({
+      authenticationToken: e.string().throwsFatal(),
+      tokenPayload: e
+        .any()
+        .custom((ctx) =>
+          OauthController.verifyOauthToken<{
+            provider: OauthProvider;
+            sessionId: string;
+            userId: string;
+            oauthAppId: string;
+            codeChallenge: string;
+            codeChallengeMethod: string;
+            remember: boolean;
+          }>({
+            type: OauthTokenType.AUTHENTICATION,
+            token: ctx.parent!.output.authenticationToken,
+          })
+        )
+        .throwsFatal(),
+      scopes: e.record(
+        e.array(e.string().matches(/\w+(\.\w+)*|^\*$/), { cast: true })
+      ),
     });
 
-    return Response.data(
-      await OauthController.createOauthCode({
-        sessionId: Session._id.toString(),
-        codeChallenge: Body.tokenPayload.codeChallenge,
-        codeChallengeMethod: Body.tokenPayload.codeChallengeMethod,
-        remember: Body.tokenPayload.remember,
-      })
-    ).statusCode(Status.Created);
+    return {
+      postman: {
+        body: BodySchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: "oauth.body" }
+        );
+
+        // Create New Session
+        const Session = await OauthController.createSession({
+          provider: OauthProvider.LOCAL,
+          sessionId: Body.tokenPayload.sessionId,
+          userId: Body.tokenPayload.userId,
+          oauthAppId: Body.tokenPayload.oauthAppId,
+          useragent: ctx.router.request.headers.get("User-Agent") ?? "",
+          scopes: Body.scopes,
+        });
+
+        return Response.data(
+          await OauthController.createOauthCode({
+            sessionId: Session._id.toString(),
+            codeChallenge: Body.tokenPayload.codeChallenge,
+            codeChallengeMethod: Body.tokenPayload.codeChallengeMethod,
+            remember: Body.tokenPayload.remember,
+          })
+        ).statusCode(Status.Created);
+      },
+    };
   }
 
   @Post("/exchange/code/")
-  async exchangeCode(ctx: IRequestContext<RouterContext<string>>) {
-    // Body Validation
-    const Body = await e
-      .object({
-        code: e.string().throwsFatal(),
-        codePayload: e
-          .any()
-          .custom((ctx) =>
-            OauthController.verifyOauthToken({
-              type: OauthTokenType.CODE,
-              token: ctx.parent!.output.code,
-            })
-          )
-          .throwsFatal(),
-        codeVerifier: e
-          .optional(e.string().length({ min: 1, max: 500 }))
-          .custom((ctx) => {
-            if (ctx.parent?.output.codePayload.codeChallenge && !ctx.output)
-              throw "A code verifier is required!";
-          }),
-      })
-      .validate(await ctx.router.request.body({ type: "json" }).value, {
-        name: "oauth.body",
-      });
-
-    // Code Verification
-    if (
-      Body.codeVerifier &&
-      !OauthController.verifyCodeChallenge({
-        alg: Body.codePayload.codeChallengeMethod as OauthPKCEMethod,
-        challenge: Body.codePayload.codeChallenge as string,
-        verifier: Body.codeVerifier,
-      })
-    )
-      e.error("Invalid code verifier!");
-
-    // Refresh Session
-    const Session = await OauthController.refreshSession({
-      sessionId: Body.codePayload.sessionId as string,
-      useragent: ctx.router.request.headers.get("User-Agent") ?? "",
+  public exchangeCode() {
+    // Define Body Schema
+    const BodySchema = e.object({
+      code: e.string().throwsFatal(),
+      codePayload: e
+        .any()
+        .custom((ctx) =>
+          OauthController.verifyOauthToken({
+            type: OauthTokenType.CODE,
+            token: ctx.parent!.output.code,
+          })
+        )
+        .throwsFatal(),
+      codeVerifier: e
+        .optional(e.string().length({ min: 1, max: 500 }))
+        .custom((ctx) => {
+          if (ctx.parent?.output.codePayload.codeChallenge && !ctx.output)
+            throw "A code verifier is required!";
+        }),
     });
 
-    if (Session.version > 1) e.error("Oauth code has been expired!");
+    return {
+      postman: {
+        body: BodySchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: "oauth.body" }
+        );
 
-    return Response.data(
-      await OauthController.createOauthAccessTokens({
-        sessionId: Session._id.toString(),
-        version: Session.version,
-        refreshable: !!Body.codePayload.remember,
-      })
-    );
+        // Code Verification
+        if (
+          Body.codeVerifier &&
+          !OauthController.verifyCodeChallenge({
+            alg: Body.codePayload.codeChallengeMethod as OauthPKCEMethod,
+            challenge: Body.codePayload.codeChallenge as string,
+            verifier: Body.codeVerifier,
+          })
+        )
+          e.error("Invalid code verifier!");
+
+        // Refresh Session
+        const Session = await OauthController.refreshSession({
+          sessionId: Body.codePayload.sessionId as string,
+          useragent: ctx.router.request.headers.get("User-Agent") ?? "",
+        });
+
+        if (Session.version > 1) e.error("Oauth code has been expired!");
+
+        return Response.data(
+          await OauthController.createOauthAccessTokens({
+            sessionId: Session._id.toString(),
+            version: Session.version,
+            refreshable: !!Body.codePayload.remember,
+          })
+        );
+      },
+    };
   }
 
   @Post("/refresh/")
-  async refresh(ctx: IRequestContext<RouterContext<string>>) {
-    // Body Validation
-    const Body = await e
-      .object({
-        refreshToken: e.string().throwsFatal(),
-        refreshTokenPayload: e.any().custom(
-          async (_ctx) =>
-            (
-              await OauthController.verifySession({
-                type: OauthTokenType.REFRESH,
-                token: _ctx.parent!.output.refreshToken,
-                useragent: ctx.router.request.headers.get("User-Agent") ?? "",
-              })
-            ).claims
-        ),
-      })
-      .validate(await ctx.router.request.body({ type: "json" }).value, {
-        name: "oauth.body",
-      });
-
-    // Refresh Session
-    const Session = await OauthController.refreshSession({
-      sessionId: Body.refreshTokenPayload.sessionId as string,
-      useragent: ctx.router.request.headers.get("User-Agent") ?? "",
+  public refresh() {
+    // Define Body Schema
+    const BodySchema = e.object({
+      refreshToken: e.string().throwsFatal(),
+      refreshTokenPayload: e.any().custom(
+        async (ctx) =>
+          (
+            await OauthController.verifySession({
+              type: OauthTokenType.REFRESH,
+              token: ctx.parent!.output.refreshToken,
+              useragent: ctx.context.useragent,
+            })
+          ).claims
+      ),
     });
 
-    return Response.data(
-      await OauthController.createOauthAccessTokens({
-        sessionId: Session._id.toString(),
-        version: Session.version,
-        refreshable: true,
-      })
-    );
+    return {
+      postman: {
+        body: BodySchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          {
+            name: "oauth.body",
+            context: {
+              useragent: ctx.router.request.headers.get("User-Agent") ?? "",
+            },
+          }
+        );
+
+        // Refresh Session
+        const Session = await OauthController.refreshSession({
+          sessionId: Body.refreshTokenPayload.sessionId as string,
+          useragent: ctx.router.request.headers.get("User-Agent") ?? "",
+        });
+
+        return Response.data(
+          await OauthController.createOauthAccessTokens({
+            sessionId: Session._id.toString(),
+            version: Session.version,
+            refreshable: true,
+          })
+        );
+      },
+    };
   }
 }

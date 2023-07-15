@@ -25,10 +25,27 @@ import { useAuth } from "../../../../context/auth";
 export const OAuthAppSchema = e.object({
   name: e.string().length({ min: 2, max: 50 }),
   description: e.optional(e.string().length(300)),
-  homepageUrl: e.string().custom((ctx) => new URL(ctx.output).toString()),
-  returnUrl: e.string().custom((ctx) => new URL(ctx.output).toString()),
   consentPrimaryColor: e.string().matches(/^(?:[0-9a-fA-F]{3}){1,2}$/),
   consentSecondaryColor: e.string().matches(/^(?:[0-9a-fA-F]{3}){1,2}$/),
+  homepageURL: e.string().custom((ctx) => new URL(ctx.output).toString()),
+  allowedCallbackURLs: e
+    .array(
+      e.string().custom((ctx) => new URL(ctx.output).toString()),
+      { cast: true, splitter: /\s*,\s*/ }
+    )
+    .length({ min: 1 }),
+  privacyPolicyURL: e.optional(
+    e.string().custom((ctx) => new URL(ctx.output).toString()),
+    { nullish: true }
+  ),
+  termsAndConditionsURL: e.optional(
+    e.string().custom((ctx) => new URL(ctx.output).toString()),
+    { nullish: true }
+  ),
+  supportURL: e.optional(
+    e.string().custom((ctx) => new URL(ctx.output).toString()),
+    { nullish: true }
+  ),
 });
 
 export const NewAppOAuthPage = () => {
@@ -49,11 +66,14 @@ export const NewAppOAuthPage = () => {
         {
           name: data.name,
           description: data.description,
-          homepageUrl: data.homepageUrl,
-          returnUrl: data.returnUrl,
           consent: {
             primaryColor: `#${data.consentPrimaryColor}`,
             secondaryColor: `#${data.consentSecondaryColor}`,
+            allowedCallbackURLs: data.allowedCallbackURLs,
+            homepageURL: data.homepageURL,
+            privacyPolicyURL: data.privacyPolicyURL,
+            termsAndConditionsURL: data.termsAndConditionsURL,
+            supportURL: data.supportURL,
           },
         },
         {
@@ -93,7 +113,13 @@ export const NewAppOAuthPage = () => {
     watch,
   } = useForm<InferOutput<typeof OAuthAppSchema>>({
     resolver: ValidatorResolver(OAuthAppSchema),
+    defaultValues: {
+      consentPrimaryColor: "e85d04",
+      consentSecondaryColor: "faa307",
+    },
   });
+
+  console.log(errors);
 
   return (
     <>
@@ -170,10 +196,10 @@ export const NewAppOAuthPage = () => {
                     <Grid container rowGap={1} sx={{ mb: 2 }}>
                       <Grid item xs={12}>
                         <FormControl variant="outlined">
-                          <InputLabel htmlFor="name">Name</InputLabel>
+                          <InputLabel htmlFor="name">Name*</InputLabel>
                           <OutlinedInput
                             id="name"
-                            label="Name"
+                            label="Name*"
                             type="text"
                             autoComplete="name"
                             {...register("name")}
@@ -213,66 +239,7 @@ export const NewAppOAuthPage = () => {
               <Grid container>
                 <Grid item md={3} xs={12}>
                   <Typography variant="subtitle2" component="div" marginTop={1}>
-                    Consent Screen
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    component="div"
-                    color="grey"
-                    marginTop={1}
-                  >
-                    Configure the OAuth consent screen of your application.
-                  </Typography>
-                </Grid>
-                <Grid item md={6} xs={12}>
-                  <Box sx={{ marginY: 1 }}>
-                    <Grid container rowGap={1} sx={{ mb: 2 }}>
-                      <Grid item xs={12}>
-                        <FormControl fullWidth variant="outlined">
-                          <InputLabel htmlFor="homepageUrl">
-                            Homepage URL
-                          </InputLabel>
-                          <OutlinedInput
-                            id="homepageUrl"
-                            label="Homepage URL"
-                            type="text"
-                            autoComplete="homepageUrl"
-                            {...register("homepageUrl")}
-                            error={!!errors.homepageUrl?.message}
-                          />
-                          <FormHelperText error={!!errors.homepageUrl?.message}>
-                            {errors.homepageUrl?.message ??
-                              "Provide a valid homepage URL of your app. E.g: https://oridune.com"}
-                          </FormHelperText>
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <FormControl fullWidth variant="outlined">
-                          <InputLabel htmlFor="returnUrl">
-                            Return URL
-                          </InputLabel>
-                          <OutlinedInput
-                            id="returnUrl"
-                            label="Return URL"
-                            type="text"
-                            autoComplete="returnUrl"
-                            {...register("returnUrl")}
-                            error={!!errors.returnUrl?.message}
-                          />
-                          <FormHelperText error={!!errors.returnUrl?.message}>
-                            {errors.returnUrl?.message ??
-                              "Provide a URL where the user will be redirected after successful authentication. E.g: https://oridune.com/login/callback/{{code}}"}
-                          </FormHelperText>
-                        </FormControl>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
-              </Grid>
-              <Grid container>
-                <Grid item md={3} xs={12}>
-                  <Typography variant="subtitle2" component="div" marginTop={1}>
-                    Branding
+                    Consent Branding
                   </Typography>
                   <Typography
                     variant="caption"
@@ -299,11 +266,11 @@ export const NewAppOAuthPage = () => {
                               variant="outlined"
                             >
                               <InputLabel htmlFor="primaryColor">
-                                Primary Color
+                                Primary Color*
                               </InputLabel>
                               <OutlinedInput
                                 id="primaryColor"
-                                label="Primary Color"
+                                label="Primary Color*"
                                 type="text"
                                 autoComplete="primaryColor"
                                 startAdornment={
@@ -335,11 +302,11 @@ export const NewAppOAuthPage = () => {
                           >
                             <FormControl variant="outlined">
                               <InputLabel htmlFor="secondaryColor">
-                                Secondary Color
+                                Secondary Color*
                               </InputLabel>
                               <OutlinedInput
                                 id="secondaryColor"
-                                label="Secondary Color"
+                                label="Secondary Color*"
                                 type="text"
                                 autoComplete="secondaryColor"
                                 startAdornment={
@@ -381,6 +348,137 @@ export const NewAppOAuthPage = () => {
                   </Box>
                 </Grid>
               </Grid>
+              <Grid container>
+                <Grid item md={3} xs={12}>
+                  <Typography variant="subtitle2" component="div" marginTop={1}>
+                    Consent Options
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    component="div"
+                    color="grey"
+                    marginTop={1}
+                  >
+                    Configure the OAuth consent options of your application.
+                  </Typography>
+                </Grid>
+                <Grid item md={6} xs={12}>
+                  <Box sx={{ marginY: 1 }}>
+                    <Grid container rowGap={1} sx={{ mb: 2 }}>
+                      <Grid item xs={12}>
+                        <Grid spacing={1} container>
+                          <Grid item xs={12}>
+                            <FormControl fullWidth variant="outlined">
+                              <InputLabel htmlFor="homepageURL">
+                                Homepage URL*
+                              </InputLabel>
+                              <OutlinedInput
+                                id="homepageURL"
+                                label="Homepage URL*"
+                                type="text"
+                                autoComplete="homepageURL"
+                                {...register("homepageURL")}
+                                error={!!errors.homepageURL?.message}
+                              />
+                              <FormHelperText
+                                error={!!errors.homepageURL?.message}
+                              >
+                                {errors.homepageURL?.message ??
+                                  "Provide a valid homepage URL of your app. E.g: https://oridune.com"}
+                              </FormHelperText>
+                            </FormControl>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <FormControl fullWidth variant="outlined">
+                              <InputLabel htmlFor="allowedCallbackURLs">
+                                Callback URL(s)*
+                              </InputLabel>
+                              <OutlinedInput
+                                id="allowedCallbackURLs"
+                                label="Callback URL(s)*"
+                                type="text"
+                                autoComplete="allowedCallbackURLs"
+                                {...register("allowedCallbackURLs")}
+                                error={!!errors.allowedCallbackURLs?.message}
+                              />
+                              <FormHelperText
+                                error={!!errors.allowedCallbackURLs?.message}
+                              >
+                                {errors.allowedCallbackURLs?.message ??
+                                  "Provide a URL where the user will be redirected after successful authentication (E.g: https://oridune.com/login/callback/). You can also provide multiple URLs separated with a comma."}
+                              </FormHelperText>
+                            </FormControl>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <FormControl fullWidth variant="outlined">
+                              <InputLabel htmlFor="privacyPolicyURL">
+                                Privacy Policy URL
+                              </InputLabel>
+                              <OutlinedInput
+                                id="privacyPolicyURL"
+                                label="Privacy Policy URL"
+                                type="text"
+                                autoComplete="privacyPolicyURL"
+                                {...register("privacyPolicyURL")}
+                                error={!!errors.privacyPolicyURL?.message}
+                              />
+                              <FormHelperText
+                                error={!!errors.privacyPolicyURL?.message}
+                              >
+                                {errors.privacyPolicyURL?.message ??
+                                  "Provide a URL to your application's privacy policy."}
+                              </FormHelperText>
+                            </FormControl>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <FormControl fullWidth variant="outlined">
+                              <InputLabel htmlFor="termsAndConditionsURL">
+                                Terms & Conditions
+                              </InputLabel>
+                              <OutlinedInput
+                                id="termsAndConditionsURL"
+                                label="Terms & Conditions"
+                                type="text"
+                                autoComplete="termsAndConditionsURL"
+                                {...register("termsAndConditionsURL")}
+                                error={!!errors.termsAndConditionsURL?.message}
+                              />
+                              <FormHelperText
+                                error={!!errors.termsAndConditionsURL?.message}
+                              >
+                                {errors.termsAndConditionsURL?.message ??
+                                  "Provide a URL to your application's terms & conditions."}
+                              </FormHelperText>
+                            </FormControl>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <FormControl fullWidth variant="outlined">
+                              <InputLabel htmlFor="supportURL">
+                                Support URL
+                              </InputLabel>
+                              <OutlinedInput
+                                id="supportURL"
+                                label="Support URL"
+                                type="text"
+                                autoComplete="supportURL"
+                                {...register("supportURL")}
+                                error={!!errors.supportURL?.message}
+                              />
+                              <FormHelperText
+                                error={!!errors.supportURL?.message}
+                              >
+                                {errors.supportURL?.message ??
+                                  "Provide a support URL."}
+                              </FormHelperText>
+                            </FormControl>
+                          </Grid>
+                        </Grid>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </Grid>
+              </Grid>
+
               <Grid container>
                 <Grid
                   sx={{ display: "flex", justifyContent: "end" }}

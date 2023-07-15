@@ -34,9 +34,19 @@ export const AppRoutes = () => {
             />
             <Route path="/settings/general" element={<GeneralSettingsPage />} />
             <Route path="/settings/profile" element={<ProfileSettingsPage />} />
-            <Route path="*" element={<SubErrorPage />} />
+            <Route
+              path="*"
+              element={
+                <SubErrorPage code={404} message="Requested page not found!" />
+              }
+            />
           </Route>
-          <Route path="*" element={<ErrorPage />} />
+          <Route
+            path="*"
+            element={
+              <ErrorPage code={404} message="Requested page not found!" />
+            }
+          />
         </Routes>
       </BrowserRouter>
     </OAuthProvider>

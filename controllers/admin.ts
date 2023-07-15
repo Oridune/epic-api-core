@@ -22,21 +22,30 @@ import { updateCore } from "@Core/scripts/updateCore.ts";
 })
 export default class AdminController extends BaseController {
   @Patch("/core/")
-  async updateCore(ctx: IRequestContext<RouterContext<string>>) {
-    if (Env.is(EnvType.PRODUCTION))
-      e.error("This operation is not possible in production!");
+  public updateCore() {
+    // Define Body Schema
+    const BodySchema = e.object({
+      branch: e.optional(e.string()),
+    });
 
-    // Body Validation
-    const Body = await e
-      .object({
-        branch: e.optional(e.string()),
-      })
-      .validate(await ctx.router.request.body({ type: "json" }).value, {
-        name: "admin.body",
-      });
+    return {
+      postman: {
+        body: BodySchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (Env.is(EnvType.PRODUCTION))
+          e.error("This operation is not possible in production!");
 
-    await e.try(() => updateCore(Body));
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: "admin.body" }
+        );
 
-    return Response.status(true);
+        await e.try(() => updateCore(Body));
+
+        return Response.status(true);
+      },
+    };
   }
 }

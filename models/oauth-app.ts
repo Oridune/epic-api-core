@@ -8,12 +8,11 @@ export interface IOauthConsent extends mongoose.Types.Subdocument {
   logo?: IFile;
   primaryColor: string;
   secondaryColor: string;
-  allowedHosts: string[];
-  returnUrl: string;
-  homepageUrl: string;
-  privacyPolicyUrl?: string;
-  termsAndConditionsUrl?: string;
-  supportUrl?: string;
+  allowedCallbackURLs: string[];
+  homepageURL: string;
+  privacyPolicyURL?: string;
+  termsAndConditionsURL?: string;
+  supportURL?: string;
 }
 
 export const OauthConsentSchema = new mongoose.Schema<IOauthConsent>(
@@ -21,12 +20,11 @@ export const OauthConsentSchema = new mongoose.Schema<IOauthConsent>(
     logo: FileSchema,
     primaryColor: { type: String, required: true },
     secondaryColor: { type: String, required: true },
-    allowedHosts: [{ type: String, required: true }],
-    returnUrl: { type: String, required: true },
-    homepageUrl: { type: String, required: true },
-    privacyPolicyUrl: String,
-    termsAndConditionsUrl: String,
-    supportUrl: String,
+    allowedCallbackURLs: [{ type: String, required: true }],
+    homepageURL: { type: String, required: true },
+    privacyPolicyURL: String,
+    termsAndConditionsURL: String,
+    supportURL: String,
   },
   { _id: false, versionKey: false }
 );

@@ -25,81 +25,110 @@ import { removePlugin } from "@Core/scripts/removePlugin.ts";
 })
 export default class AdminPluginsController extends BaseController {
   @Get("/")
-  async list() {
-    return Response.data(await Manager.getPlugins());
+  public list() {
+    return {
+      handler: async () => Response.data(await Manager.getPlugins()),
+    };
   }
 
   @Post("/")
-  async add(ctx: IRequestContext<RouterContext<string>>) {
-    if (Env.is(EnvType.PRODUCTION))
-      e.error("This operation is not possible in production!");
+  public add() {
+    // Define Body Schema
+    const BodySchema = e.object({
+      source: e.optional(e.in(Object.values(PluginSource))),
+      name: e.string(),
+    });
 
-    // Body Validation
-    const Body = await e
-      .object({
-        source: e.optional(e.in(Object.values(PluginSource))),
-        name: e.string(),
-      })
-      .validate(await ctx.router.request.body({ type: "json" }).value, {
-        name: "Plugins.body",
-      });
+    return {
+      postman: {
+        body: BodySchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (Env.is(EnvType.PRODUCTION))
+          e.error("This operation is not possible in production!");
 
-    await e.try(() => addPlugin(Body));
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: "Plugins.body" }
+        );
 
-    return Response.data(
-      (await Manager.getPlugins()).filter(
-        (manager) => manager.name === Body.name
-      )[0]
-    );
+        await e.try(() => addPlugin(Body));
+
+        return Response.data(
+          (await Manager.getPlugins()).filter(
+            (manager) => manager.name === Body.name
+          )[0]
+        );
+      },
+    };
   }
 
   @Patch("/toggle/enable/")
-  async toggleEnable(ctx: IRequestContext<RouterContext<string>>) {
-    if (Env.is(EnvType.PRODUCTION))
-      e.error("This operation is not possible in production!");
-
-    // Body Validation
-    const Body = await e
-      .object({
-        name: e.string(),
-      })
-      .validate(await ctx.router.request.body({ type: "json" }).value, {
-        name: "Plugins.body",
-      });
-
-    const Sequence = await Manager.getDetailedSequence("plugins");
-    const TargetPlugin = Sequence.filter(({ name }) => name === Body.name)[0];
-
-    if (!TargetPlugin) e.error("Plugin not found!");
-
-    await Manager.setExcludes("plugins", (exc) => {
-      if (TargetPlugin.enabled) exc.add(Body.name);
-      else exc.delete(Body.name);
-      return exc;
+  public toggleEnable() {
+    // Define Body Schema
+    const BodySchema = e.object({
+      name: e.string(),
     });
 
-    return Response.data({
-      name: TargetPlugin.name,
-      enabled: !TargetPlugin.enabled,
-    });
+    return {
+      postman: {
+        body: BodySchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (Env.is(EnvType.PRODUCTION))
+          e.error("This operation is not possible in production!");
+
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: "Plugins.body" }
+        );
+
+        const Sequence = await Manager.getDetailedSequence("plugins");
+        const TargetPlugin = Sequence.filter(
+          ({ name }) => name === Body.name
+        )[0];
+
+        if (!TargetPlugin) e.error("Plugin not found!");
+
+        await Manager.setExcludes("plugins", (exc) => {
+          if (TargetPlugin.enabled) exc.add(Body.name);
+          else exc.delete(Body.name);
+          return exc;
+        });
+
+        return Response.data({
+          name: TargetPlugin.name,
+          enabled: !TargetPlugin.enabled,
+        });
+      },
+    };
   }
 
   @Delete("/:name/")
-  async delete(ctx: IRequestContext<RouterContext<string>>) {
-    if (Env.is(EnvType.PRODUCTION))
-      e.error("This operation is not possible in production!");
+  public delete() {
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      name: e.string(),
+    });
 
-    // Params Validation
-    const Params = await e
-      .object({
-        name: e.string(),
-      })
-      .validate(ctx.router.params, {
-        name: "Plugins.params",
-      });
+    return {
+      postman: {
+        params: ParamsSchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (Env.is(EnvType.PRODUCTION))
+          e.error("This operation is not possible in production!");
 
-    await e.try(() => removePlugin(Params));
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: "Plugins.params",
+        });
 
-    return Response.status(true);
+        await e.try(() => removePlugin(Params));
+
+        return Response.status(true);
+      },
+    };
   }
 }

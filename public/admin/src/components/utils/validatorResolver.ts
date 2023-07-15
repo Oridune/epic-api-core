@@ -19,13 +19,16 @@ export const ValidatorResolver =
     } catch (error) {
       if (error instanceof ValidationException)
         error.issues.forEach((issue) => {
-          if (issue.location)
-            Errors[
-              issue.location.replace(
-                location ? new RegExp(`^${location}\\.`) : "input.",
-                ""
-              )
-            ] = issue;
+          if (issue.location) {
+            const Key1 = issue.location.replace(
+              location ? new RegExp(`^${location}\\.`) : "input.",
+              ""
+            );
+            const Key2 = Key1.replace(/\..*/, "");
+
+            Errors[Key1] = Errors[Key1] ?? issue;
+            Errors[Key2] = Errors[Key2] ?? issue;
+          }
         });
     }
 

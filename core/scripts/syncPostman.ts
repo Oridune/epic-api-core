@@ -1,8 +1,9 @@
+// deno-lint-ignore-file no-explicit-any
 import { parse } from "flags";
 import { join } from "path";
 import e from "validator";
 
-import { ApiServer } from "@Core/common/mod.ts";
+import { Server } from "@Core/common/mod.ts";
 import { APIController } from "@Core/controller.ts";
 
 export type PostmanRequestMethods =
@@ -64,6 +65,11 @@ export interface PostmanCollectionItemInterface {
         disabled?: boolean;
       }>;
       raw?: string;
+      options?: {
+        raw?: {
+          language?: "json";
+        };
+      };
     };
     url:
       | string
@@ -71,8 +77,10 @@ export interface PostmanCollectionItemInterface {
           raw: string;
           host: string[];
           path: string[];
-          protocol?: "http";
-          port?: "8080";
+          query?: Array<{ key: string; value: string }>;
+          variable?: Array<{ key: string; value: string }>;
+          protocol?: "http" | "https";
+          port?: string;
         };
   };
   response?: any[];
@@ -92,6 +100,7 @@ export const syncPostman = async (options: {
   key?: string;
   collectionId?: string;
   name?: string;
+  version?: string;
 }) => {
   try {
     const Options = await e
@@ -99,6 +108,7 @@ export const syncPostman = async (options: {
         key: e.optional(e.string()),
         collectionId: e.optional(e.string()),
         name: e.optional(e.string()),
+        version: e.optional(e.string()).default("latest"),
       })
       .validate(options);
 
@@ -118,7 +128,7 @@ export const syncPostman = async (options: {
       item: [],
     };
 
-    await new ApiServer(APIController).prepare((routes) => {
+    await new Server(APIController).prepare(async (routes) => {
       type NestedRequests = {
         [Key: string]: PostmanCollectionItemInterface[] | NestedRequests;
       };
@@ -156,39 +166,67 @@ export const syncPostman = async (options: {
           return requestGroups;
         };
 
-        const Endpoint = join("{{host}}", Route.endpoint)
-          .replace(/\\/g, "/")
-          .replace("?", "");
-        const QueryParams = Object.entries<string>({});
-        const Headers: PostmanHeader = [];
-        const BodyType = "raw";
-        const Body = "";
+        const { object: RequestHandler } =
+          (await Route.options.buildRequestHandler(Route, {
+            version: Options.version,
+          })) ?? {};
 
-        NormalizeRequest(
-          Groups,
-          Route.scope,
-          {
-            name: Route.options.name,
-            request: {
-              url:
-                Endpoint +
-                (QueryParams.length
-                  ? `?${QueryParams.map(
-                      (param) => param[0] + "=" + param[1]
-                    ).join("&")}`
-                  : ""),
-              method:
-                Route.options.method.toUpperCase() as PostmanRequestMethods,
-              header: Headers,
-              body: {
-                mode: BodyType,
-                [BodyType]: Body,
+        if (typeof RequestHandler === "object") {
+          const Host = "{{host}}";
+          const Endpoint = join(Host, Route.endpoint)
+            .replace(/\\/g, "/")
+            .replace("?", "");
+          const QueryParams = Object.entries<string>(
+            RequestHandler.postman?.query ?? {}
+          );
+
+          NormalizeRequest(
+            Groups,
+            Route.scope,
+            {
+              name: Route.options.name,
+              request: {
+                url: {
+                  raw:
+                    Endpoint +
+                    (QueryParams.length
+                      ? `?${QueryParams.map(
+                          (param) => param[0] + "=" + param[1]
+                        ).join("&")}`
+                      : ""),
+                  host: [Host],
+                  path: Route.endpoint.replace(/^\//, "").split("/"),
+                  query: QueryParams.map(([key, value]) => ({ key, value })),
+                  variable: Object.entries<string>(
+                    RequestHandler.postman?.params ?? {}
+                  ).map(([key, value]) => ({ key, value })),
+                },
+                method:
+                  Route.options.method.toUpperCase() as PostmanRequestMethods,
+                header: Object.entries<string>(
+                  RequestHandler.postman?.headers ?? {}
+                ).map(([key, value]) => ({ key, value, type: "text" })),
+                body: RequestHandler.postman?.body
+                  ? {
+                      mode: "raw",
+                      raw: JSON.stringify(
+                        RequestHandler.postman.body,
+                        undefined,
+                        2
+                      ),
+                      options: {
+                        raw: {
+                          language: "json",
+                        },
+                      },
+                    }
+                  : undefined,
               },
+              response: [],
             },
-            response: [],
-          },
-          RequestGroups
-        );
+            RequestGroups
+          );
+        }
       }
 
       const PushRequests = (
@@ -215,7 +253,7 @@ export const syncPostman = async (options: {
     });
 
     await Deno.writeTextFile(
-      `postman_collection.json`,
+      `postman_collection-${Options.version}.json`,
       JSON.stringify(PostmanCollectionObject, undefined, 2)
     );
 
@@ -245,11 +283,12 @@ export const syncPostman = async (options: {
 };
 
 if (import.meta.main) {
-  const { key, k, collectionId, c, name, n } = parse(Deno.args);
+  const { key, k, collectionId, c, name, n, version, v } = parse(Deno.args);
 
   syncPostman({
     key: key ?? k,
     collectionId: collectionId ?? c,
     name: name ?? n,
+    version: version ?? v,
   });
 }

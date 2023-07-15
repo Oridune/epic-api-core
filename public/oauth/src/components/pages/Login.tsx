@@ -61,7 +61,7 @@ export const LoginPage = () => {
 
   const CodeChallenge = Params.get("codeChallenge");
   const CodeChallengeMethod = Params.get("codeChallengeMethod");
-  const ReturnUrl = Params.get("returnUrl");
+  const CallbackURL = Params.get("callbackURL");
 
   const { app } = useOauthApp();
 
@@ -89,7 +89,8 @@ export const LoginPage = () => {
           oauthAppId: app!._id,
           codeChallenge: CodeChallenge ?? undefined,
           codeChallengeMethod: CodeChallengeMethod ?? undefined,
-          returnUrl: ReturnUrl ?? app!.consent.returnUrl ?? undefined,
+          callbackURL:
+            CallbackURL ?? app!.consent.allowedCallbackURLs[0] ?? undefined,
           remember: data.remember,
         },
         {
@@ -108,7 +109,7 @@ export const LoginPage = () => {
               appId: app!._id,
               codeChallenge: CodeChallenge,
               codeChallengeMethod: CodeChallengeMethod,
-              returnUrl: ReturnUrl,
+              callbackURL: CallbackURL,
               ...LoginResponse.data.data,
             },
           });
@@ -131,12 +132,19 @@ export const LoginPage = () => {
           );
 
           if (ExchangeResponse.data.status) {
-            const RedirectURL = ReturnUrl ?? app?.consent.returnUrl;
-            if (RedirectURL)
-              window.location.href = decodeURIComponent(RedirectURL).replace(
-                /{{\s*AUTH_CODE\s*}}/g,
+            const RedirectURL =
+              CallbackURL ?? app!.consent.allowedCallbackURLs[0];
+
+            if (RedirectURL) {
+              const RedirectURLWithCode = new URL(RedirectURL);
+
+              RedirectURLWithCode.searchParams.set(
+                "code",
                 ExchangeResponse.data.data.oauthCode.token
               );
+
+              window.location.href = RedirectURLWithCode.toString();
+            }
           } else setErrorMessage(ExchangeResponse.data.messages?.[0]?.message);
         }
       } else setErrorMessage(LoginResponse.data.messages?.[0]?.message);
@@ -179,7 +187,7 @@ export const LoginPage = () => {
               src={Logo}
               alt="Logo"
               onClick={() => {
-                window.location.href = app!.consent.homepageUrl;
+                window.location.href = app!.consent.homepageURL;
               }}
             />
           </Box>
@@ -370,7 +378,7 @@ export const LoginPage = () => {
           </Typography>
           <Copyright
             name={app!.name}
-            href={app!.consent.homepageUrl}
+            href={app!.consent.homepageURL}
             typographyProps={{ sx: { mt: 8, mb: 4 } }}
           />
         </Box>

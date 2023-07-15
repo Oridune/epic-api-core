@@ -125,7 +125,7 @@ export const SignupPage = () => {
               src={Logo}
               alt="Logo"
               onClick={() => {
-                window.location.href = app!.consent.homepageUrl;
+                window.location.href = app!.consent.homepageURL;
               }}
             />
           </Box>
@@ -308,7 +308,7 @@ export const SignupPage = () => {
           </Typography>
           <Copyright
             name={app!.name}
-            href={app!.consent.homepageUrl}
+            href={app!.consent.homepageURL}
             typographyProps={{ sx: { mt: 8, mb: 4 } }}
           />
         </Box>

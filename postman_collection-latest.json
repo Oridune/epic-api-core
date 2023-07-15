@@ -1,0 +1,539 @@
+{
+  "info": {
+    "name": "Epic API Core",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "api",
+      "item": [
+        {
+          "name": "home",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "test",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/test",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "test"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "item": [
+        {
+          "name": "create",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/users/:oauthAppId",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ":oauthAppId"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "oauthAppId",
+                  "value": ""
+                },
+                {
+                  "key": "oauthApp"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"username\": \"\",\n  \"password\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": 2,\n  \"locale\": \"\",\n  \"tags\": [\n    \"\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "list",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/users/:oauthAppId",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ":oauthAppId"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "oauth",
+      "item": [
+        {
+          "name": "authenticate",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/local",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "local"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oauthAppId\": \"\",\n  \"codeChallenge\": \"\",\n  \"codeChallengeMethod\": \"sha256\",\n  \"callbackURL\": \"\",\n  \"remember\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "exchangeAuthentication",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/exchange/authentication",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "exchange",
+                "authentication"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authenticationToken\": \"\",\n  \"scopes\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "exchangeCode",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/exchange/code",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "exchange",
+                "code"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"\",\n  \"codeVerifier\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "refresh",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/refresh",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "refresh"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "admin",
+          "item": [
+            {
+              "name": "updateCore",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/admin/core",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "core"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"branch\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "adminPlugins",
+          "item": [
+            {
+              "name": "list",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/admin/plugins",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "plugins"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "add",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/admin/plugins",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "plugins"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"source\": \"git\",\n  \"name\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "toggleEnable",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/admin/plugins/toggle/enable",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "plugins",
+                    "toggle",
+                    "enable"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/admin/plugins/:name",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "plugins",
+                    ":name"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "name",
+                      "value": ""
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "oauthApps",
+      "item": [
+        {
+          "name": "create",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/apps",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "apps"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"description\": \"\",\n  \"consent\": {\n    \"primaryColor\": \"\",\n    \"secondaryColor\": \"\",\n    \"allowedCallbackURLs\": [\n      \"\"\n    ],\n    \"homepageURL\": \"\",\n    \"privacyPolicyURL\": \"\",\n    \"termsAndConditionsURL\": \"\",\n    \"supportURL\": \"\"\n  },\n  \"metadata\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "list",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/apps?limit=1&offset=1",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "apps"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": 1
+                },
+                {
+                  "key": "offset",
+                  "value": 1
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "getDefault",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/apps/default",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "apps",
+                "default"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "get",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/apps/:appId",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "apps",
+                ":appId"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "appId",
+                  "value": ""
+                }
+              ]
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/apps/:appId",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "apps",
+                ":appId"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "appId",
+                  "value": ""
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -191,6 +191,8 @@ export const addPlugin = async (options: {
               "env",
               ".gitattributes",
               ".gitignore",
+              "database.ts",
+              "serve.ts",
             ])
               try {
                 await Deno.remove(

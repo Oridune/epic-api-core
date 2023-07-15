@@ -1,17 +1,10 @@
 import {
   BaseController,
   IControllerOptions,
-  IRouteOptions,
+  IRoute,
 } from "./controller/base.ts";
 
-export interface IRoute {
-  group: string;
-  scope: string;
-  endpoint: string;
-  options: IRouteOptions;
-}
-
-export class ApiServer {
+export class Server {
   protected Routes: IRoute[] = [];
 
   protected async collectRoutes(

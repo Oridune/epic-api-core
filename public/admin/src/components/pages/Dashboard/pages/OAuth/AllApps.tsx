@@ -38,7 +38,7 @@ export interface IOAuthApp {
   _id: string;
   name: string;
   description?: string;
-  homepageUrl?: string;
+  homepageURL?: string;
 }
 
 export interface IAppItemProps {
