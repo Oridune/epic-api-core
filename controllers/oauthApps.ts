@@ -7,7 +7,6 @@ import {
   Delete,
   type IRequestContext,
 } from "@Core/common/mod.ts";
-import Manager from "@Core/common/manager.ts";
 import { Status, type RouterContext } from "oak";
 import e from "validator";
 import mongoose from "mongoose";
@@ -15,13 +14,7 @@ import mongoose from "mongoose";
 import { OauthAppModel } from "@Models/oauth-app.ts";
 import { DefaultOauthAppID } from "@Jobs/create-initial-oauth-app.ts";
 
-@Controller("/apps/", {
-  name: "oauthApps",
-
-  /** Do not edit this code */
-  childs: () => Manager.getModules("controllers", import.meta.url),
-  /** --------------------- */
-})
+@Controller("/oauth/apps/", { name: "oauthApps" })
 export default class OauthAppsController extends BaseController {
   @Post("/")
   public create() {

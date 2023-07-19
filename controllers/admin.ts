@@ -7,19 +7,11 @@ import {
   Env,
   EnvType,
 } from "@Core/common/mod.ts";
-import Manager from "@Core/common/manager.ts";
 import { type RouterContext } from "oak";
 import e from "validator";
 import { updateCore } from "@Core/scripts/updateCore.ts";
 
-@Controller("/admin/", {
-  group: "Admin",
-  name: "admin",
-
-  /** Do not edit this code */
-  childs: () => Manager.getModules("controllers", import.meta.url),
-  /** --------------------- */
-})
+@Controller("/admin/", { group: "Admin", name: "admin" })
 export default class AdminController extends BaseController {
   @Patch("/core/")
   public updateCore() {

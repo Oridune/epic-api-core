@@ -6,7 +6,6 @@ import {
   type IRequestContext,
   Env,
 } from "@Core/common/mod.ts";
-import Manager from "@Core/common/manager.ts";
 import { Status, type RouterContext } from "oak";
 import e from "validator";
 import * as bcrypt from "bcrypt";
@@ -52,13 +51,7 @@ export interface IOauthAccessTokens {
 export const DefaultOauthIssuer = await Env.get("DISPLAY_NAME");
 export const DefaultOauthAudience = await Env.get("DISPLAY_NAME");
 
-@Controller("/oauth/", {
-  name: "oauth",
-
-  /** Do not edit this code */
-  childs: () => Manager.getModules("controllers", import.meta.url),
-  /** --------------------- */
-})
+@Controller("/oauth/", { name: "oauth" })
 export default class OauthController extends BaseController {
   static DefaultOauthIssuer = DefaultOauthIssuer;
   static DefaultOauthAudience = DefaultOauthAudience;

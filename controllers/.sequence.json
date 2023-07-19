@@ -2,8 +2,8 @@
   "sequence": [
     "users.ts",
     "oauth.ts",
-    "oauth.apps.ts",
+    "oauthApps.ts",
     "admin.ts",
-    "admin.plugins.ts"
+    "adminPlugins.ts"
   ]
 }

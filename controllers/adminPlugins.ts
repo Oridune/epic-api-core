@@ -1,4 +1,5 @@
 import {
+  Loader,
   Controller,
   BaseController,
   Get,
@@ -10,24 +11,18 @@ import {
   Env,
   EnvType,
 } from "@Core/common/mod.ts";
-import Manager from "@Core/common/manager.ts";
-import { type RouterContext } from "oak";
+import { Status, type RouterContext } from "oak";
 import e from "validator";
 import { addPlugin, PluginSource } from "@Core/scripts/addPlugin.ts";
 import { removePlugin } from "@Core/scripts/removePlugin.ts";
 
-@Controller("/plugins/", {
-  name: "adminPlugins",
-
-  /** Do not edit this code */
-  childs: () => Manager.getModules("controllers", import.meta.url),
-  /** --------------------- */
-})
+@Controller("/admin/plugins/", { group: "Admin", name: "adminPlugins" })
 export default class AdminPluginsController extends BaseController {
   @Get("/")
   public list() {
     return {
-      handler: async () => Response.data(await Manager.getPlugins()),
+      handler: () =>
+        Response.data(Loader.getSequence("plugins")?.listDetailed() ?? []),
     };
   }
 
@@ -54,16 +49,12 @@ export default class AdminPluginsController extends BaseController {
 
         await e.try(() => addPlugin(Body));
 
-        return Response.data(
-          (await Manager.getPlugins()).filter(
-            (manager) => manager.name === Body.name
-          )[0]
-        );
+        return Response.statusCode(Status.Created);
       },
     };
   }
 
-  @Patch("/toggle/enable/")
+  @Patch("/toggle/plugin/")
   public toggleEnable() {
     // Define Body Schema
     const BodySchema = e.object({
@@ -84,23 +75,10 @@ export default class AdminPluginsController extends BaseController {
           { name: "Plugins.body" }
         );
 
-        const Sequence = await Manager.getDetailedSequence("plugins");
-        const TargetPlugin = Sequence.filter(
-          ({ name }) => name === Body.name
-        )[0];
+        // Toggle Plugin
+        Loader.getSequence("plugins")?.toggle(Body.name);
 
-        if (!TargetPlugin) e.error("Plugin not found!");
-
-        await Manager.setExcludes("plugins", (exc) => {
-          if (TargetPlugin.enabled) exc.add(Body.name);
-          else exc.delete(Body.name);
-          return exc;
-        });
-
-        return Response.data({
-          name: TargetPlugin.name,
-          enabled: !TargetPlugin.enabled,
-        });
+        return Response.true();
       },
     };
   }

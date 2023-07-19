@@ -6,7 +6,6 @@ import {
   Response,
   type IRequestContext,
 } from "@Core/common/mod.ts";
-import Manager from "@Core/common/manager.ts";
 import { Status, type RouterContext } from "oak";
 import e from "validator";
 import mongoose from "mongoose";
@@ -27,13 +26,7 @@ export const PasswordValidator = () =>
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=?|\s])[A-Za-z\d!@#$%^&*()_\-+=?|\s]{8,}$/,
   });
 
-@Controller("/users/", {
-  name: "users",
-
-  /** Do not edit this code */
-  childs: () => Manager.getModules("controllers", import.meta.url),
-  /** --------------------- */
-})
+@Controller("/users/", { name: "users" })
 export default class UsersController extends BaseController {
   static async create(user: Partial<IUser>) {
     const Session = await mongoose.startSession();
