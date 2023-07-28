@@ -32,10 +32,10 @@ import { useOauthApp } from "../context/OauthApp";
 import { Copyright } from "../misc/Copyright";
 
 import Logo from "../../assets/logo.svg";
-import Google from "../../assets/google.png";
-import Facebook from "../../assets/facebook.png";
-import Github from "../../assets/github.png";
-import Discord from "../../assets/discord.png";
+// import Google from "../../assets/google.png";
+// import Facebook from "../../assets/facebook.png";
+// import Github from "../../assets/github.png";
+// import Discord from "../../assets/discord.png";
 
 export const LoginSchema = e.object({
   username: e
@@ -152,7 +152,6 @@ export const LoginPage = () => {
         }
       } else setErrorMessage(LoginResponse.data.messages?.[0]?.message);
     } catch (error) {
-      console.error(error);
       if (error instanceof AxiosError)
         setErrorMessage(
           error.response?.data.messages[0].message ?? error.message
@@ -187,7 +186,7 @@ export const LoginPage = () => {
             <img
               width={50}
               height={50}
-              src={Logo}
+              src={app?.consent.logo?.url ?? Logo}
               alt="Logo"
               onClick={() => {
                 window.location.href = app!.consent.homepageURL;
@@ -197,7 +196,8 @@ export const LoginPage = () => {
           <Typography component="h1" variant="h6" textAlign="center">
             Sign In to Continue
           </Typography>
-          <Grid container spacing={1} sx={{ marginY: 3 }}>
+
+          {/* <Grid container spacing={1} sx={{ marginY: 3 }}>
             <Grid
               item
               xs={3}
@@ -247,7 +247,8 @@ export const LoginPage = () => {
             <Typography variant="subtitle2" color="GrayText">
               or sign in with your credentials
             </Typography>
-          </Divider>
+          </Divider> */}
+
           <Box
             component="form"
             onSubmit={handleSubmit(HandleLogin)}

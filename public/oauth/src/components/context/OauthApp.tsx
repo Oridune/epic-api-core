@@ -2,6 +2,9 @@ import React from "react";
 import axios from "axios";
 
 export interface IOauthConsent {
+  logo: {
+    url: string;
+  };
   primaryColor: string;
   secondaryColor: string;
   allowedCallbackURLs: string[];

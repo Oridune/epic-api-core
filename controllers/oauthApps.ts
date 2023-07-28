@@ -26,6 +26,11 @@ export default class OauthAppsController extends BaseController {
       name: e.string().length({ min: 2, max: 50 }),
       description: e.optional(e.string().length(300)),
       consent: e.object({
+        logo: e.optional(
+          e.object({
+            url: e.string().custom((ctx) => new URL(ctx.output).toString()),
+          })
+        ),
         primaryColor: e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
         secondaryColor: e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
         allowedCallbackURLs: e

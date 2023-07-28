@@ -122,7 +122,7 @@ export const SignupPage = () => {
             <img
               width={50}
               height={50}
-              src={Logo}
+              src={app?.consent.logo?.url ?? Logo}
               alt="Logo"
               onClick={() => {
                 window.location.href = app!.consent.homepageURL;

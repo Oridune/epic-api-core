@@ -27,6 +27,10 @@ export const OAuthAppSchema = e.object({
   description: e.optional(e.string().length(300)),
   consentPrimaryColor: e.string().matches(/^(?:[0-9a-fA-F]{3}){1,2}$/),
   consentSecondaryColor: e.string().matches(/^(?:[0-9a-fA-F]{3}){1,2}$/),
+  logoURL: e.optional(
+    e.string().custom((ctx) => new URL(ctx.output).toString()),
+    { nullish: true }
+  ),
   homepageURL: e.string().custom((ctx) => new URL(ctx.output).toString()),
   allowedCallbackURLs: e
     .array(
@@ -67,6 +71,7 @@ export const NewAppOAuthPage = () => {
           name: data.name,
           description: data.description,
           consent: {
+            logo: data.logoURL ? { url: data.logoURL } : undefined,
             primaryColor: `#${data.consentPrimaryColor}`,
             secondaryColor: `#${data.consentSecondaryColor}`,
             allowedCallbackURLs: data.allowedCallbackURLs,
@@ -118,8 +123,6 @@ export const NewAppOAuthPage = () => {
       consentSecondaryColor: "faa307",
     },
   });
-
-  console.log(errors);
 
   return (
     <>
@@ -343,6 +346,24 @@ export const NewAppOAuthPage = () => {
                             </FormHelperText>
                           </Grid>
                         </Grid>
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <FormControl fullWidth variant="outlined">
+                          <InputLabel htmlFor="logoURL">Logo URL</InputLabel>
+                          <OutlinedInput
+                            id="logoURL"
+                            label="Logo URL"
+                            type="text"
+                            autoComplete="logoURL"
+                            {...register("logoURL")}
+                            error={!!errors.logoURL?.message}
+                          />
+                          <FormHelperText error={!!errors.logoURL?.message}>
+                            {errors.logoURL?.message ??
+                              "Provide a valid logo URL of your app. E.g: https://oridune.com/logo.png"}
+                          </FormHelperText>
+                        </FormControl>
                       </Grid>
                     </Grid>
                   </Box>
