@@ -11,7 +11,7 @@ import e from "validator";
 import mongoose from "mongoose";
 
 import { Gender, IUser, UserModel } from "@Models/user.ts";
-import { AccessModel } from "@Models/access.ts";
+import { CollaboratorModel } from "@Models/collaborator.ts";
 import { AccountModel } from "@Models/account.ts";
 import { IOauthApp, OauthAppModel } from "@Models/oauth-app.ts";
 
@@ -36,19 +36,19 @@ export default class UsersController extends BaseController {
 
       const User = new UserModel(user);
       const Account = new AccountModel({});
-      const Access = new AccessModel({
+      const Collaborator = new CollaboratorModel({
         account: Account,
         isOwned: true,
         isPrimary: true,
-        role: "user",
+        role: "unverified",
       });
 
-      User.accesses = [Access];
+      User.collaborates = [Collaborator];
       Account.createdBy = Account.createdFor = User;
-      Access.createdBy = Access.createdFor = User;
+      Collaborator.createdBy = Collaborator.createdFor = User;
 
       await Account.save({ session: Session });
-      await Access.save({ session: Session });
+      await Collaborator.save({ session: Session });
       await User.save({ session: Session });
 
       await Session.commitTransaction();
@@ -120,7 +120,7 @@ export default class UsersController extends BaseController {
 
         User.set("password", undefined);
         User.set("oauthApp", undefined);
-        User.set("accesses", undefined);
+        User.set("collaborates", undefined);
 
         return Response.statusCode(Status.Created).data(User);
       },

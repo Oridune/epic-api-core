@@ -14,10 +14,10 @@ import { SignJWT, jwtVerify, JWTVerifyOptions, JWTPayload } from "jose";
 import { createHash } from "hash";
 import { UserModel } from "@Models/user.ts";
 import { OauthProvider, OauthSessionModel } from "@Models/oauth-session.ts";
-import { OauthAppModel } from "../models/oauth-app.ts";
+import { OauthAppModel } from "@Models/oauth-app.ts";
+import { CollaboratorModel } from "@Models/collaborator.ts";
+import { OauthScopesModel } from "@Models/oauth-scopes.ts";
 import { UsernameValidator } from "./users.ts";
-import { AccessModel } from "../models/access.ts";
-import { OauthScopesModel } from "../models/oauth-scopes.ts";
 
 export enum OauthTokenType {
   AUTHENTICATION = "oauth_authentication",
@@ -51,7 +51,7 @@ export interface IOauthAccessTokens {
 export const DefaultOauthIssuer = await Env.get("DISPLAY_NAME");
 export const DefaultOauthAudience = await Env.get("DISPLAY_NAME");
 
-@Controller("/oauth/", { name: "oauth" })
+@Controller("/oauth/", { group: "Oauth", name: "oauth" })
 export default class OauthController extends BaseController {
   static DefaultOauthIssuer = DefaultOauthIssuer;
   static DefaultOauthAudience = DefaultOauthAudience;
@@ -319,26 +319,32 @@ export default class OauthController extends BaseController {
     challenge: string;
     verifier: string;
   }) {
-    return (
-      createHash(opts.alg)
-        .update(opts.verifier)
-        .toString("base64")
-        .split("=")[0]
-        .replaceAll("+", "-")
-        .replaceAll("/", "_") ===
-      opts.challenge.split("=")[0].replaceAll("+", "-").replaceAll("/", "_")
-    );
+    try {
+      return (
+        createHash(opts.alg)
+          .update(opts.verifier)
+          .toString("base64")
+          .split("=")[0]
+          .replaceAll("+", "-")
+          .replaceAll("/", "_") ===
+        opts.challenge.split("=")[0].replaceAll("+", "-").replaceAll("/", "_")
+      );
+    } catch {
+      return false;
+    }
   }
 
   static async getAvailableScopes(userId: string) {
     return await Promise.all(
       // Require account details (name, description etc.)
       (
-        await AccessModel.find({ createdFor: userId }).populate("account")
-      ).map(async (access) => ({
-        ...access.toJSON(),
+        await CollaboratorModel.find({ createdFor: userId }).populate("account")
+      ).map(async (collaborator) => ({
+        ...collaborator.toJSON(),
         scopes:
-          (await OauthScopesModel.findOne({ role: access.role }))?.scopes ?? [],
+          (
+            await OauthScopesModel.findOne({ role: collaborator.role })
+          )?.scopes ?? [],
       }))
     );
   }

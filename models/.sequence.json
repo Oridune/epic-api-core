@@ -1,8 +1,6 @@
 {
   "sequence": [
     "account.ts",
-    "access.ts",
-    "session.ts",
     "user.ts",
     "activity.ts",
     "oauth-session.ts",
@@ -10,6 +8,8 @@
     "oauth-app.ts",
     "file.ts",
     "oauth-scopes.ts",
-    "env.ts"
-  ]
+    "env.ts",
+    "collaborator.ts"
+  ],
+  "excludes": []
 }

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import * as bcrypt from "bcrypt";
 import { IOauthApp } from "@Models/oauth-app.ts";
-import { IAccess } from "@Models/access.ts";
+import { ICollaborator } from "@Models/collaborator.ts";
 import { FileSchema, IFile } from "@Models/file.ts";
 
 export enum Gender {
@@ -27,7 +27,7 @@ export interface IUser extends mongoose.Document {
   failedLoginAttempts: number;
   requiresMfa: boolean;
   isBlocked: boolean;
-  accesses: IAccess[];
+  collaborates: ICollaborator[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,7 +50,7 @@ export const UserSchema = new mongoose.Schema<IUser>(
     failedLoginAttempts: { type: Number, default: 0 },
     requiresMfa: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
-    accesses: [{ type: mongoose.Types.ObjectId, ref: "access" }],
+    collaborates: [{ type: mongoose.Types.ObjectId, ref: "collaborator" }],
   },
   { timestamps: true, versionKey: false }
 );

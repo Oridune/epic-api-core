@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { IUser } from "@Models/user.ts";
 import { IAccount } from "@Models/account.ts";
 
-export interface IAccess extends mongoose.Document {
+export interface ICollaborator extends mongoose.Document {
   createdBy: IUser;
   createdFor: IUser;
   role: string;
@@ -13,7 +13,7 @@ export interface IAccess extends mongoose.Document {
   updatedAt: Date;
 }
 
-export const AccessSchema = new mongoose.Schema<IAccess>(
+export const CollaboratorSchema = new mongoose.Schema<ICollaborator>(
   {
     createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
     createdFor: { type: mongoose.Types.ObjectId, ref: "user" },
@@ -25,6 +25,6 @@ export const AccessSchema = new mongoose.Schema<IAccess>(
   { timestamps: true, versionKey: false }
 );
 
-AccessSchema.index({ createdFor: 1, account: 1 });
+CollaboratorSchema.index({ createdFor: 1, account: 1 });
 
-export const AccessModel = mongoose.model<IAccess>("access", AccessSchema);
+export const CollaboratorModel = mongoose.model<ICollaborator>("collaborator", CollaboratorSchema);

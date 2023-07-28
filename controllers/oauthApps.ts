@@ -14,7 +14,7 @@ import mongoose from "mongoose";
 import { OauthAppModel } from "@Models/oauth-app.ts";
 import { DefaultOauthAppID } from "@Jobs/create-initial-oauth-app.ts";
 
-@Controller("/oauth/apps/", { name: "oauthApps" })
+@Controller("/oauth/apps/", { group: "Oauth", name: "oauthApps" })
 export default class OauthAppsController extends BaseController {
   @Post("/")
   public create() {

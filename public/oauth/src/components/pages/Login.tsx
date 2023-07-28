@@ -124,7 +124,10 @@ export const LoginPage = () => {
                   account: { _id: string };
                 }>
               ).reduce(
-                (obj, access) => ({ ...obj, [access.account._id]: ["*"] }),
+                (obj, collaboration) => ({
+                  ...obj,
+                  [collaboration.account._id]: ["*"],
+                }),
                 {}
               ),
             },

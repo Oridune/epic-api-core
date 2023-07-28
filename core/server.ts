@@ -1,48 +1,20 @@
 // deno-lint-ignore-file no-explicit-any
-import { join } from "path";
-import {
-  RawResponse,
-  Response,
-  Server,
-  Env,
-  EnvType,
-  Loader,
-} from "@Core/common/mod.ts";
+import { RawResponse, Response, Server, Loader } from "@Core/common/mod.ts";
 import { APIController } from "@Core/controller.ts";
 import { Database } from "../database.ts";
 import {
   Application as AppServer,
   Router as AppRouter,
   RouterContext,
-  isHttpError,
-  send,
-  Context,
+  Status,
 } from "oak";
-import StaticFiles from "oak:static";
 import Logger from "oak:logger";
 import { CORS } from "oak:cors";
 import { gzip } from "oak:compress";
-import { RateLimiter } from "oak:limiter";
-import { ValidationException } from "validator";
-
-export const serveStatic =
-  (prefix: string, path: string) =>
-  async (
-    ctx: Context<Record<string, any>, Record<string, any>>,
-    next: () => Promise<unknown>
-  ) => {
-    const Prefix = new RegExp(`^/${prefix}/?`);
-
-    if (Prefix.test(ctx.request.url.pathname)) {
-      const File = ctx.request.url.pathname.replace(Prefix, "/");
-      const Stat = await Deno.stat(File).catch(() => {});
-      await send(ctx, Stat?.isFile ? File : "index.html", {
-        root: join(path, "www"),
-      });
-    }
-
-    await next();
-  };
+import { errorHandler, respondWith } from "@Core/middlewares/errorHandler.ts";
+import { serveStatic } from "@Core/middlewares/serveStatic.ts";
+import { requestId } from "@Core/middlewares/requestId.ts";
+import { rateLimiter } from "@Core/middlewares/rateLimiter.ts";
 
 export const prepareAppServer = async () => {
   const App = new AppServer();
@@ -50,38 +22,20 @@ export const prepareAppServer = async () => {
 
   App.use(Logger.logger);
   App.use(Logger.responseTime);
+  App.use(errorHandler());
+
   App.use(gzip());
   App.use(CORS());
-  App.use(await RateLimiter());
-  App.use(async (ctx, next) => {
-    const ID = crypto.randomUUID();
-    ctx.state["X-Request-ID"] = ID;
-    await next();
-    ctx.response.headers.set("X-Request-ID", ID);
-  });
+  App.use(rateLimiter());
+  App.use(requestId());
 
   for (const [, SubLoader] of Loader.getLoaders() ?? [])
-    for await (const UI of SubLoader.tree
-      .get("public")
-      ?.sequence.listDetailed() ?? [])
+    for (const UI of SubLoader.tree.get("public")?.sequence.listDetailed() ??
+      [])
       if (UI.enabled) App.use(serveStatic(UI.name, UI.path));
 
-  for await (const UI of Loader.getSequence("public")?.listDetailed() ?? [])
+  for (const UI of Loader.getSequence("public")?.listDetailed() ?? [])
     if (UI.enabled) App.use(serveStatic(UI.name, UI.path));
-
-  App.use(async (ctx, next) => {
-    try {
-      await next();
-    } catch (e) {
-      const NewResponse = Response.statusCode(
-        isHttpError(e) ? e.status : e instanceof ValidationException ? 400 : 500
-      ).messages(e.issues ?? [{ message: e.message }]);
-
-      ctx.response.status = NewResponse.getStatusCode();
-      ctx.response.headers = NewResponse.getHeaders();
-      ctx.response.body = NewResponse.getBody();
-    }
-  });
 
   for (const [, SubLoader] of Loader.getLoaders() ?? [])
     for (const [, Middleware] of SubLoader.tree.get("middlewares")?.modules ??
@@ -109,13 +63,13 @@ export const prepareAppServer = async () => {
         Hooks.push(Hook.object.default);
 
     for (const Route of routes) {
-      if (!Env.is(EnvType.PRODUCTION))
-        console.info(
-          "Endpoint:",
-          Route.options.method.toUpperCase(),
-          "\t\t",
-          Route.endpoint
-        );
+      console.info(
+        "Endpoint:",
+        "\t",
+        Route.options.method.toUpperCase(),
+        "\t\t",
+        Route.endpoint
+      );
 
       const ControllerOptions = Route.options.controller.getOptions();
       const Middlewares = [
@@ -169,7 +123,7 @@ export const prepareAppServer = async () => {
             });
 
           dispatchEvent(
-            new CustomEvent(ctx.state.requestName, {
+            new CustomEvent(`${Route.scope}.${Route.options.name}`, {
               detail: {
                 ctx: RequestContext,
                 res: ReturnedResponse,
@@ -180,11 +134,8 @@ export const prepareAppServer = async () => {
           if (
             ReturnedResponse instanceof RawResponse ||
             ReturnedResponse instanceof Response
-          ) {
-            ctx.response.status = ReturnedResponse.getStatusCode();
-            ctx.response.headers = ReturnedResponse.getHeaders();
-            ctx.response.body = ReturnedResponse.getBody();
-          }
+          )
+            respondWith(ctx, ReturnedResponse);
         }
       );
     }
@@ -192,6 +143,7 @@ export const prepareAppServer = async () => {
 
   App.use(Router.routes());
   App.use(Router.allowedMethods());
+  App.use((ctx) => ctx.throw(Status.NotFound));
 
   return App;
 };

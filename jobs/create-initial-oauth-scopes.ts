@@ -10,6 +10,9 @@ export default async () => {
       scopes: ["api", "oauthApps.getDefault", "users.create", "oauth"],
     }).save();
 
+  if (!(await OauthScopesModel.exists({ role: "unverified" })))
+    await new OauthScopesModel({ role: "unverified" }).save();
+
   if (!(await OauthScopesModel.exists({ role: "user" })))
     await new OauthScopesModel({ role: "user" }).save();
 };

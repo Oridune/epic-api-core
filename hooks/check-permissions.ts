@@ -2,7 +2,7 @@ import { type IRequestContext } from "@Core/common/mod.ts";
 import { type RouterContext, createHttpError, Status } from "oak";
 import e from "validator";
 
-import { AccessModel } from "@Models/access.ts";
+import { CollaboratorModel } from "@Models/collaborator.ts";
 import { OauthScopesModel } from "@Models/oauth-scopes.ts";
 
 import { SecurityGuard } from "@Lib/security-guard.ts";
@@ -56,7 +56,7 @@ export default {
 
       RequestedScopes = SessionInfo.session.scopes[AccountId] ?? [];
 
-      const Access = await AccessModel.findOne(
+      const Collaborator = await CollaboratorModel.findOne(
         {
           account: AccountId,
           createdFor: SessionInfo.session.createdBy,
@@ -64,16 +64,18 @@ export default {
         { role: 1 }
       );
 
-      if (!Access) e.error("You don't have access to this account!");
+      if (!Collaborator) e.error("You don't have access to this account!");
 
       const Scopes = await OauthScopesModel.findOne(
-        { role: Access!.role },
+        { role: Collaborator!.role },
         { scopes: 1 }
       );
 
       if (!Scopes)
         e.error(
-          `Unable to fetch the available scopes for the role '${Access!.role}'!`
+          `Unable to fetch the available scopes for the role '${
+            Collaborator!.role
+          }'!`
         );
 
       AvailableScopes = Scopes?.scopes ?? [];
@@ -81,7 +83,7 @@ export default {
       ctx.router.state.auth = {
         userId: SessionInfo.session.createdBy,
         accountId: AccountId,
-        role: Access!.role,
+        role: Collaborator!.role,
       };
     } else {
       const UnauthenticatedRole = "unauthenticated";

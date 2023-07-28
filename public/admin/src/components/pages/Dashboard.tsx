@@ -2,8 +2,8 @@ import React from "react";
 import { Box } from "@mui/system";
 import { Grid } from "@mui/material";
 import { Outlet } from "react-router-dom";
-import randomString from "randomized-string";
 import { encode as base64encode } from "base64-arraybuffer";
+import randomString from "randomized-string";
 
 import { useAuth } from "../context/auth";
 
@@ -11,16 +11,20 @@ import { SidebarPartial } from "./Dashboard/partials/Sidebar";
 import { LoadingPage } from "./Dashboard/pages/Loading";
 import { ErrorPage } from "./Error";
 
-export const generateCodeChallenge = async (codeVerifier: string) =>
-  base64encode(
-    await window.crypto.subtle.digest(
-      "SHA-256",
-      new TextEncoder().encode(codeVerifier)
+export const generateCodeChallenge = async (verifier: string) => {
+  return {
+    verifier,
+    challenge: base64encode(
+      await window.crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(verifier)
+      )
     )
-  )
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, ""),
+  };
+};
 
 export const DashboardPage = () => {
   const { isLoading, isError, error, getTokens } = useAuth();
@@ -31,11 +35,12 @@ export const DashboardPage = () => {
 
   if (isLoading || (!isError && !getTokens() && !import.meta.env.DEV)) {
     if (!isLoading) {
-      const Verifier = randomString.generate(128);
-      localStorage.setItem("codeChallengeVerifier", Verifier);
-      generateCodeChallenge(Verifier).then((challenge) => {
-        window.location.href = `/oauth/login/?appId=default&codeChallengeMethod=sha256&codeChallenge=${challenge}`;
-      });
+      generateCodeChallenge(randomString.generate(128)).then(
+        ({ verifier, challenge }) => {
+          localStorage.setItem("codeChallengeVerifier", verifier);
+          window.location.href = `/oauth/login/?appId=default&codeChallengeMethod=sha256&codeChallenge=${challenge}`;
+        }
+      );
     }
 
     return <LoadingPage />;
