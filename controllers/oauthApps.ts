@@ -1,4 +1,5 @@
 import {
+  Env,
   Controller,
   BaseController,
   Response,
@@ -10,12 +11,14 @@ import {
 import { Status, type RouterContext } from "oak";
 import e from "validator";
 import mongoose from "mongoose";
-
 import { OauthAppModel } from "@Models/oauth-app.ts";
-import { DefaultOauthAppID } from "@Jobs/create-initial-oauth-app.ts";
 
 @Controller("/oauth/apps/", { group: "Oauth", name: "oauthApps" })
 export default class OauthAppsController extends BaseController {
+  static DefaultOauthAppID = new mongoose.Types.ObjectId(
+    "63b6a997e1275524350649f4"
+  );
+
   @Post("/")
   public create() {
     // Define Body Schema
@@ -96,9 +99,28 @@ export default class OauthAppsController extends BaseController {
   @Get("/default/")
   public getDefault() {
     return {
-      handler: async () => {
-        const App = await OauthAppModel.findOne({ _id: DefaultOauthAppID });
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        const App =
+          (await OauthAppModel.findOne({
+            _id: OauthAppsController.DefaultOauthAppID,
+          })) ??
+          (await new OauthAppModel({
+            _id: OauthAppsController.DefaultOauthAppID,
+            name: await Env.get("DISPLAY_NAME"),
+            description: "The default oauth application.",
+            enabled: true,
+            consent: {
+              primaryColor: "#e85d04",
+              secondaryColor: "#faa307",
+              allowedCallbackURLs: [
+                new URL("/admin/", ctx.router.request.url.origin).toString(),
+              ],
+              homepageURL: ctx.router.request.url.origin,
+            },
+          }).save());
+
         if (!App) e.error("Default Oauth app not found!");
+
         return Response.data(App!);
       },
     };
@@ -140,7 +162,7 @@ export default class OauthAppsController extends BaseController {
         if (!mongoose.Types.ObjectId.isValid(ctx.output))
           throw "Not a valid id!";
 
-        if (DefaultOauthAppID.toString() === ctx.output)
+        if (OauthAppsController.DefaultOauthAppID.toString() === ctx.output)
           throw "Cannot delete the default Oauth app!";
       }),
     });

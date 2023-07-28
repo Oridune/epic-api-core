@@ -1,10 +1,16 @@
-// deno-lint-ignore-file no-empty-interface no-explicit-any
+// deno-lint-ignore-file no-explicit-any
 import "ts-reset";
 import "@Core/common/controller/base.ts";
 
 declare module "@Core/common/controller/base.ts" {
   interface IRouterContextExtendor {
-    // Override properties here
+    state: {
+      auth: {
+        userId: string;
+        accountId: string;
+        role: string;
+      };
+    };
   }
 
   interface IRequestHandlerObjectExtendor {
