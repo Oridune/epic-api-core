@@ -2,7 +2,7 @@ import React from "react";
 import axios from "axios";
 
 export interface IOauthConsent {
-  logo: {
+  logo?: {
     url: string;
   };
   primaryColor: string;

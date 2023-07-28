@@ -178,8 +178,8 @@ export const SidebarPartial = () => {
               ],
             },
             {
-              label: "Storage",
-              path: "/storage",
+              label: "Files",
+              path: "/files",
               icon: "gallery_thumbnail",
               items: [
                 {

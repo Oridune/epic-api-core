@@ -34,11 +34,28 @@ import Github from "../../../../../assets/github.png";
 import Discord from "../../../../../assets/discord.png";
 import { TGetTokens, useAuth } from "../../../../context/auth";
 
-export interface IOAuthApp {
+export interface IOauthConsent {
+  logo?: {
+    url: string;
+  };
+  primaryColor: string;
+  secondaryColor: string;
+  allowedCallbackURLs: string[];
+  callbackURL: string;
+  homepageURL: string;
+  privacyPolicyURL?: string;
+  termsAndConditionsURL?: string;
+  supportURL?: string;
+}
+
+export interface IOauthApp {
   _id: string;
   name: string;
-  description?: string;
-  homepageURL?: string;
+  description: string;
+  consent: IOauthConsent;
+  metadata: Record<string, string>;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface IAppItemProps {
@@ -210,7 +227,7 @@ export const AllAppsOAuthPage = () => {
 
   const { getTokens } = useAuth();
 
-  const AppsFetcher = FetchOAuthApps<Array<IOAuthApp>>(getTokens);
+  const AppsFetcher = FetchOAuthApps<Array<IOauthApp>>(getTokens);
 
   const QueryClient = useQueryClient();
 
@@ -364,6 +381,7 @@ export const AllAppsOAuthPage = () => {
                         appId={App._id}
                         name={App.name}
                         description={App.description}
+                        icon={App.consent.logo?.url}
                         onDelete={async (_, props) => {
                           if (
                             await DeleteAppDialogRef.current?.confirm({

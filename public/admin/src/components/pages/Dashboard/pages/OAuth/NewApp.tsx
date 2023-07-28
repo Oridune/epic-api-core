@@ -76,9 +76,9 @@ export const NewAppOAuthPage = () => {
             secondaryColor: `#${data.consentSecondaryColor}`,
             allowedCallbackURLs: data.allowedCallbackURLs,
             homepageURL: data.homepageURL,
-            privacyPolicyURL: data.privacyPolicyURL,
-            termsAndConditionsURL: data.termsAndConditionsURL,
-            supportURL: data.supportURL,
+            privacyPolicyURL: data.privacyPolicyURL ?? undefined,
+            termsAndConditionsURL: data.termsAndConditionsURL ?? undefined,
+            supportURL: data.supportURL ?? undefined,
           },
         },
         {

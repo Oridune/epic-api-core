@@ -120,12 +120,18 @@ export const SignupPage = () => {
         <Box sx={{ maxWidth: 333, paddingX: 1 }}>
           <Box sx={{ display: "flex", justifyContent: "center", marginY: 2 }}>
             <img
-              width={50}
-              height={50}
+              width={70}
+              height={70}
               src={app?.consent.logo?.url ?? Logo}
               alt="Logo"
               onClick={() => {
                 window.location.href = app!.consent.homepageURL;
+              }}
+              onError={(e) => {
+                if (app?.consent.logo?.url) {
+                  e.persist();
+                  e.currentTarget.src = Logo;
+                }
               }}
             />
           </Box>
