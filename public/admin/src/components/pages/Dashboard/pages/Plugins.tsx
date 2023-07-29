@@ -208,6 +208,7 @@ export const PluginItem: React.FC<IPluginItemProps> = (props) => {
 export const AddPlugin =
   <D extends any>(getTokens: TGetTokens) =>
   async (name: string) => {
+    const Token = (await getTokens()?.resolveTokens())?.access.token;
     const Response = await axios.post<{
       status: boolean;
       data: D;
@@ -219,11 +220,7 @@ export const AddPlugin =
         baseURL: import.meta.env.VITE_API_HOST,
         validateStatus: (status) => status < 500,
         headers: {
-          Authorization: `Bearer ${
-            (
-              await getTokens()?.resolveTokens()
-            )?.access.token
-          }`,
+          Authorization: Token && `Bearer ${Token}`,
         },
       }
     );
@@ -239,6 +236,7 @@ export const AddPlugin =
 export const FetchPlugins =
   <D extends any>(getTokens: TGetTokens) =>
   async () => {
+    const Token = (await getTokens()?.resolveTokens())?.access.token;
     const Response = await axios.get<{
       status: boolean;
       data: D;
@@ -247,11 +245,7 @@ export const FetchPlugins =
       baseURL: import.meta.env.VITE_API_HOST,
       validateStatus: (status) => status < 500,
       headers: {
-        Authorization: `Bearer ${
-          (
-            await getTokens()?.resolveTokens()
-          )?.access.token
-        }`,
+        Authorization: Token && `Bearer ${Token}`,
       },
     });
 
@@ -265,6 +259,7 @@ export const FetchPlugins =
 
 export const ToggleEnablePlugin =
   (getTokens: TGetTokens) => async (id: string) => {
+    const Token = (await getTokens()?.resolveTokens())?.access.token;
     const Response = await axios.patch<{
       status: boolean;
       data: {
@@ -279,11 +274,7 @@ export const ToggleEnablePlugin =
         baseURL: import.meta.env.VITE_API_HOST,
         validateStatus: (status) => status < 500,
         headers: {
-          Authorization: `Bearer ${
-            (
-              await getTokens()?.resolveTokens()
-            )?.access.token
-          }`,
+          Authorization: Token && `Bearer ${Token}`,
         },
       }
     );
@@ -296,6 +287,7 @@ export const ToggleEnablePlugin =
   };
 
 export const DeletePlugin = (getTokens: TGetTokens) => async (id: string) => {
+  const Token = (await getTokens()?.resolveTokens())?.access.token;
   const Response = await axios.delete<{
     status: boolean;
     messages: { message: string }[];
@@ -303,11 +295,7 @@ export const DeletePlugin = (getTokens: TGetTokens) => async (id: string) => {
     baseURL: import.meta.env.VITE_API_HOST,
     validateStatus: (status) => status < 500,
     headers: {
-      Authorization: `Bearer ${
-        (
-          await getTokens()?.resolveTokens()
-        )?.access.token
-      }`,
+      Authorization: Token && `Bearer ${Token}`,
     },
   });
 

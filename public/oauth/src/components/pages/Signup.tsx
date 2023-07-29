@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -33,6 +33,11 @@ import Logo from "../../assets/logo.svg";
 export const SignupSchema = e.object({
   fname: e.string().length({ min: 2, max: 30 }),
   lname: e.string(),
+  email: e
+    .string({ messages: { matchFailed: "Please provide a valid email!" } })
+    .matches({
+      regex: /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/,
+    }),
   username: e
     .string({
       messages: { matchFailed: "Please provide a valid username format!" },
@@ -57,7 +62,6 @@ export const SignupSchema = e.object({
 
 export const SignupPage = () => {
   const Navigate = useNavigate();
-  const [Params] = useSearchParams();
 
   const { app } = useOauthApp();
 
@@ -85,6 +89,7 @@ export const SignupPage = () => {
         {
           fname: data.fname,
           lname: data.lname,
+          email: data.email,
           username: data.username,
           password: data.password,
         },
@@ -189,6 +194,19 @@ export const SignupPage = () => {
                 >
                   {errors.fname?.message ?? errors.lname?.message}
                 </FormHelperText>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel htmlFor="email">Email</InputLabel>
+                  <OutlinedInput
+                    id="email"
+                    label="Email"
+                    type="text"
+                    autoComplete="email"
+                    error={!!errors.email?.message}
+                    {...register("email")}
+                  />
+                </FormControl>
               </Grid>
               <Grid item xs={12}>
                 <FormControl fullWidth variant="outlined">

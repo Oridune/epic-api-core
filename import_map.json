@@ -16,7 +16,7 @@
     "u-semver": "npm:u-semver@0.7.1",
     "mongoose": "npm:mongoose@7.3.4",
     "ts-reset": "npm:@total-typescript/ts-reset@0.4.2",
-    "validator": "https://deno.land/x/oridune_validator@v0.2.2/mod.ts",
+    "validator": "https://deno.land/x/oridune_validator@v0.2.3/mod.ts",
     "flags": "https://deno.land/std@0.164.0/flags/mod.ts",
     "pluralize": "https://deno.land/x/deno_plural@2.0.0/mod.ts",
     "bcrypt": "https://deno.land/x/bcrypt@v0.4.1/mod.ts",
@@ -28,7 +28,8 @@
     "oak:testing": "https://deno.land/x/superoak@4.7.0/mod.ts",
     "oak:requestId": "https://deno.land/x/oak_middleware_request_id@0.0.1/mod.ts",
     "jose": "https://deno.land/x/jose@v4.11.1/index.ts",
-    "hash": "https://deno.land/std@0.107.0/hash/mod.ts"
+    "hash": "https://deno.land/std@0.107.0/hash/mod.ts",
+    "novu": "npm:@novu/node"
   },
   "scopes": {}
 }

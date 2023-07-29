@@ -5,7 +5,7 @@ import "@Core/common/controller/base.ts";
 declare module "@Core/common/controller/base.ts" {
   interface IRouterContextExtendor {
     state: {
-      auth: {
+      auth?: {
         userId: string;
         accountId: string;
         role: string;

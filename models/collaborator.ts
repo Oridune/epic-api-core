@@ -26,5 +26,9 @@ export const CollaboratorSchema = new mongoose.Schema<ICollaborator>(
 );
 
 CollaboratorSchema.index({ createdFor: 1, account: 1 });
+CollaboratorSchema.index({ createdFor: 1, isPrimary: 1 }, { unique: true });
 
-export const CollaboratorModel = mongoose.model<ICollaborator>("collaborator", CollaboratorSchema);
+export const CollaboratorModel = mongoose.model<ICollaborator>(
+  "collaborator",
+  CollaboratorSchema
+);

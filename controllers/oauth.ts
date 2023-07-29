@@ -31,8 +31,9 @@ export enum OauthPKCEMethod {
 }
 
 export interface IOauthVerifyOptions {
-  type: OauthTokenType;
+  type: string;
   token: string;
+  secret?: string;
   verifyOpts?: JWTVerifyOptions;
 }
 
@@ -62,17 +63,20 @@ export default class OauthController extends BaseController {
   static DefaultRefreshTokenExpirySeconds = 86400; // 1d
   static DefaultAccessTokenExpirySeconds = 300; // 5m
 
-  static async createOauthToken(opts: {
-    type: OauthTokenType;
+  static async createToken<T extends string>(opts: {
+    type: T;
     payload: Record<
       string,
       string | string[] | number | boolean | null | undefined
     >;
+    secret?: string;
     issuer?: string;
     audience?: string;
     expiresInSeconds?: number;
-  }): Promise<IOauthToken> {
-    const JWTSecret = new TextEncoder().encode(await Env.get("ENCRYPTION_KEY"));
+  }) {
+    const JWTSecret = new TextEncoder().encode(
+      (opts.secret ?? "") + (await Env.get("ENCRYPTION_KEY"))
+    );
     const Issuer = opts.issuer ?? OauthController.DefaultOauthIssuer;
     const Audience = opts.audience ?? OauthController.DefaultOauthAudience;
 
@@ -98,6 +102,19 @@ export default class OauthController extends BaseController {
         .sign(JWTSecret),
       expiresAtSeconds: ExpiresAtSeconds,
     };
+  }
+
+  static async createOauthToken(opts: {
+    type: OauthTokenType;
+    payload: Record<
+      string,
+      string | string[] | number | boolean | null | undefined
+    >;
+    issuer?: string;
+    audience?: string;
+    expiresInSeconds?: number;
+  }): Promise<IOauthToken> {
+    return await OauthController.createToken(opts);
   }
 
   static async createOauthAccessTokens(opts: {
@@ -141,8 +158,10 @@ export default class OauthController extends BaseController {
     };
   }
 
-  static async verifyOauthToken<P>(opts: IOauthVerifyOptions) {
-    const JWTSecret = new TextEncoder().encode(await Env.get("ENCRYPTION_KEY"));
+  static async verifyToken<P>(opts: IOauthVerifyOptions) {
+    const JWTSecret = new TextEncoder().encode(
+      (opts.secret ?? "") + (await Env.get("ENCRYPTION_KEY"))
+    );
     const JWTResults = await jwtVerify(opts.token, JWTSecret, {
       subject: opts.type,
       issuer: OauthController.DefaultOauthIssuer,
@@ -214,7 +233,7 @@ export default class OauthController extends BaseController {
     useragent: string;
     verifyOpts?: JWTVerifyOptions;
   }) {
-    const Claims = await OauthController.verifyOauthToken({
+    const Claims = await OauthController.verifyToken({
       type: opts.type,
       token: opts.token,
       verifyOpts: opts.verifyOpts,
@@ -465,7 +484,7 @@ export default class OauthController extends BaseController {
       tokenPayload: e
         .any()
         .custom((ctx) =>
-          OauthController.verifyOauthToken<{
+          OauthController.verifyToken<{
             provider: OauthProvider;
             sessionId: string;
             userId: string;
@@ -525,7 +544,7 @@ export default class OauthController extends BaseController {
       codePayload: e
         .any()
         .custom((ctx) =>
-          OauthController.verifyOauthToken({
+          OauthController.verifyToken({
             type: OauthTokenType.CODE,
             token: ctx.parent!.output.code,
           })

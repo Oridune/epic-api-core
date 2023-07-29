@@ -1,4 +1,5 @@
 import {
+  Env,
   Controller,
   BaseController,
   Get,
@@ -26,7 +27,17 @@ export const PasswordValidator = () =>
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=?|\s])[A-Za-z\d!@#$%^&*()_\-+=?|\s]{8,}$/,
   });
 
-@Controller("/users/", { name: "users" })
+export const EmailValidator = () =>
+  e.string().matches({
+    regex: /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/,
+  });
+
+export const PhoneValidator = () =>
+  e.string().matches({
+    regex: /^\+(?:[0-9]?){6,14}[0-9]$/,
+  });
+
+@Controller("/users/", { group: "Users", name: "users" })
 export default class UsersController extends BaseController {
   static async create(user: Partial<IUser>) {
     const Session = await mongoose.startSession();
@@ -40,7 +51,11 @@ export default class UsersController extends BaseController {
         account: Account,
         isOwned: true,
         isPrimary: true,
-        role: "unverified",
+        role: ["", undefined].includes(
+          await Env.get("VERIFIED_ROLE_POLICY", true)
+        )
+          ? "user"
+          : "unverified",
       });
 
       User.collaborates = [Collaborator];
@@ -92,6 +107,8 @@ export default class UsersController extends BaseController {
       ),
       locale: e.optional(e.string()),
       tags: e.optional(e.array(e.string())),
+      email: e.optional(EmailValidator()),
+      phone: e.optional(PhoneValidator()),
     });
 
     return {

@@ -30,6 +30,7 @@ import { CustomDialog, ICustomDialogRef } from "../../../../utils/Dialog";
 export const UpdateCore =
   <D extends any>(getTokens: TGetTokens) =>
   async () => {
+    const Token = (await getTokens()?.resolveTokens())?.access.token;
     const Response = await axios.patch<{
       status: boolean;
       data: D;
@@ -41,11 +42,7 @@ export const UpdateCore =
         baseURL: import.meta.env.VITE_API_HOST,
         validateStatus: (status) => status < 500,
         headers: {
-          Authorization: `Bearer ${
-            (
-              await getTokens()?.resolveTokens()
-            )?.access.token
-          }`,
+          Authorization: Token && `Bearer ${Token}`,
         },
       }
     );

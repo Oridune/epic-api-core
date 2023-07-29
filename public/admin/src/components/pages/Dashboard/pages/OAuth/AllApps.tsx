@@ -171,6 +171,7 @@ export const FetchOAuthApps =
     limit: number;
     offset: number;
   }) => {
+    const Token = (await getTokens()?.resolveTokens())?.access.token;
     const Response = await axios.get<{
       status: boolean;
       data: D;
@@ -179,11 +180,7 @@ export const FetchOAuthApps =
       baseURL: import.meta.env.VITE_API_HOST,
       validateStatus: (status) => status < 500,
       headers: {
-        Authorization: `Bearer ${
-          (
-            await getTokens()?.resolveTokens()
-          )?.access.token
-        }`,
+        Authorization: Token && `Bearer ${Token}`,
       },
       params: {
         ...query,
@@ -200,6 +197,7 @@ export const FetchOAuthApps =
   };
 
 export const DeleteOAuthApp = (getTokens: TGetTokens) => async (id: string) => {
+  const Token = (await getTokens()?.resolveTokens())?.access.token;
   const Response = await axios.delete<{
     status: boolean;
     messages: { message: string }[];
@@ -207,11 +205,7 @@ export const DeleteOAuthApp = (getTokens: TGetTokens) => async (id: string) => {
     baseURL: import.meta.env.VITE_API_HOST,
     validateStatus: (status) => status < 500,
     headers: {
-      Authorization: `Bearer ${
-        (
-          await getTokens()?.resolveTokens()
-        )?.access.token
-      }`,
+      Authorization: Token && `Bearer ${Token}`,
     },
   });
 

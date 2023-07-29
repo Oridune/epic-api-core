@@ -22,6 +22,10 @@ export interface IUser extends mongoose.Document {
   avatar?: IFile;
   locale?: string;
   tags: string[];
+  email: string;
+  isEmailVerified: boolean;
+  phone: string;
+  isPhoneVerified: boolean;
   lastLogin: Date;
   loginCount: number;
   failedLoginAttempts: number;
@@ -45,6 +49,10 @@ export const UserSchema = new mongoose.Schema<IUser>(
     avatar: FileSchema,
     locale: String,
     tags: [String],
+    email: String,
+    isEmailVerified: { type: Boolean, default: false },
+    phone: String,
+    isPhoneVerified: { type: Boolean, default: false },
     lastLogin: Date,
     loginCount: { type: Number, default: 0 },
     failedLoginAttempts: { type: Number, default: 0 },

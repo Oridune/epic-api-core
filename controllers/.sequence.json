@@ -4,7 +4,8 @@
     "oauth.ts",
     "oauthApps.ts",
     "admin.ts",
-    "adminPlugins.ts"
+    "adminPlugins.ts",
+    "usersVerifications.ts"
   ],
   "excludes": []
 }

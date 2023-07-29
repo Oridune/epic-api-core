@@ -65,6 +65,7 @@ export const NewAppOAuthPage = () => {
     setLoading(true);
 
     try {
+      const Token = (await getTokens()?.resolveTokens())?.access.token;
       const Response = await axios.post(
         "/api/oauth/apps/",
         {
@@ -85,11 +86,7 @@ export const NewAppOAuthPage = () => {
           baseURL: import.meta.env.VITE_API_HOST,
           validateStatus: (status) => status < 500,
           headers: {
-            Authorization: `Bearer ${
-              (
-                await getTokens()?.resolveTokens()
-              )?.access.token
-            }`,
+            Authorization: Token && `Bearer ${Token}`,
           },
         }
       );
