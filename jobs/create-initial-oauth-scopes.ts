@@ -7,12 +7,23 @@ export default async () => {
   if (!(await OauthScopesModel.exists({ role: "unauthenticated" })))
     await new OauthScopesModel({
       role: "unauthenticated",
-      scopes: ["api", "oauthApps.getDefault", "users.create", "oauth"],
+      scopes: [
+        "api",
+        "oauthApps.getDefault",
+        "users.create",
+        "users.verify",
+        "users.updatePassword",
+        "oauth",
+        "usersIdentification",
+      ],
     }).save();
 
   if (!(await OauthScopesModel.exists({ role: "unverified" })))
     await new OauthScopesModel({ role: "unverified" }).save();
 
   if (!(await OauthScopesModel.exists({ role: "user" })))
-    await new OauthScopesModel({ role: "user" }).save();
+    await new OauthScopesModel({
+      role: "user",
+      scopes: ["users.delete"],
+    }).save();
 };

@@ -5,6 +5,7 @@ import {
   Response,
   Server,
   Loader,
+  Events,
 } from "@Core/common/mod.ts";
 import { APIController } from "@Core/controller.ts";
 import { Database } from "../database.ts";
@@ -14,6 +15,7 @@ import {
   RouterContext,
   Status,
 } from "oak";
+import { ApplicationListenEvent } from "oak/application.ts";
 import Logger from "oak:logger";
 import { CORS } from "oak:cors";
 import { gzip } from "oak:compress";
@@ -29,7 +31,6 @@ export const prepareAppServer = async () => {
   App.use(Logger.logger);
   App.use(Logger.responseTime);
   App.use(errorHandler());
-
   App.use(gzip());
   App.use(CORS());
   App.use(
@@ -133,14 +134,10 @@ export const prepareAppServer = async () => {
               res: ReturnedResponse,
             });
 
-          dispatchEvent(
-            new CustomEvent(`${Route.scope}.${Route.options.name}`, {
-              detail: {
-                ctx: RequestContext,
-                res: ReturnedResponse,
-              },
-            })
-          );
+          Events.dispatchRequestEvent(`${Route.scope}.${Route.options.name}`, {
+            ctx: RequestContext,
+            res: ReturnedResponse,
+          });
 
           if (
             ReturnedResponse instanceof RawResponse ||
@@ -187,6 +184,23 @@ export const startAppServer = async () => {
   return {
     app: App,
     signal: Controller.signal,
+    start: () =>
+      new Promise<ApplicationListenEvent>((resolve) => {
+        App.listen({
+          port: parseInt(Env.getSync("PORT", true) || "8080"),
+          signal: Controller.signal,
+        });
+
+        App.addEventListener("listen", (e) => {
+          console.info(
+            `${Env.getType().toUpperCase()} Server is listening on Port: ${
+              e.port
+            }`
+          );
+
+          resolve(e);
+        });
+      }),
     end: async () => {
       Controller.abort();
 

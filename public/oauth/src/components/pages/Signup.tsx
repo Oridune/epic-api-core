@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
-  Divider,
   Grid,
   Link,
   Typography,
@@ -26,7 +25,7 @@ import axios, { AxiosError } from "axios";
 import { ValidatorResolver } from "../utils/validatorResolver";
 import { useOauthApp } from "../context/OauthApp";
 
-import { Copyright } from "../misc/Copyright";
+import { ConsentFooter } from "../misc/ConsentFooter";
 
 import Logo from "../../assets/logo.svg";
 
@@ -81,6 +80,7 @@ export const SignupPage = () => {
   const HandleSignup: SubmitHandler<InferOutput<typeof SignupSchema>> = async (
     data
   ) => {
+    setErrorMessage(null);
     setLoading(true);
 
     try {
@@ -96,7 +96,7 @@ export const SignupPage = () => {
         { baseURL: import.meta.env.VITE_API_HOST }
       );
 
-      if (Response.data.status) Navigate("/login");
+      if (Response.data.status) Navigate(`/login/${window.location.search}`);
       else setErrorMessage(Response.data.messages[0].message);
     } catch (error) {
       console.error(error);
@@ -161,7 +161,7 @@ export const SignupPage = () => {
                   )}
                 </Stack>
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={6}>
                 <FormControl fullWidth variant="outlined">
                   <InputLabel htmlFor="fname">First Name</InputLabel>
                   <OutlinedInput
@@ -172,9 +172,12 @@ export const SignupPage = () => {
                     error={!!errors.fname?.message}
                     {...register("fname")}
                   />
+                  <FormHelperText error={!!errors.fname?.message}>
+                    {errors.fname?.message}
+                  </FormHelperText>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={6}>
                 <FormControl fullWidth variant="outlined">
                   <InputLabel htmlFor="lname">Last Name</InputLabel>
                   <OutlinedInput
@@ -185,15 +188,10 @@ export const SignupPage = () => {
                     error={!!errors.lname?.message}
                     {...register("lname")}
                   />
+                  <FormHelperText error={!!errors.lname?.message}>
+                    {errors.lname?.message}
+                  </FormHelperText>
                 </FormControl>
-              </Grid>
-              <Grid item sm={12}>
-                <FormHelperText
-                  sx={{ paddingX: 1 }}
-                  error={!!errors.fname?.message || !!errors.lname?.message}
-                >
-                  {errors.fname?.message ?? errors.lname?.message}
-                </FormHelperText>
               </Grid>
               <Grid item xs={12}>
                 <FormControl fullWidth variant="outlined">
@@ -206,6 +204,9 @@ export const SignupPage = () => {
                     error={!!errors.email?.message}
                     {...register("email")}
                   />
+                  <FormHelperText error={!!errors.email?.message}>
+                    {errors.email?.message}
+                  </FormHelperText>
                 </FormControl>
               </Grid>
               <Grid item xs={12}>
@@ -219,15 +220,10 @@ export const SignupPage = () => {
                     error={!!errors.username?.message}
                     {...register("username")}
                   />
+                  <FormHelperText error={!!errors.username?.message}>
+                    {errors.username?.message}
+                  </FormHelperText>
                 </FormControl>
-              </Grid>
-              <Grid item sm={12}>
-                <FormHelperText
-                  sx={{ paddingX: 1 }}
-                  error={!!errors.username?.message}
-                >
-                  {errors.username?.message}
-                </FormHelperText>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth variant="outlined">
@@ -251,6 +247,9 @@ export const SignupPage = () => {
                     error={!!errors.password?.message}
                     {...register("password")}
                   />
+                  <FormHelperText error={!!errors.password?.message}>
+                    {errors.password?.message}
+                  </FormHelperText>
                 </FormControl>
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -275,21 +274,18 @@ export const SignupPage = () => {
                     error={!!errors.confirmPassword?.message}
                     {...register("confirmPassword")}
                   />
+                  <FormHelperText error={!!errors.confirmPassword?.message}>
+                    {errors.confirmPassword?.message}
+                  </FormHelperText>
                 </FormControl>
               </Grid>
-              <Grid item sm={12}>
-                <FormHelperText
-                  sx={{ paddingX: 1 }}
-                  error={
-                    !!errors.password?.message ||
-                    !!errors.confirmPassword?.message
-                  }
-                >
-                  {errors.password?.message ?? errors.confirmPassword?.message}
-                </FormHelperText>
-              </Grid>
               <Grid item xs={12}>
-                <Button type="submit" fullWidth variant="contained">
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  disabled={Loading}
+                >
                   Sign Up
                 </Button>
               </Grid>
@@ -299,7 +295,7 @@ export const SignupPage = () => {
                 sx={{ display: "flex", justifyContent: "right" }}
               >
                 <Link
-                  href="/login"
+                  href={`/login/${window.location.search}`}
                   onClick={(e) => {
                     e.preventDefault();
                     const Path = e.currentTarget.getAttribute("href")!;
@@ -312,29 +308,7 @@ export const SignupPage = () => {
               </Grid>
             </Grid>
           </Box>
-          <Divider sx={{ width: "100%" }}>
-            <Typography variant="subtitle2" color="GrayText">
-              See also
-            </Typography>
-          </Divider>
-          <Typography color="primary" textAlign="center" sx={{ marginY: 2 }}>
-            <Link href="#" variant="body2">
-              Support
-            </Link>
-            <span style={{ margin: "0px 10px 0px 10px" }}>•</span>
-            <Link href="#" variant="body2">
-              Terms of Services
-            </Link>
-            <span style={{ margin: "0px 10px 0px 10px" }}>•</span>
-            <Link href="#" variant="body2">
-              Privacy Policy
-            </Link>
-          </Typography>
-          <Copyright
-            name={app!.name}
-            href={app!.consent.homepageURL}
-            typographyProps={{ sx: { mt: 8, mb: 4 } }}
-          />
+          <ConsentFooter />
         </Box>
       </motion.div>
     </>

@@ -162,6 +162,7 @@ export default class OauthController extends BaseController {
     const JWTSecret = new TextEncoder().encode(
       (opts.secret ?? "") + (await Env.get("ENCRYPTION_KEY"))
     );
+
     const JWTResults = await jwtVerify(opts.token, JWTSecret, {
       subject: opts.type,
       issuer: OauthController.DefaultOauthIssuer,
@@ -422,7 +423,12 @@ export default class OauthController extends BaseController {
         );
 
         const User = await UserModel.findOne(
-          { username: Credentials.username },
+          ((await Env.get("ALLOW_CROSS_APP_AUTH", true)) ?? "0") === "1"
+            ? { username: Credentials.username }
+            : {
+                oauthApp: Body.oauthAppId,
+                username: Credentials.username,
+              },
           {
             _id: 1,
             username: 1,
@@ -435,15 +441,14 @@ export default class OauthController extends BaseController {
 
         login: if (User) {
           if (User.isBlocked)
-            return Response.status(false).message("You have been blocked!");
+            return Response.status(false).message(
+              "You have been blocked! Please reset your password."
+            );
 
           // Authentication will always fail even if the password is correct, if multiple wrong attempts found!
           if (
             User.failedLoginAttempts > 5 ||
-            !(await bcrypt.compare(
-              Credentials.username + Credentials.password,
-              User.password
-            ))
+            !(await bcrypt.compare(Credentials.password, User.password))
           )
             break login;
 
@@ -468,7 +473,7 @@ export default class OauthController extends BaseController {
 
         await UserModel.updateOne(
           { username: Credentials.username },
-          { $inc: { failedLoginAttempts: 1 } }
+          { $inc: { failedLoginAttempts: 1, deletionAt: null } }
         );
 
         e.error("Invalid username or password!");
@@ -498,9 +503,21 @@ export default class OauthController extends BaseController {
           })
         )
         .throwsFatal(),
-      scopes: e.record(
-        e.array(e.string().matches(/\w+(\.\w+)*|^\*$/), { cast: true })
-      ),
+      scopes: e
+        .record(e.array(e.string().matches(/\w+(\.\w+)*|^\*$/), { cast: true }))
+        .custom(async (ctx) => {
+          await Promise.all(
+            Object.keys(ctx.output).map(async (account) => {
+              if (
+                !(await CollaboratorModel.exists({
+                  account,
+                  createdFor: ctx.parent?.output.tokenPayload.userId ?? "",
+                }))
+              )
+                throw "Invalid account id in the scope!";
+            })
+          );
+        }),
     });
 
     return {

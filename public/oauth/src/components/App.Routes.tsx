@@ -7,6 +7,7 @@ import {
 import { LoginPage } from "./pages/Login";
 import { ScopesPage } from "./pages/Scopes";
 import { SignupPage } from "./pages/Signup";
+import { ForgotPage } from "./pages/Forgot";
 import { NotFoundPage } from "./pages/NotFound";
 
 export const AppRoutes = () => {
@@ -16,7 +17,7 @@ export const AppRoutes = () => {
         [
           {
             path: "/",
-            element: <Navigate to="/login" />,
+            element: <Navigate to={`/login/${window.location.search}`} />,
           },
           {
             path: "/login",
@@ -29,6 +30,10 @@ export const AppRoutes = () => {
           {
             path: "/signup",
             element: <SignupPage />,
+          },
+          {
+            path: "/forgot",
+            element: <ForgotPage />,
           },
           {
             path: "*",

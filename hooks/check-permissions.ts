@@ -1,5 +1,5 @@
 import { type IRequestContext } from "@Core/common/mod.ts";
-import { type RouterContext, createHttpError, Status } from "oak";
+import { type RouterContext, Status } from "oak";
 import e from "validator";
 
 import { CollaboratorModel } from "@Models/collaborator.ts";
@@ -66,19 +66,19 @@ export default {
 
       if (!Collaborator) e.error("You don't have access to this account!");
 
-      const Scopes = await OauthScopesModel.findOne(
+      const OauthScopes = await OauthScopesModel.findOne(
         { role: Collaborator!.role },
         { scopes: 1 }
       );
 
-      if (!Scopes)
+      if (!OauthScopes)
         e.error(
           `Unable to fetch the available scopes for the role '${
             Collaborator!.role
           }'!`
         );
 
-      AvailableScopes = Scopes?.scopes ?? [];
+      AvailableScopes = OauthScopes?.scopes ?? [];
 
       ctx.router.state.auth = {
         userId: SessionInfo.session.createdBy,
@@ -87,27 +87,51 @@ export default {
       };
     } else {
       const UnauthenticatedRole = "unauthenticated";
-      const Scopes = await OauthScopesModel.findOne(
+      const OauthScopes = await OauthScopesModel.findOne(
         { role: UnauthenticatedRole },
         { scopes: 1 }
       );
 
-      if (!Scopes)
+      if (!OauthScopes)
         e.error(
           `Unable to fetch the available scopes for the role '${UnauthenticatedRole}'!`
         );
 
-      AvailableScopes = Scopes?.scopes ?? [];
+      AvailableScopes = OauthScopes?.scopes ?? [];
       RequestedScopes = ["*"];
     }
 
+    const NormalizedAvailableScopes = await AvailableScopes.reduce(
+      async (scopes, scope) => {
+        const Scopes = await scopes;
+        const Match = scope.match(/^role:(.*)/);
+
+        if (Match) {
+          const OauthScopes = await OauthScopesModel.findOne(
+            { role: Match[1] },
+            { scopes: 1 }
+          );
+
+          if (!OauthScopes)
+            e.error(
+              `Unable to fetch the available scopes for the role '${Match[1]}'!`
+            );
+
+          return [...Scopes, ...(OauthScopes?.scopes ?? [])];
+        }
+
+        return [...Scopes, scope];
+      },
+      Promise.resolve<string[]>([])
+    );
+
     ctx.router.state.guard = new SecurityGuard(
-      AvailableScopes,
+      NormalizedAvailableScopes,
       RequestedScopes
     );
 
     if (!ctx.router.state.guard.isPermitted(scope, name))
-      throw createHttpError(
+      ctx.router.throw(
         Status.Unauthorized,
         `You are not permitted! Missing permission '${`${scope}.${name}`}'.`
       );

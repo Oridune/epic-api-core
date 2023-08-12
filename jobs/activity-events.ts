@@ -1,31 +1,26 @@
 import { RouterContext } from "oak";
-import { Env, IRequestContext, Response } from "@Core/common/mod.ts";
+import {
+  Env,
+  EnvType,
+  Events,
+  EventChannel,
+  IRequestContext,
+  Response,
+} from "@Core/common/mod.ts";
 import { Novu } from "novu";
 import { UserModel } from "@Models/user.ts";
+import e from "validator";
 
 export default () => {
-  addEventListener("oauth.authenticate", (e) => {
-    const Evt = e as CustomEvent<{
-      ctx: IRequestContext<RouterContext<string>>;
-      res: Response;
-    }>;
-
-    console.log(
-      "Authenticated!",
-      Evt.detail.res,
-      Evt.detail.ctx.router.request.headers.get("user-agent")
-    );
-  });
-
-  addEventListener("users.create", async (e) => {
-    const Evt = e as CustomEvent<{
-      ctx: IRequestContext<RouterContext<string>>;
-      res: Response;
-    }>;
+  Events.listen<{
+    ctx: IRequestContext<RouterContext<string>>;
+    res: Response;
+  }>(EventChannel.REQUEST, "users.create", async (event) => {
+    if (Env.is(EnvType.TEST)) return;
 
     const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
 
-    const Data = Evt.detail.res.getBody();
+    const Data = event.detail.res.getBody();
 
     if (Data.status)
       await Notifier.subscribers.identify(Data.data._id, {
@@ -38,25 +33,41 @@ export default () => {
       });
   });
 
-  addEventListener("usersVerifications.verify", async (e) => {
-    const Evt = e as CustomEvent<{
-      ctx: IRequestContext<RouterContext<string>>;
-      res: Response;
-    }>;
-
-    const Data = Evt.detail.res.getBody();
+  Events.listen<{
+    ctx: IRequestContext<RouterContext<string>>;
+    res: Response;
+  }>(EventChannel.REQUEST, "users.verify", async (event) => {
+    const Data = event.detail.res.getBody();
 
     if (Data.status) {
+      const VerificationTokenPayload = await e
+        .object(
+          {
+            method: e.string(),
+            userId: e.string(),
+          },
+          { allowUnexpectedProps: true }
+        )
+        .validate(event.detail.ctx.router.state.verifyTokenPayload);
+
       const User = await UserModel.findOne(
-        { _id: Evt.detail.ctx.router.state.auth!.userId },
+        { _id: VerificationTokenPayload.userId },
         {
           isEmailVerified: 1,
           isPhoneVerified: 1,
           collaborates: 1,
+        },
+        {
+          new: true,
         }
       ).populate(["collaborates"]);
 
       if (User) {
+        if (!User.collaborates.length)
+          throw new Error(
+            "A user that was verified, exists but is not connected to an account!"
+          );
+
         const Collaborator = User.collaborates.find(
           (collaborator) => collaborator.isOwned && collaborator.isPrimary
         );
@@ -83,7 +94,7 @@ export default () => {
             await Collaborator.save();
           }
         }
-      }
+      } else throw new Error(`A user that was just verified, not found!`);
     }
   });
 };

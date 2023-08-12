@@ -7,8 +7,11 @@ export const respondWith = (
   ctx: Context<Record<string, any>, Record<string, any>>,
   response: Response | RawResponse
 ) => {
+  // Append headers
+  response.getHeaders().forEach((v, k) => ctx.response.headers.append(k, v));
+
+  // Set status code & body
   ctx.response.status = response.getStatusCode();
-  ctx.response.headers = response.getHeaders();
   ctx.response.body = response.getBody();
 };
 
@@ -40,5 +43,11 @@ export const errorHandler =
       );
 
       respondWith(ctx, ResponseObject);
+
+      if (!Env.is(EnvType.PRODUCTION))
+        console.error(
+          `${ctx.request.method.toUpperCase()}: ${ctx.request.url.pathname}`,
+          error
+        );
     }
   };

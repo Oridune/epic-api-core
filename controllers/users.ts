@@ -2,19 +2,27 @@ import {
   Env,
   Controller,
   BaseController,
-  Get,
   Post,
+  Put,
+  Delete,
   Response,
   type IRequestContext,
+  Versioned,
 } from "@Core/common/mod.ts";
 import { Status, type RouterContext } from "oak";
 import e from "validator";
+import * as bcrypt from "bcrypt";
 import mongoose from "mongoose";
 
 import { Gender, IUser, UserModel } from "@Models/user.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { AccountModel } from "@Models/account.ts";
 import { IOauthApp, OauthAppModel } from "@Models/oauth-app.ts";
+import {
+  IdentificationMethod,
+  IdentificationPurpose,
+} from "@Controllers/usersIdentification.ts";
+import OauthController from "@Controllers/oauth.ts";
 
 export const UsernameValidator = () =>
   e.string().matches({
@@ -75,6 +83,38 @@ export default class UsersController extends BaseController {
     }
   }
 
+  static async verify(method: IdentificationMethod, userId: string) {
+    switch (method) {
+      case IdentificationMethod.EMAIL:
+        await UserModel.updateOne({ _id: userId }, { isEmailVerified: true });
+        break;
+
+      case IdentificationMethod.PHONE:
+        await UserModel.updateOne({ _id: userId }, { isPhoneVerified: true });
+        break;
+
+      default:
+        throw new Error(`Invalid identification method for verification!`);
+    }
+  }
+
+  static async scheduleDeletion(
+    userId: string,
+    options?: { timeoutMs?: number }
+  ) {
+    await UserModel.updateOne(
+      { _id: userId },
+      {
+        deletionAt:
+          Date.now() +
+          (options?.timeoutMs ??
+            parseFloat(
+              (await Env.get("USER_DELETION_TIMEOUT_MS", true)) ?? "1.296e+9" // Deletion in 15 days default
+            )),
+      }
+    );
+  }
+
   @Post("/:oauthAppId/")
   public create() {
     // Define Params Schema
@@ -98,9 +138,10 @@ export default class UsersController extends BaseController {
       lname: e.optional(e.string()),
       username: UsernameValidator().custom(async (ctx) => {
         if (await UserModel.exists({ username: ctx.output }))
-          throw "User already exists!";
+          throw "Username is already taken!";
       }),
-      password: PasswordValidator(),
+      password: PasswordValidator().custom((ctx) => bcrypt.hash(ctx.output)),
+      passwordHistory: e.any().custom((ctx) => [ctx.parent!.output.password]),
       gender: e.optional(e.in(Object.values(Gender))),
       dob: e.optional(
         e.number({ cast: true }).custom((ctx) => new Date(ctx.output))
@@ -136,6 +177,7 @@ export default class UsersController extends BaseController {
         const User = await UsersController.create(Body);
 
         User.set("password", undefined);
+        User.set("passwordHistory", undefined);
         User.set("oauthApp", undefined);
         User.set("collaborates", undefined);
 
@@ -144,41 +186,135 @@ export default class UsersController extends BaseController {
     };
   }
 
-  @Get("/:oauthAppId/")
-  public list() {
-    // Define Query Schema
-    const QuerySchema = e.object({}, { allowUnexpectedProps: true });
+  @Put("/password/")
+  public updatePassword() {
+    // Define Body Schema
+    const BodySchema = e.object({
+      method: e.in(Object.values(IdentificationMethod)),
+      token: e.string(),
+      code: e.number({ cast: true }).length(6),
+      password: PasswordValidator(),
+      hashedPassword: e
+        .any()
+        .custom((ctx) => bcrypt.hash(ctx.parent?.output.password)),
+    });
 
-    // Define Params Schema
-    const ParamsSchema = e.object({});
-
-    return {
+    return new Versioned().add("1.0.0", {
       postman: {
-        query: QuerySchema.toSample().data,
-        params: ParamsSchema.toSample().data,
+        body: BodySchema.toSample().data,
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: "usersRecoveries.body" }
+        );
+
+        const Payload = await OauthController.verifyToken<{
+          method: IdentificationMethod;
+          userId: string;
+        }>({
+          type:
+            Body.method + "_identification_" + IdentificationPurpose.RECOVERY,
+          token: Body.token,
+          secret: Body.code.toString(),
+        }).catch(e.error);
+
+        const User = await UserModel.findOne(
+          { _id: Payload.userId },
+          { passwordHistory: 1 }
+        );
+
+        if (!User) e.error(`User not found!`);
+
+        if (
+          User!.passwordHistory?.some((hashedPassword) =>
+            bcrypt.compareSync(Body.password, hashedPassword)
+          )
+        )
+          e.error(`Cannot use an old password!`);
+
+        await UserModel.updateOne(
+          { _id: Payload.userId },
+          {
+            password: Body.hashedPassword,
+            $push: { passwordHistory: Body.hashedPassword },
+            isBlocked: false,
+          }
+        );
+
+        return Response.true();
+      },
+    });
+  }
+
+  @Post("/verify/")
+  public verify() {
+    // Define Body Schema
+    const BodySchema = e.object({
+      method: e.in(Object.values(IdentificationMethod)),
+      token: e.string(),
+      code: e.number({ cast: true }).length(6),
+    });
+
+    return new Versioned().add("1.0.0", {
+      postman: {
+        body: BodySchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: "usersVerifications.body" }
+        );
+
+        const Payload = (ctx.router.state.verifyTokenPayload =
+          await OauthController.verifyToken<{
+            method: IdentificationMethod;
+            userId: string;
+          }>({
+            type:
+              Body.method +
+              "_identification_" +
+              IdentificationPurpose.VERIFICATION,
+            token: Body.token,
+            secret: Body.code.toString(),
+          }).catch(e.error));
+
+        await UsersController.verify(Payload.method, Payload.userId);
+
+        return Response.true();
+      },
+    });
+  }
+
+  @Delete("/")
+  public delete() {
+    // Define Query Schema
+    const QuerySchema = e.object(
+      { deletionTimeoutMs: e.optional(e.number({ cast: true })) },
+      { allowUnexpectedProps: true }
+    );
+
+    return Versioned.add("1.0.0", {
+      postman: {
+        query: QuerySchema.toSample().data,
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
         // Query Validation
         const Query = await QuerySchema.validate(
           Object.fromEntries(ctx.router.request.url.searchParams),
-          { name: "users.query" }
+          { name: "$_nameCamel.query" }
         );
 
-        /**
-         * It is recommended to keep the following validators in place even if you don't want to validate any data.
-         * It will prevent the client from injecting unexpected data into the request.
-         *
-         * */
-
-        // Params Validation
-        const Params = await ParamsSchema.validate(ctx.router.params, {
-          name: "users.params",
+        await UsersController.scheduleDeletion(ctx.router.state.auth.userId, {
+          timeoutMs: Query.deletionTimeoutMs,
         });
 
-        // Start coding here...
-
-        return Response.status(true);
+        return Response.true();
       },
-    };
+    });
   }
 }

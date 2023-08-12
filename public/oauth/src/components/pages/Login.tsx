@@ -4,13 +4,11 @@ import {
   Box,
   Button,
   Checkbox,
-  Divider,
   FormControlLabel,
   Grid,
   Link,
   Typography,
   IconButton,
-  Tooltip,
   FormControl,
   FormHelperText,
   InputLabel,
@@ -29,7 +27,7 @@ import axios, { AxiosError } from "axios";
 import { ValidatorResolver } from "../utils/validatorResolver";
 import { useOauthApp } from "../context/OauthApp";
 
-import { Copyright } from "../misc/Copyright";
+import { ConsentFooter } from "../misc/ConsentFooter";
 
 import Logo from "../../assets/logo.svg";
 // import Google from "../../assets/google.png";
@@ -52,7 +50,9 @@ export const LoginSchema = e.object({
       },
     })
     .length({ min: 1, max: 300 }),
-  remember: e.or([e.string(), e.boolean()]).custom((ctx) => !!ctx.output),
+  remember: e
+    .optional(e.or([e.string(), e.boolean()]).custom((ctx) => !!ctx.output))
+    .default(false),
 });
 
 export const LoginPage = () => {
@@ -62,6 +62,9 @@ export const LoginPage = () => {
   const CodeChallenge = Params.get("codeChallenge");
   const CodeChallengeMethod = Params.get("codeChallengeMethod");
   const CallbackURL = Params.get("callbackURL");
+  const Remember = Params.has("remember")
+    ? Params.get("remember") === "true"
+    : undefined;
 
   const { app } = useOauthApp();
 
@@ -80,6 +83,7 @@ export const LoginPage = () => {
   const HandleLogin: SubmitHandler<InferOutput<typeof LoginSchema>> = async (
     data
   ) => {
+    setErrorMessage(null);
     setLoading(true);
 
     try {
@@ -91,7 +95,7 @@ export const LoginPage = () => {
           codeChallengeMethod: CodeChallengeMethod ?? undefined,
           callbackURL:
             CallbackURL ?? app!.consent.allowedCallbackURLs[0] ?? undefined,
-          remember: data.remember,
+          remember: Remember ?? data.remember,
         },
         {
           baseURL: import.meta.env.VITE_API_HOST,
@@ -295,7 +299,7 @@ export const LoginPage = () => {
                 sx={{ display: "flex", justifyContent: "right" }}
               >
                 <Link
-                  href="/forgot-password"
+                  href={`/forgot/${window.location.search}`}
                   onClick={(e) => {
                     e.preventDefault();
                     Navigate(e.currentTarget.getAttribute("href")!);
@@ -332,20 +336,27 @@ export const LoginPage = () => {
                   </FormHelperText>
                 </FormControl>
               </Grid>
+              {typeof Remember === "undefined" && (
+                <Grid item xs={12}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        value="remember"
+                        color="primary"
+                        {...register("remember")}
+                      />
+                    }
+                    label="Remember me"
+                  />
+                </Grid>
+              )}
               <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      value="remember"
-                      color="primary"
-                      {...register("remember")}
-                    />
-                  }
-                  label="Remember me"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Button type="submit" fullWidth variant="contained">
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  disabled={Loading}
+                >
                   Sign In
                 </Button>
               </Grid>
@@ -355,7 +366,7 @@ export const LoginPage = () => {
                 sx={{ display: "flex", justifyContent: "right" }}
               >
                 <Link
-                  href="/signup"
+                  href={`/signup/${window.location.search}`}
                   onClick={(e) => {
                     e.preventDefault();
                     const Path = e.currentTarget.getAttribute("href")!;
@@ -368,29 +379,7 @@ export const LoginPage = () => {
               </Grid>
             </Grid>
           </Box>
-          <Divider sx={{ width: "100%" }}>
-            <Typography variant="subtitle2" color="GrayText">
-              See also
-            </Typography>
-          </Divider>
-          <Typography color="primary" textAlign="center" sx={{ marginY: 2 }}>
-            <Link href="#" variant="body2">
-              Support
-            </Link>
-            <span style={{ margin: "0px 10px 0px 10px" }}>•</span>
-            <Link href="#" variant="body2">
-              Terms of Services
-            </Link>
-            <span style={{ margin: "0px 10px 0px 10px" }}>•</span>
-            <Link href="#" variant="body2">
-              Privacy Policy
-            </Link>
-          </Typography>
-          <Copyright
-            name={app!.name}
-            href={app!.consent.homepageURL}
-            typographyProps={{ sx: { mt: 8, mb: 4 } }}
-          />
+          <ConsentFooter />
         </Box>
       </motion.div>
     </>

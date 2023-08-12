@@ -74,7 +74,10 @@ export const OAuthProvider: React.FC<IOAuthProviderProps> = (props) => {
             { baseURL: import.meta.env.VITE_API_HOST }
           );
 
-          if (Response.data.status) SetTokens(Response.data.data);
+          if (Response.data.status) {
+            localStorage.removeItem("codeChallengeVerifier");
+            SetTokens(Response.data.data);
+          }
         } catch (error) {
           setErrorObject(error as Error);
           setIsError(true);
