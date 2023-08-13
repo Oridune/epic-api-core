@@ -55,7 +55,7 @@ export default class OauthAppsController extends BaseController {
 
     return {
       postman: {
-        body: BodySchema.toSample().data,
+        body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
@@ -85,7 +85,7 @@ export default class OauthAppsController extends BaseController {
 
     return {
       postman: {
-        query: QuerySchema.toSample().data,
+        query: QuerySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
@@ -143,7 +143,7 @@ export default class OauthAppsController extends BaseController {
 
     return {
       postman: {
-        params: ParamsSchema.toSample().data,
+        params: ParamsSchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
@@ -174,7 +174,7 @@ export default class OauthAppsController extends BaseController {
 
     return {
       postman: {
-        params: ParamsSchema.toSample().data,
+        params: ParamsSchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation

@@ -403,7 +403,7 @@ export default class OauthController extends BaseController {
 
     return {
       postman: {
-        body: BodySchema.toSample().data,
+        body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Authorization Validation
@@ -522,7 +522,7 @@ export default class OauthController extends BaseController {
 
     return {
       postman: {
-        body: BodySchema.toSample().data,
+        body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
@@ -577,7 +577,7 @@ export default class OauthController extends BaseController {
 
     return {
       postman: {
-        body: BodySchema.toSample().data,
+        body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
@@ -635,7 +635,7 @@ export default class OauthController extends BaseController {
 
     return {
       postman: {
-        body: BodySchema.toSample().data,
+        body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation

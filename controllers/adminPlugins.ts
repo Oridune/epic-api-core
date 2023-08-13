@@ -36,7 +36,7 @@ export default class AdminPluginsController extends BaseController {
 
     return {
       postman: {
-        body: BodySchema.toSample().data,
+        body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (Env.is(EnvType.PRODUCTION))
@@ -63,7 +63,7 @@ export default class AdminPluginsController extends BaseController {
 
     return {
       postman: {
-        body: BodySchema.toSample().data,
+        body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (Env.is(EnvType.PRODUCTION))
@@ -92,7 +92,7 @@ export default class AdminPluginsController extends BaseController {
 
     return {
       postman: {
-        params: ParamsSchema.toSample().data,
+        params: ParamsSchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (Env.is(EnvType.PRODUCTION))

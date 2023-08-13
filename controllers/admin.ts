@@ -22,7 +22,7 @@ export default class AdminController extends BaseController {
 
     return {
       postman: {
-        body: BodySchema.toSample().data,
+        body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (Env.is(EnvType.PRODUCTION))

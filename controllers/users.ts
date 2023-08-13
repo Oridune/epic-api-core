@@ -143,9 +143,7 @@ export default class UsersController extends BaseController {
       password: PasswordValidator().custom((ctx) => bcrypt.hash(ctx.output)),
       passwordHistory: e.any().custom((ctx) => [ctx.parent!.output.password]),
       gender: e.optional(e.in(Object.values(Gender))),
-      dob: e.optional(
-        e.number({ cast: true }).custom((ctx) => new Date(ctx.output))
-      ),
+      dob: e.optional(e.date()),
       locale: e.optional(e.string()),
       tags: e.optional(e.array(e.string())),
       email: e.optional(EmailValidator()),
@@ -154,8 +152,8 @@ export default class UsersController extends BaseController {
 
     return {
       postman: {
-        params: ParamsSchema.toSample().data,
-        body: BodySchema.toSample().data,
+        params: ParamsSchema.toSample(),
+        body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
@@ -201,7 +199,7 @@ export default class UsersController extends BaseController {
 
     return new Versioned().add("1.0.0", {
       postman: {
-        body: BodySchema.toSample().data,
+        body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
@@ -259,7 +257,7 @@ export default class UsersController extends BaseController {
 
     return new Versioned().add("1.0.0", {
       postman: {
-        body: BodySchema.toSample().data,
+        body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
@@ -298,7 +296,7 @@ export default class UsersController extends BaseController {
 
     return Versioned.add("1.0.0", {
       postman: {
-        query: QuerySchema.toSample().data,
+        query: QuerySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);

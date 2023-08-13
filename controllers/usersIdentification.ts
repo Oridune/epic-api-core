@@ -88,7 +88,7 @@ export default class UsersIdentificationController extends BaseController {
 
     return new Versioned().add("1.0.0", {
       postman: {
-        params: ParamsSchema.toSample().data,
+        params: ParamsSchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
@@ -136,7 +136,7 @@ export default class UsersIdentificationController extends BaseController {
 
     return new Versioned().add("1.0.0", {
       postman: {
-        params: ParamsSchema.toSample().data,
+        params: ParamsSchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
