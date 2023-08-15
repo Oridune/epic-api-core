@@ -3,7 +3,7 @@
     "activity-events.ts",
     "create-initial-oauth-scopes.ts",
     "env-resolver.ts",
-    "schedules.ts"
+    "delete-users.ts"
   ],
   "excludes": []
 }

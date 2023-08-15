@@ -454,6 +454,7 @@ export default class OauthController extends BaseController {
 
           User.failedLoginAttempts = 0;
           User.loginCount += 1;
+          User.deletionAt = null;
 
           await User.save();
 
@@ -473,7 +474,7 @@ export default class OauthController extends BaseController {
 
         await UserModel.updateOne(
           { username: Credentials.username },
-          { $inc: { failedLoginAttempts: 1, deletionAt: null } }
+          { $inc: { failedLoginAttempts: 1 } }
         );
 
         e.error("Invalid username or password!");

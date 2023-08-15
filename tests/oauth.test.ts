@@ -1,5 +1,5 @@
 import { Loader } from "@Core/common/mod.ts";
-import { startAppServer } from "@Core/server.ts";
+import { createAppServer } from "@Core/server.ts";
 import { expect } from "expect";
 import e, { inferOutput } from "validator";
 
@@ -130,7 +130,7 @@ Deno.test({
   async fn(t) {
     await Loader.load({ excludeTypes: ["templates"] });
 
-    const { start, end } = await startAppServer();
+    const { start, end, restart } = await createAppServer();
 
     const { port } = await start();
 
@@ -507,16 +507,44 @@ Deno.test({
 
       await Promise.all(
         TestUsers.map(async (_, index) => {
-          const Response = await fetch(new URL("/api/users/", APIHost), {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${
-                Context.oauthExchangeCode![index].data.access.token
-              }`,
-            },
-          });
+          const Response = await fetch(
+            new URL("/api/users/?deletionTimeoutMs=1000", APIHost),
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${
+                  Context.oauthExchangeCode![index].data.access.token
+                }`,
+              },
+            }
+          );
 
           expect(Response.status).toBe(200);
+        })
+      );
+    });
+
+    await new Promise((_) => setTimeout(_, 3000));
+
+    await restart();
+
+    await t.step("POST /api/oauth/local/ Authenticate", async () => {
+      await Promise.all(
+        TestUsers.map(async (user) => {
+          const Response = await fetch(new URL("/api/oauth/local/", APIHost), {
+            method: "POST",
+            headers: {
+              Authorization:
+                "Basic " + btoa(`${user[0].username}:${user[1].password}`),
+            },
+            body: JSON.stringify({
+              oauthAppId: Context.defaultOauthApp!.data._id,
+              callbackURL:
+                Context.defaultOauthApp!.data.consent.allowedCallbackURLs[0],
+            }),
+          });
+
+          expect(Response.status).toBe(400);
         })
       );
     });

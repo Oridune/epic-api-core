@@ -45,7 +45,7 @@ export const UserSchema = new mongoose.Schema<IUser>(
     lname: String,
     username: { type: String, required: true, index: { unique: true } },
     password: { type: String, required: true, select: false },
-    passwordHistory: [{ type: String }],
+    passwordHistory: [{ type: String, select: false }],
     gender: { type: String, enum: Gender },
     dob: Date,
     avatar: FileSchema,
