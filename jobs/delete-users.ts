@@ -14,9 +14,11 @@ PermanentlyDeleteUsers.add(async (_, next) => {
     const Users = await UserModel.find(
       { deletionAt: { $lt: new Date() } },
       { deletionAt: 0 }
-    ).catch(() => {
-      // Do nothing...
-    });
+    )
+      .session(Session)
+      .catch(() => {
+        // Do nothing...
+      });
 
     if (Users?.length) {
       Session.startTransaction();
