@@ -10,6 +10,7 @@ export default async () => {
       scopes: [
         "api",
         "oauthApps.getDefault",
+        "oauthApps.get",
         "users.create",
         "users.verify",
         "users.updatePassword",

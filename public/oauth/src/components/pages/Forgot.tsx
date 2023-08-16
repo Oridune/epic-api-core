@@ -334,7 +334,7 @@ export const ForgotPage = () => {
                   <Grid item xs={12}>
                     <FormControl>
                       <FormLabel id="recovery-method-label">
-                        How would you like to get your security code?
+                        How would you like to get the security code?
                       </FormLabel>
                       <RadioGroup
                         aria-labelledby="recovery-method-label"

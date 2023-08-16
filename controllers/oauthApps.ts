@@ -24,7 +24,7 @@ export default class OauthAppsController extends BaseController {
     // Define Body Schema
     const BodySchema = e.object({
       name: e.string().length({ min: 2, max: 50 }),
-      description: e.optional(e.string().length(300)),
+      description: e.optional(e.string().length({ min: 30, max: 300 })),
       consent: e.object({
         logo: e.optional(
           e.object({
@@ -111,8 +111,8 @@ export default class OauthAppsController extends BaseController {
           })) ??
           (await new OauthAppModel({
             _id: OauthAppsController.DefaultOauthAppID,
-            name: await Env.get("DISPLAY_NAME"),
-            description: "The default oauth application.",
+            name: `${await Env.get("DISPLAY_NAME")} (By Oridune)`,
+            description: "The default OAuth application.",
             enabled: true,
             consent: {
               primaryColor: "#e85d04",
