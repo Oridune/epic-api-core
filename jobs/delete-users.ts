@@ -47,7 +47,7 @@ export const permanentlyDeleteUsers = async () => {
         _id: { $in: CollaboratorIDs },
       }).session(Session);
 
-      Events.dispatch("user-deleted", {
+      Events.dispatch("users-deleted", {
         detail: {
           users: Users,
           collaborations: Collaborations,
