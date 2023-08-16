@@ -1,11 +1,13 @@
 import mongoose from "mongoose";
-import { Events } from "@Core/common/events.ts";
+import { Transaction } from "@Core/common/mod.ts";
 import { UserModel } from "@Models/user.ts";
 import { AccountModel } from "@Models/account.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { daily } from "cron";
 
-export const permanentlyDeleteUsers = async () => {
+export const PermanentlyDeleteUsers = new Transaction();
+
+PermanentlyDeleteUsers.add(async (_, next) => {
   const Session = await mongoose.startSession();
 
   try {
@@ -47,28 +49,26 @@ export const permanentlyDeleteUsers = async () => {
         _id: { $in: CollaboratorIDs },
       }).session(Session);
 
-      Events.dispatch("users-deleted", {
-        detail: {
-          users: Users,
-          collaborations: Collaborations,
-          accounts: Accounts,
-        },
+      await next({
+        users: Users,
+        collaborations: Collaborations,
+        accounts: Accounts,
       });
 
       await Session.commitTransaction();
     }
   } catch (error) {
-    console.error(error);
     await Session.abortTransaction();
+    console.error(error);
   } finally {
     await Session.endSession();
   }
-};
+});
 
 export default async () => {
   // Delete scheduled users on start
-  await permanentlyDeleteUsers();
+  await PermanentlyDeleteUsers.exec();
 
   // Delete every day...
-  daily(permanentlyDeleteUsers);
+  daily(PermanentlyDeleteUsers.exec);
 };
