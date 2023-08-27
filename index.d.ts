@@ -2,15 +2,33 @@
 import "ts-reset";
 import "@Core/common/controller/base.ts";
 import { IValidatorJSONSchema } from "validator";
+import { SecurityGuard } from "@Lib/security-guard.ts";
+
+type SessionInfo = {
+  claims: {
+    sessionId: string;
+    version: number;
+    refreshable: boolean;
+  };
+  session: {
+    scopes: Record<string, Array<string>>;
+    createdBy: string;
+  };
+};
+
+type Authorization = {
+  sessionId: string;
+  userId: string;
+  accountId: string;
+  role: string;
+};
 
 declare module "@Core/common/controller/base.ts" {
   interface IRouterContextExtendor {
     state: {
-      auth?: {
-        userId: string;
-        accountId: string;
-        role: string;
-      };
+      sessionInfo?: SessionInfo;
+      auth?: Authorization;
+      guard: SecurityGuard;
     };
   }
 

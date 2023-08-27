@@ -205,7 +205,7 @@ export default class UsersController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: "usersRecoveries.body" }
+          { name: "users.body" }
         );
 
         const Payload = await OauthController.verifyToken<{
@@ -263,7 +263,7 @@ export default class UsersController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: "usersVerifications.body" }
+          { name: "users.body" }
         );
 
         const Payload = (ctx.router.state.verifyTokenPayload =
@@ -304,7 +304,7 @@ export default class UsersController extends BaseController {
         // Query Validation
         const Query = await QuerySchema.validate(
           Object.fromEntries(ctx.router.request.url.searchParams),
-          { name: "$_nameCamel.query" }
+          { name: "users.query" }
         );
 
         await UsersController.scheduleDeletion(ctx.router.state.auth.userId, {

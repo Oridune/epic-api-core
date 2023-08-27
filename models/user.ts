@@ -51,9 +51,21 @@ export const UserSchema = new mongoose.Schema<IUser>(
     avatar: FileSchema,
     locale: String,
     tags: [String],
-    email: { type: String, index: { unique: true } },
+    email: {
+      type: String,
+      index: {
+        unique: true,
+        partialFilterExpression: { phone: { $exists: true } },
+      },
+    },
     isEmailVerified: { type: Boolean, default: false },
-    phone: { type: String, index: { unique: true } },
+    phone: {
+      type: String,
+      index: {
+        unique: true,
+        partialFilterExpression: { phone: { $exists: true } },
+      },
+    },
     isPhoneVerified: { type: Boolean, default: false },
     lastLogin: Date,
     loginCount: { type: Number, default: 0 },
@@ -66,6 +78,7 @@ export const UserSchema = new mongoose.Schema<IUser>(
   { timestamps: true, versionKey: false }
 );
 
+//! This code doesn't seem to work!
 UserSchema.post("init", function () {
   if (this.deletionAt instanceof Date)
     // Throw an error if the user is deleted

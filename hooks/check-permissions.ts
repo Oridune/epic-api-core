@@ -81,6 +81,7 @@ export default {
       AvailableScopes = OauthScopes?.scopes ?? [];
 
       ctx.router.state.auth = {
+        sessionId: SessionInfo.claims.sessionId,
         userId: SessionInfo.session.createdBy,
         accountId: AccountId,
         role: Collaborator!.role,

@@ -8,25 +8,6 @@
       "name": "api",
       "item": [
         {
-          "name": "home",
-          "request": {
-            "url": {
-              "raw": "{{host}}/api",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "api"
-              ],
-              "query": [],
-              "variable": []
-            },
-            "method": "GET",
-            "header": []
-          },
-          "response": []
-        },
-        {
           "name": "test",
           "request": {
             "url": {
@@ -45,6 +26,25 @@
             "header": []
           },
           "response": []
+        },
+        {
+          "name": "home",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
         }
       ]
     },
@@ -54,6 +54,92 @@
         {
           "name": "users",
           "item": [
+            {
+              "name": "updatePassword",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/users/password",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "password"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"method\": \"email|phone\",\n  \"token\": \"\",\n  \"code\": 100000,\n  \"password\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "verify",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/users/verify",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "verify"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"method\": \"email|phone\",\n  \"token\": \"\",\n  \"code\": 100000\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/users?deletionTimeoutMs=1",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "deletionTimeoutMs",
+                      "value": 1,
+                      "description": "(Optional)"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "DELETE",
+                "header": []
+              },
+              "response": []
+            },
             {
               "name": "create",
               "request": {
@@ -71,10 +157,12 @@
                   "variable": [
                     {
                       "key": "oauthAppId",
-                      "value": ""
+                      "value": "",
+                      "description": ""
                     },
                     {
-                      "key": "oauthApp"
+                      "key": "oauthApp",
+                      "description": ""
                     }
                   ]
                 },
@@ -82,91 +170,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"username\": \"\",\n  \"password\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": 2,\n  \"locale\": \"\",\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "list",
-              "request": {
-                "url": {
-                  "raw": "{{host}}/api/users/:oauthAppId",
-                  "host": [
-                    "{{host}}"
-                  ],
-                  "path": [
-                    "api",
-                    "users",
-                    ":oauthAppId"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "method": "GET",
-                "header": []
-              },
-              "response": []
-            }
-          ]
-        },
-        {
-          "name": "usersVerifications",
-          "item": [
-            {
-              "name": "request",
-              "request": {
-                "url": {
-                  "raw": "{{host}}/api/users/verifications/:type",
-                  "host": [
-                    "{{host}}"
-                  ],
-                  "path": [
-                    "api",
-                    "users",
-                    "verifications",
-                    ":type"
-                  ],
-                  "query": [],
-                  "variable": [
-                    {
-                      "key": "type",
-                      "value": "email|phone"
-                    }
-                  ]
-                },
-                "method": "GET",
-                "header": []
-              },
-              "response": []
-            },
-            {
-              "name": "verify",
-              "request": {
-                "url": {
-                  "raw": "{{host}}/api/users/verifications/verify",
-                  "host": [
-                    "{{host}}"
-                  ],
-                  "path": [
-                    "api",
-                    "users",
-                    "verifications",
-                    "verify"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "method": "POST",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"type\": \"email|phone\",\n  \"token\": \"\",\n  \"code\": 1\n}",
+                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"username\": \"\",\n  \"password\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-08-27T13:47:34.022Z\",\n  \"locale\": \"\",\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -186,36 +190,6 @@
         {
           "name": "oauth",
           "item": [
-            {
-              "name": "authenticate",
-              "request": {
-                "url": {
-                  "raw": "{{host}}/api/oauth/local",
-                  "host": [
-                    "{{host}}"
-                  ],
-                  "path": [
-                    "api",
-                    "oauth",
-                    "local"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "method": "POST",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"oauthAppId\": \"\",\n  \"codeChallenge\": \"\",\n  \"codeChallengeMethod\": \"sha256\",\n  \"callbackURL\": \"\",\n  \"remember\": false\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "response": []
-            },
             {
               "name": "exchangeAuthentication",
               "request": {
@@ -279,6 +253,63 @@
               "response": []
             },
             {
+              "name": "authenticate",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/oauth/local",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "oauth",
+                    "local"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"oauthAppId\": \"\",\n  \"codeChallenge\": \"\",\n  \"codeChallengeMethod\": \"sha256\",\n  \"callbackURL\": \"\",\n  \"remember\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "logout",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/oauth/logout?allDevices=false",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "oauth",
+                    "logout"
+                  ],
+                  "query": [
+                    {
+                      "key": "allDevices",
+                      "value": false,
+                      "description": "(Optional)"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "DELETE",
+                "header": []
+              },
+              "response": []
+            },
+            {
               "name": "refresh",
               "request": {
                 "url": {
@@ -314,6 +345,28 @@
           "name": "oauthApps",
           "item": [
             {
+              "name": "getDefault",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/oauth/apps/default",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "oauth",
+                    "apps",
+                    "default"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
               "name": "create",
               "request": {
                 "url": {
@@ -347,7 +400,7 @@
               "name": "list",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/oauth/apps?limit=2&offset=1",
+                  "raw": "{{host}}/api/oauth/apps?limit=1&offset=1",
                   "host": [
                     "{{host}}"
                   ],
@@ -359,35 +412,15 @@
                   "query": [
                     {
                       "key": "limit",
-                      "value": 2
+                      "value": 1,
+                      "description": "(Optional)"
                     },
                     {
                       "key": "offset",
-                      "value": 1
+                      "value": 1,
+                      "description": "(Optional)"
                     }
                   ],
-                  "variable": []
-                },
-                "method": "GET",
-                "header": []
-              },
-              "response": []
-            },
-            {
-              "name": "getDefault",
-              "request": {
-                "url": {
-                  "raw": "{{host}}/api/oauth/apps/default",
-                  "host": [
-                    "{{host}}"
-                  ],
-                  "path": [
-                    "api",
-                    "oauth",
-                    "apps",
-                    "default"
-                  ],
-                  "query": [],
                   "variable": []
                 },
                 "method": "GET",
@@ -413,7 +446,8 @@
                   "variable": [
                     {
                       "key": "appId",
-                      "value": ""
+                      "value": "",
+                      "description": ""
                     }
                   ]
                 },
@@ -440,7 +474,8 @@
                   "variable": [
                     {
                       "key": "appId",
-                      "value": ""
+                      "value": "",
+                      "description": ""
                     }
                   ]
                 },
@@ -495,6 +530,38 @@
           "name": "adminPlugins",
           "item": [
             {
+              "name": "toggleEnable",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/admin/plugins/toggle/plugin",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "plugins",
+                    "toggle",
+                    "plugin"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
               "name": "list",
               "request": {
                 "url": {
@@ -546,38 +613,6 @@
               "response": []
             },
             {
-              "name": "toggleEnable",
-              "request": {
-                "url": {
-                  "raw": "{{host}}/api/admin/plugins/toggle/plugin",
-                  "host": [
-                    "{{host}}"
-                  ],
-                  "path": [
-                    "api",
-                    "admin",
-                    "plugins",
-                    "toggle",
-                    "plugin"
-                  ],
-                  "query": [],
-                  "variable": []
-                },
-                "method": "PATCH",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"name\": \"\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "response": []
-            },
-            {
               "name": "delete",
               "request": {
                 "url": {
@@ -595,7 +630,8 @@
                   "variable": [
                     {
                       "key": "name",
-                      "value": ""
+                      "value": "",
+                      "description": ""
                     }
                   ]
                 },
@@ -605,6 +641,80 @@
               "response": []
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "usersIdentification",
+      "item": [
+        {
+          "name": "methods",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/users/identification/methods/:username",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "identification",
+                "methods",
+                ":username"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "username",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "request",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/users/identification/:purpose/:username/:method",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "identification",
+                ":purpose",
+                ":username",
+                ":method"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "purpose",
+                  "value": "verification|recovery",
+                  "description": ""
+                },
+                {
+                  "key": "username",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "method",
+                  "value": "email|phone",
+                  "description": ""
+                }
+              ]
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
         }
       ]
     }

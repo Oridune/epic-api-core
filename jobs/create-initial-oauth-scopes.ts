@@ -1,12 +1,15 @@
-import { OauthScopesModel } from "../models/oauth-scopes.ts";
+import { OauthScopesModel } from "@Models/oauth-scopes.ts";
 
 export default async () => {
-  if (!(await OauthScopesModel.exists({ role: "root" })))
-    await new OauthScopesModel({ role: "root", scopes: ["*"] }).save();
+  await OauthScopesModel.updateOne(
+    { role: "root" },
+    { scopes: ["*"] },
+    { upsert: true }
+  );
 
-  if (!(await OauthScopesModel.exists({ role: "unauthenticated" })))
-    await new OauthScopesModel({
-      role: "unauthenticated",
+  await OauthScopesModel.updateOne(
+    { role: "unauthenticated" },
+    {
       scopes: [
         "api",
         "oauthApps.getDefault",
@@ -17,14 +20,19 @@ export default async () => {
         "oauth",
         "usersIdentification",
       ],
-    }).save();
+    },
+    { upsert: true }
+  );
 
-  if (!(await OauthScopesModel.exists({ role: "unverified" })))
-    await new OauthScopesModel({ role: "unverified" }).save();
+  await OauthScopesModel.updateOne(
+    { role: "unverified" },
+    { scopes: ["oauth.logout"] },
+    { upsert: true }
+  );
 
-  if (!(await OauthScopesModel.exists({ role: "user" })))
-    await new OauthScopesModel({
-      role: "user",
-      scopes: ["users.delete"],
-    }).save();
+  await OauthScopesModel.updateOne(
+    { role: "user" },
+    { scopes: ["users.delete", "oauth.logout"] },
+    { upsert: true }
+  );
 };

@@ -3,6 +3,7 @@ import {
   BaseController,
   Response,
   Post,
+  Delete,
   type IRequestContext,
   Env,
 } from "@Core/common/mod.ts";
@@ -663,6 +664,42 @@ export default class OauthController extends BaseController {
             refreshable: true,
           })
         );
+      },
+    };
+  }
+
+  @Delete("/logout/")
+  public logout() {
+    // Define Query Schema
+    const QuerySchema = e.object(
+      {
+        allDevices: e.optional(e.boolean({ cast: true })),
+      },
+      { allowUnexpectedProps: true }
+    );
+
+    return {
+      postman: {
+        query: QuerySchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Query Validation
+        const Query = await QuerySchema.validate(
+          Object.fromEntries(ctx.router.request.url.searchParams),
+          { name: "users.query" }
+        );
+
+        // Delete OauthSession
+        if (Query.allDevices)
+          await OauthSessionModel.deleteMany({
+            createdBy: ctx.router.state.auth.userId,
+          });
+        else
+          await OauthSessionModel.deleteOne({
+            _id: ctx.router.state.auth.sessionId,
+          });
       },
     };
   }
