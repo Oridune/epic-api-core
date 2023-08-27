@@ -6,6 +6,7 @@ import {
   Delete,
   type IRequestContext,
   Env,
+  Versioned,
 } from "@Core/common/mod.ts";
 import { Status, type RouterContext } from "oak";
 import e from "validator";
@@ -402,7 +403,7 @@ export default class OauthController extends BaseController {
       remember: e.optional(e.boolean({ cast: true })).default(false),
     });
 
-    return {
+    return Versioned.add("1.0.0", {
       postman: {
         body: BodySchema.toSample(),
       },
@@ -480,7 +481,7 @@ export default class OauthController extends BaseController {
 
         e.error("Invalid username or password!");
       },
-    };
+    });
   }
 
   @Post("/exchange/authentication/")
@@ -522,7 +523,7 @@ export default class OauthController extends BaseController {
         }),
     });
 
-    return {
+    return Versioned.add("1.0.0", {
       postman: {
         body: BodySchema.toSample(),
       },
@@ -552,7 +553,7 @@ export default class OauthController extends BaseController {
           })
         ).statusCode(Status.Created);
       },
-    };
+    });
   }
 
   @Post("/exchange/code/")
@@ -577,7 +578,7 @@ export default class OauthController extends BaseController {
         }),
     });
 
-    return {
+    return Versioned.add("1.0.0", {
       postman: {
         body: BodySchema.toSample(),
       },
@@ -615,7 +616,7 @@ export default class OauthController extends BaseController {
           })
         );
       },
-    };
+    });
   }
 
   @Post("/refresh/")
@@ -635,7 +636,7 @@ export default class OauthController extends BaseController {
       ),
     });
 
-    return {
+    return Versioned.add("1.0.0", {
       postman: {
         body: BodySchema.toSample(),
       },
@@ -665,7 +666,7 @@ export default class OauthController extends BaseController {
           })
         );
       },
-    };
+    });
   }
 
   @Delete("/logout/")
@@ -678,7 +679,7 @@ export default class OauthController extends BaseController {
       { allowUnexpectedProps: true }
     );
 
-    return {
+    return Versioned.add("1.0.0", {
       postman: {
         query: QuerySchema.toSample(),
       },
@@ -701,6 +702,6 @@ export default class OauthController extends BaseController {
             _id: ctx.router.state.auth.sessionId,
           });
       },
-    };
+    });
   }
 }

@@ -7,6 +7,7 @@ import {
   Post,
   Delete,
   type IRequestContext,
+  Versioned,
 } from "@Core/common/mod.ts";
 import { Status, type RouterContext } from "oak";
 import e from "validator";
@@ -53,7 +54,7 @@ export default class OauthAppsController extends BaseController {
       metadata: e.optional(e.record(e.string())),
     });
 
-    return {
+    return Versioned.add("1.0.0", {
       postman: {
         body: BodySchema.toSample(),
       },
@@ -69,7 +70,7 @@ export default class OauthAppsController extends BaseController {
 
         return Response.data(App).statusCode(Status.Created);
       },
-    };
+    });
   }
 
   @Get("/")
@@ -83,7 +84,7 @@ export default class OauthAppsController extends BaseController {
       { allowUnexpectedProps: true }
     );
 
-    return {
+    return Versioned.add("1.0.0", {
       postman: {
         query: QuerySchema.toSample(),
       },
@@ -98,12 +99,12 @@ export default class OauthAppsController extends BaseController {
           await OauthAppModel.find().skip(Query.offset).limit(Query.limit)
         );
       },
-    };
+    });
   }
 
   @Get("/default/")
   public getDefault() {
-    return {
+    return Versioned.add("1.0.0", {
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         const App =
           (await OauthAppModel.findOne({
@@ -128,7 +129,7 @@ export default class OauthAppsController extends BaseController {
 
         return Response.data(App!);
       },
-    };
+    });
   }
 
   @Get("/:appId/")
@@ -141,7 +142,7 @@ export default class OauthAppsController extends BaseController {
       }),
     });
 
-    return {
+    return Versioned.add("1.0.0", {
       postman: {
         params: ParamsSchema.toSample(),
       },
@@ -156,7 +157,7 @@ export default class OauthAppsController extends BaseController {
 
         return Response.data(App!);
       },
-    };
+    });
   }
 
   @Delete("/:appId/")
@@ -172,7 +173,7 @@ export default class OauthAppsController extends BaseController {
       }),
     });
 
-    return {
+    return Versioned.add("1.0.0", {
       postman: {
         params: ParamsSchema.toSample(),
       },
@@ -186,6 +187,6 @@ export default class OauthAppsController extends BaseController {
 
         return Response.status(true);
       },
-    };
+    });
   }
 }

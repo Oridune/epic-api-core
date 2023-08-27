@@ -10,6 +10,7 @@ import {
   type IRequestContext,
   Env,
   EnvType,
+  Versioned,
 } from "@Core/common/mod.ts";
 import { Status, type RouterContext } from "oak";
 import e from "validator";
@@ -34,7 +35,7 @@ export default class AdminPluginsController extends BaseController {
       name: e.string(),
     });
 
-    return {
+    return Versioned.add("1.0.0", {
       postman: {
         body: BodySchema.toSample(),
       },
@@ -51,7 +52,7 @@ export default class AdminPluginsController extends BaseController {
 
         return Response.statusCode(Status.Created);
       },
-    };
+    });
   }
 
   @Patch("/toggle/plugin/")
@@ -61,7 +62,7 @@ export default class AdminPluginsController extends BaseController {
       name: e.string(),
     });
 
-    return {
+    return Versioned.add("1.0.0", {
       postman: {
         body: BodySchema.toSample(),
       },
@@ -80,7 +81,7 @@ export default class AdminPluginsController extends BaseController {
 
         return Response.true();
       },
-    };
+    });
   }
 
   @Delete("/:name/")
@@ -90,7 +91,7 @@ export default class AdminPluginsController extends BaseController {
       name: e.string(),
     });
 
-    return {
+    return Versioned.add("1.0.0", {
       postman: {
         params: ParamsSchema.toSample(),
       },
@@ -107,6 +108,6 @@ export default class AdminPluginsController extends BaseController {
 
         return Response.status(true);
       },
-    };
+    });
   }
 }

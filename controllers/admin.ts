@@ -6,6 +6,7 @@ import {
   type IRequestContext,
   Env,
   EnvType,
+  Versioned,
 } from "@Core/common/mod.ts";
 import { type RouterContext } from "oak";
 import e from "validator";
@@ -20,7 +21,7 @@ export default class AdminController extends BaseController {
       branch: e.optional(e.string()),
     });
 
-    return {
+    return Versioned.add("1.0.0", {
       postman: {
         body: BodySchema.toSample(),
       },
@@ -38,6 +39,6 @@ export default class AdminController extends BaseController {
 
         return Response.status(true);
       },
-    };
+    });
   }
 }

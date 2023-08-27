@@ -2,6 +2,7 @@ import {
   Env,
   Controller,
   BaseController,
+  Get,
   Post,
   Put,
   Delete,
@@ -282,6 +283,69 @@ export default class UsersController extends BaseController {
         await UsersController.verify(Payload.method, Payload.userId);
 
         return Response.true();
+      },
+    });
+  }
+
+  @Get("/:userId?/")
+  public listAll() {
+    // Define Query Schema
+    const QuerySchema = e.object(
+      {
+        limit: e.optional(e.number({ cast: true })).default(Infinity),
+        offset: e.optional(e.number({ cast: true })).default(0),
+      },
+      { allowUnexpectedProps: true }
+    );
+
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      userId: e.optional(e.string()),
+    });
+
+    return Versioned.add("1.0.0", {
+      postman: {
+        query: QuerySchema.toSample(),
+        params: ParamsSchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Query Validation
+        const Query = await QuerySchema.validate(
+          Object.fromEntries(ctx.router.request.url.searchParams),
+          { name: "users.query" }
+        );
+
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: "users.params",
+        });
+
+        // Fetch users
+        const Users = await UserModel.find({ _id: Params.userId })
+          .skip(Query.offset)
+          .limit(Query.limit);
+
+        return Response.data({
+          users: Users,
+        });
+      },
+    });
+  }
+
+  @Get("/me/")
+  public get() {
+    return Versioned.add("1.0.0", {
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Fetch user
+        const User = await UserModel.findOne({
+          _id: ctx.router.state.auth.userId,
+        });
+
+        return Response.data({
+          user: User,
+        });
       },
     });
   }

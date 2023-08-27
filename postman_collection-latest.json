@@ -55,6 +55,27 @@
           "name": "users",
           "item": [
             {
+              "name": "get",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/users/me",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "me"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
               "name": "updatePassword",
               "request": {
                 "url": {
@@ -118,7 +139,7 @@
               "name": "delete",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/users?deletionTimeoutMs=1",
+                  "raw": "{{host}}/api/users?deletionTimeoutMs=2",
                   "host": [
                     "{{host}}"
                   ],
@@ -129,7 +150,7 @@
                   "query": [
                     {
                       "key": "deletionTimeoutMs",
-                      "value": 1,
+                      "value": 2,
                       "description": "(Optional)"
                     }
                   ],
@@ -170,13 +191,51 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"username\": \"\",\n  \"password\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-08-27T13:47:34.022Z\",\n  \"locale\": \"\",\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\"\n}",
+                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"username\": \"\",\n  \"password\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-08-27T16:56:48.440Z\",\n  \"locale\": \"\",\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
                     }
                   }
                 }
+              },
+              "response": []
+            },
+            {
+              "name": "listAll",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/users/:userId?limit=1&offset=1",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    ":userId"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": 1,
+                      "description": "(Optional)"
+                    },
+                    {
+                      "key": "offset",
+                      "value": 1,
+                      "description": "(Optional)"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "userId",
+                      "value": "",
+                      "description": "(Optional)"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": []
               },
               "response": []
             }
