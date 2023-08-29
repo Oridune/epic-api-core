@@ -704,6 +704,8 @@ export default class OauthController extends BaseController {
           await OauthSessionModel.deleteOne({
             _id: ctx.router.state.auth.sessionId,
           });
+
+        return Response.true();
       },
     });
   }
