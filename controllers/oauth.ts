@@ -375,23 +375,24 @@ export default class OauthController extends BaseController {
   public authenticate() {
     // Define Body Schema
     const BodySchema = e.object({
-      oauthAppId: e.string().throwsFatal(),
-      oauthApp: e.any().custom(async (ctx) => {
-        const App = await OauthAppModel.findOne(
-          { _id: ctx.parent!.output.oauthAppId },
-          {
-            _id: 1,
-            consent: {
-              allowedCallbackURLs: 1,
-            },
-          }
-        );
+      oauthAppId: e.string().checkpoint(),
+      oauthApp: e
+        .any()
+        .custom(async (ctx) => {
+          const App = await OauthAppModel.findOne(
+            { _id: ctx.parent!.output.oauthAppId },
+            {
+              _id: 1,
+              consent: {
+                allowedCallbackURLs: 1,
+              },
+            }
+          );
 
-        if (!App) throw new Error("Invalid oauth app id!");
-        return App;
-      }),
-      codeChallenge: e.optional(e.string().length({ min: 1, max: 500 })),
-      codeChallengeMethod: e.optional(e.in(Object.values(OauthPKCEMethod))),
+          if (!App) throw new Error("Invalid oauth app id!");
+          return App;
+        })
+        .checkpoint(),
       callbackURL: e.string().custom((ctx) => {
         if (
           !ctx.parent?.output.oauthApp.consent.allowedCallbackURLs.includes(
@@ -400,6 +401,8 @@ export default class OauthController extends BaseController {
         )
           throw "Return host not allowed!";
       }),
+      codeChallenge: e.optional(e.string().length({ min: 1, max: 500 })),
+      codeChallengeMethod: e.optional(e.in(Object.values(OauthPKCEMethod))),
       remember: e.optional(e.boolean({ cast: true })).default(false),
     });
 
