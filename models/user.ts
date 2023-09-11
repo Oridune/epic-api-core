@@ -79,8 +79,8 @@ export const UserSchema = new mongoose.Schema<IUser>(
 );
 
 //! This code doesn't seem to work!
-UserSchema.post("init", function () {
-  if (this.deletionAt instanceof Date)
+UserSchema.post("init", (user) => {
+  if (user.deletionAt instanceof Date)
     // Throw an error if the user is deleted
     throw new Error("Deleted user cannot be fetched!");
 });

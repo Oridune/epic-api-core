@@ -6,7 +6,9 @@ import {
   Get,
   Versioned,
   Response,
+  Store,
 } from "@Core/common/mod.ts";
+import { Database } from "../database.ts";
 
 @Controller("/api/", {
   name: "api",
@@ -30,7 +32,15 @@ export class APIController extends BaseController {
   @Get("/")
   public home() {
     return () => {
-      return Response.message("Hurry! The API is online!");
+      return Response.message("Hurry! The API is online!").data({
+        database: {
+          connected: Database.isConnected(),
+        },
+        store: {
+          type: Store.type,
+          connected: Store.isConnected(),
+        },
+      });
     };
   }
 

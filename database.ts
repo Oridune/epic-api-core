@@ -1,5 +1,5 @@
-import mongoose from "mongoose";
 import { Env, EnvType } from "@Core/common/env.ts";
+import mongoose from "mongoose";
 
 export class Database {
   /**
@@ -8,17 +8,15 @@ export class Database {
   static connection?: typeof mongoose;
 
   /**
-   * Get current database connection
+   * Is database connected?
    * @returns
    */
-  static get() {
-    if (!Database.connection) throw new Error(`Database not connected yet!`);
-    return Database.connection;
+  static isConnected() {
+    return Database.connection?.connection.readyState === 1;
   }
 
   /**
    * This method is called when attempted to connect to the database
-   * @returns
    */
   static async connect() {
     // You can modify this function to connect to a different database...
@@ -35,13 +33,12 @@ export class Database {
 
   /**
    * Disconnect the database
-   * @returns
    */
   static async disconnect() {
     // You can modify this function to connect to a different database...
 
     // Disconnect the database
-    await Database.get().disconnect();
+    await Database.connection?.disconnect();
 
     // Delete connection object
     delete Database.connection;

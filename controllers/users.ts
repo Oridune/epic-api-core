@@ -209,15 +209,16 @@ export default class UsersController extends BaseController {
           { name: "users.body" }
         );
 
-        const Payload = await OauthController.verifyToken<{
-          method: IdentificationMethod;
-          userId: string;
-        }>({
-          type:
-            Body.method + "_identification_" + IdentificationPurpose.RECOVERY,
-          token: Body.token,
-          secret: Body.code.toString(),
-        }).catch(e.error);
+        const Payload = (ctx.router.state.verifyTokenPayload =
+          await OauthController.verifyToken<{
+            method: IdentificationMethod;
+            userId: string;
+          }>({
+            type:
+              Body.method + "_identification_" + IdentificationPurpose.RECOVERY,
+            token: Body.token,
+            secret: Body.code.toString(),
+          }).catch(e.error));
 
         const User = await UserModel.findOne(
           { _id: Payload.userId },
@@ -322,6 +323,10 @@ export default class UsersController extends BaseController {
 
         // Fetch users
         const Users = await UserModel.find({ _id: Params.userId })
+          .populate({
+            path: "collaborates",
+            populate: "account",
+          })
           .skip(Query.offset)
           .limit(Query.limit);
 
@@ -341,6 +346,9 @@ export default class UsersController extends BaseController {
         // Fetch user
         const User = await UserModel.findOne({
           _id: ctx.router.state.auth.userId,
+        }).populate({
+          path: "collaborates",
+          populate: "account",
         });
 
         return Response.data({

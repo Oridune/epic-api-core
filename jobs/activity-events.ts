@@ -7,29 +7,32 @@ import {
   IRequestContext,
   Response,
 } from "@Core/common/mod.ts";
-import { Novu } from "novu";
-import { UserModel } from "@Models/user.ts";
 import e from "validator";
+import { Novu } from "novu";
+import { IUser, UserModel } from "@Models/user.ts";
+import { OauthSessionModel } from "@Models/oauth-session.ts";
 
 export default () => {
   Events.listen<{
     ctx: IRequestContext<RouterContext<string>>;
-    res: Response;
+    res: Response<
+      Omit<IUser, "password" | "passwordHistory" | "oauthApp" | "collaborates">
+    >;
   }>(EventChannel.REQUEST, "users.create", async (event) => {
     if (Env.is(EnvType.TEST)) return;
 
     const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
 
-    const Data = event.detail.res.getBody();
+    const Body = event.detail.res.getBody();
 
-    if (Data.status)
-      await Notifier.subscribers.identify(Data.data._id, {
-        avatar: Data.data.avatar?.url,
-        firstName: Data.data.fname,
-        lastName: Data.data.lname,
-        locale: Data.data.locale,
-        email: Data.data.email,
-        phone: Data.data.phone,
+    if (Body.status && Body.data)
+      await Notifier.subscribers.identify(Body.data._id, {
+        avatar: Body.data.avatar?.url,
+        firstName: Body.data.fname,
+        lastName: Body.data.lname,
+        locale: Body.data.locale,
+        email: Body.data.email,
+        phone: Body.data.phone,
       });
   });
 
@@ -37,10 +40,10 @@ export default () => {
     ctx: IRequestContext<RouterContext<string>>;
     res: Response;
   }>(EventChannel.REQUEST, "users.verify", async (event) => {
-    const Data = event.detail.res.getBody();
+    const Body = event.detail.res.getBody();
 
-    if (Data.status) {
-      const VerificationTokenPayload = await e
+    if (Body.status) {
+      const VerifyTokenPayload = await e
         .object(
           {
             method: e.string(),
@@ -51,7 +54,7 @@ export default () => {
         .validate(event.detail.ctx.router.state.verifyTokenPayload);
 
       const User = await UserModel.findOne(
-        { _id: VerificationTokenPayload.userId },
+        { _id: VerifyTokenPayload.userId },
         {
           isEmailVerified: 1,
           isPhoneVerified: 1,
@@ -95,6 +98,29 @@ export default () => {
           }
         }
       } else throw new Error(`A user that was just verified, not found!`);
+    }
+  });
+
+  Events.listen<{
+    ctx: IRequestContext<RouterContext<string>>;
+    res: Response;
+  }>(EventChannel.REQUEST, "users.updatePassword", async (event) => {
+    const Body = event.detail.res.getBody();
+
+    if (Body.status) {
+      const VerifyTokenPayload = await e
+        .object(
+          {
+            method: e.string(),
+            userId: e.string(),
+          },
+          { allowUnexpectedProps: true }
+        )
+        .validate(event.detail.ctx.router.state.verifyTokenPayload);
+
+      await OauthSessionModel.deleteMany({
+        createdBy: VerifyTokenPayload.userId,
+      });
     }
   });
 };

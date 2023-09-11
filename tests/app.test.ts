@@ -1,17 +1,20 @@
-import { Loader } from "@Core/common/mod.ts";
+import { Loader, StoreType } from "@Core/common/mod.ts";
 import { createAppServer } from "@Core/server.ts";
 import { expect } from "expect";
+import e from "validator";
 
 Deno.test({
   name: "Basic Flow Test",
   async fn(t) {
     await Loader.load({ excludeTypes: ["templates"] });
 
-    const { start, end } = await createAppServer();
+    const { start, end, restart } = await createAppServer();
 
     const { port } = await start();
 
     const APIHost = `http://localhost:${port}`;
+
+    await restart();
 
     await t.step("GET / Should return 404 not found", async () => {
       const Response = await fetch(new URL("/", APIHost));
@@ -33,12 +36,22 @@ Deno.test({
       expect(Response.headers.get("X-Rate-Limit-Remaining")).toMatch(/[0-9]+/);
       expect(Response.headers.get("Content-Type")).toMatch(/json/);
       expect(Response.status).toBe(200);
-      expect(await Response.text()).toBe(
-        JSON.stringify({
-          status: true,
-          messages: [{ message: "Hurry! The API is online!" }],
+
+      await e
+        .object({
+          status: e.boolean(),
+          messages: e.array(e.object({ message: e.string() })),
+          data: e.object({
+            database: e.object({
+              connected: e.boolean(),
+            }),
+            store: e.object({
+              type: e.in(Object.values(StoreType)),
+              connected: e.boolean(),
+            }),
+          }),
         })
-      );
+        .validate(JSON.parse(await Response.text()));
     });
 
     await t.step(
@@ -52,12 +65,22 @@ Deno.test({
 
         expect(Response.headers.get("Content-Type")).toMatch(/json/);
         expect(Response.status).toBe(200);
-        expect(await Response.text()).toBe(
-          JSON.stringify({
-            status: true,
-            messages: [{ message: "Hurry! The API is online!" }],
+
+        await e
+          .object({
+            status: e.boolean(),
+            messages: e.array(e.object({ message: e.string() })),
+            data: e.object({
+              database: e.object({
+                connected: e.boolean(),
+              }),
+              store: e.object({
+                type: e.in(Object.values(StoreType)),
+                connected: e.boolean(),
+              }),
+            }),
           })
-        );
+          .validate(JSON.parse(await Response.text()));
       }
     );
 
