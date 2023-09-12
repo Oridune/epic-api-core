@@ -4,6 +4,7 @@ import {
   BaseController,
   Get,
   Post,
+  Patch,
   Put,
   Delete,
   Response,
@@ -134,7 +135,7 @@ export default class UsersController extends BaseController {
     // Define Body Schema
     const BodySchema = e.object({
       oauthApp: e.any().custom((ctx) => ctx.context.oauthApp as IOauthApp),
-      fname: e.string(),
+      fname: e.string().min(3),
       mname: e.optional(e.string()),
       lname: e.optional(e.string()),
       username: UsernameValidator().custom(async (ctx) => {
@@ -183,6 +184,40 @@ export default class UsersController extends BaseController {
         return Response.statusCode(Status.Created).data(User);
       },
     };
+  }
+
+  @Patch("/me/")
+  public update() {
+    // Define Body Schema
+    const BodySchema = e.object({
+      fname: e.optional(e.string().min(3)),
+      mname: e.optional(e.string()),
+      lname: e.optional(e.string()),
+      gender: e.optional(e.in(Object.values(Gender))),
+      dob: e.optional(e.date()),
+      locale: e.optional(e.string()),
+      tags: e.optional(e.array(e.string())),
+    });
+
+    return Versioned.add("1.0.0", {
+      postman: {
+        body: BodySchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: "users.body" }
+        );
+
+        // Update user
+        await UserModel.updateOne({ _id: ctx.router.state.auth.userId }, Body);
+
+        return Response.true();
+      },
+    });
   }
 
   @Put("/password/")
