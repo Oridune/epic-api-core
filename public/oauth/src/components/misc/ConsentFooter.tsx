@@ -2,9 +2,11 @@ import React from "react";
 import { Divider, Link, Typography } from "@mui/material";
 import { Copyright } from "./Copyright";
 import { useOauthApp } from "../context/OauthApp";
+import { useTranslation } from "react-i18next";
 
 export const ConsentFooter = () => {
   const { app } = useOauthApp();
+  const { t } = useTranslation();
 
   if (!app) return <></>;
 
@@ -16,21 +18,21 @@ export const ConsentFooter = () => {
         <>
           <Divider sx={{ width: "100%" }}>
             <Typography variant="subtitle2" color="GrayText">
-              See also
+              {t("See also")}
             </Typography>
           </Divider>
           <Typography color="primary" textAlign="center" sx={{ marginY: 2 }}>
             {[
               {
-                label: "Support",
+                label: t("Support"),
                 href: app.consent.supportURL,
               },
               {
-                label: "Terms of Services",
+                label: t("Terms of Services"),
                 href: app.consent.termsAndConditionsURL,
               },
               {
-                label: "Privacy Policy",
+                label: t("Privacy Policy"),
                 href: app.consent.privacyPolicyURL,
               },
             ]

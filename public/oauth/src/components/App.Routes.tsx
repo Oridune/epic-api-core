@@ -5,7 +5,6 @@ import {
 } from "react-router-dom";
 
 import { LoginPage } from "./pages/Login";
-import { ScopesPage } from "./pages/Scopes";
 import { SignupPage } from "./pages/Signup";
 import { ForgotPage } from "./pages/Forgot";
 import { NotFoundPage } from "./pages/NotFound";
@@ -22,10 +21,6 @@ export const AppRoutes = () => {
           {
             path: "/login",
             element: <LoginPage />,
-          },
-          {
-            path: "/scopes",
-            element: <ScopesPage />,
           },
           {
             path: "/signup",

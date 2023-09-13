@@ -25,13 +25,14 @@ import { motion } from "framer-motion";
 import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
 import axios, { AxiosError } from "axios";
+import { useTranslation } from "react-i18next";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
 import { useOauthApp } from "../context/OauthApp";
 
 import { ConsentFooter } from "../misc/ConsentFooter";
 
-import Logo from "../../assets/logo.svg";
+import Logo from "../../assets/logo.png";
 
 export const ForgotSchema = e.object({
   username: e
@@ -67,6 +68,9 @@ export const ForgotPage = () => {
 
   const [Loading, setLoading] = React.useState(false);
   const [ErrorMessage, setErrorMessage] = React.useState<string | null>(null);
+
+  const { t, i18n } = useTranslation();
+
   const [Username, setUsername] = React.useState<null | string>(null);
   const [AvailableMethods, setAvailableMethods] = React.useState<null | Array<{
     type: string;
@@ -79,6 +83,44 @@ export const ForgotPage = () => {
   const [ResendCounter, setResendCounter] = React.useState(0);
   const [ShowPassword, setShowPassword] = React.useState(false);
   const [ShowConfirmPassword, setShowConfirmPassword] = React.useState(false);
+
+  const ForgotSchema = React.useMemo(
+    () =>
+      e.object({
+        username: e
+          .string({
+            messages: {
+              matchFailed: t("Please provide a valid username format!"),
+            },
+          })
+          .matches(/^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/)
+          .length(50),
+      }),
+    [i18n.language]
+  );
+
+  const RecoverySchema = React.useMemo(
+    () =>
+      e.object({
+        code: e.number({ cast: true }).length(6),
+        password: e
+          .string({
+            messages: {
+              matchFailed: t(
+                "A password should be 8 characters long, must contain an uppercase, a lowercase, a number and a special character!"
+              ),
+            },
+          })
+          .matches(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=?|\s])[A-Za-z\d!@#$%^&*()_\-+=?|\s]{8,}$/
+          ),
+        confirmPassword: e.string().custom((ctx) => {
+          if (ctx.parent!.output.password !== ctx.output)
+            throw t("Password doesn't match!");
+        }),
+      }),
+    [i18n.language]
+  );
 
   const {
     register: registerForgot,
@@ -113,7 +155,7 @@ export const ForgotPage = () => {
           setUsername(data.username);
           setAvailableMethods(Response.data.data.availableMethods);
           setRecoveryMethod(Response.data.data.availableMethods[0].type);
-        } else setErrorMessage(`Invalid response pattern!`);
+        } else setErrorMessage(t("Invalid response pattern!"));
       } else setErrorMessage(Response.data.messages[0].message);
     } catch (error) {
       console.error(error);
@@ -140,7 +182,7 @@ export const ForgotPage = () => {
         if (typeof Response.data.data.token === "string") {
           setToken(Response.data.data.token);
           setResendCounter(0);
-        } else setErrorMessage(`Invalid response pattern!`);
+        } else setErrorMessage(t("Invalid response pattern!"));
       } else setErrorMessage(Response.data.messages[0].message);
     } catch (error) {
       console.error(error);
@@ -206,10 +248,17 @@ export const ForgotPage = () => {
         }}
       >
         <Box sx={{ maxWidth: 333, paddingX: 1 }}>
-          <Box sx={{ display: "flex", justifyContent: "center", marginY: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              marginY: 2,
+              cursor: "pointer",
+            }}
+          >
             <img
-              width={70}
-              height={70}
+              width={60}
+              height={60}
               src={app?.consent.logo?.url ?? Logo}
               alt="Logo"
               onClick={() => {
@@ -226,7 +275,7 @@ export const ForgotPage = () => {
           {!AvailableMethods ? (
             <>
               <Typography component="h1" variant="h6" textAlign="center">
-                Recover your password!
+                {t("Recover your password!")}
               </Typography>
               <Box
                 component="form"
@@ -248,10 +297,12 @@ export const ForgotPage = () => {
                   </Grid>
                   <Grid item xs={12}>
                     <FormControl fullWidth variant="outlined">
-                      <InputLabel htmlFor="username">Username</InputLabel>
+                      <InputLabel htmlFor="username">
+                        {t("Username")}
+                      </InputLabel>
                       <OutlinedInput
                         id="username"
-                        label="Username"
+                        label={t("Username")}
                         type="text"
                         autoComplete="username"
                         error={!!errorsForgot.username?.message}
@@ -269,7 +320,7 @@ export const ForgotPage = () => {
                       variant="contained"
                       disabled={Loading}
                     >
-                      Recover
+                      {t("Recover")}
                     </Button>
                   </Grid>
                   <Grid
@@ -286,7 +337,7 @@ export const ForgotPage = () => {
                       }}
                       variant="body2"
                     >
-                      Login instead?
+                      {t("Login instead?")}
                     </Link>
                   </Grid>
                   <Grid
@@ -303,7 +354,7 @@ export const ForgotPage = () => {
                       }}
                       variant="body2"
                     >
-                      Don't have an account?
+                      {t("Don't have an account?")}
                     </Link>
                   </Grid>
                 </Grid>
@@ -315,7 +366,7 @@ export const ForgotPage = () => {
               initial={{ opacity: 0, y: 10 }}
             >
               <Typography component="h1" variant="h6" textAlign="center">
-                We need to verify your identity!
+                {t("We need to verify your identity!")}
               </Typography>
               <Box sx={{ marginY: 3 }}>
                 <Grid container spacing={1} sx={{ mb: 2 }}>
@@ -334,7 +385,7 @@ export const ForgotPage = () => {
                   <Grid item xs={12}>
                     <FormControl>
                       <FormLabel id="recovery-method-label">
-                        How would you like to get the security code?
+                        {t("How would you like to get the security code?")}
                       </FormLabel>
                       <RadioGroup
                         aria-labelledby="recovery-method-label"
@@ -364,7 +415,7 @@ export const ForgotPage = () => {
                       onClick={HandleRequestRecovery}
                       disabled={Loading}
                     >
-                      Get Code
+                      {t("Get Code")}
                     </Button>
                   </Grid>
                 </Grid>
@@ -376,7 +427,7 @@ export const ForgotPage = () => {
               initial={{ opacity: 0, y: 10 }}
             >
               <Typography component="h1" variant="h6" textAlign="center">
-                You may receive an OTP
+                {t("You may receive an OTP")}
               </Typography>
               <Box
                 component="form"
@@ -398,12 +449,16 @@ export const ForgotPage = () => {
                   </Grid>
                   <Grid item xs={12}>
                     <FormControl fullWidth variant="outlined">
-                      <InputLabel htmlFor="code">OTP Code</InputLabel>
+                      <InputLabel htmlFor="code">{t("OTP Code")}</InputLabel>
                       <OutlinedInput
                         id="code"
-                        label="OTP Code"
+                        label={t("OTP Code")}
                         type="number"
                         autoComplete="code"
+                        inputProps={{
+                          min: "100000",
+                          max: "999999",
+                        }}
                         error={!!errorsRecovery.code?.message}
                         {...registerRecovery("code")}
                       />
@@ -424,7 +479,7 @@ export const ForgotPage = () => {
                       }}
                       variant="body2"
                     >
-                      Change Method?
+                      {t("Change Method?")}
                     </Link>
                   </Grid>
                   <Grid
@@ -443,16 +498,20 @@ export const ForgotPage = () => {
                       color={ResendCounter < 60 ? "#808080" : undefined}
                     >
                       {ResendCounter >= 60
-                        ? "Re-send code?"
-                        : `Re-send code in ${60 - ResendCounter}s`}
+                        ? t("Re-send code?")
+                        : t("Re-send code in {{seconds}}s", {
+                            seconds: 60 - ResendCounter,
+                          })}
                     </Link>
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <FormControl fullWidth variant="outlined">
-                      <InputLabel htmlFor="password">Password</InputLabel>
+                      <InputLabel htmlFor="password">
+                        {t("Password")}
+                      </InputLabel>
                       <OutlinedInput
                         id="password"
-                        label="Password"
+                        label={t("Password")}
                         type={ShowPassword ? "text" : "password"}
                         autoComplete="password"
                         endAdornment={
@@ -483,11 +542,11 @@ export const ForgotPage = () => {
                   <Grid item xs={12} sm={6}>
                     <FormControl fullWidth variant="outlined">
                       <InputLabel htmlFor="confirm-password">
-                        Re-Type
+                        {t("Re-Type")}
                       </InputLabel>
                       <OutlinedInput
                         id="confirm-password"
-                        label="Re-Type"
+                        label={t("Re-Type")}
                         type={ShowConfirmPassword ? "text" : "password"}
                         autoComplete="confirm-password"
                         endAdornment={
@@ -497,7 +556,7 @@ export const ForgotPage = () => {
                               onClick={() => setShowConfirmPassword((_) => !_)}
                               edge="end"
                             >
-                              {ShowPassword ? (
+                              {ShowConfirmPassword ? (
                                 <VisibilityOff />
                               ) : (
                                 <Visibility />
@@ -522,7 +581,7 @@ export const ForgotPage = () => {
                       variant="contained"
                       disabled={Loading}
                     >
-                      Update Password
+                      {t("Update Password")}
                     </Button>
                   </Grid>
                 </Grid>

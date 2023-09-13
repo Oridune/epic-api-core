@@ -21,43 +21,14 @@ import { VisibilityOff, Visibility } from "@mui/icons-material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
 import axios, { AxiosError } from "axios";
+import { useTranslation } from "react-i18next";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
 import { useOauthApp } from "../context/OauthApp";
 
 import { ConsentFooter } from "../misc/ConsentFooter";
 
-import Logo from "../../assets/logo.svg";
-
-export const SignupSchema = e.object({
-  fname: e.string().length({ min: 2, max: 30 }),
-  lname: e.string(),
-  email: e
-    .string({ messages: { matchFailed: "Please provide a valid email!" } })
-    .matches({
-      regex: /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/,
-    }),
-  username: e
-    .string({
-      messages: { matchFailed: "Please provide a valid username format!" },
-    })
-    .matches(/^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/)
-    .length(50),
-  password: e
-    .string({
-      messages: {
-        matchFailed:
-          "A password should be 8 characters long, must contain an uppercase, a lowercase, a number and a special character!",
-      },
-    })
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=?|\s])[A-Za-z\d!@#$%^&*()_\-+=?|\s]{8,}$/
-    ),
-  confirmPassword: e.string().custom((ctx) => {
-    if (ctx.parent!.output.password !== ctx.output)
-      throw "Password doesn't match!";
-  }),
-});
+import Logo from "../../assets/logo.png";
 
 export const SignupPage = () => {
   const Navigate = useNavigate();
@@ -68,6 +39,48 @@ export const SignupPage = () => {
   const [ShowConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [Loading, setLoading] = React.useState(false);
   const [ErrorMessage, setErrorMessage] = React.useState<string | null>(null);
+
+  const { t, i18n } = useTranslation();
+
+  const SignupSchema = React.useMemo(
+    () =>
+      e.object({
+        fname: e.string().length({ min: 2, max: 30 }),
+        lname: e.string(),
+        email: e
+          .string({
+            messages: { matchFailed: t("Please provide a valid email!") },
+          })
+          .matches({
+            regex:
+              /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/,
+          }),
+        username: e
+          .string({
+            messages: {
+              matchFailed: t("Please provide a valid username format!"),
+            },
+          })
+          .matches(/^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/)
+          .length(50),
+        password: e
+          .string({
+            messages: {
+              matchFailed: t(
+                "A password should be 8 characters long, must contain an uppercase, a lowercase, a number and a special character!"
+              ),
+            },
+          })
+          .matches(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=?|\s])[A-Za-z\d!@#$%^&*()_\-+=?|\s]{8,}$/
+          ),
+        confirmPassword: e.string().custom((ctx) => {
+          if (ctx.parent!.output.password !== ctx.output)
+            throw t("Password doesn't match!");
+        }),
+      }),
+    [i18n.language]
+  );
 
   const {
     register,
@@ -123,10 +136,17 @@ export const SignupPage = () => {
         }}
       >
         <Box sx={{ maxWidth: 333, paddingX: 1 }}>
-          <Box sx={{ display: "flex", justifyContent: "center", marginY: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              marginY: 2,
+              cursor: "pointer",
+            }}
+          >
             <img
-              width={70}
-              height={70}
+              width={60}
+              height={60}
               src={app?.consent.logo?.url ?? Logo}
               alt="Logo"
               onClick={() => {
@@ -141,7 +161,7 @@ export const SignupPage = () => {
             />
           </Box>
           <Typography component="h1" variant="h6" textAlign="center">
-            Sign Up Quickly!
+            {t("Sign Up Quickly!")}
           </Typography>
           <Box
             component="form"
@@ -163,10 +183,10 @@ export const SignupPage = () => {
               </Grid>
               <Grid item xs={6}>
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel htmlFor="fname">First Name</InputLabel>
+                  <InputLabel htmlFor="fname">{t("First Name")}</InputLabel>
                   <OutlinedInput
                     id="fname"
-                    label="First Name"
+                    label={t("First Name")}
                     type="text"
                     autoComplete="fname"
                     error={!!errors.fname?.message}
@@ -179,10 +199,10 @@ export const SignupPage = () => {
               </Grid>
               <Grid item xs={6}>
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel htmlFor="lname">Last Name</InputLabel>
+                  <InputLabel htmlFor="lname">{t("Last Name")}</InputLabel>
                   <OutlinedInput
                     id="lname"
-                    label="Last Name"
+                    label={t("Last Name")}
                     type="text"
                     autoComplete="lname"
                     error={!!errors.lname?.message}
@@ -195,10 +215,10 @@ export const SignupPage = () => {
               </Grid>
               <Grid item xs={12}>
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel htmlFor="email">Email</InputLabel>
+                  <InputLabel htmlFor="email">{t("Email")}</InputLabel>
                   <OutlinedInput
                     id="email"
-                    label="Email"
+                    label={t("Email")}
                     type="text"
                     autoComplete="email"
                     error={!!errors.email?.message}
@@ -211,10 +231,10 @@ export const SignupPage = () => {
               </Grid>
               <Grid item xs={12}>
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel htmlFor="username">Username</InputLabel>
+                  <InputLabel htmlFor="username">{t("Username")}</InputLabel>
                   <OutlinedInput
                     id="username"
-                    label="Username"
+                    label={t("Username")}
                     type="text"
                     autoComplete="username"
                     error={!!errors.username?.message}
@@ -227,10 +247,10 @@ export const SignupPage = () => {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel htmlFor="password">Password</InputLabel>
+                  <InputLabel htmlFor="password">{t("Password")}</InputLabel>
                   <OutlinedInput
                     id="password"
-                    label="Password"
+                    label={t("Password")}
                     type={ShowPassword ? "text" : "password"}
                     autoComplete="password"
                     endAdornment={
@@ -254,10 +274,12 @@ export const SignupPage = () => {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel htmlFor="confirm-password">Re-Type</InputLabel>
+                  <InputLabel htmlFor="confirm-password">
+                    {t("Re-Type")}
+                  </InputLabel>
                   <OutlinedInput
                     id="confirm-password"
-                    label="Re-Type"
+                    label={t("Re-Type")}
                     type={ShowConfirmPassword ? "text" : "password"}
                     autoComplete="confirm-password"
                     endAdornment={
@@ -267,7 +289,11 @@ export const SignupPage = () => {
                           onClick={() => setShowConfirmPassword((_) => !_)}
                           edge="end"
                         >
-                          {ShowPassword ? <VisibilityOff /> : <Visibility />}
+                          {ShowConfirmPassword ? (
+                            <VisibilityOff />
+                          ) : (
+                            <Visibility />
+                          )}
                         </IconButton>
                       </InputAdornment>
                     }
@@ -286,7 +312,7 @@ export const SignupPage = () => {
                   variant="contained"
                   disabled={Loading}
                 >
-                  Sign Up
+                  {t("Sign Up")}
                 </Button>
               </Grid>
               <Grid
@@ -303,7 +329,7 @@ export const SignupPage = () => {
                   }}
                   variant="body2"
                 >
-                  Already have an account?
+                  {t("Already have an account?")}
                 </Link>
               </Grid>
             </Grid>

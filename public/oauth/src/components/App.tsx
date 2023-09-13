@@ -5,16 +5,16 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
+import EN from "../locales/en.json";
+import AR from "../locales/ar.json";
+
 i18n
   .use(initReactI18next)
   .use(LanguageDetector)
   .init({
     resources: {
-      en: {
-        translation: {
-          "Welcome to React": "Welcome to React and react-i18next",
-        },
-      },
+      en: EN,
+      ar: AR,
     },
     fallbackLng: "en",
     interpolation: {

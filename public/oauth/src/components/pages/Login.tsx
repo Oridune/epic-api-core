@@ -23,37 +23,18 @@ import { VisibilityOff, Visibility } from "@mui/icons-material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
 import axios, { AxiosError } from "axios";
+import { useTranslation } from "react-i18next";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
 import { useOauthApp } from "../context/OauthApp";
 
 import { ConsentFooter } from "../misc/ConsentFooter";
 
-import Logo from "../../assets/logo.svg";
+import Logo from "../../assets/logo.png";
 // import Google from "../../assets/google.png";
 // import Facebook from "../../assets/facebook.png";
 // import Github from "../../assets/github.png";
 // import Discord from "../../assets/discord.png";
-
-export const LoginSchema = e.object({
-  username: e
-    .string({
-      messages: { matchFailed: "Please provide a valid username format!" },
-    })
-    .matches(/^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/)
-    .length(50),
-  password: e
-    .string({
-      messages: {
-        typeError: "Please provide a valid password!",
-        smallerLength: "Password is required!",
-      },
-    })
-    .length({ min: 1, max: 300 }),
-  remember: e
-    .optional(e.or([e.string(), e.boolean()]).custom((ctx) => !!ctx.output))
-    .default(false),
-});
 
 export const LoginPage = () => {
   const Navigate = useNavigate();
@@ -71,6 +52,36 @@ export const LoginPage = () => {
   const [ShowPassword, setShowPassword] = React.useState(false);
   const [Loading, setLoading] = React.useState(false);
   const [ErrorMessage, setErrorMessage] = React.useState<string | null>(null);
+
+  const { t, i18n } = useTranslation();
+
+  const LoginSchema = React.useMemo(
+    () =>
+      e.object({
+        username: e
+          .string({
+            messages: {
+              matchFailed: t("Please provide a valid username format!"),
+            },
+          })
+          .matches(/^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/)
+          .length(50),
+        password: e
+          .string({
+            messages: {
+              typeError: t("Please provide a valid password!"),
+              smallerLength: t("Password is required!"),
+            },
+          })
+          .length({ min: 1, max: 300 }),
+        remember: e
+          .optional(
+            e.or([e.string(), e.boolean()]).custom((ctx) => !!ctx.output)
+          )
+          .default(false),
+      }),
+    [i18n.language]
+  );
 
   const {
     register,
@@ -188,8 +199,8 @@ export const LoginPage = () => {
             }}
           >
             <img
-              width={70}
-              height={70}
+              width={60}
+              height={60}
               src={app?.consent.logo?.url ?? Logo}
               alt="Logo"
               onClick={() => {
@@ -204,7 +215,7 @@ export const LoginPage = () => {
             />
           </Box>
           <Typography component="h1" variant="h6" textAlign="center">
-            Sign In to Continue
+            {t("Sign In to Continue")}
           </Typography>
 
           {/* <Grid container spacing={1} sx={{ marginY: 3 }}>
@@ -279,7 +290,7 @@ export const LoginPage = () => {
               </Grid>
               <Grid item xs={12}>
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel htmlFor="username">Username</InputLabel>
+                  <InputLabel htmlFor="username">{t("Username")}</InputLabel>
                   <OutlinedInput
                     id="username"
                     label="Username"
@@ -306,12 +317,12 @@ export const LoginPage = () => {
                   }}
                   variant="body2"
                 >
-                  Forgot password?
+                  {t("Forgot password?")}
                 </Link>
               </Grid>
               <Grid item xs={12}>
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel htmlFor="password">Password</InputLabel>
+                  <InputLabel htmlFor="password">{t("Password")}</InputLabel>
                   <OutlinedInput
                     id="password"
                     label="Password"
@@ -346,7 +357,7 @@ export const LoginPage = () => {
                         {...register("remember")}
                       />
                     }
-                    label="Remember me"
+                    label={t("Remember me")}
                   />
                 </Grid>
               )}
@@ -357,7 +368,7 @@ export const LoginPage = () => {
                   variant="contained"
                   disabled={Loading}
                 >
-                  Sign In
+                  {t("Sign In")}
                 </Button>
               </Grid>
               <Grid
@@ -374,7 +385,7 @@ export const LoginPage = () => {
                   }}
                   variant="body2"
                 >
-                  Don't have an account?
+                  {t("Don't have an account?")}
                 </Link>
               </Grid>
             </Grid>
