@@ -47,14 +47,25 @@ export const SignupPage = () => {
       e.object({
         fname: e.string().length({ min: 2, max: 30 }),
         lname: e.string(),
-        email: e
-          .string({
-            messages: { matchFailed: t("Please provide a valid email!") },
-          })
-          .matches({
-            regex:
-              /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/,
-          }),
+        email: app?.consent.requiredIdentificationMethods.includes("email")
+          ? e
+              .string({
+                messages: { matchFailed: t("Please provide a valid email!") },
+              })
+              .matches({
+                regex:
+                  /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/,
+              })
+          : undefined,
+        phone: app?.consent.requiredIdentificationMethods.includes("phone")
+          ? e
+              .string({
+                messages: { matchFailed: t("Please provide a valid phone!") },
+              })
+              .matches({
+                regex: /^\+(?:[0-9]?){6,14}[0-9]$/,
+              })
+          : undefined,
         username: e
           .string({
             messages: {
@@ -106,7 +117,12 @@ export const SignupPage = () => {
           username: data.username,
           password: data.password,
         },
-        { baseURL: import.meta.env.VITE_API_HOST }
+        {
+          baseURL: import.meta.env.VITE_API_HOST,
+          headers: {
+            "X-Api-Version": import.meta.env.VITE_API_VERSION,
+          },
+        }
       );
 
       if (Response.data.status) Navigate(`/login/${window.location.search}`);
@@ -213,22 +229,45 @@ export const SignupPage = () => {
                   </FormHelperText>
                 </FormControl>
               </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel htmlFor="email">{t("Email")}</InputLabel>
-                  <OutlinedInput
-                    id="email"
-                    label={t("Email")}
-                    type="text"
-                    autoComplete="email"
-                    error={!!errors.email?.message}
-                    {...register("email")}
-                  />
-                  <FormHelperText error={!!errors.email?.message}>
-                    {errors.email?.message}
-                  </FormHelperText>
-                </FormControl>
-              </Grid>
+
+              {app?.consent.requiredIdentificationMethods.includes("email") && (
+                <Grid item xs={12}>
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel htmlFor="email">{t("Email")}</InputLabel>
+                    <OutlinedInput
+                      id="email"
+                      label={t("Email")}
+                      type="text"
+                      autoComplete="email"
+                      error={!!errors.email?.message}
+                      {...register("email")}
+                    />
+                    <FormHelperText error={!!errors.email?.message}>
+                      {errors.email?.message}
+                    </FormHelperText>
+                  </FormControl>
+                </Grid>
+              )}
+
+              {app?.consent.requiredIdentificationMethods.includes("phone") && (
+                <Grid item xs={12}>
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel htmlFor="phone">{t("Phone")}</InputLabel>
+                    <OutlinedInput
+                      id="phone"
+                      label={t("Phone")}
+                      type="text"
+                      autoComplete="phone"
+                      error={!!errors.phone?.message}
+                      {...register("phone")}
+                    />
+                    <FormHelperText error={!!errors.phone?.message}>
+                      {errors.phone?.message ?? t("Example: +13904789456")}
+                    </FormHelperText>
+                  </FormControl>
+                </Grid>
+              )}
+
               <Grid item xs={12}>
                 <FormControl fullWidth variant="outlined">
                   <InputLabel htmlFor="username">{t("Username")}</InputLabel>

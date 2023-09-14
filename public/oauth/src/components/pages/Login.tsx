@@ -114,6 +114,9 @@ export const LoginPage = () => {
             username: data.username,
             password: data.password,
           },
+          headers: {
+            "X-Api-Version": import.meta.env.VITE_API_VERSION,
+          },
         }
       );
 
@@ -146,7 +149,12 @@ export const LoginPage = () => {
                 {}
               ),
             },
-            { baseURL: import.meta.env.VITE_API_HOST }
+            {
+              baseURL: import.meta.env.VITE_API_HOST,
+              headers: {
+                "X-Api-Version": import.meta.env.VITE_API_VERSION,
+              },
+            }
           );
 
           if (ExchangeResponse.data.status) {

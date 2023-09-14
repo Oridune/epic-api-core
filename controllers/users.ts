@@ -196,19 +196,19 @@ export default class UsersController extends BaseController {
   public update() {
     // Define Body Schema
     const BodySchema = e.object({
-      fname: e.optional(e.string().min(3)),
-      mname: e.optional(e.string()),
-      lname: e.optional(e.string()),
-      gender: e.optional(e.in(Object.values(Gender))),
-      dob: e.optional(e.date()),
-      locale: e.optional(e.string()),
-      tags: e.optional(e.array(e.string())),
-      country: e.optional(e.string()),
-      state: e.optional(e.string()),
-      city: e.optional(e.string()),
-      address_1: e.optional(e.string()),
-      address_2: e.optional(e.string()),
-      postalCode: e.optional(e.string()),
+      fname: e.optional(e.string().min(3), { nullish: true }),
+      mname: e.optional(e.string(), { nullish: true }),
+      lname: e.optional(e.string(), { nullish: true }),
+      gender: e.optional(e.in(Object.values(Gender)), { nullish: true }),
+      dob: e.optional(e.date(), { nullish: true }),
+      locale: e.optional(e.string(), { nullish: true }),
+      tags: e.optional(e.array(e.string()), { nullish: true }),
+      country: e.optional(e.string(), { nullish: true }),
+      state: e.optional(e.string(), { nullish: true }),
+      city: e.optional(e.string(), { nullish: true }),
+      address_1: e.optional(e.string(), { nullish: true }),
+      address_2: e.optional(e.string(), { nullish: true }),
+      postalCode: e.optional(e.string(), { nullish: true }),
     });
 
     return Versioned.add("1.0.0", {

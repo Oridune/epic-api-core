@@ -26,13 +26,13 @@ export default async () => {
 
   await OauthScopesModel.updateOne(
     { role: "unverified" },
-    { scopes: ["oauth.logout"] },
+    { scopes: ["oauth.logout", "users.update"] },
     { upsert: true }
   );
 
   await OauthScopesModel.updateOne(
     { role: "user" },
-    { scopes: ["users.delete", "oauth.logout"] },
+    { scopes: ["users.delete", "users.update", "oauth.logout"] },
     { upsert: true }
   );
 };

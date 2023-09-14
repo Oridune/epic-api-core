@@ -149,7 +149,12 @@ export const ForgotPage = () => {
     try {
       const Response = await axios.get(
         `/api/users/identification/methods/${data.username}`,
-        { baseURL: import.meta.env.VITE_API_HOST }
+        {
+          baseURL: import.meta.env.VITE_API_HOST,
+          headers: {
+            "X-Api-Version": import.meta.env.VITE_API_VERSION,
+          },
+        }
       );
 
       if (Response.data.status) {
@@ -177,7 +182,12 @@ export const ForgotPage = () => {
     try {
       const Response = await axios.get(
         `/api/users/identification/recovery/${Username}/${RecoveryMethod}`,
-        { baseURL: import.meta.env.VITE_API_HOST }
+        {
+          baseURL: import.meta.env.VITE_API_HOST,
+          headers: {
+            "X-Api-Version": import.meta.env.VITE_API_VERSION,
+          },
+        }
       );
 
       if (Response.data.status) {
@@ -212,7 +222,12 @@ export const ForgotPage = () => {
           code: data.code,
           password: data.password,
         },
-        { baseURL: import.meta.env.VITE_API_HOST }
+        {
+          baseURL: import.meta.env.VITE_API_HOST,
+          headers: {
+            "X-Api-Version": import.meta.env.VITE_API_VERSION,
+          },
+        }
       );
 
       if (Response.data.status) Navigate(`/login/${window.location.search}`);

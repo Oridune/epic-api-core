@@ -98,7 +98,9 @@ export default class UsersIdentificationController extends BaseController {
 
         const User = await UserModel.findOne(Params, {
           email: 1,
+          isEmailVerified: 1,
           phone: 1,
+          isPhoneVerified: 1,
         });
 
         if (User) {
@@ -110,6 +112,7 @@ export default class UsersIdentificationController extends BaseController {
                   /^(\w{3})[\w.-]+@([\w.]+\w)$/,
                   "$1***@$2"
                 ),
+                verified: User.isEmailVerified,
               },
               {
                 type: IdentificationMethod.PHONE,
@@ -117,6 +120,7 @@ export default class UsersIdentificationController extends BaseController {
                   /^(\+)\w+(\w{3})$/,
                   "$1*********$2"
                 ),
+                verified: User.isPhoneVerified,
               },
             ].filter((_) => !!_.maskedValue),
           });

@@ -3,8 +3,10 @@ import mongoose from "mongoose";
 import { IAccount } from "@Models/account.ts";
 import { IUser } from "@Models/user.ts";
 import { IFile, FileSchema } from "@Models/file.ts";
+import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 
 export interface IOauthConsent extends mongoose.Types.Subdocument {
+  requiredIdentificationMethods: IdentificationMethod[];
   logo?: IFile;
   primaryColor: string;
   secondaryColor: string;
@@ -17,6 +19,9 @@ export interface IOauthConsent extends mongoose.Types.Subdocument {
 
 export const OauthConsentSchema = new mongoose.Schema<IOauthConsent>(
   {
+    requiredIdentificationMethods: [
+      { type: String, enum: IdentificationMethod, required: true },
+    ],
     logo: FileSchema,
     primaryColor: { type: String, required: true },
     secondaryColor: { type: String, required: true },

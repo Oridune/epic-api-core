@@ -13,6 +13,7 @@ import { Status, type RouterContext } from "oak";
 import e from "validator";
 import mongoose from "mongoose";
 import { OauthAppModel } from "@Models/oauth-app.ts";
+import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 
 @Controller("/oauth/apps/", { group: "Oauth", name: "oauthApps" })
 export default class OauthAppsController extends BaseController {
@@ -27,6 +28,9 @@ export default class OauthAppsController extends BaseController {
       name: e.string().length({ min: 2, max: 50 }),
       description: e.optional(e.string().length({ min: 30, max: 300 })),
       consent: e.object({
+        requiredIdentificationMethods: e
+          .optional(e.array(e.in(Object.values(IdentificationMethod))))
+          .default([IdentificationMethod.EMAIL]),
         logo: e.optional(
           e.object({
             url: e.string().custom((ctx) => new URL(ctx.output).toString()),
@@ -116,6 +120,7 @@ export default class OauthAppsController extends BaseController {
             description: "The default OAuth application.",
             enabled: true,
             consent: {
+              requiredIdentificationMethods: [IdentificationMethod.EMAIL],
               primaryColor: "#e85d04",
               secondaryColor: "#faa307",
               allowedCallbackURLs: [
