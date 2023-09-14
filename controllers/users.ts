@@ -150,6 +150,12 @@ export default class UsersController extends BaseController {
       tags: e.optional(e.array(e.string())),
       email: e.optional(EmailValidator()),
       phone: e.optional(PhoneValidator()),
+      country: e.optional(e.string()),
+      state: e.optional(e.string()),
+      city: e.optional(e.string()),
+      address_1: e.optional(e.string()),
+      address_2: e.optional(e.string()),
+      postalCode: e.optional(e.string()),
     });
 
     return {
@@ -197,6 +203,12 @@ export default class UsersController extends BaseController {
       dob: e.optional(e.date()),
       locale: e.optional(e.string()),
       tags: e.optional(e.array(e.string())),
+      country: e.optional(e.string()),
+      state: e.optional(e.string()),
+      city: e.optional(e.string()),
+      address_1: e.optional(e.string()),
+      address_2: e.optional(e.string()),
+      postalCode: e.optional(e.string()),
     });
 
     return Versioned.add("1.0.0", {

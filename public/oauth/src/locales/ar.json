@@ -41,6 +41,7 @@
     "Loading...": "جار التحميل...",
     "Consent Error": "خطأ في الموافقة",
     "We've encountered an issue while fetching the consent information!": "لقد واجهنا مشكلة أثناء جلب معلومات الموافقة!",
-    "This page could not be found!": "لا يمكن العثور على هذه الصفحة!"
+    "This page could not be found!": "لا يمكن العثور على هذه الصفحة!",
+    "Change Username?": "غير اسم المستخدم؟"
   }
 }

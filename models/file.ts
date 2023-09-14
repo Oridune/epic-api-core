@@ -10,7 +10,7 @@ export interface IFile extends mongoose.Types.Subdocument {
 export const FileSchema = new mongoose.Schema<IFile>(
   {
     name: String,
-    url: String,
+    url: { type: String, required: true },
     sizeInBytes: Number,
     alt: String,
   },

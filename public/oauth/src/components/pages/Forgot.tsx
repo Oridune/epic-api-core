@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Box,
   Button,
@@ -19,6 +19,7 @@ import {
   FormControlLabel,
   InputAdornment,
   IconButton,
+  Skeleton,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { motion } from "framer-motion";
@@ -63,6 +64,7 @@ export const RecoverySchema = e.object({
 
 export const ForgotPage = () => {
   const Navigate = useNavigate();
+  const [Query, setQuery] = useSearchParams();
 
   const { app } = useOauthApp();
 
@@ -226,6 +228,12 @@ export const ForgotPage = () => {
     setLoading(false);
   };
 
+  const QueryUsername = Query.get("username");
+
+  React.useEffect(() => {
+    if (QueryUsername) HandleForgot({ username: QueryUsername });
+  }, [QueryUsername]);
+
   React.useEffect(() => {
     const Interval = setInterval(() => setResendCounter((c) => c + 1), 1000);
 
@@ -272,8 +280,11 @@ export const ForgotPage = () => {
               }}
             />
           </Box>
-          {!AvailableMethods ? (
-            <>
+          {!AvailableMethods && !QueryUsername ? (
+            <motion.div
+              animate={{ opacity: 1, y: 0, transition: { duration: 0.2 } }}
+              initial={{ opacity: 0, y: 10 }}
+            >
               <Typography component="h1" variant="h6" textAlign="center">
                 {t("Recover your password!")}
               </Typography>
@@ -359,7 +370,7 @@ export const ForgotPage = () => {
                   </Grid>
                 </Grid>
               </Box>
-            </>
+            </motion.div>
           ) : !Token ? (
             <motion.div
               animate={{ opacity: 1, y: 0, transition: { duration: 0.2 } }}
@@ -395,16 +406,27 @@ export const ForgotPage = () => {
                           setRecoveryMethod(e.currentTarget.value);
                         }}
                       >
-                        {AvailableMethods.map((method, index) => (
-                          <FormControlLabel
-                            key={index}
-                            control={<Radio />}
-                            label={`${method.type.toUpperCase()} ${
-                              method.maskedValue
-                            }`}
-                            value={method.type}
-                          />
-                        ))}
+                        {AvailableMethods instanceof Array ? (
+                          AvailableMethods.map((method, index) => (
+                            <FormControlLabel
+                              key={index}
+                              control={<Radio />}
+                              label={`${method.type.toUpperCase()} ${
+                                method.maskedValue
+                              }`}
+                              value={method.type}
+                            />
+                          ))
+                        ) : (
+                          <>
+                            <Typography component="div" variant="h3">
+                              <Skeleton />
+                            </Typography>
+                            <Typography component="div" variant="h3">
+                              <Skeleton />
+                            </Typography>
+                          </>
+                        )}
                       </RadioGroup>
                     </FormControl>
                   </Grid>
@@ -417,6 +439,25 @@ export const ForgotPage = () => {
                     >
                       {t("Get Code")}
                     </Button>
+                  </Grid>
+                  <Grid
+                    item
+                    xs={12}
+                    sx={{ display: "flex", justifyContent: "right" }}
+                  >
+                    <Link
+                      href="#change-username"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setUsername(null);
+                        setAvailableMethods(null);
+                        Query.delete("username");
+                        setQuery(Query);
+                      }}
+                      variant="body2"
+                    >
+                      {t("Change Username?")}
+                    </Link>
                   </Grid>
                 </Grid>
               </Box>
@@ -474,7 +515,8 @@ export const ForgotPage = () => {
                   >
                     <Link
                       href="#change-method"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
                         setToken(null);
                       }}
                       variant="body2"

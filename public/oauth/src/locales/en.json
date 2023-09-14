@@ -41,6 +41,7 @@
     "Loading...": "Loading...",
     "Consent Error": "Consent Error",
     "We've encountered an issue while fetching the consent information!": "We've encountered an issue while fetching the consent information!",
-    "This page could not be found!": "This page could not be found!"
+    "This page could not be found!": "This page could not be found!",
+    "Change Username?": "Change Username?"
   }
 }

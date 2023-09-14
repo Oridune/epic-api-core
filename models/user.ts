@@ -26,6 +26,12 @@ export interface IUser extends mongoose.Document {
   isEmailVerified: boolean;
   phone?: string;
   isPhoneVerified: boolean;
+  country?: string;
+  state?: string;
+  city?: string;
+  address_1?: string;
+  address_2?: string;
+  postalCode?: string;
   lastLogin?: Date;
   loginCount: number;
   failedLoginAttempts: number;
@@ -67,6 +73,12 @@ export const UserSchema = new mongoose.Schema<IUser>(
       },
     },
     isPhoneVerified: { type: Boolean, default: false },
+    country: String,
+    state: String,
+    city: String,
+    address_1: String,
+    address_2: String,
+    postalCode: String,
     lastLogin: Date,
     loginCount: { type: Number, default: 0 },
     failedLoginAttempts: { type: Number, default: 0 },

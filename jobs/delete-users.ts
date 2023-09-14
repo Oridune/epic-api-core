@@ -75,5 +75,5 @@ export default async () => {
   await PermanentlyDeleteUsers.exec();
 
   // Delete every day...
-  daily(PermanentlyDeleteUsers.exec);
+  daily(() => PermanentlyDeleteUsers.exec());
 };
