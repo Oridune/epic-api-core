@@ -59,7 +59,12 @@ export const FetchOauthApp = async (appId: string) => {
 export const OauthAppProvider: React.FC<IOauthAppProviderProps> = ({
   children,
 }) => {
-  const AppID = new URLSearchParams(window.location.search).get("appId");
+  const QueryAppID = new URLSearchParams(window.location.search).get("appId");
+  const AppID = QueryAppID
+    ? QueryAppID
+    : import.meta.env.DEV
+    ? "default"
+    : null;
 
   const [Loading, setLoading] = React.useState(!!AppID);
   const [App, setApp] = React.useState<IOauthApp | null>(null);
@@ -70,7 +75,7 @@ export const OauthAppProvider: React.FC<IOauthAppProviderProps> = ({
         setApp(await FetchOauthApp(AppID));
         setLoading(false);
       })();
-  }, []);
+  }, [AppID]);
 
   return (
     <OauthAppContext.Provider

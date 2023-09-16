@@ -44,6 +44,12 @@
     "Consent Error": "Consent Error",
     "We've encountered an issue while fetching the consent information!": "We've encountered an issue while fetching the consent information!",
     "This page could not be found!": "This page could not be found!",
-    "Change Username?": "Change Username?"
+    "Change Username?": "Change Username?",
+    "Change or verify your contacts": "Change or verify your contacts",
+    "Your contacts list": "Your contacts list",
+    "Verified": "Verified",
+    "Verify": "Verify",
+    "Change": "Change",
+    "Change your contact": "Change your contact"
   }
 }

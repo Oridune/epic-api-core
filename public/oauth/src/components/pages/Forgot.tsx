@@ -35,33 +35,6 @@ import { ConsentFooter } from "../misc/ConsentFooter";
 
 import Logo from "../../assets/logo.png";
 
-export const ForgotSchema = e.object({
-  username: e
-    .string({
-      messages: { matchFailed: "Please provide a valid username format!" },
-    })
-    .matches(/^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/)
-    .length(50),
-});
-
-export const RecoverySchema = e.object({
-  code: e.number({ cast: true }).length(6),
-  password: e
-    .string({
-      messages: {
-        matchFailed:
-          "A password should be 8 characters long, must contain an uppercase, a lowercase, a number and a special character!",
-      },
-    })
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=?|\s])[A-Za-z\d!@#$%^&*()_\-+=?|\s]{8,}$/
-    ),
-  confirmPassword: e.string().custom((ctx) => {
-    if (ctx.parent!.output.password !== ctx.output)
-      throw "Password doesn't match!";
-  }),
-});
-
 export const ForgotPage = () => {
   const Navigate = useNavigate();
   const [Query, setQuery] = useSearchParams();
@@ -255,7 +228,7 @@ export const ForgotPage = () => {
     return () => {
       clearInterval(Interval);
     };
-  });
+  }, []);
 
   return (
     <>
@@ -408,53 +381,58 @@ export const ForgotPage = () => {
                       )}
                     </Stack>
                   </Grid>
-                  <Grid item xs={12}>
-                    <FormControl>
-                      <FormLabel id="recovery-method-label">
-                        {t("How would you like to get the security code?")}
-                      </FormLabel>
-                      <RadioGroup
-                        aria-labelledby="recovery-method-label"
-                        value={RecoveryMethod}
-                        onChange={(e) => {
-                          e.persist();
-                          setRecoveryMethod(e.currentTarget.value);
-                        }}
-                      >
-                        {AvailableMethods instanceof Array ? (
-                          AvailableMethods.map((method, index) => (
-                            <FormControlLabel
-                              key={index}
-                              control={<Radio />}
-                              label={`${method.type.toUpperCase()} ${
-                                method.maskedValue
-                              }`}
-                              value={method.type}
-                            />
-                          ))
-                        ) : (
-                          <>
-                            <Typography component="div" variant="h3">
-                              <Skeleton />
-                            </Typography>
-                            <Typography component="div" variant="h3">
-                              <Skeleton />
-                            </Typography>
-                          </>
-                        )}
-                      </RadioGroup>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      onClick={HandleRequestRecovery}
-                      disabled={Loading}
-                    >
-                      {t("Get Code")}
-                    </Button>
-                  </Grid>
+                  {!ErrorMessage && (
+                    <>
+                      <Grid item xs={12}>
+                        <FormControl>
+                          <FormLabel id="recovery-method-label">
+                            {t("How would you like to get the security code?")}
+                          </FormLabel>
+                          <RadioGroup
+                            aria-labelledby="recovery-method-label"
+                            value={RecoveryMethod}
+                            onChange={(e) => {
+                              e.persist();
+                              setRecoveryMethod(e.currentTarget.value);
+                            }}
+                          >
+                            {AvailableMethods instanceof Array ? (
+                              AvailableMethods.map((method, index) => (
+                                <FormControlLabel
+                                  key={index}
+                                  control={<Radio />}
+                                  label={`${
+                                    method.type.charAt(0).toUpperCase() +
+                                    method.type.slice(1)
+                                  }: ${method.maskedValue}`}
+                                  value={method.type}
+                                />
+                              ))
+                            ) : (
+                              <>
+                                <Typography component="div" variant="h3">
+                                  <Skeleton />
+                                </Typography>
+                                <Typography component="div" variant="h3">
+                                  <Skeleton />
+                                </Typography>
+                              </>
+                            )}
+                          </RadioGroup>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          onClick={HandleRequestRecovery}
+                          disabled={Loading}
+                        >
+                          {t("Get Code")}
+                        </Button>
+                      </Grid>
+                    </>
+                  )}
                   <Grid
                     item
                     xs={12}

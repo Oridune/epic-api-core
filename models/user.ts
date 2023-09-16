@@ -61,7 +61,7 @@ export const UserSchema = new mongoose.Schema<IUser>(
       type: String,
       index: {
         unique: true,
-        partialFilterExpression: { phone: { $exists: true } },
+        partialFilterExpression: { email: { $exists: true } },
       },
     },
     isEmailVerified: { type: Boolean, default: false },

@@ -9,6 +9,7 @@ import {
   Delete,
   Response,
   type IRequestContext,
+  type IRoute,
   Versioned,
 } from "@Core/common/mod.ts";
 import { Status, type RouterContext } from "oak";
@@ -288,6 +289,72 @@ export default class UsersController extends BaseController {
             $push: { passwordHistory: Body.hashedPassword },
             isBlocked: false,
           }
+        );
+
+        return Response.true();
+      },
+    });
+  }
+
+  @Put("/email/")
+  public updateEmail(route: IRoute) {
+    // Define Body Schema
+    const BodySchema = e.object({
+      email: EmailValidator().custom(async (ctx) => {
+        if (await UserModel.exists({ email: ctx.output }))
+          throw "Please provide a different email!";
+      }),
+    });
+
+    return Versioned.add("1.0.0", {
+      postman: {
+        body: BodySchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: `${route.scope}.body` }
+        );
+
+        await UserModel.updateOne(
+          { _id: ctx.router.state.auth.userId },
+          { email: Body.email, isEmailVerified: false }
+        );
+
+        return Response.true();
+      },
+    });
+  }
+
+  @Put("/phone/")
+  public updatePhone(route: IRoute) {
+    // Define Body Schema
+    const BodySchema = e.object({
+      phone: PhoneValidator().custom(async (ctx) => {
+        if (await UserModel.exists({ phone: ctx.output }))
+          throw "Please provide a different phone!";
+      }),
+    });
+
+    return Versioned.add("1.0.0", {
+      postman: {
+        body: BodySchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: `${route.scope}.body` }
+        );
+
+        await UserModel.updateOne(
+          { _id: ctx.router.state.auth.userId },
+          { phone: Body.phone, isPhoneVerified: false }
         );
 
         return Response.true();
