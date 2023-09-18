@@ -97,6 +97,7 @@ export const SignupPage = () => {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<InferOutput<typeof SignupSchema>>({
     resolver: ValidatorResolver(SignupSchema),
   });
@@ -125,8 +126,10 @@ export const SignupPage = () => {
         }
       );
 
-      if (Response.data.status) Navigate(`/login/${window.location.search}`);
-      else setErrorMessage(Response.data.messages[0].message);
+      if (Response.data.status) {
+        reset();
+        Navigate(`/login/${window.location.search}`);
+      } else setErrorMessage(Response.data.messages[0].message);
     } catch (error) {
       console.error(error);
       if (error instanceof AxiosError)

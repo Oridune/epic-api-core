@@ -1,9 +1,11 @@
 export class SecurityGuard {
   protected AllScopes: Set<string>;
   protected RequestedScopes: Set<string>;
+  protected PermittedScopes: Set<string>;
 
   protected AllPermissionsExists: boolean;
   protected AllPermissionsRequested: boolean;
+  protected AllPermissionsPermitted: boolean;
 
   protected findCommonElements<T>(
     arr1: T[] | Set<T>,
@@ -13,23 +15,32 @@ export class SecurityGuard {
     return new Set(Array.from(arr2).filter((element) => Set1.delete(element)));
   }
 
-  constructor(allScopes: string[], requestedScopes: string[]) {
+  constructor(
+    allScopes: string[],
+    requestedScopes: string[],
+    permittedScopes: string[]
+  ) {
     this.AllScopes = new Set(allScopes);
     this.RequestedScopes = new Set(requestedScopes);
+    this.PermittedScopes = new Set(permittedScopes);
 
     this.AllPermissionsExists = this.AllScopes.has("*");
     this.AllPermissionsRequested = this.RequestedScopes.has("*");
+    this.AllPermissionsPermitted = this.PermittedScopes.has("*");
   }
 
   public isPermitted(scope: string, permission?: string) {
+    let Allowed = false;
+    let Permitted = false;
+
     if (this.AllPermissionsExists) {
-      if (this.AllPermissionsRequested) return true;
+      if (this.AllPermissionsRequested) Allowed = true;
       else if (
         this.RequestedScopes.has(scope) ||
         (typeof permission === "string" &&
           this.RequestedScopes.has(`${scope}.${permission}`))
       )
-        return true;
+        Allowed = true;
     } else {
       if (this.AllPermissionsRequested) {
         if (
@@ -37,7 +48,7 @@ export class SecurityGuard {
           (typeof permission === "string" &&
             this.AllScopes.has(`${scope}.${permission}`))
         )
-          return true;
+          Allowed = true;
       } else {
         const Scopes = this.findCommonElements(
           this.AllScopes,
@@ -49,10 +60,18 @@ export class SecurityGuard {
           (typeof permission === "string" &&
             Scopes.has(`${scope}.${permission}`))
         )
-          return true;
+          Allowed = true;
       }
     }
 
-    return false;
+    if (Allowed) {
+      Permitted =
+        this.AllPermissionsPermitted ||
+        this.PermittedScopes.has(scope) ||
+        (typeof permission === "string" &&
+          this.PermittedScopes.has(`${scope}.${permission}`));
+    }
+
+    return Permitted;
   }
 }

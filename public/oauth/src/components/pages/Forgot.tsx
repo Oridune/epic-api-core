@@ -101,6 +101,7 @@ export const ForgotPage = () => {
     register: registerForgot,
     handleSubmit: handleSubmitForgot,
     formState: { errors: errorsForgot },
+    reset: resetForgot,
   } = useForm<InferOutput<typeof ForgotSchema>>({
     resolver: ValidatorResolver(ForgotSchema),
   });
@@ -109,6 +110,7 @@ export const ForgotPage = () => {
     register: registerRecovery,
     handleSubmit: handleSubmitRecovery,
     formState: { errors: errorsRecovery },
+    reset: resetRecovery,
   } = useForm<InferOutput<typeof RecoverySchema>>({
     resolver: ValidatorResolver(RecoverySchema),
   });
@@ -132,6 +134,7 @@ export const ForgotPage = () => {
 
       if (Response.data.status) {
         if (Response.data.data.availableMethods instanceof Array) {
+          resetForgot();
           setUsername(data.username);
           setAvailableMethods(Response.data.data.availableMethods);
           setRecoveryMethod(Response.data.data.availableMethods[0].type);
@@ -203,8 +206,10 @@ export const ForgotPage = () => {
         }
       );
 
-      if (Response.data.status) Navigate(`/login/${window.location.search}`);
-      else setErrorMessage(Response.data.messages[0].message);
+      if (Response.data.status) {
+        resetRecovery();
+        Navigate(`/login/${window.location.search}`);
+      } else setErrorMessage(Response.data.messages[0].message);
     } catch (error) {
       console.error(error);
       if (error instanceof AxiosError)
@@ -525,9 +530,7 @@ export const ForgotPage = () => {
                     <Link
                       href={ResendCounter >= 60 ? "#resend-otp" : undefined}
                       onClick={() => {
-                        if (ResendCounter >= 60) {
-                          HandleRequestRecovery();
-                        }
+                        if (ResendCounter >= 60) HandleRequestRecovery();
                       }}
                       variant="body2"
                       color={ResendCounter < 60 ? "#808080" : undefined}

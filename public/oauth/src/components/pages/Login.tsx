@@ -87,6 +87,7 @@ export const LoginPage = () => {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<InferOutput<typeof LoginSchema>>({
     resolver: ValidatorResolver(LoginSchema),
   });
@@ -158,6 +159,8 @@ export const LoginPage = () => {
           );
 
           if (ExchangeResponse.data.status) {
+            reset();
+
             const RedirectURL =
               CallbackURL ?? app!.consent.allowedCallbackURLs[0];
 

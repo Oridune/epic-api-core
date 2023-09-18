@@ -7,7 +7,7 @@ import {
 import { LoginPage } from "./pages/Login";
 import { SignupPage } from "./pages/Signup";
 import { ForgotPage } from "./pages/Forgot";
-import { VerifyPage } from "./pages/Verify";
+import { ContactsPage } from "./pages/Contacts";
 import { NotFoundPage } from "./pages/NotFound";
 
 export const AppRoutes = () => {
@@ -32,8 +32,8 @@ export const AppRoutes = () => {
             element: <ForgotPage />,
           },
           {
-            path: "/verify/:username",
-            element: <VerifyPage />,
+            path: "/contacts/:username",
+            element: <ContactsPage />,
           },
           {
             path: "*",

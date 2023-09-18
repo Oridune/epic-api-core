@@ -20,7 +20,8 @@ export default {
             {
               sessionId: e.string(),
               version: e.number(),
-              refreshable: e.boolean(),
+              refreshable: e.optional(e.boolean()),
+              scopes: e.optional(e.array(e.string())),
             },
             { allowUnexpectedProps: true }
           ),
@@ -43,6 +44,7 @@ export default {
 
     let AvailableScopes: string[] = [];
     let RequestedScopes: string[] = [];
+    let PermittedScopes: string[] = [];
 
     if (SessionInfo) {
       const AccountId = await e
@@ -53,8 +55,6 @@ export default {
             Object.keys(SessionInfo.session.scopes)[0],
           { name: `${scope}.headers.x-account-id` }
         );
-
-      RequestedScopes = SessionInfo.session.scopes[AccountId] ?? [];
 
       const Collaborator = await CollaboratorModel.findOne(
         {
@@ -78,14 +78,16 @@ export default {
           }'!`
         );
 
-      AvailableScopes = OauthScopes?.scopes ?? [];
-
       ctx.router.state.auth = {
         sessionId: SessionInfo.claims.sessionId,
         userId: SessionInfo.session.createdBy,
         accountId: AccountId,
         role: Collaborator!.role,
       };
+
+      AvailableScopes = OauthScopes?.scopes ?? [];
+      RequestedScopes = SessionInfo.session.scopes[AccountId] ?? [];
+      PermittedScopes = SessionInfo.claims.scopes ?? ["*"];
     } else {
       const UnauthenticatedRole = "unauthenticated";
       const OauthScopes = await OauthScopesModel.findOne(
@@ -100,6 +102,7 @@ export default {
 
       AvailableScopes = OauthScopes?.scopes ?? [];
       RequestedScopes = ["*"];
+      PermittedScopes = ["*"];
     }
 
     const NormalizedAvailableScopes = await AvailableScopes.reduce(
@@ -126,12 +129,13 @@ export default {
       Promise.resolve<string[]>([])
     );
 
-    ctx.router.state.guard = new SecurityGuard(
+    const Guard = (ctx.router.state.guard = new SecurityGuard(
       NormalizedAvailableScopes,
-      RequestedScopes
-    );
+      RequestedScopes,
+      PermittedScopes
+    ));
 
-    if (!ctx.router.state.guard.isPermitted(scope, name))
+    if (!Guard.isPermitted(scope, name))
       ctx.router.throw(
         Status.Unauthorized,
         `You are not permitted! Missing permission '${`${scope}.${name}`}'.`

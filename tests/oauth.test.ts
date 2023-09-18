@@ -32,6 +32,7 @@ const DefaultOauthAppResponseSchema = e.object({
     description: e.string(),
     enabled: e.boolean(),
     consent: e.object({
+      requiredIdentificationMethods: e.array(e.string()),
       primaryColor: e.string(),
       secondaryColor: e.string(),
       allowedCallbackURLs: e.array(e.string()),

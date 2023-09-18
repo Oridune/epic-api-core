@@ -8,7 +8,8 @@ type SessionInfo = {
   claims: {
     sessionId: string;
     version: number;
-    refreshable: boolean;
+    refreshable?: boolean;
+    scopes?: string[];
   };
   session: {
     scopes: Record<string, Array<string>>;

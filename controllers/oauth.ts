@@ -5,6 +5,7 @@ import {
   Post,
   Delete,
   type IRequestContext,
+  type IRoute,
   Env,
   Versioned,
 } from "@Core/common/mod.ts";
@@ -26,6 +27,7 @@ export enum OauthTokenType {
   CODE = "oauth_code",
   REFRESH = "oauth_refresh_token",
   ACCESS = "oauth_access_token",
+  PERMIT = "oauth_permit",
 }
 
 export enum OauthPKCEMethod {
@@ -153,8 +155,41 @@ export default class OauthController extends BaseController {
       access: await OauthController.createOauthToken({
         type: OauthTokenType.ACCESS,
         payload: { ...opts.payload, ...Payload },
+        issuer: opts.issuer,
+        audience: opts.audience,
         expiresInSeconds:
           opts.accessTokenExpiresInSeconds ??
+          OauthController.DefaultAccessTokenExpirySeconds,
+      }),
+    };
+  }
+
+  static async createOauthPermitToken(opts: {
+    version: number;
+    sessionId: string;
+    scopes: string[];
+    payload?: Record<
+      string,
+      string | string[] | number | boolean | null | undefined
+    >;
+    issuer?: string;
+    audience?: string;
+    expiresInSeconds?: number;
+  }) {
+    const Payload = {
+      version: opts.version,
+      sessionId: opts.sessionId,
+      scopes: opts.scopes,
+    };
+
+    return {
+      permit: await OauthController.createOauthToken({
+        type: OauthTokenType.PERMIT,
+        payload: { ...opts.payload, ...Payload },
+        issuer: opts.issuer,
+        audience: opts.audience,
+        expiresInSeconds:
+          opts.expiresInSeconds ??
           OauthController.DefaultAccessTokenExpirySeconds,
       }),
     };
@@ -234,6 +269,7 @@ export default class OauthController extends BaseController {
     type: OauthTokenType;
     token: string;
     useragent: string;
+    useragentCheck?: boolean;
     verifyOpts?: JWTVerifyOptions;
   }) {
     const Claims = await OauthController.verifyToken({
@@ -246,7 +282,10 @@ export default class OauthController extends BaseController {
 
     if (!Session) throw new Error(`An active session was not found!`);
 
-    if (Session.useragent !== opts.useragent)
+    if (
+      [undefined, true].includes(opts.useragentCheck) &&
+      Session.useragent !== opts.useragent
+    )
       throw new Error(`Your session is invalid!`);
 
     if (Session.version !== Claims.version) {
@@ -706,6 +745,38 @@ export default class OauthController extends BaseController {
           });
 
         return Response.true();
+      },
+    });
+  }
+
+  @Post("/permit/")
+  public createPermit(route: IRoute) {
+    // Define Body Schema
+    const BodySchema = e.object({
+      scopes: e.array(e.string(), { cast: true }).min(1),
+    });
+
+    return Versioned.add("1.0.0", {
+      postman: {
+        query: BodySchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth || !ctx.router.state.sessionInfo)
+          ctx.router.throw(Status.Unauthorized);
+
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: `${route.scope}.body` }
+        );
+
+        return Response.data(
+          await OauthController.createOauthPermitToken({
+            version: ctx.router.state.sessionInfo.claims.version,
+            sessionId: ctx.router.state.auth.sessionId,
+            scopes: Body.scopes,
+          })
+        );
       },
     });
   }

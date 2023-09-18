@@ -28,6 +28,9 @@ export const DotMenu = (props: {
     props.onClose?.();
   };
 
+  if (!props.options.length || !props.options.filter((_) => !_.disabled).length)
+    return null;
+
   return (
     <>
       <IconButton

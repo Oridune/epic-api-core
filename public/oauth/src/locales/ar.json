@@ -45,7 +45,12 @@
     "We've encountered an issue while fetching the consent information!": "لقد واجهنا مشكلة أثناء جلب معلومات الموافقة!",
     "This page could not be found!": "لا يمكن العثور على هذه الصفحة!",
     "Change Username?": "غير اسم المستخدم؟",
-    "Your contacts": "Your contacts",
-    "Below is your list of contacts that are verified, or need to be verified with us.": "Below is your list of contacts that are verified, or need to be verified with us."
+    "Change or verify your contacts": "قم بتغيير جهات الاتصال الخاصة بك أو التحقق منها",
+    "Your contacts list": "قائمة الاتصال الخاصة بك",
+    "Verified": "تم التحقق",
+    "Verify": "تحقق من",
+    "Change": "التغيير",
+    "Change your contact": "تغيير الاتصال الخاص بك",
+    "Return back?": "العودة إلى الوراء؟"
   }
 }

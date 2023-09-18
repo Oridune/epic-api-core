@@ -55,6 +55,66 @@
           "name": "users",
           "item": [
             {
+              "name": "updateEmail",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/users/email",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "email"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/users/me",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "me"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-09-18T18:39:22.331Z\",\n  \"locale\": \"\",\n  \"tags\": [\n    \"\"\n  ],\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
               "name": "get",
               "request": {
                 "url": {
@@ -106,6 +166,36 @@
               "response": []
             },
             {
+              "name": "updatePhone",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/users/phone",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "phone"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
               "name": "verify",
               "request": {
                 "url": {
@@ -139,7 +229,7 @@
               "name": "delete",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/users?deletionTimeoutMs=2",
+                  "raw": "{{host}}/api/users?deletionTimeoutMs=1",
                   "host": [
                     "{{host}}"
                   ],
@@ -150,7 +240,7 @@
                   "query": [
                     {
                       "key": "deletionTimeoutMs",
-                      "value": 2,
+                      "value": 1,
                       "description": "(Optional)"
                     }
                   ],
@@ -191,7 +281,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"username\": \"\",\n  \"password\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-08-27T16:56:48.440Z\",\n  \"locale\": \"\",\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\"\n}",
+                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"username\": \"\",\n  \"password\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-09-18T18:39:22.335Z\",\n  \"locale\": \"\",\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -205,7 +295,7 @@
               "name": "listAll",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/users/:userId?limit=1&offset=1",
+                  "raw": "{{host}}/api/users/:userId?limit=2&offset=2",
                   "host": [
                     "{{host}}"
                   ],
@@ -217,12 +307,12 @@
                   "query": [
                     {
                       "key": "limit",
-                      "value": 1,
+                      "value": 2,
                       "description": "(Optional)"
                     },
                     {
                       "key": "offset",
-                      "value": 1,
+                      "value": 2,
                       "description": "(Optional)"
                     }
                   ],
@@ -331,7 +421,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"oauthAppId\": \"\",\n  \"codeChallenge\": \"\",\n  \"codeChallengeMethod\": \"sha256\",\n  \"callbackURL\": \"\",\n  \"remember\": true\n}",
+                  "raw": "{\n  \"oauthAppId\": \"\",\n  \"callbackURL\": \"\",\n  \"codeChallenge\": \"\",\n  \"codeChallengeMethod\": \"sha256\",\n  \"remember\": false\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -364,6 +454,35 @@
                   "variable": []
                 },
                 "method": "DELETE",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "createPermit",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/oauth/permit?scopes=",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "oauth",
+                    "permit"
+                  ],
+                  "query": [
+                    {
+                      "key": "scopes",
+                      "value": [
+                        ""
+                      ],
+                      "description": ""
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST",
                 "header": []
               },
               "response": []
@@ -445,7 +564,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"\",\n  \"description\": \"\",\n  \"consent\": {\n    \"logo\": {\n      \"url\": \"\"\n    },\n    \"primaryColor\": \"\",\n    \"secondaryColor\": \"\",\n    \"allowedCallbackURLs\": [\n      \"\"\n    ],\n    \"homepageURL\": \"\",\n    \"privacyPolicyURL\": \"\",\n    \"termsAndConditionsURL\": \"\",\n    \"supportURL\": \"\"\n  },\n  \"metadata\": {}\n}",
+                  "raw": "{\n  \"name\": \"\",\n  \"description\": \"\",\n  \"consent\": {\n    \"requiredIdentificationMethods\": [\n      \"email|phone\"\n    ],\n    \"logo\": {\n      \"url\": \"\"\n    },\n    \"primaryColor\": \"\",\n    \"secondaryColor\": \"\",\n    \"allowedCallbackURLs\": [\n      \"\"\n    ],\n    \"homepageURL\": \"\",\n    \"privacyPolicyURL\": \"\",\n    \"termsAndConditionsURL\": \"\",\n    \"supportURL\": \"\"\n  },\n  \"metadata\": {}\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -459,7 +578,7 @@
               "name": "list",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/oauth/apps?limit=1&offset=1",
+                  "raw": "{{host}}/api/oauth/apps?limit=2&offset=1",
                   "host": [
                     "{{host}}"
                   ],
@@ -471,7 +590,7 @@
                   "query": [
                     {
                       "key": "limit",
-                      "value": 1,
+                      "value": 2,
                       "description": "(Optional)"
                     },
                     {
@@ -708,6 +827,29 @@
       "item": [
         {
           "name": "methods",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/users/identification/methods/me",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "identification",
+                "methods",
+                "me"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "publicMethods",
           "request": {
             "url": {
               "raw": "{{host}}/api/users/identification/methods/:username",

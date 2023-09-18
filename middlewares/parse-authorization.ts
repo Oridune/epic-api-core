@@ -29,6 +29,15 @@ export default () =>
         }).catch((error) => {
           throw createHttpError(Status.Unauthorized, error);
         });
+      else if (AuthType === "permit")
+        ctx.state.sessionInfo = await OauthController.verifySession({
+          type: OauthTokenType.PERMIT,
+          token: Token,
+          useragent: ctx.request.headers.get("User-Agent") ?? "",
+          useragentCheck: false,
+        }).catch((error) => {
+          throw createHttpError(Status.Unauthorized, error);
+        });
       else if (AuthType === "basic")
         ctx.state.credentials = await CredentialsValidator().validate(Token, {
           name: "oauth.header.authorization",

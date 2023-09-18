@@ -9,7 +9,7 @@ import {
   EnvType,
 } from "@Core/common/mod.ts";
 import e from "validator";
-import { type RouterContext } from "oak";
+import { type RouterContext, Status } from "oak";
 import { Novu } from "novu";
 import { UserModel } from "@Models/user.ts";
 import { UsernameValidator } from "@Controllers/users.ts";
@@ -79,8 +79,44 @@ export default class UsersIdentificationController extends BaseController {
     };
   }
 
-  @Get("/methods/:username/")
+  @Get("/methods/me/")
   public methods() {
+    return new Versioned().add("1.0.0", {
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        const User = await UserModel.findOne(
+          { _id: ctx.router.state.auth.userId },
+          {
+            email: 1,
+            isEmailVerified: 1,
+            phone: 1,
+            isPhoneVerified: 1,
+          }
+        );
+
+        if (User) {
+          return Response.data({
+            availableMethods: [
+              {
+                type: IdentificationMethod.EMAIL,
+                value: User.email,
+                verified: User.isEmailVerified,
+              },
+              {
+                type: IdentificationMethod.PHONE,
+                value: User.phone,
+                verified: User.isPhoneVerified,
+              },
+            ],
+          });
+        } else e.error("User not found!");
+      },
+    });
+  }
+
+  @Get("/methods/:username/")
+  public publicMethods() {
     // Define Params Schema
     const ParamsSchema = e.object({
       username: UsernameValidator(),
