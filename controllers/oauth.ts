@@ -758,7 +758,7 @@ export default class OauthController extends BaseController {
 
     return Versioned.add("1.0.0", {
       postman: {
-        query: BodySchema.toSample(),
+        body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth || !ctx.router.state.sessionInfo)

@@ -25,6 +25,8 @@
     "create": "deno task create:module",
     "rename": "deno task rename:module",
     "delete": "deno task delete:module",
-    "update:plugin": "deno run -A ./core/scripts/updatePlugin.ts"
+    "update:plugin": "deno run -A ./core/scripts/updatePlugin.ts",
+    "run": "deno run --unstable --allow-read --allow-write --allow-env --allow-net --allow-sys --allow-run --allow-ffi ./serve.ts",
+    "build:docker": "docker compose -f docker-compose.yml build && docker compose up"
   }
 }

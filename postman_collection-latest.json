@@ -104,7 +104,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-09-18T18:39:22.331Z\",\n  \"locale\": \"\",\n  \"tags\": [\n    \"\"\n  ],\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\"\n}",
+                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-09-19T15:02:56.191Z\",\n  \"locale\": \"\",\n  \"tags\": [\n    \"\"\n  ],\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -155,7 +155,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"method\": \"email|phone\",\n  \"token\": \"\",\n  \"code\": 100000,\n  \"password\": \"\"\n}",
+                  "raw": "{\n  \"method\": \"email|phone\",\n  \"token\": \"\",\n  \"code\": 200000,\n  \"password\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -215,7 +215,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"method\": \"email|phone\",\n  \"token\": \"\",\n  \"code\": 100000\n}",
+                  "raw": "{\n  \"method\": \"email|phone\",\n  \"token\": \"\",\n  \"code\": 200000\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -229,7 +229,7 @@
               "name": "delete",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/users?deletionTimeoutMs=1",
+                  "raw": "{{host}}/api/users?deletionTimeoutMs=2",
                   "host": [
                     "{{host}}"
                   ],
@@ -240,7 +240,7 @@
                   "query": [
                     {
                       "key": "deletionTimeoutMs",
-                      "value": 1,
+                      "value": 2,
                       "description": "(Optional)"
                     }
                   ],
@@ -281,7 +281,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"username\": \"\",\n  \"password\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-09-18T18:39:22.335Z\",\n  \"locale\": \"\",\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\"\n}",
+                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"username\": \"\",\n  \"password\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-09-19T15:02:56.210Z\",\n  \"locale\": \"\",\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -435,7 +435,7 @@
               "name": "logout",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/oauth/logout?allDevices=false",
+                  "raw": "{{host}}/api/oauth/logout?allDevices=true",
                   "host": [
                     "{{host}}"
                   ],
@@ -447,7 +447,7 @@
                   "query": [
                     {
                       "key": "allDevices",
-                      "value": false,
+                      "value": true,
                       "description": "(Optional)"
                     }
                   ],
@@ -462,7 +462,7 @@
               "name": "createPermit",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/oauth/permit?scopes=",
+                  "raw": "{{host}}/api/oauth/permit",
                   "host": [
                     "{{host}}"
                   ],
@@ -471,19 +471,20 @@
                     "oauth",
                     "permit"
                   ],
-                  "query": [
-                    {
-                      "key": "scopes",
-                      "value": [
-                        ""
-                      ],
-                      "description": ""
-                    }
-                  ],
+                  "query": [],
                   "variable": []
                 },
                 "method": "POST",
-                "header": []
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"scopes\": [\n    \"\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
               },
               "response": []
             },
