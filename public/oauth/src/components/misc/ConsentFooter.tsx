@@ -1,6 +1,7 @@
 import React from "react";
 import { Divider, Link, Typography } from "@mui/material";
 import { Copyright } from "./Copyright";
+import { Credits } from "./Credits";
 import { useOauthApp } from "../context/OauthApp";
 import { useTranslation } from "react-i18next";
 
@@ -42,7 +43,7 @@ export const ConsentFooter = () => {
                   {index !== 0 && (
                     <span style={{ margin: "0px 10px 0px 10px" }}>•</span>
                   )}
-                  <Link href={href} variant="body2">
+                  <Link href={href} variant="body2" target="_blank">
                     {label}
                   </Link>
                 </React.Fragment>
@@ -55,6 +56,7 @@ export const ConsentFooter = () => {
         href={app.consent.homepageURL}
         typographyProps={{ sx: { mt: 8, mb: 4 } }}
       />
+      <Credits />
     </>
   );
 };

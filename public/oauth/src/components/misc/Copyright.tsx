@@ -11,7 +11,7 @@ export const Copyright = (props: {
 
   return (
     <Typography
-      variant="body2"
+      variant="subtitle2"
       color="text.secondary"
       align="center"
       {...props.typographyProps}

@@ -38,13 +38,13 @@ import Logo from "../../assets/logo.png";
 
 export const LoginPage = () => {
   const Navigate = useNavigate();
-  const [Params] = useSearchParams();
+  const [Query] = useSearchParams();
 
-  const CodeChallenge = Params.get("codeChallenge");
-  const CodeChallengeMethod = Params.get("codeChallengeMethod");
-  const CallbackURL = Params.get("callbackURL");
-  const Remember = Params.has("remember")
-    ? Params.get("remember") === "true"
+  const CodeChallenge = Query.get("codeChallenge");
+  const CodeChallengeMethod = Query.get("codeChallengeMethod");
+  const CallbackURL = Query.get("callbackURL");
+  const Remember = Query.has("remember")
+    ? Query.get("remember") === "true"
     : undefined;
 
   const { app } = useOauthApp();
@@ -88,9 +88,12 @@ export const LoginPage = () => {
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm<InferOutput<typeof LoginSchema>>({
     resolver: ValidatorResolver(LoginSchema),
   });
+
+  const LoginData = watch();
 
   const HandleLogin: SubmitHandler<InferOutput<typeof LoginSchema>> = async (
     data
@@ -172,7 +175,7 @@ export const LoginPage = () => {
                 ExchangeResponse.data.data.oauthCode.token
               );
 
-              window.location.href = RedirectURLWithCode.toString();
+              window.location.replace(RedirectURLWithCode.toString());
             }
           } else setErrorMessage(ExchangeResponse.data.messages?.[0]?.message);
         }
@@ -215,7 +218,7 @@ export const LoginPage = () => {
               src={app?.consent.logo?.url ?? Logo}
               alt="Logo"
               onClick={() => {
-                window.location.href = app!.consent.homepageURL;
+                window.open(app!.consent.homepageURL, "_blank");
               }}
               onError={(e) => {
                 if (app?.consent.logo?.url) {
@@ -308,7 +311,9 @@ export const LoginPage = () => {
                     type="text"
                     autoComplete="username"
                     error={!!errors.username?.message}
-                    {...register("username")}
+                    {...register("username", {
+                      value: Query.get("username") ?? "",
+                    })}
                   />
                   <FormHelperText error={!!errors.username?.message}>
                     {errors.username?.message}
@@ -321,7 +326,17 @@ export const LoginPage = () => {
                 sx={{ display: "flex", justifyContent: "right" }}
               >
                 <Link
-                  href={`/forgot/${window.location.search}`}
+                  href={`/forgot/${(() => {
+                    if (!LoginData.username) return window.location.search;
+
+                    const SearchParams = new URLSearchParams(
+                      window.location.search
+                    );
+
+                    SearchParams.set("username", LoginData.username);
+
+                    return "?" + SearchParams.toString();
+                  })()}`}
                   onClick={(e) => {
                     e.preventDefault();
                     Navigate(e.currentTarget.getAttribute("href")!);

@@ -208,7 +208,8 @@ export const ForgotPage = () => {
 
       if (Response.data.status) {
         resetRecovery();
-        Navigate(`/login/${window.location.search}`);
+        if (QueryReturnURL) window.location.replace(QueryReturnURL);
+        else Navigate(`/login/${window.location.search}`);
       } else setErrorMessage(Response.data.messages[0].message);
     } catch (error) {
       console.error(error);
@@ -222,6 +223,7 @@ export const ForgotPage = () => {
   };
 
   const QueryUsername = Query.get("username");
+  const QueryReturnURL = Query.get("returnUrl");
 
   React.useEffect(() => {
     if (QueryUsername) HandleForgot({ username: QueryUsername });
@@ -263,7 +265,7 @@ export const ForgotPage = () => {
               src={app?.consent.logo?.url ?? Logo}
               alt="Logo"
               onClick={() => {
-                window.location.href = app!.consent.homepageURL;
+                window.open(app!.consent.homepageURL, "_blank");
               }}
               onError={(e) => {
                 if (app?.consent.logo?.url) {
@@ -379,7 +381,11 @@ export const ForgotPage = () => {
                       {ErrorMessage && (
                         <Alert
                           severity="error"
-                          onClose={() => setErrorMessage(null)}
+                          onClose={() => {
+                            Query.delete("username");
+                            setQuery(Query);
+                            setErrorMessage(null);
+                          }}
                         >
                           {ErrorMessage}
                         </Alert>
@@ -438,25 +444,37 @@ export const ForgotPage = () => {
                       </Grid>
                     </>
                   )}
-                  <Grid
-                    item
-                    xs={12}
-                    sx={{ display: "flex", justifyContent: "right" }}
-                  >
-                    <Link
-                      href="#change-username"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setUsername(null);
-                        setAvailableMethods(null);
-                        Query.delete("username");
-                        setQuery(Query);
-                      }}
-                      variant="body2"
+                  {QueryReturnURL ? (
+                    <Grid
+                      item
+                      xs={12}
+                      sx={{ display: "flex", justifyContent: "right" }}
                     >
-                      {t("Change Username?")}
-                    </Link>
-                  </Grid>
+                      <Link href={QueryReturnURL} variant="body2">
+                        {t("Return back?")}
+                      </Link>
+                    </Grid>
+                  ) : (
+                    <Grid
+                      item
+                      xs={12}
+                      sx={{ display: "flex", justifyContent: "right" }}
+                    >
+                      <Link
+                        href="#change-username"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setUsername(null);
+                          setAvailableMethods(null);
+                          Query.delete("username");
+                          setQuery(Query);
+                        }}
+                        variant="body2"
+                      >
+                        {t("Change Username?")}
+                      </Link>
+                    </Grid>
+                  )}
                 </Grid>
               </Box>
             </motion.div>

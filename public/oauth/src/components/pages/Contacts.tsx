@@ -288,7 +288,7 @@ export const ContactsPage = () => {
               src={app?.consent.logo?.url ?? Logo}
               alt="Logo"
               onClick={() => {
-                window.location.href = app!.consent.homepageURL;
+                window.open(app!.consent.homepageURL, "_blank");
               }}
               onError={(e) => {
                 if (app?.consent.logo?.url) {

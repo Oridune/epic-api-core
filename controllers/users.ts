@@ -21,6 +21,7 @@ import { Gender, IUser, UserModel } from "@Models/user.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { AccountModel } from "@Models/account.ts";
 import { IOauthApp, OauthAppModel } from "@Models/oauth-app.ts";
+import { OauthSessionModel } from "@Models/oauth-session.ts";
 import {
   IdentificationMethod,
   IdentificationPurpose,
@@ -505,6 +506,11 @@ export default class UsersController extends BaseController {
           Object.fromEntries(ctx.router.request.url.searchParams),
           { name: "users.query" }
         );
+
+        // Logout all sessions
+        await OauthSessionModel.deleteMany({
+          createdBy: ctx.router.state.auth.userId,
+        });
 
         await UsersController.scheduleDeletion(ctx.router.state.auth.userId, {
           timeoutMs: Query.deletionTimeoutMs,
