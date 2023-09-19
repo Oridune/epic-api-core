@@ -11,6 +11,7 @@ import e from "validator";
 import { Novu } from "novu";
 import { IUser, UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauth-session.ts";
+import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 
 export const isUserVerified = async (input: {
   isEmailVerified?: boolean;
@@ -123,17 +124,80 @@ export default () => {
 
   Events.listen<{
     ctx: IRequestContext<RouterContext<string>>;
-    res: Response;
+    res: Response<{
+      type: IdentificationMethod;
+      value: string;
+      verified: boolean;
+    }>;
   }>(
     EventChannel.REQUEST,
     ["users.updateEmail", "users.updatePhone"],
     async (event) => {
       const Request = event.detail.ctx;
 
-      if (typeof Request.router.state.auth?.userId === "string")
+      if (typeof Request.router.state.auth?.userId === "string") {
         await syncUserVerifiedRole(Request.router.state.auth.userId);
+
+        const Body = event.detail.res.getBody();
+
+        if (Body.status && Body.data) {
+          const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
+
+          await Notifier.subscribers
+            .update(Request.router.state.auth.userId, {
+              [Body.data.type]: Body.data.value,
+            })
+            .catch(() =>
+              Notifier.subscribers.identify(Request.router.state.auth!.userId, {
+                [Body.data!.type]: Body.data!.value,
+              })
+            );
+        }
+      }
     }
   );
+
+  Events.listen<{
+    ctx: IRequestContext<RouterContext<string>>;
+    res: Response<
+      Partial<
+        Omit<
+          IUser,
+          | "email"
+          | "isEmailVerified"
+          | "phone"
+          | "isPhoneVerified"
+          | "password"
+          | "passwordHistory"
+          | "oauthApp"
+          | "collaborates"
+        >
+      >
+    >;
+  }>(EventChannel.REQUEST, "users.update", async (event) => {
+    const Request = event.detail.ctx;
+    const Body = event.detail.res.getBody();
+
+    if (typeof Request.router.state.auth?.userId === "string")
+      if (Body.status && Body.data) {
+        const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
+
+        const Payload = {
+          firstName: Body.data.fname,
+          lastName: Body.data.lname,
+          locale: Body.data.locale,
+        };
+
+        await Notifier.subscribers
+          .update(Request.router.state.auth.userId, Payload)
+          .catch(() =>
+            Notifier.subscribers.identify(
+              Request.router.state.auth!.userId,
+              Payload
+            )
+          );
+      }
+  });
 
   Events.listen<{
     ctx: IRequestContext<RouterContext<string>>;

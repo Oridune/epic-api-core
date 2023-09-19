@@ -50,7 +50,11 @@ export default class UsersIdentificationController extends BaseController {
     if (!Env.is(EnvType.TEST)) {
       const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
 
-      await Notifier.subscribers.update(User._id, { [method]: User[method] });
+      await Notifier.subscribers
+        .update(User._id, { [method]: User[method] })
+        .catch(() =>
+          Notifier.subscribers.identify(User._id, { [method]: User[method] })
+        );
 
       const NovuTemplateId = method + "-identification-otp";
 

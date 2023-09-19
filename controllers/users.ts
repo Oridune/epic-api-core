@@ -229,7 +229,7 @@ export default class UsersController extends BaseController {
         // Update user
         await UserModel.updateOne({ _id: ctx.router.state.auth.userId }, Body);
 
-        return Response.true();
+        return Response.data(Body);
       },
     });
   }
@@ -320,12 +320,18 @@ export default class UsersController extends BaseController {
           { name: `${route.scope}.body` }
         );
 
+        const Verified = false;
+
         await UserModel.updateOne(
           { _id: ctx.router.state.auth.userId },
-          { email: Body.email, isEmailVerified: false }
+          { email: Body.email, isEmailVerified: Verified }
         );
 
-        return Response.true();
+        return Response.data({
+          type: IdentificationMethod.EMAIL,
+          value: Body.email,
+          verified: Verified,
+        });
       },
     });
   }
@@ -353,12 +359,18 @@ export default class UsersController extends BaseController {
           { name: `${route.scope}.body` }
         );
 
+        const Verified = false;
+
         await UserModel.updateOne(
           { _id: ctx.router.state.auth.userId },
-          { phone: Body.phone, isPhoneVerified: false }
+          { phone: Body.phone, isPhoneVerified: Verified }
         );
 
-        return Response.true();
+        return Response.data({
+          type: IdentificationMethod.PHONE,
+          value: Body.phone,
+          verified: Verified,
+        });
       },
     });
   }
