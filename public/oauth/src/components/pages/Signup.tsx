@@ -115,6 +115,7 @@ export const SignupPage = () => {
           fname: data.fname,
           lname: data.lname,
           email: data.email,
+          phone: data.phone,
           username: data.username,
           password: data.password,
         },
