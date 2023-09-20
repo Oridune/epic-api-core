@@ -27,6 +27,7 @@ import {
   IdentificationPurpose,
 } from "@Controllers/usersIdentification.ts";
 import OauthController from "@Controllers/oauth.ts";
+import { PermanentlyDeleteUsers } from "@Jobs/delete-users.ts";
 
 export const UsernameValidator = () =>
   e.string().matches({
@@ -515,6 +516,9 @@ export default class UsersController extends BaseController {
         await UsersController.scheduleDeletion(ctx.router.state.auth.userId, {
           timeoutMs: Query.deletionTimeoutMs,
         });
+
+        // Instant user deletion
+        if (Query.deletionTimeoutMs === 0) await PermanentlyDeleteUsers.exec();
 
         return Response.true();
       },
