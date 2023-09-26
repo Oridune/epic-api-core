@@ -8,6 +8,9 @@ export interface IOauthConsent {
   };
   primaryColor: string;
   secondaryColor: string;
+  styling?: {
+    roundness?: number;
+  };
   allowedCallbackURLs: string[];
   callbackURL: string;
   homepageURL: string;

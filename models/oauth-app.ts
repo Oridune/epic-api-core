@@ -5,11 +5,24 @@ import { IUser } from "@Models/user.ts";
 import { IFile, FileSchema } from "@Models/file.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 
+export interface IOauthConsentStyling extends mongoose.Types.Subdocument {
+  roundness?: number;
+}
+
+export const OauthConsentStylingSchema =
+  new mongoose.Schema<IOauthConsentStyling>(
+    {
+      roundness: Number,
+    },
+    { _id: false, versionKey: false }
+  );
+
 export interface IOauthConsent extends mongoose.Types.Subdocument {
   requiredIdentificationMethods: IdentificationMethod[];
   logo?: IFile;
   primaryColor: string;
   secondaryColor: string;
+  styling?: IOauthConsentStyling;
   allowedCallbackURLs: string[];
   homepageURL: string;
   privacyPolicyURL?: string;
@@ -25,6 +38,7 @@ export const OauthConsentSchema = new mongoose.Schema<IOauthConsent>(
     logo: FileSchema,
     primaryColor: { type: String, required: true },
     secondaryColor: { type: String, required: true },
+    styling: OauthConsentStylingSchema,
     allowedCallbackURLs: [{ type: String, required: true }],
     homepageURL: { type: String, required: true },
     privacyPolicyURL: String,

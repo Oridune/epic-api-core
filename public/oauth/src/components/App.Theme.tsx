@@ -20,16 +20,20 @@ export const AppTheme = () => {
   const { app, loading } = useOauthApp();
   const ThemeMode = useThemeMode();
 
+  const DefaultPrimaryColor = "#9e9e9e";
+  const DefaultSecondaryColor = "#607d8b";
+  const DefaultRoundness = 10;
+
   return (
     <ThemeProvider
       theme={createTheme({
         palette: {
           mode: ThemeMode,
           primary: {
-            main: app?.consent.primaryColor ?? "#9e9e9e",
+            main: app?.consent.primaryColor ?? DefaultPrimaryColor,
           },
           secondary: {
-            main: app?.consent.secondaryColor ?? "#607d8b",
+            main: app?.consent.secondaryColor ?? DefaultSecondaryColor,
           },
         },
         components: {
@@ -50,14 +54,16 @@ export const AppTheme = () => {
             },
             styleOverrides: {
               root: {
-                borderRadius: 10,
+                borderRadius:
+                  app?.consent.styling?.roundness ?? DefaultRoundness,
               },
             },
           },
           MuiButton: {
             styleOverrides: {
               root: {
-                borderRadius: 10,
+                borderRadius:
+                  app?.consent.styling?.roundness ?? DefaultRoundness,
               },
             },
           },
@@ -77,7 +83,8 @@ export const AppTheme = () => {
           MuiAlert: {
             styleOverrides: {
               root: {
-                borderRadius: 10,
+                borderRadius:
+                  app?.consent.styling?.roundness ?? DefaultRoundness,
               },
             },
           },
