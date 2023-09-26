@@ -51,20 +51,18 @@ export const AreArraysIdentical = (arr1: unknown[], arr2: unknown[]) => {
 };
 
 export const SyncOauthScopes = async () => {
-  const ExistingScopes = await OauthScopesModel.find({
+  const Scopes = await OauthScopesModel.find({
     role: { $in: Object.keys(DefaultOauthScopes) },
   });
 
   await Promise.all(
     Object.entries(DefaultOauthScopes).map(([role, scopes]) => {
+      const ExistingScopes = Scopes.find((doc) => doc.role === role)?.scopes;
       const UpdatedScopes = Array.from(
-        new Set([
-          ...scopes,
-          ...(ExistingScopes.find((doc) => doc.role === role)?.scopes ?? []),
-        ])
+        new Set([...scopes, ...(ExistingScopes ?? [])])
       );
 
-      if (!AreArraysIdentical(UpdatedScopes, scopes))
+      if (!ExistingScopes || !AreArraysIdentical(UpdatedScopes, scopes))
         return OauthScopesModel.updateOne(
           { role },
           { scopes: UpdatedScopes },
