@@ -41,6 +41,11 @@ export const createEnvironment = async (options: {
         "# Put your global environment variables here."
       );
 
+    // Generate a 30 character random string
+    const RandomString = [...crypto.getRandomValues(new Uint32Array(30))]
+      .map((v) => (v % 36).toString(36))
+      .join("");
+
     for (const Type of Options.types) {
       const EnvironmentFileName = `.${Type}.env`;
       const EnvironmentFilePath = join(EnvironmentDir, EnvironmentFileName);
@@ -54,7 +59,12 @@ export const createEnvironment = async (options: {
       )
         return;
 
-      const Content = Object.keys(Options.variables).reduce(
+      const Content = Object.keys({
+        port: 3742,
+        envType: Type,
+        randomString: RandomString,
+        ...Options.variables,
+      }).reduce(
         (content, key) =>
           ["string", "number"].includes(typeof Options.variables[key])
             ? content.replace(
