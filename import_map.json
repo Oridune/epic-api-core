@@ -27,7 +27,7 @@
     "hash": "https://deno.land/std@0.107.0/hash/mod.ts",
     "expect": "https://deno.land/x/expect@v0.4.0/mod.ts",
     "oak:testing": "https://deno.land/x/superoak@4.7.0/mod.ts",
-    "cron": "https://deno.land/x/deno_cron@v1.0.0/cron.ts",
+    "croner": "https://deno.land/x/croner@7.0.2/dist/croner.js",
     "u-semver": "npm:u-semver@^0.7.1",
     "mongoose": "npm:mongoose@^7.3.4",
     "ts-reset": "npm:@total-typescript/ts-reset@^0.4.2",

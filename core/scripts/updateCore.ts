@@ -111,35 +111,14 @@ export const updateCore = async (options: {
     if (Status.success) {
       Process.close();
 
-      // Create/Update Files
-      for (const Glob of ["core/**/*", "templates/**/*", "serve.ts"].map(
-        (pattern) =>
-          expandGlob(pattern, {
-            root: TempPath,
-            globstar: true,
-          })
-      ))
-        for await (const Entry of Glob)
-          if (!Entry.isDirectory) {
-            const SourcePath = Entry.path;
-            const TargetPath = Entry.path.replace(TempPath, Deno.cwd());
-            const TargetDirectory = dirname(TargetPath);
-
-            await Deno.mkdir(TargetDirectory, { recursive: true }).catch(() => {
-              // Do nothing...
-            });
-
-            await Deno.copyFile(SourcePath, TargetPath);
-          }
-
       // Create Files
-      for (const Glob of ["tests/**/*", "*.*", "*"].map((pattern) =>
+      for (const Glob of ["**/**/*"].map((pattern) =>
         expandGlob(pattern, {
           root: TempPath,
           globstar: true,
         })
       ))
-        for await (const Entry of Glob) {
+        for await (const Entry of Glob)
           if (!Entry.isDirectory) {
             const SourcePath = Entry.path;
             const TargetPath = Entry.path.replace(TempPath, Deno.cwd());
@@ -153,7 +132,31 @@ export const updateCore = async (options: {
 
             await Deno.copyFile(SourcePath, TargetPath);
           }
-        }
+
+      // Create/Update Files
+      for (const Glob of [
+        "core/**/*",
+        "docs/**/*",
+        "templates/**/*",
+        "serve.ts",
+      ].map((pattern) =>
+        expandGlob(pattern, {
+          root: TempPath,
+          globstar: true,
+        })
+      ))
+        for await (const Entry of Glob)
+          if (!Entry.isDirectory) {
+            const SourcePath = Entry.path;
+            const TargetPath = Entry.path.replace(TempPath, Deno.cwd());
+            const TargetDirectory = dirname(TargetPath);
+
+            await Deno.mkdir(TargetDirectory, { recursive: true }).catch(() => {
+              // Do nothing...
+            });
+
+            await Deno.copyFile(SourcePath, TargetPath);
+          }
 
       // Update Docs File
       await Deno.copyFile(

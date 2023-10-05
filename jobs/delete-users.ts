@@ -3,7 +3,7 @@ import { Transaction } from "@Core/common/mod.ts";
 import { UserModel } from "@Models/user.ts";
 import { AccountModel } from "@Models/account.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
-import { daily } from "cron";
+import { Cron } from "croner";
 
 export const PermanentlyDeleteUsers = Transaction.add(async (_, next) => {
   const Users = await UserModel.find(
@@ -75,5 +75,5 @@ export default async () => {
   await PermanentlyDeleteUsers.exec();
 
   // Delete every day...
-  daily(() => PermanentlyDeleteUsers.exec());
+  new Cron("0 0 0 * * *").schedule(() => PermanentlyDeleteUsers.exec());
 };

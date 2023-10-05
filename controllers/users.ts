@@ -28,6 +28,9 @@ import {
 } from "@Controllers/usersIdentification.ts";
 import OauthController from "@Controllers/oauth.ts";
 import { PermanentlyDeleteUsers } from "@Jobs/delete-users.ts";
+import UploadsController from "@Controllers/uploads.ts";
+import { Uploads } from "@Lib/uploads/mod.ts";
+import { IFile } from "@Models/file.ts";
 
 export const UsernameValidator = () =>
   e.string().matches({
@@ -122,7 +125,7 @@ export default class UsersController extends BaseController {
   }
 
   @Post("/:oauthAppId/")
-  public create() {
+  public create(route: IRoute) {
     // Define Params Schema
     const ParamsSchema = e.object({
       oauthAppId: e.string().throwsFatal(),
@@ -170,14 +173,14 @@ export default class UsersController extends BaseController {
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {
-          name: "users.params",
+          name: `${route.scope}.params`,
         });
 
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
           {
-            name: "users.body",
+            name: `${route.scope}.body`,
             context: {
               oauthApp: Params.oauthApp,
             },
@@ -197,7 +200,7 @@ export default class UsersController extends BaseController {
   }
 
   @Patch("/me/")
-  public update() {
+  public update(route: IRoute) {
     // Define Body Schema
     const BodySchema = e.object({
       fname: e.optional(e.string().min(3), { nullish: true }),
@@ -225,7 +228,7 @@ export default class UsersController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: "users.body" }
+          { name: `${route.scope}.body` }
         );
 
         // Update user
@@ -237,7 +240,7 @@ export default class UsersController extends BaseController {
   }
 
   @Put("/password/")
-  public updatePassword() {
+  public updatePassword(route: IRoute) {
     // Define Body Schema
     const BodySchema = e.object({
       method: e.in(Object.values(IdentificationMethod)),
@@ -257,7 +260,7 @@ export default class UsersController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: "users.body" }
+          { name: `${route.scope}.body` }
         );
 
         const Payload = (ctx.router.state.verifyTokenPayload =
@@ -378,7 +381,7 @@ export default class UsersController extends BaseController {
   }
 
   @Post("/verify/")
-  public verify() {
+  public verify(route: IRoute) {
     // Define Body Schema
     const BodySchema = e.object({
       method: e.in(Object.values(IdentificationMethod)),
@@ -394,7 +397,7 @@ export default class UsersController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: "users.body" }
+          { name: `${route.scope}.body` }
         );
 
         const Payload = (ctx.router.state.verifyTokenPayload =
@@ -418,7 +421,7 @@ export default class UsersController extends BaseController {
   }
 
   @Get("/:userId?/")
-  public listAll() {
+  public listAll(route: IRoute) {
     // Define Query Schema
     const QuerySchema = e.object(
       {
@@ -442,12 +445,12 @@ export default class UsersController extends BaseController {
         // Query Validation
         const Query = await QuerySchema.validate(
           Object.fromEntries(ctx.router.request.url.searchParams),
-          { name: "users.query" }
+          { name: `${route.scope}.query` }
         );
 
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {
-          name: "users.params",
+          name: `${route.scope}.params`,
         });
 
         // Fetch users
@@ -488,7 +491,7 @@ export default class UsersController extends BaseController {
   }
 
   @Delete("/")
-  public delete() {
+  public delete(route: IRoute) {
     // Define Query Schema
     const QuerySchema = e.object(
       { deletionTimeoutMs: e.optional(e.number({ cast: true })) },
@@ -505,7 +508,7 @@ export default class UsersController extends BaseController {
         // Query Validation
         const Query = await QuerySchema.validate(
           Object.fromEntries(ctx.router.request.url.searchParams),
-          { name: "users.query" }
+          { name: `${route.scope}.query` }
         );
 
         // Logout all sessions
@@ -519,6 +522,73 @@ export default class UsersController extends BaseController {
 
         // Instant user deletion
         if (Query.deletionTimeoutMs === 0) await PermanentlyDeleteUsers.exec();
+
+        return Response.true();
+      },
+    });
+  }
+
+  @Get("/avatar/sign/")
+  public signAvatar(route: IRoute) {
+    return UploadsController.sign(route, {
+      allowedContentTypes: [
+        "image/png",
+        "image/jpg",
+        "image/jpeg",
+        "image/svg+xml",
+        "image/webp",
+      ],
+      maxContentLength: 2e6,
+      location: "{{userId}}/avatar/",
+    });
+  }
+
+  @Put("/avatar/")
+  public updateAvatar(route: IRoute) {
+    // Define Body Schema
+    const BodySchema = e
+      .object({
+        token: e
+          .string()
+          .custom((ctx) =>
+            OauthController.verifyToken<IFile>({
+              token: ctx.output,
+              type: UploadsController.UploadTokenType,
+              secret: ctx.context?.userId,
+            })
+          )
+          .checkpoint(),
+      })
+      .custom(async (ctx) => {
+        if (!(await Uploads.objectExists(ctx.output.token.url)))
+          throw new Error(`File is not uploaded yet!`);
+      });
+
+    return Versioned.add("1.0.0", {
+      postman: {
+        body: BodySchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: `${route.scope}.body`, context: ctx.router.state.auth }
+        );
+
+        await UserModel.updateOne(
+          { _id: ctx.router.state.auth.userId },
+          {
+            avatar: {
+              name: Body.token.name,
+              url: Body.token.url,
+              mimeType: Body.token.mimeType,
+              sizeInBytes: Body.token.sizeInBytes,
+              alt: Body.token.alt,
+            },
+          }
+        );
 
         return Response.true();
       },
