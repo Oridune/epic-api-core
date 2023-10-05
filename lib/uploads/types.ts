@@ -49,6 +49,7 @@ export interface ISignedUrlResult {
 
 export interface IParsedObjectUrl {
   provider: UploadsProvider;
+  path: string;
   key: string;
   url: string;
 }

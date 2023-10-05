@@ -197,7 +197,8 @@ export class AwsS3Provider {
 
       return {
         provider: UploadsProvider.AWS_S3,
-        key: S3Url.pathname,
+        path: S3Url.pathname,
+        key: S3Url.pathname.replace(/^\/|\/$/g, ""),
         url: ResolveUrl,
       };
     }

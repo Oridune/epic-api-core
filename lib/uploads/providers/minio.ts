@@ -163,9 +163,12 @@ export class MinioProvider {
           `Invalid upload location '${UploadedLocation}'! Expected location is '${CheckLocation}'`
         );
 
+      const Path = ResolvedPath.join("/");
+
       return {
         provider: UploadsProvider.MINIO,
-        key: ResolvedPath.join("/"),
+        path: Path,
+        key: Path.replace(/^\/|\/$/g, ""),
         url: TargetUrl.toString(),
       };
     }
