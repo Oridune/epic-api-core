@@ -577,20 +577,22 @@ export default class UsersController extends BaseController {
           { name: `${route.scope}.body`, context: ctx.router.state.auth }
         );
 
+        const Avatar = {
+          name: Body.token.name,
+          url: Body.token.url,
+          mimeType: Body.token.mimeType,
+          sizeInBytes: Body.token.sizeInBytes,
+          alt: Body.token.alt,
+        };
+
         await UserModel.updateOne(
           { _id: ctx.router.state.auth.userId },
           {
-            avatar: {
-              name: Body.token.name,
-              url: Body.token.url,
-              mimeType: Body.token.mimeType,
-              sizeInBytes: Body.token.sizeInBytes,
-              alt: Body.token.alt,
-            },
+            avatar: Avatar,
           }
         );
 
-        return Response.true();
+        return Response.data(Avatar);
       },
     });
   }

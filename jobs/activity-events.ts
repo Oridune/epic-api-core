@@ -12,6 +12,7 @@ import { Novu } from "novu";
 import { IUser, UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauth-session.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
+import { IFile } from "@Models/file.ts";
 
 export const isUserVerified = async (input: {
   isEmailVerified?: boolean;
@@ -186,6 +187,32 @@ export default () => {
           firstName: Body.data.fname,
           lastName: Body.data.lname,
           locale: Body.data.locale,
+        };
+
+        await Notifier.subscribers
+          .update(Request.router.state.auth.userId, Payload)
+          .catch(() =>
+            Notifier.subscribers.identify(
+              Request.router.state.auth!.userId,
+              Payload
+            )
+          );
+      }
+  });
+
+  Events.listen<{
+    ctx: IRequestContext<RouterContext<string>>;
+    res: Response<IFile>;
+  }>(EventChannel.REQUEST, "users.updateAvatar", async (event) => {
+    const Request = event.detail.ctx;
+    const Body = event.detail.res.getBody();
+
+    if (typeof Request.router.state.auth?.userId === "string")
+      if (Body.status && Body.data) {
+        const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
+
+        const Payload = {
+          avatar: Body.data.url,
         };
 
         await Notifier.subscribers
