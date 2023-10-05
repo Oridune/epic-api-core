@@ -30,10 +30,16 @@ export const AppTheme = () => {
         palette: {
           mode: ThemeMode,
           primary: {
-            main: app?.consent.primaryColor ?? DefaultPrimaryColor,
+            main:
+              (ThemeMode === "dark"
+                ? app?.consent.primaryColorDark
+                : app?.consent.primaryColor) ?? DefaultPrimaryColor,
           },
           secondary: {
-            main: app?.consent.secondaryColor ?? DefaultSecondaryColor,
+            main:
+              (ThemeMode === "dark"
+                ? app?.consent.secondaryColorDark
+                : app?.consent.secondaryColor) ?? DefaultSecondaryColor,
           },
         },
         components: {

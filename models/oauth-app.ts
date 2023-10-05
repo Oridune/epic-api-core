@@ -21,7 +21,9 @@ export interface IOauthConsent extends mongoose.Types.Subdocument {
   requiredIdentificationMethods: IdentificationMethod[];
   logo?: IFile;
   primaryColor: string;
+  primaryColorDark?: string;
   secondaryColor: string;
+  secondaryColorDark?: string;
   styling?: IOauthConsentStyling;
   allowedCallbackURLs: string[];
   homepageURL: string;
@@ -37,7 +39,9 @@ export const OauthConsentSchema = new mongoose.Schema<IOauthConsent>(
     ],
     logo: FileSchema,
     primaryColor: { type: String, required: true },
+    primaryColorDark: String,
     secondaryColor: { type: String, required: true },
+    secondaryColorDark: String,
     styling: OauthConsentStylingSchema,
     allowedCallbackURLs: [{ type: String, required: true }],
     homepageURL: { type: String, required: true },

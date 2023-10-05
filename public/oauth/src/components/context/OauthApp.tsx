@@ -7,7 +7,9 @@ export interface IOauthConsent {
     url: string;
   };
   primaryColor: string;
+  primaryColorDark?: string;
   secondaryColor: string;
+  secondaryColorDark?: string;
   styling?: {
     roundness?: number;
   };
