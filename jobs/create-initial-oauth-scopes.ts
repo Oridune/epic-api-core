@@ -37,6 +37,10 @@ export const DefaultOauthScopes = {
   ],
 };
 
+export const OauthScopes: Record<string, string[]> = {
+  ...DefaultOauthScopes,
+};
+
 export const AreArraysIdentical = (arr1: unknown[], arr2: unknown[]) => {
   // Check if the arrays have the same length
   if (arr1.length !== arr2.length) return false;
@@ -54,11 +58,11 @@ export const AreArraysIdentical = (arr1: unknown[], arr2: unknown[]) => {
 
 export const SyncOauthScopes = async () => {
   const Scopes = await OauthScopesModel.find({
-    role: { $in: Object.keys(DefaultOauthScopes) },
+    role: { $in: Object.keys(OauthScopes) },
   });
 
   await Promise.all(
-    Object.entries(DefaultOauthScopes).map(([role, scopes]) => {
+    Object.entries(OauthScopes).map(([role, scopes]) => {
       const ExistingScopes = Scopes.find((doc) => doc.role === role)?.scopes;
       const UpdatedScopes = Array.from(
         new Set([...scopes, ...(ExistingScopes ?? [])])
