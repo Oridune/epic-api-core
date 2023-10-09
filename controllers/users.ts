@@ -62,7 +62,14 @@ export default class UsersController extends BaseController {
     try {
       Session.startTransaction();
 
-      const User = new UserModel(user);
+      const Password = await bcrypt.hash(
+        user.password ?? Math.random().toString(36) + Date.now().toString(36)
+      );
+
+      const User = new UserModel({
+        ...user,
+        password: Password,
+      });
       const Account = new AccountModel({});
       const Collaborator = new CollaboratorModel({
         account: Account,
@@ -149,7 +156,7 @@ export default class UsersController extends BaseController {
         if (await UserModel.exists({ username: ctx.output }))
           throw "Username is already taken!";
       }),
-      password: PasswordValidator().custom((ctx) => bcrypt.hash(ctx.output)),
+      password: PasswordValidator(),
       passwordHistory: e.any().custom((ctx) => [ctx.parent!.output.password]),
       gender: e.optional(e.in(Object.values(Gender))),
       dob: e.optional(e.date()),
