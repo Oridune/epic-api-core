@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import {
   Box,
   Button,
@@ -287,9 +287,6 @@ export const ContactsPage = () => {
               height={60}
               src={app?.consent.logo?.url ?? Logo}
               alt="Logo"
-              onClick={() => {
-                window.open(app!.consent.homepageURL, "_blank");
-              }}
               onError={(e) => {
                 if (app?.consent.logo?.url) {
                   e.persist();

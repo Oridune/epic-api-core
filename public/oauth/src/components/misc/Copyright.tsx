@@ -17,7 +17,7 @@ export const Copyright = (props: {
       {...props.typographyProps}
     >
       {t("Copyright © ")}
-      <Link color="inherit" href={props.href}>
+      <Link color="inherit" href={props.href} target="_blank">
         {props.name}
       </Link>{" "}
       {new Date().getFullYear()}
