@@ -24,22 +24,30 @@ export const AppTheme = () => {
   const DefaultSecondaryColor = "#607d8b";
   const DefaultRoundness = 10;
 
+  const PrimaryColor =
+    (ThemeMode === "dark"
+      ? app?.consent.primaryColorDark
+      : app?.consent.primaryColor) ??
+    app?.consent.primaryColor ??
+    DefaultPrimaryColor;
+  const SecondaryColor =
+    (ThemeMode === "dark"
+      ? app?.consent.secondaryColorDark
+      : app?.consent.secondaryColor) ??
+    app?.consent.secondaryColor ??
+    DefaultSecondaryColor;
+  const Roundness = app?.consent.styling?.roundness ?? DefaultRoundness;
+
   return (
     <ThemeProvider
       theme={createTheme({
         palette: {
           mode: ThemeMode,
           primary: {
-            main:
-              (ThemeMode === "dark"
-                ? app?.consent.primaryColorDark
-                : app?.consent.primaryColor) ?? DefaultPrimaryColor,
+            main: PrimaryColor,
           },
           secondary: {
-            main:
-              (ThemeMode === "dark"
-                ? app?.consent.secondaryColorDark
-                : app?.consent.secondaryColor) ?? DefaultSecondaryColor,
+            main: SecondaryColor,
           },
         },
         components: {
@@ -60,16 +68,14 @@ export const AppTheme = () => {
             },
             styleOverrides: {
               root: {
-                borderRadius:
-                  app?.consent.styling?.roundness ?? DefaultRoundness,
+                borderRadius: Roundness,
               },
             },
           },
           MuiButton: {
             styleOverrides: {
               root: {
-                borderRadius:
-                  app?.consent.styling?.roundness ?? DefaultRoundness,
+                borderRadius: Roundness,
               },
             },
           },
@@ -89,8 +95,7 @@ export const AppTheme = () => {
           MuiAlert: {
             styleOverrides: {
               root: {
-                borderRadius:
-                  app?.consent.styling?.roundness ?? DefaultRoundness,
+                borderRadius: Roundness,
               },
             },
           },
