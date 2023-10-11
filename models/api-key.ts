@@ -6,7 +6,7 @@ export enum ApiKeyStatus {
   BLOCKED = "blocked",
 }
 export interface IApiKey extends mongoose.Document {
-  createdBy: IUser;
+  createdBy: IUser | mongoose.Types.ObjectId;
   secret: string;
   status: ApiKeyStatus;
   createdAt: Date;

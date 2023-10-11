@@ -3,12 +3,12 @@ import { IUser } from "@Models/user.ts";
 import { IAccount } from "@Models/account.ts";
 
 export interface ICollaborator extends mongoose.Document {
-  createdBy: IUser;
-  createdFor: IUser;
+  createdBy: IUser | mongoose.Types.ObjectId;
+  createdFor: IUser | mongoose.Types.ObjectId;
   role: string;
   isPrimary: boolean;
   isOwned: boolean;
-  account: IAccount;
+  account: IAccount | mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

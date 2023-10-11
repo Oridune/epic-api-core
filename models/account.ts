@@ -3,8 +3,8 @@ import { IUser } from "@Models/user.ts";
 import { IFile, FileSchema } from "@Models/file.ts";
 
 export interface IAccount extends mongoose.Document {
-  createdBy?: IUser;
-  createdFor: IUser;
+  createdBy?: IUser | mongoose.Types.ObjectId;
+  createdFor: IUser | mongoose.Types.ObjectId;
   name?: string;
   description?: string;
   logo?: IFile;

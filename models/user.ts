@@ -10,7 +10,7 @@ export enum Gender {
 }
 
 export interface IUser extends mongoose.Document {
-  oauthApp: IOauthApp;
+  oauthApp: IOauthApp | mongoose.Types.ObjectId;
   fname: string;
   mname?: string;
   lname?: string;
@@ -37,7 +37,7 @@ export interface IUser extends mongoose.Document {
   failedLoginAttempts: number;
   requiresMfa: boolean;
   isBlocked: boolean;
-  collaborates: ICollaborator[];
+  collaborates: ICollaborator[] | mongoose.Types.ObjectId[];
   deletionAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;

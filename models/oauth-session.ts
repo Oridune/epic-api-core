@@ -7,9 +7,9 @@ export enum OauthProvider {
 }
 
 export interface IOauthSession extends mongoose.Document {
-  createdBy?: IUser;
+  createdBy?: IUser | mongoose.Types.ObjectId;
   useragent?: string;
-  oauthApp: IOauthApp;
+  oauthApp: IOauthApp | mongoose.Types.ObjectId;
   version: number;
   provider: OauthProvider;
   scopes: Record<string, string[]>;

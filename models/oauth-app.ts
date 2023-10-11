@@ -53,8 +53,8 @@ export const OauthConsentSchema = new mongoose.Schema<IOauthConsent>(
 );
 
 export interface IOauthApp extends mongoose.Document {
-  account?: IAccount;
-  createdBy?: IUser;
+  account?: IAccount | mongoose.Types.ObjectId;
+  createdBy?: IUser | mongoose.Types.ObjectId;
   name: string;
   description?: string;
   enabled: boolean;

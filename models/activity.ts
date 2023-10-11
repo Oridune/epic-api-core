@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { IUser } from "./user.ts";
 
 export interface IActivity extends mongoose.Document {
-  createdBy: IUser;
+  createdBy: IUser | mongoose.Types.ObjectId;
   subject: string;
   payload?: any;
   createdAt: Date;
