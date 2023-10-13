@@ -201,33 +201,36 @@ export default class WalletController extends BaseController {
           throw e.error("Receiver account is not available!");
 
         return Response.statusCode(Status.Created).data({
-          transactions: await Wallet.transfer({
-            fromName: [
-              Payload.sender.fname,
-              Payload.sender.mname,
-              Payload.sender.lname,
-            ]
-              .filter(Boolean)
-              .join(" "),
-            from: ctx.router.state.auth.accountId,
-            toName: [
-              Payload.receiver.fname,
-              Payload.receiver.mname,
-              Payload.receiver.lname,
-            ]
-              .filter(Boolean)
-              .join(" "),
-            to: ReceiverAccount,
-            user: ctx.router.state.auth.userId,
-            type: Payload.transactionDetails.type,
-            currency: Payload.transactionDetails.currency,
-            amount: Payload.transactionDetails.amount,
-            description: Payload.transactionDetails.description,
-            is3DVerified: [
-              IdentificationMethod.EMAIL,
-              IdentificationMethod.PHONE,
-            ].includes(Body.method ?? ""),
-          }),
+          transaction: (
+            await Wallet.transfer({
+              sessionId: Payload.challengeId,
+              fromName: [
+                Payload.sender.fname,
+                Payload.sender.mname,
+                Payload.sender.lname,
+              ]
+                .filter(Boolean)
+                .join(" "),
+              from: ctx.router.state.auth.accountId,
+              toName: [
+                Payload.receiver.fname,
+                Payload.receiver.mname,
+                Payload.receiver.lname,
+              ]
+                .filter(Boolean)
+                .join(" "),
+              to: ReceiverAccount,
+              user: ctx.router.state.auth.userId,
+              type: Payload.transactionDetails.type,
+              currency: Payload.transactionDetails.currency,
+              amount: Payload.transactionDetails.amount,
+              description: Payload.transactionDetails.description,
+              is3DVerified: [
+                IdentificationMethod.EMAIL,
+                IdentificationMethod.PHONE,
+              ].includes(Body.method ?? ""),
+            })
+          ).transactions[0],
         });
       },
     });

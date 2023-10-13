@@ -64,6 +64,7 @@ export class Wallet {
     options?: {
       type?: string;
       currency?: string;
+      session?: mongoose.mongo.ClientSession;
     }
   ) {
     const Account = (
@@ -78,7 +79,8 @@ export class Wallet {
         type: Type,
         currency: Currency,
       },
-      { transactions: 0 }
+      { transactions: 0 },
+      { session: options?.session }
     );
 
     if (!Wallet) throw new Error(`Wallet doesn't exist!`);
@@ -90,6 +92,7 @@ export class Wallet {
   }
 
   static async transfer(options: {
+    sessionId?: string;
     reference?: string;
     fromName: string;
     from: IAccount | mongoose.Types.ObjectId | string;
@@ -102,10 +105,25 @@ export class Wallet {
     description?: string;
     status?: TransactionStatus;
     is3DVerified?: boolean;
-    session?: mongoose.mongo.ClientSession;
+    databaseSession?: mongoose.mongo.ClientSession;
   }) {
-    if (typeof options.amount !== "number" || options.amount === 0)
-      throw new Error(`Please provide a valid non-zero amount!`);
+    if (typeof options.amount !== "number" || options.amount <= 0)
+      throw new Error(`Please provide a valid non-zero positive amount!`);
+
+    if (
+      options.sessionId &&
+      (await TransactionModel.exists({ sessionId: options.sessionId }))
+    )
+      throw new Error(`Cannot transfer in the same session again!`);
+
+    const Reference =
+      options.reference ??
+      `TX${10000 + (await Store.incr("wallet-transaction-reference"))}`;
+
+    if (await TransactionModel.exists({ reference: Reference }))
+      throw new Error(
+        `A payment with the same transaction reference '${Reference}' already exists!`
+      );
 
     const From = (
       options.from instanceof AccountModel ? options.from._id : options.from
@@ -116,35 +134,34 @@ export class Wallet {
     const Type = options?.type ?? (await this.getDefaultType());
     const Currency = options?.currency ?? (await this.getDefaultCurrency());
 
-    const WalletA = await this.get(From, {
-      type: Type,
-      currency: Currency,
-    });
-
-    // Check to allow negative balance
-    const OverdraftEnabledAccounts =
-      (await Env.get("WALLET_OVERDRAFT_ENABLED_ACCOUNTS", true))?.split(
-        /\s*,\s*/
-      ) ?? [];
-
-    if (
-      !OverdraftEnabledAccounts.includes(From.toString()) &&
-      WalletA.balance - options.amount < 0
-    )
-      throw new Error(`Insufficient balance!`);
-
-    const WalletB = await this.get(To, {
-      type: Type,
-      currency: Currency,
-    });
-
-    const Reference =
-      options.reference ??
-      `TX${10000 + (await Store.incr("wallet-transaction-reference"))}`;
-
     return Database.transaction(async (session) => {
+      const WalletA = await this.get(From, {
+        type: Type,
+        currency: Currency,
+        session,
+      });
+
+      // Check to allow negative balance
+      const OverdraftEnabledAccounts =
+        (await Env.get("WALLET_OVERDRAFT_ENABLED_ACCOUNTS", true))?.split(
+          /\s*,\s*/
+        ) ?? [];
+
+      if (
+        !OverdraftEnabledAccounts.includes(From.toString()) &&
+        WalletA.balance - options.amount < 0
+      )
+        throw new Error(`Insufficient balance!`);
+
+      const WalletB = await this.get(To, {
+        type: Type,
+        currency: Currency,
+        session,
+      });
+
       // Prepare Transaction Object
       const TransactionCommon = {
+        sessionId: options.sessionId,
         reference: Reference,
         fromName: options.fromName,
         from: From,
@@ -178,36 +195,43 @@ export class Wallet {
       );
 
       // Debit Balance
-      WalletA.balance = TransactionA.balance + TransactionA.amount;
-      WalletA.digest = await bcrypt.hash(WalletA.balance.toString());
-      await WalletModel.updateOne(
-        { _id: WalletA._id },
-        {
-          balance: WalletA.balance,
-          digest: WalletA.digest,
-          $push: {
-            transactions: TransactionA._id,
+      if (TransactionA.status === TransactionStatus.COMPLETED) {
+        WalletA.balance = TransactionA.balance + TransactionA.amount;
+        WalletA.digest = await bcrypt.hash(WalletA.balance.toString());
+        await WalletModel.updateOne(
+          { _id: WalletA._id },
+          {
+            balance: WalletA.balance,
+            digest: WalletA.digest,
+            $push: {
+              transactions: TransactionA._id,
+            },
           },
-        },
-        { session }
-      );
+          { session }
+        );
+      }
 
       // Credit Balance
-      WalletB.balance = TransactionB.balance + TransactionB.amount;
-      WalletB.digest = await bcrypt.hash(WalletB.balance.toString());
-      await WalletModel.updateOne(
-        { _id: WalletB._id },
-        {
-          balance: WalletB.balance,
-          digest: WalletB.digest,
-          $push: {
-            transactions: TransactionB._id,
+      if (TransactionB.status === TransactionStatus.COMPLETED) {
+        WalletB.balance = TransactionB.balance + TransactionB.amount;
+        WalletB.digest = await bcrypt.hash(WalletB.balance.toString());
+        await WalletModel.updateOne(
+          { _id: WalletB._id },
+          {
+            balance: WalletB.balance,
+            digest: WalletB.digest,
+            $push: {
+              transactions: TransactionB._id,
+            },
           },
-        },
-        { session }
-      );
+          { session }
+        );
+      }
 
-      return [WalletA, WalletB] as const;
-    }, options.session);
+      return {
+        wallets: [WalletA, WalletB] as const,
+        transactions: [TransactionA, TransactionB] as const,
+      };
+    }, options.databaseSession);
   }
 }

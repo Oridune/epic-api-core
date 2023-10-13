@@ -41,6 +41,7 @@ export default class UsersIdentificationController extends BaseController {
         await OauthController.createToken({
           type: (method ?? "direct") + "_identification_" + purpose,
           payload: {
+            challengeId: crypto.randomUUID(),
             method,
             ...payload,
           },
@@ -60,6 +61,7 @@ export default class UsersIdentificationController extends BaseController {
   ) {
     return OauthController.verifyToken<
       T & {
+        challengeId: string;
         method?: IdentificationMethod | null;
       }
     >({

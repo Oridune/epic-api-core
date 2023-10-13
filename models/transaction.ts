@@ -9,6 +9,7 @@ export enum TransactionStatus {
 }
 
 export interface ITransaction {
+  sessionId?: string;
   reference: string;
   fromName: string;
   from: IAccount | mongoose.Types.ObjectId;
@@ -30,6 +31,7 @@ export type ITransactionDocument = ITransaction & mongoose.Document;
 
 export const TransactionSchema = new mongoose.Schema<ITransaction>(
   {
+    sessionId: { type: String, index: true },
     reference: { type: String, required: true, text: true },
     fromName: { type: String, required: true, text: true },
     from: { type: mongoose.Types.ObjectId, ref: "account", index: true },
