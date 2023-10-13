@@ -1,5 +1,5 @@
 import { Env } from "@Core/common/env.ts";
-import { Database } from "../database.ts";
+import { Database } from "@Database";
 import * as bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import { AccountModel, IAccount } from "@Models/account.ts";

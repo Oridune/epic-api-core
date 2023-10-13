@@ -3,7 +3,7 @@ import { UserModel } from "@Models/user.ts";
 import { AccountModel } from "@Models/account.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { Cron } from "croner";
-import { Database } from "../database.ts";
+import { Database } from "@Database";
 
 export const PermanentlyDeleteUsers = Transaction.add(async (_, next) => {
   const Users = await UserModel.find(
