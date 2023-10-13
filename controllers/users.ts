@@ -22,7 +22,7 @@ import { CollaboratorModel } from "@Models/collaborator.ts";
 import { AccountModel } from "@Models/account.ts";
 import { IOauthApp, OauthAppModel } from "@Models/oauth-app.ts";
 import { OauthSessionModel } from "@Models/oauth-session.ts";
-import {
+import UsersIdentificationController, {
   IdentificationMethod,
   IdentificationPurpose,
 } from "@Controllers/usersIdentification.ts";
@@ -271,15 +271,14 @@ export default class UsersController extends BaseController {
         );
 
         const Payload = (ctx.router.state.verifyTokenPayload =
-          await OauthController.verifyToken<{
-            method: IdentificationMethod;
+          await UsersIdentificationController.verify<{
             userId: string;
-          }>({
-            type:
-              Body.method + "_identification_" + IdentificationPurpose.RECOVERY,
-            token: Body.token,
-            secret: Body.code.toString(),
-          }).catch(e.error));
+          }>(
+            Body.token,
+            Body.code,
+            IdentificationPurpose.RECOVERY,
+            Body.method
+          ).catch(e.error));
 
         const User = await UserModel.findOne(
           { _id: Payload.userId },
@@ -408,19 +407,16 @@ export default class UsersController extends BaseController {
         );
 
         const Payload = (ctx.router.state.verifyTokenPayload =
-          await OauthController.verifyToken<{
-            method: IdentificationMethod;
+          await UsersIdentificationController.verify<{
             userId: string;
-          }>({
-            type:
-              Body.method +
-              "_identification_" +
-              IdentificationPurpose.VERIFICATION,
-            token: Body.token,
-            secret: Body.code.toString(),
-          }).catch(e.error));
+          }>(
+            Body.token,
+            Body.code,
+            IdentificationPurpose.VERIFICATION,
+            Body.method
+          ).catch(e.error));
 
-        await UsersController.verify(Payload.method, Payload.userId);
+        await UsersController.verify(Body.method, Payload.userId);
 
         return Response.true();
       },

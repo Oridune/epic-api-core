@@ -13,6 +13,7 @@ import { IUser, UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauth-session.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 import { IFile } from "@Models/file.ts";
+import { ICollaborator } from "@Models/collaborator.ts";
 
 export const isUserVerified = async (input: {
   isEmailVerified?: boolean;
@@ -62,7 +63,7 @@ export const syncUserVerifiedRole = async (
 
   const Verified = await isUserVerified(User);
 
-  const Collaborator = User.collaborates.find(
+  const Collaborator = (User.collaborates as ICollaborator[]).find(
     (collaborator) => collaborator.isOwned && collaborator.isPrimary
   );
 

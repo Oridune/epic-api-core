@@ -12,7 +12,11 @@ export default () => {
     const Value = (await EnvModel.findOne({ type: Env.getType(), key }))?.value;
 
     if (typeof Value === "string")
-      await Store.set(CacheKey, Value, { expiresInMs: 600000 }); // TTL 10 minutes
+      await Store.set(CacheKey, Value, {
+        expiresInMs: parseFloat(
+          (await Env.get("ENV_CACHE_TTL_MS", true)) ?? "600000"
+        ),
+      }); // TTL 10 minutes
 
     return Value;
   };

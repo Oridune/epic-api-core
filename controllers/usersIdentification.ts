@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any ban-types
 import {
   Env,
   Controller,
@@ -23,45 +24,98 @@ export enum IdentificationPurpose {
 export enum IdentificationMethod {
   EMAIL = "email",
   PHONE = "phone",
+  IN_APP = "in-app",
 }
 
 @Controller("/users/identification/", { name: "usersIdentification" })
 export default class UsersIdentificationController extends BaseController {
-  static async request(
-    id: string,
-    method: IdentificationMethod,
-    userFilter: { userId: string }
-  ): Promise<{ token: string; otp: number }>;
-  static async request(
-    id: string,
-    method: IdentificationMethod,
-    userFilter: { username: string }
-  ): Promise<{ token: string; otp: number }>;
-  static async request(
-    id: string,
-    method: IdentificationMethod,
-    userFilter: object
+  static async sign(
+    purpose: IdentificationPurpose | (string & {}),
+    method?: IdentificationMethod | null,
+    payload?: Record<string, any>
   ) {
     const OTP = Math.floor(100000 + Math.random() * 900000);
-    const User = await UserModel.findOne(userFilter, { _id: 1, [method]: 1 });
+
+    return {
+      token: (
+        await OauthController.createToken({
+          type: (method ?? "direct") + "_identification_" + purpose,
+          payload: {
+            method,
+            ...payload,
+          },
+          secret: OTP.toString(),
+          expiresInSeconds: 60 * 60, // Expires in 1 hour.
+        })
+      ).token,
+      otp: OTP,
+    };
+  }
+
+  static verify<T extends object>(
+    token: string,
+    code: string | number,
+    purpose: IdentificationPurpose,
+    method?: IdentificationMethod | null
+  ) {
+    return OauthController.verifyToken<
+      T & {
+        method?: IdentificationMethod | null;
+      }
+    >({
+      type: (method ?? "direct") + "_identification_" + purpose,
+      token,
+      secret: code.toString(),
+    });
+  }
+
+  static async request(
+    purpose: IdentificationPurpose | (string & {}),
+    method: IdentificationMethod,
+    userFilter: { userId: string },
+    metadata?: Record<string, any>
+  ): Promise<{ token: string; otp: number }>;
+  static async request(
+    purpose: IdentificationPurpose | (string & {}),
+    method: IdentificationMethod,
+    userFilter: { username: string },
+    metadata?: Record<string, any>
+  ): Promise<{ token: string; otp: number }>;
+  static async request(
+    purpose: IdentificationPurpose | (string & {}),
+    method: IdentificationMethod,
+    userFilter: object,
+    metadata?: Record<string, any>
+  ) {
+    const User = await UserModel.findOne(userFilter, {
+      _id: 1,
+      [method]: 1,
+    });
 
     if (!User) throw new Error(`User not found!`);
+
+    const Challenge = await UsersIdentificationController.sign(
+      purpose,
+      method,
+      { userId: User._id, ...metadata }
+    );
 
     if (!Env.is(EnvType.TEST)) {
       const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
 
-      await Notifier.subscribers
-        .update(User._id, { [method]: User[method] })
-        .catch(() =>
-          Notifier.subscribers.identify(User._id, { [method]: User[method] })
-        );
+      if (method !== IdentificationMethod.IN_APP)
+        await Notifier.subscribers
+          .update(User._id, { [method]: User[method] })
+          .catch(() =>
+            Notifier.subscribers.identify(User._id, { [method]: User[method] })
+          );
 
       const NovuTemplateId = method + "-identification-otp";
 
       await Notifier.trigger(NovuTemplateId, {
         to: { subscriberId: User._id },
         payload: {
-          otp: OTP,
+          otp: Challenge.otp,
         },
       }).catch((error) => {
         if (error.response.data.message === "workflow_not_found")
@@ -70,17 +124,7 @@ export default class UsersIdentificationController extends BaseController {
       });
     }
 
-    return {
-      token: (
-        await OauthController.createToken({
-          type: method + "_identification_" + id,
-          payload: { method, userId: User._id },
-          secret: OTP.toString(),
-          expiresInSeconds: 60 * 60, // Expires in 1 hour.
-        })
-      ).token,
-      otp: OTP,
-    };
+    return Challenge;
   }
 
   @Get("/methods/me/")
@@ -188,15 +232,15 @@ export default class UsersIdentificationController extends BaseController {
           name: "usersIdentifications.params",
         });
 
-        const Signature = await UsersIdentificationController.request(
+        const Challenge = await UsersIdentificationController.request(
           Params.purpose,
           Params.method,
           { username: Params.username }
         );
 
         return Response.data({
-          token: Signature.token,
-          otp: Env.is(EnvType.TEST) ? Signature.otp : undefined,
+          token: Challenge.token,
+          otp: Env.is(EnvType.TEST) ? Challenge.otp : undefined,
         });
       },
     });

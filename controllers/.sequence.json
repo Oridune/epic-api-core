@@ -6,7 +6,8 @@
     "admin.ts",
     "adminPlugins.ts",
     "usersIdentification.ts",
-    "uploads.ts"
+    "uploads.ts",
+    "wallet.ts"
   ],
   "excludes": []
 }

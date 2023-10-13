@@ -1,9 +1,9 @@
-import mongoose from "mongoose";
 import { Transaction } from "@Core/common/mod.ts";
 import { UserModel } from "@Models/user.ts";
 import { AccountModel } from "@Models/account.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { Cron } from "croner";
+import { Database } from "../database.ts";
 
 export const PermanentlyDeleteUsers = Transaction.add(async (_, next) => {
   const Users = await UserModel.find(
@@ -19,26 +19,22 @@ export const PermanentlyDeleteUsers = Transaction.add(async (_, next) => {
     for (const User of Users)
       Transactions.push(
         Transaction.add(async (_, next) => {
-          const Session = await mongoose.startSession();
-
-          try {
-            Session.startTransaction();
-
-            await UserModel.deleteOne({ _id: User._id }).session(Session);
+          await Database.transaction(async (session) => {
+            await UserModel.deleteOne({ _id: User._id }).session(session);
 
             const Accounts = await AccountModel.find({
               createdFor: User._id,
-            }).session(Session);
+            }).session(session);
 
             const AccountIDs = Accounts.map((account) => account._id);
 
             await AccountModel.deleteMany({
               _id: { $in: AccountIDs },
-            }).session(Session);
+            }).session(session);
 
             const Collaborations = await CollaboratorModel.find({
               account: { $in: AccountIDs },
-            }).session(Session);
+            }).session(session);
 
             const CollaboratorIDs = Collaborations.map(
               (collaboration) => collaboration._id
@@ -46,21 +42,14 @@ export const PermanentlyDeleteUsers = Transaction.add(async (_, next) => {
 
             await CollaboratorModel.deleteMany({
               _id: { $in: CollaboratorIDs },
-            }).session(Session);
+            }).session(session);
 
             await next({
               user: User,
               collaborations: Collaborations,
               accounts: Accounts,
             });
-
-            await Session.commitTransaction();
-          } catch (error) {
-            await Session.abortTransaction();
-            console.error(error);
-          } finally {
-            await Session.endSession();
-          }
+          }).catch(console.error);
         })
       );
 
