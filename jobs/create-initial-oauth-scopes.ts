@@ -78,7 +78,7 @@ export const SyncOauthScopes = async () => {
         new Set([...scopes, ...(ExistingScopes ?? [])])
       );
 
-      if (!ExistingScopes || !AreArraysIdentical(UpdatedScopes, scopes))
+      if (!ExistingScopes || !AreArraysIdentical(ExistingScopes, UpdatedScopes))
         return OauthScopesModel.updateOne(
           { role },
           { scopes: UpdatedScopes },
