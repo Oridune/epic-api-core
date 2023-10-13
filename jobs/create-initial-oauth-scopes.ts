@@ -24,6 +24,10 @@ export const DefaultOauthScopes = {
     "users.updateEmail",
     "users.updatePhone",
     "usersIdentification",
+    "wallet.signTransfer",
+    "wallet.transfer",
+    "wallet.balance",
+    "wallet.transactions",
   ],
   user: [
     "users.get",
@@ -36,6 +40,10 @@ export const DefaultOauthScopes = {
     "users.updateEmail",
     "users.updatePhone",
     "usersIdentification",
+    "wallet.signTransfer",
+    "wallet.transfer",
+    "wallet.balance",
+    "wallet.transactions",
   ],
 };
 
