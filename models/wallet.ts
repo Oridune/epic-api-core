@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import { IAccount } from "@Models/account.ts";
-import { IUser } from "@Models/user.ts";
 import { ITransaction } from "@Models/transaction.ts";
 
 export interface IWallet {
@@ -10,7 +9,6 @@ export interface IWallet {
   balance: number;
   digest: string;
   transactions: ITransaction[] | mongoose.Types.ObjectId[];
-  createdBy: IUser | mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,7 +23,6 @@ export const WalletSchema = new mongoose.Schema<IWallet>(
     balance: { type: Number, required: true },
     digest: { type: String, required: true },
     transactions: [{ type: mongoose.Types.ObjectId, ref: "transaction" }],
-    createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
   },
   { timestamps: true, versionKey: false }
 );

@@ -3,8 +3,8 @@ import { Database } from "@Database";
 import * as bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import { AccountModel, IAccount } from "@Models/account.ts";
-import { IUser, UserModel } from "@Models/user.ts";
-import { IWalletDocument, WalletModel } from "@Models/wallet.ts";
+import { IUser } from "@Models/user.ts";
+import { WalletModel } from "@Models/wallet.ts";
 import { TransactionModel, TransactionStatus } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
 
@@ -32,19 +32,15 @@ export class Wallet {
 
   static async create(
     account: IAccount | mongoose.Types.ObjectId | string,
-    user: IUser | mongoose.Types.ObjectId | string,
     options?: {
       type?: string;
       currency?: string;
+      databaseSession?: mongoose.mongo.ClientSession;
     }
   ) {
     const Account = (
       account instanceof AccountModel ? account._id : account
     ) as mongoose.Types.ObjectId | string;
-    const User = (user instanceof UserModel ? user._id : user) as
-      | mongoose.Types.ObjectId
-      | string;
-
     const Type = options?.type ?? (await this.getDefaultType());
     const Currency = options?.currency ?? (await this.getDefaultCurrency());
 
@@ -62,8 +58,7 @@ export class Wallet {
       currency: Currency,
       balance: Balance,
       digest: await bcrypt.hash(Balance.toString()),
-      createdBy: User,
-    }).save();
+    }).save({ session: options?.databaseSession });
   }
 
   static async get(
@@ -71,7 +66,6 @@ export class Wallet {
     options?: {
       type?: string;
       currency?: string;
-      createWalletCallback?: () => Promise<IWalletDocument>;
       databaseSession?: mongoose.mongo.ClientSession;
     }
   ) {
@@ -81,7 +75,7 @@ export class Wallet {
     const Type = options?.type ?? (await this.getDefaultType());
     const Currency = options?.currency ?? (await this.getDefaultCurrency());
 
-    const Wallet = await WalletModel.findOne(
+    let Wallet = await WalletModel.findOne(
       {
         account: Account,
         type: Type,
@@ -91,14 +85,8 @@ export class Wallet {
       { session: options?.databaseSession }
     );
 
-    if (!Wallet) {
-      if (typeof options?.createWalletCallback === "function")
-        return options?.createWalletCallback();
-
-      throw new Error(`Wallet doesn't exist!`);
-    }
-
-    if (!(await bcrypt.compare(Wallet.balance.toString(), Wallet.digest)))
+    if (!Wallet) Wallet = await this.create(account, options);
+    else if (!(await bcrypt.compare(Wallet.balance.toString(), Wallet.digest)))
       throw new Error(`Balance tampering detected!`);
 
     return Wallet;
@@ -146,6 +134,25 @@ export class Wallet {
     ) as mongoose.Types.ObjectId | string;
     const Type = options?.type ?? (await this.getDefaultType());
     const Currency = options?.currency ?? (await this.getDefaultCurrency());
+
+    const SubKey = `${Type.toUpperCase()}_${Currency.toUpperCase()}`;
+    const [MinTransfer, MaxTransfer] = await Promise.all([
+      Env.get(`WALLET_MIN_TRANSFER_${SubKey}`, true),
+      Env.get(`WALLET_MAX_TRANSFER_${SubKey}`, true),
+    ]);
+
+    const MinTransferAmount = parseFloat(MinTransfer ?? "1");
+    const MaxTransferAmount = parseFloat(MaxTransfer ?? "1e500");
+
+    if (options.amount < MinTransferAmount)
+      throw new Error(
+        `Minimum transfer amount required is ${MinTransferAmount}`
+      );
+
+    if (options.amount > MaxTransferAmount)
+      throw new Error(
+        `Maximum transfer amount allowed is ${MaxTransferAmount}`
+      );
 
     return Database.transaction(async (session) => {
       const WalletA = await this.get(From, {

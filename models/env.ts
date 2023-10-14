@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { EnvType } from "@Core/common/env.ts";
 
 export interface IEnv extends mongoose.Document {
-  type: EnvType | "*";
+  type?: EnvType | "*" | null;
   key: string;
   value: string;
   createdAt: Date;

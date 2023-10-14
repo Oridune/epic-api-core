@@ -21,6 +21,7 @@ import UsersIdentificationController, {
   IdentificationPurpose,
 } from "@Controllers/usersIdentification.ts";
 import { AccountModel } from "@Models/account.ts";
+import { IFile } from "@Models/file.ts";
 
 @Controller("/wallet/", { name: "wallet" })
 export default class WalletController extends BaseController {
@@ -168,7 +169,7 @@ export default class WalletController extends BaseController {
           fname: string;
           mname: string;
           lname: string;
-          avatar: string;
+          avatar: IFile;
         };
 
         const Payload = await UsersIdentificationController.verify<{
@@ -257,15 +258,7 @@ export default class WalletController extends BaseController {
         });
 
         return Response.data(
-          await Wallet.get(ctx.router.state.auth.accountId, {
-            ...Params,
-            createWalletCallback: () =>
-              Wallet.create(
-                ctx.router.state.auth!.accountId,
-                ctx.router.state.auth!.userId,
-                Params
-              ),
-          })
+          await Wallet.get(ctx.router.state.auth.accountId, Params)
         );
       },
     });
