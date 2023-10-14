@@ -132,6 +132,9 @@ export class Wallet {
     const To = (
       options.to instanceof AccountModel ? options.to._id : options.to
     ) as mongoose.Types.ObjectId | string;
+
+    if (From === To) throw new Error(`Cannot transfer to the same wallet!`);
+
     const Type = options?.type ?? (await this.getDefaultType());
     const Currency = options?.currency ?? (await this.getDefaultCurrency());
 

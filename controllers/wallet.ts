@@ -179,7 +179,7 @@ export default class WalletController extends BaseController {
             type: string;
             currency: string;
             amount: number;
-            fee: number;
+            fee: number; //! Do not use this fee as it is not authentic! Possible Reasons: (Fee change, Account Change after signTransfer etc.)
             description: string;
           };
         }>(Body.token, Body.code, IdentificationPurpose.VERIFICATION).catch(
