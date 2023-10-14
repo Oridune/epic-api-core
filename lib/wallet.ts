@@ -3,8 +3,8 @@ import { Database } from "@Database";
 import * as bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import { AccountModel, IAccount } from "@Models/account.ts";
-import { IUser } from "@Models/user.ts";
-import { WalletModel } from "@Models/wallet.ts";
+import { IUser, UserModel } from "@Models/user.ts";
+import { IWalletDocument, WalletModel } from "@Models/wallet.ts";
 import { TransactionModel, TransactionStatus } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
 
@@ -31,13 +31,20 @@ export class Wallet {
   }
 
   static async create(
-    account: IAccount,
-    user: IUser,
+    account: IAccount | mongoose.Types.ObjectId | string,
+    user: IUser | mongoose.Types.ObjectId | string,
     options?: {
       type?: string;
       currency?: string;
     }
   ) {
+    const Account = (
+      account instanceof AccountModel ? account._id : account
+    ) as mongoose.Types.ObjectId | string;
+    const User = (user instanceof UserModel ? user._id : user) as
+      | mongoose.Types.ObjectId
+      | string;
+
     const Type = options?.type ?? (await this.getDefaultType());
     const Currency = options?.currency ?? (await this.getDefaultCurrency());
 
@@ -50,12 +57,12 @@ export class Wallet {
     const Balance = 0;
 
     return new WalletModel({
-      account,
+      account: Account,
       type: Type,
       currency: Currency,
       balance: Balance,
       digest: await bcrypt.hash(Balance.toString()),
-      createdBy: user,
+      createdBy: User,
     }).save();
   }
 
@@ -64,7 +71,8 @@ export class Wallet {
     options?: {
       type?: string;
       currency?: string;
-      session?: mongoose.mongo.ClientSession;
+      createWalletCallback?: () => Promise<IWalletDocument>;
+      databaseSession?: mongoose.mongo.ClientSession;
     }
   ) {
     const Account = (
@@ -80,10 +88,15 @@ export class Wallet {
         currency: Currency,
       },
       { transactions: 0 },
-      { session: options?.session }
+      { session: options?.databaseSession }
     );
 
-    if (!Wallet) throw new Error(`Wallet doesn't exist!`);
+    if (!Wallet) {
+      if (typeof options?.createWalletCallback === "function")
+        return options?.createWalletCallback();
+
+      throw new Error(`Wallet doesn't exist!`);
+    }
 
     if (!(await bcrypt.compare(Wallet.balance.toString(), Wallet.digest)))
       throw new Error(`Balance tampering detected!`);
@@ -138,7 +151,7 @@ export class Wallet {
       const WalletA = await this.get(From, {
         type: Type,
         currency: Currency,
-        session,
+        databaseSession: session,
       });
 
       // Check to allow negative balance
@@ -156,7 +169,7 @@ export class Wallet {
       const WalletB = await this.get(To, {
         type: Type,
         currency: Currency,
-        session,
+        databaseSession: session,
       });
 
       // Prepare Transaction Object

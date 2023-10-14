@@ -257,7 +257,15 @@ export default class WalletController extends BaseController {
         });
 
         return Response.data(
-          await Wallet.get(ctx.router.state.auth.accountId, Params)
+          await Wallet.get(ctx.router.state.auth.accountId, {
+            ...Params,
+            createWalletCallback: () =>
+              Wallet.create(
+                ctx.router.state.auth!.accountId,
+                ctx.router.state.auth!.userId,
+                Params
+              ),
+          })
         );
       },
     });
