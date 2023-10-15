@@ -231,7 +231,7 @@ export default class WalletController extends BaseController {
                 IdentificationMethod.PHONE,
               ].includes(Body.method ?? ""),
             })
-          ).transactions[0],
+          ).transaction,
         });
       },
     });

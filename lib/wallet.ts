@@ -182,8 +182,8 @@ export class Wallet {
         databaseSession: session,
       });
 
-      // Prepare Transaction Object
-      const TransactionCommon = {
+      // Create a Transaction
+      const Transaction = await TransactionModel.create({
         sessionId: options.sessionId,
         reference: Reference,
         fromName: options.fromName,
@@ -195,57 +195,31 @@ export class Wallet {
         currency: Currency,
         createdBy: options.user,
         is3DVerified: options.is3DVerified,
-      };
+        amount: options.amount,
+        status: options.status ?? TransactionStatus.COMPLETED,
+      });
 
-      const [TransactionA, TransactionB] = await TransactionModel.insertMany(
-        [
-          // Debit Transaction
-          {
-            ...TransactionCommon,
-            amount: -options.amount,
-            balance: WalletA.balance,
-            status: TransactionStatus.COMPLETED,
-          },
-          // Credit Transaction
-          {
-            ...TransactionCommon,
-            amount: +options.amount,
-            balance: WalletB.balance,
-            status: options.status ?? TransactionStatus.COMPLETED,
-          },
-        ],
+      // Debit Balance
+      WalletA.balance -= Transaction.amount;
+      WalletA.digest = await bcrypt.hash(WalletA.balance.toString());
+      await WalletModel.updateOne(
+        { _id: WalletA._id },
+        {
+          balance: WalletA.balance,
+          digest: WalletA.digest,
+        },
         { session }
       );
 
-      // Debit Balance
-      if (TransactionA.status === TransactionStatus.COMPLETED) {
-        WalletA.balance = TransactionA.balance + TransactionA.amount;
-        WalletA.digest = await bcrypt.hash(WalletA.balance.toString());
-        await WalletModel.updateOne(
-          { _id: WalletA._id },
-          {
-            balance: WalletA.balance,
-            digest: WalletA.digest,
-            $push: {
-              transactions: TransactionA._id,
-            },
-          },
-          { session }
-        );
-      }
-
       // Credit Balance
-      if (TransactionB.status === TransactionStatus.COMPLETED) {
-        WalletB.balance = TransactionB.balance + TransactionB.amount;
+      if (Transaction.status === TransactionStatus.COMPLETED) {
+        WalletB.balance += Transaction.amount;
         WalletB.digest = await bcrypt.hash(WalletB.balance.toString());
         await WalletModel.updateOne(
           { _id: WalletB._id },
           {
             balance: WalletB.balance,
             digest: WalletB.digest,
-            $push: {
-              transactions: TransactionB._id,
-            },
           },
           { session }
         );
@@ -253,7 +227,7 @@ export class Wallet {
 
       return {
         wallets: [WalletA, WalletB] as const,
-        transactions: [TransactionA, TransactionB] as const,
+        transaction: Transaction,
       };
     }, options.databaseSession);
   }

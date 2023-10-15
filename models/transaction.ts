@@ -19,7 +19,6 @@ export interface ITransaction {
   type: string;
   currency: string;
   amount: number;
-  balance: number;
   status: TransactionStatus;
   is3DVerified: boolean;
   createdBy: IUser | mongoose.Types.ObjectId;
@@ -31,8 +30,8 @@ export type ITransactionDocument = ITransaction & mongoose.Document;
 
 export const TransactionSchema = new mongoose.Schema<ITransaction>(
   {
-    sessionId: { type: String, index: true },
-    reference: { type: String, required: true, text: true },
+    sessionId: { type: String, unique: true },
+    reference: { type: String, required: true, unique: true, text: true },
     fromName: { type: String, required: true, text: true },
     from: { type: mongoose.Types.ObjectId, ref: "account", index: true },
     toName: { type: String, required: true, text: true },
@@ -41,7 +40,6 @@ export const TransactionSchema = new mongoose.Schema<ITransaction>(
     type: { type: String, required: true },
     currency: { type: String, required: true },
     amount: { type: Number, required: true, text: true },
-    balance: { type: Number, required: true },
     status: { type: String, enum: TransactionStatus, required: true },
     is3DVerified: { type: Boolean, default: false },
     createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
