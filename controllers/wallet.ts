@@ -279,7 +279,7 @@ export default class WalletController extends BaseController {
           .default([Date.now() - 86400000 * 7, Date.now()]),
         sort: e
           .optional(
-            e.record(e.number({ cast: true }).min(0).max(1), { cast: true })
+            e.record(e.number({ cast: true }).min(-1).max(1), { cast: true })
           )
           .default({ _id: 0 }),
       },

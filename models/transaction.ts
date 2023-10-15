@@ -52,7 +52,6 @@ TransactionSchema.index({
   fromName: "text",
   toName: "text",
   description: "text",
-  amount: "text",
 });
 
 export const TransactionModel = mongoose.model<ITransaction>(
