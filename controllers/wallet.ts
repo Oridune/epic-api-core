@@ -274,15 +274,9 @@ export default class WalletController extends BaseController {
         search: e.optional(e.string()),
         range: e
           .optional(
-            e.tuple(
-              [
-                e.date().end(CurrentTimestamp),
-                e.date().start(CurrentTimestamp),
-              ],
-              { cast: true }
-            )
+            e.tuple([e.date().end(CurrentTimestamp), e.date()], { cast: true })
           )
-          .default([Date.now(), Date.now()]),
+          .default([Date.now() - 86400000 * 7, Date.now()]),
         sort: e
           .optional(
             e.record(e.number({ cast: true }).min(0).max(1), { cast: true })
@@ -313,6 +307,9 @@ export default class WalletController extends BaseController {
           Object.fromEntries(ctx.router.request.url.searchParams),
           { name: `${route.scope}.query` }
         );
+
+        if (Query.range[1] <= Query.range[0])
+          throw e.error(`Please provide a valid date range!`);
 
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {
