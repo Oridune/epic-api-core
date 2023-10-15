@@ -106,6 +106,7 @@ export class Wallet {
     description?: string;
     status?: TransactionStatus;
     is3DVerified?: boolean;
+    allowOverdraft?: boolean;
     databaseSession?: mongoose.mongo.ClientSession;
   }) {
     if (typeof options.amount !== "number" || options.amount <= 0)
@@ -165,14 +166,14 @@ export class Wallet {
       });
 
       // Check to allow negative balance
-      const OverdraftEnabledAccounts =
-        (await Env.get("WALLET_OVERDRAFT_ENABLED_ACCOUNTS", true))?.split(
-          /\s*,\s*/
-        ) ?? [];
-
       if (
-        !OverdraftEnabledAccounts.includes(From.toString()) &&
-        WalletA.balance - options.amount < 0
+        WalletA.balance - options.amount < 0 &&
+        !options.allowOverdraft &&
+        !(
+          (await Env.get("WALLET_OVERDRAFT_ENABLED_ACCOUNTS", true))?.split(
+            /\s*,\s*/
+          ) ?? []
+        ).includes(From.toString())
       )
         throw new Error(`Insufficient balance!`);
 
