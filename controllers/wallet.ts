@@ -281,7 +281,7 @@ export default class WalletController extends BaseController {
           .optional(
             e.record(e.number({ cast: true }).min(-1).max(1), { cast: true })
           )
-          .default({ _id: 0 }),
+          .default({ _id: -1 }),
       },
       { allowUnexpectedProps: true }
     );
