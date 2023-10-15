@@ -31,21 +31,29 @@ export type ITransactionDocument = ITransaction & mongoose.Document;
 export const TransactionSchema = new mongoose.Schema<ITransaction>(
   {
     sessionId: { type: String, unique: true },
-    reference: { type: String, required: true, unique: true, text: true },
-    fromName: { type: String, required: true, text: true },
+    reference: { type: String, required: true, unique: true },
+    fromName: { type: String, required: true },
     from: { type: mongoose.Types.ObjectId, ref: "account", index: true },
-    toName: { type: String, required: true, text: true },
+    toName: { type: String, required: true },
     to: { type: mongoose.Types.ObjectId, ref: "account", index: true },
-    description: { type: String, text: true },
+    description: String,
     type: { type: String, required: true },
     currency: { type: String, required: true },
-    amount: { type: Number, required: true, text: true },
+    amount: { type: Number, required: true },
     status: { type: String, enum: TransactionStatus, required: true },
     is3DVerified: { type: Boolean, default: false },
     createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
   },
   { timestamps: true, versionKey: false }
 );
+
+TransactionSchema.index({
+  reference: "text",
+  fromName: "text",
+  toName: "text",
+  description: "text",
+  amount: "text",
+});
 
 export const TransactionModel = mongoose.model<ITransaction>(
   "transaction",
