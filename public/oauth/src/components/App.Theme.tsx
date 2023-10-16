@@ -1,5 +1,6 @@
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+import { useTranslation } from "react-i18next";
 
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
@@ -18,12 +19,16 @@ import { LoadingFormPage } from "./pages/LoadingForm";
 
 export const AppTheme = () => {
   const { app, loading } = useOauthApp();
+
   const ThemeMode = useThemeMode();
+  const { i18n } = useTranslation();
 
   const DefaultPrimaryColor = "#9e9e9e";
   const DefaultSecondaryColor = "#607d8b";
   const DefaultRoundness = 10;
+  const DefaultFontFamily = "'Noto Sans Arabic', sans-serif";
 
+  const FontFamily = i18n.language === "ar" ? DefaultFontFamily : undefined;
   const PrimaryColor =
     (ThemeMode === "dark"
       ? app?.consent.primaryColorDark
@@ -41,6 +46,9 @@ export const AppTheme = () => {
   return (
     <ThemeProvider
       theme={createTheme({
+        typography: {
+          fontFamily: FontFamily,
+        },
         palette: {
           mode: ThemeMode,
           primary: {

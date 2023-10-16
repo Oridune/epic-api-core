@@ -154,6 +154,7 @@ export const ForgotPage = () => {
   const HandleRequestRecovery = async () => {
     setErrorMessage(null);
     setLoading(true);
+    resetRecovery();
 
     try {
       const Response = await axios.get(
