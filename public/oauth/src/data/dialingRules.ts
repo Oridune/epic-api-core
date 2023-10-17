@@ -270,15 +270,15 @@ export const DialingRules: Record<
     dialingCode: number;
     mask?: string;
   }
-> = RawDialingRules.reduce(
-  (rules, rule) => ({
+> = RawDialingRules.reduce((rules, rule) => {
+  const CountryCode = rule[1].toLowerCase();
+  return {
     ...rules,
-    [rule[1]]: {
+    [CountryCode]: {
       name: rule[0],
-      countryCode: rule[1],
+      countryCode: CountryCode,
       dialingCode: parseInt(rule[2]),
       mask: rule[3],
     },
-  }),
-  {}
-);
+  };
+}, {});

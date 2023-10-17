@@ -346,6 +346,9 @@ export const ContactsPage = () => {
                         label={t("Phone")}
                         autoComplete="phone"
                         errorMessage={errorsChangeContact.phone?.message}
+                        defaultCountryCode={
+                          app?.consent.availableCountryCodes?.[0]
+                        }
                         allowedCountryCodes={app?.consent.availableCountryCodes}
                         {...registerChangeContact("phone")}
                       />

@@ -38,20 +38,25 @@ export const PhoneField = React.forwardRef<any, PhoneFieldProps>(
     },
     ref
   ) => {
+    const DefaultCountryCode = defaultCountryCode?.toLowerCase();
+    const AllowedCountryCodes = React.useMemo(
+      () =>
+        new Set(allowedCountryCodes?.map((code) => code.toLowerCase()) ?? []),
+      [allowedCountryCodes]
+    );
+
     const AvailableDialingRules = React.useMemo(
       () =>
         Object.values(DialingRules).filter(
           (rule) =>
-            !(allowedCountryCodes instanceof Array) ||
-            allowedCountryCodes
-              ?.map((code) => code.toLowerCase())
-              ?.includes(rule.countryCode)
+            !AllowedCountryCodes.size ||
+            AllowedCountryCodes.has(rule.countryCode)
         ),
       allowedCountryCodes
     );
 
     const [CountryCode, setCountryCode] = React.useState(
-      defaultCountryCode ?? "us"
+      DefaultCountryCode ?? "us"
     );
 
     const TargetDialingRule = DialingRules[CountryCode];
@@ -98,17 +103,9 @@ export const PhoneField = React.forwardRef<any, PhoneFieldProps>(
                   },
                 }}
                 sx={{
-                  // width: "max-content",
-                  // Remove default outline (display only on focus)
                   fieldset: {
                     display: "none",
                   },
-                  // '&.Mui-focused:has(div[aria-expanded="false"])': {
-                  //   fieldset: {
-                  //     display: "block",
-                  //   },
-                  // },
-                  // Update default spacing
                   ".MuiSelect-select": {
                     padding: "8px",
                     paddingRight: "24px !important",

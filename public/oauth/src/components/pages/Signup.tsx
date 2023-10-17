@@ -258,6 +258,7 @@ export const SignupPage = () => {
                     label={t("Phone")}
                     autoComplete="phone"
                     errorMessage={errors.phone?.message}
+                    defaultCountryCode={app?.consent.availableCountryCodes?.[0]}
                     allowedCountryCodes={app?.consent.availableCountryCodes}
                     {...register("phone")}
                   />
