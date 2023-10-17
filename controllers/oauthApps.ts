@@ -28,8 +28,11 @@ export default class OauthAppsController extends BaseController {
       name: e.string().length({ min: 2, max: 50 }),
       description: e.optional(e.string().length({ min: 30, max: 300 })),
       consent: e.object({
+        availableCountryCodes: e.optional(
+          e.array(e.string().length({ min: 2, max: 2 })).min(1)
+        ),
         requiredIdentificationMethods: e
-          .optional(e.array(e.in(Object.values(IdentificationMethod))))
+          .optional(e.array(e.in(Object.values(IdentificationMethod))).min(1))
           .default([IdentificationMethod.EMAIL]),
         logo: e.optional(
           e.object({
@@ -37,7 +40,18 @@ export default class OauthAppsController extends BaseController {
           })
         ),
         primaryColor: e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
+        primaryColorDark: e.optional(
+          e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/)
+        ),
         secondaryColor: e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
+        secondaryColorDark: e.optional(
+          e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/)
+        ),
+        styling: e.optional(
+          e.object({
+            roundness: e.optional(e.number().amount({ min: 0, max: 100 })),
+          })
+        ),
         allowedCallbackURLs: e
           .array(
             e.string().custom((ctx) => new URL(ctx.output).toString()),

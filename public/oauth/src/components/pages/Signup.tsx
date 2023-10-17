@@ -27,6 +27,7 @@ import { ValidatorResolver } from "../utils/validatorResolver";
 import { useOauthApp } from "../context/OauthApp";
 
 import { ConsentFooter } from "../misc/ConsentFooter";
+import { PhoneField } from "../misc/PhoneField";
 
 import Logo from "../../assets/logo.png";
 
@@ -63,7 +64,7 @@ export const SignupPage = () => {
                 messages: { matchFailed: t("Please provide a valid phone!") },
               })
               .matches({
-                regex: /^\+(?:[0-9]?){6,14}[0-9]$/,
+                regex: /^\+[0-9]{6,14}$/,
               })
           : undefined,
         username: e
@@ -252,20 +253,14 @@ export const SignupPage = () => {
 
               {app?.consent.requiredIdentificationMethods.includes("phone") && (
                 <Grid item xs={12}>
-                  <FormControl fullWidth variant="outlined">
-                    <InputLabel htmlFor="phone">{t("Phone")}</InputLabel>
-                    <OutlinedInput
-                      id="phone"
-                      label={t("Phone")}
-                      type="text"
-                      autoComplete="phone"
-                      error={!!errors.phone?.message}
-                      {...register("phone")}
-                    />
-                    <FormHelperText error={!!errors.phone?.message}>
-                      {errors.phone?.message ?? t("Example: +13904789456")}
-                    </FormHelperText>
-                  </FormControl>
+                  <PhoneField
+                    id="phone"
+                    label={t("Phone")}
+                    autoComplete="phone"
+                    errorMessage={errors.phone?.message}
+                    allowedCountryCodes={app?.consent.availableCountryCodes}
+                    {...register("phone")}
+                  />
                 </Grid>
               )}
 

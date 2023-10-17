@@ -18,6 +18,7 @@ export const OauthConsentStylingSchema =
   );
 
 export interface IOauthConsent extends mongoose.Types.Subdocument {
+  availableCountryCodes?: string[];
   requiredIdentificationMethods: IdentificationMethod[];
   logo?: IFile;
   primaryColor: string;
@@ -34,6 +35,7 @@ export interface IOauthConsent extends mongoose.Types.Subdocument {
 
 export const OauthConsentSchema = new mongoose.Schema<IOauthConsent>(
   {
+    availableCountryCodes: [{ type: String }],
     requiredIdentificationMethods: [
       { type: String, enum: IdentificationMethod, required: true },
     ],

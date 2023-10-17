@@ -2,6 +2,7 @@ import React from "react";
 import axios from "axios";
 
 export interface IOauthConsent {
+  availableCountryCodes?: string[];
   requiredIdentificationMethods: Array<"email" | "phone">;
   logo?: {
     url: string;

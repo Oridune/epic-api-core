@@ -32,6 +32,7 @@ import { useOauthApp } from "../context/OauthApp";
 
 import { DotMenu } from "../misc/DotMenu";
 import { ConsentFooter } from "../misc/ConsentFooter";
+import { PhoneField } from "../misc/PhoneField";
 
 import Logo from "../../assets/logo.png";
 
@@ -76,7 +77,7 @@ export const ContactsPage = () => {
               messages: { matchFailed: t("Please provide a valid phone!") },
             })
             .matches({
-              regex: /^\+(?:[0-9]?){6,14}[0-9]$/,
+              regex: /^\+[0-9]{6,14}$/,
             })
         ),
       }),
@@ -340,22 +341,14 @@ export const ContactsPage = () => {
                         </FormHelperText>
                       </FormControl>
                     ) : VerificationMethod === "phone" ? (
-                      <FormControl fullWidth variant="outlined">
-                        <InputLabel htmlFor="phone">{t("Phone")}</InputLabel>
-                        <OutlinedInput
-                          id="phone"
-                          label={t("Phone")}
-                          type="text"
-                          autoComplete="phone"
-                          error={!!errorsChangeContact.phone?.message}
-                          {...registerChangeContact("phone")}
-                        />
-                        <FormHelperText
-                          error={!!errorsChangeContact.phone?.message}
-                        >
-                          {errorsChangeContact.phone?.message}
-                        </FormHelperText>
-                      </FormControl>
+                      <PhoneField
+                        id="phone"
+                        label={t("Phone")}
+                        autoComplete="phone"
+                        errorMessage={errorsChangeContact.phone?.message}
+                        allowedCountryCodes={app?.consent.availableCountryCodes}
+                        {...registerChangeContact("phone")}
+                      />
                     ) : null}
                   </Grid>
                   <Grid item xs={12}>
