@@ -2,7 +2,7 @@ import e, { inferInput, inferOutput } from "validator";
 import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
 
 export const $_namePascalSchema = e.object({
-  _id: e.instanceOf(ObjectId, { instantiate: true }),
+  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
   createdAt: e.optional(e.date()).default(() => new Date()),
   updatedAt: e.optional(e.date()).default(() => new Date()),
 });
