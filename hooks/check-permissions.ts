@@ -1,9 +1,10 @@
 import { type IRequestContext } from "@Core/common/mod.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
+import { ObjectId } from "mongo";
 
 import { CollaboratorModel } from "@Models/collaborator.ts";
-import { OauthScopesModel } from "@Models/oauth-scopes.ts";
+import { OauthPolicyModel } from "@Models/oauth-policy.ts";
 
 import { SecurityGuard } from "@Lib/security-guard.ts";
 
@@ -56,20 +57,16 @@ export default {
           { name: `${scope}.headers.x-account-id` }
         );
 
-      const Collaborator = await CollaboratorModel.findOne(
-        {
-          account: AccountId,
-          createdFor: SessionInfo.session.createdBy,
-        },
-        { role: 1 }
-      );
+      const Collaborator = await CollaboratorModel.findOne({
+        account: new ObjectId(AccountId),
+        createdFor: new ObjectId(SessionInfo.session.createdBy),
+      }).project({ role: 1 });
 
       if (!Collaborator) e.error("You don't have access to this account!");
 
-      const OauthScopes = await OauthScopesModel.findOne(
-        { role: Collaborator!.role },
-        { scopes: 1 }
-      );
+      const OauthScopes = await OauthPolicyModel.findOne({
+        role: Collaborator!.role,
+      }).project({ scopes: 1 });
 
       if (!OauthScopes)
         e.error(
@@ -90,10 +87,9 @@ export default {
       PermittedScopes = SessionInfo.claims.scopes ?? ["*"];
     } else {
       const UnauthenticatedRole = "unauthenticated";
-      const OauthScopes = await OauthScopesModel.findOne(
-        { role: UnauthenticatedRole },
-        { scopes: 1 }
-      );
+      const OauthScopes = await OauthPolicyModel.findOne({
+        role: UnauthenticatedRole,
+      }).project({ scopes: 1 });
 
       if (!OauthScopes)
         e.error(
@@ -111,10 +107,9 @@ export default {
         const Match = scope.match(/^role:(.*)/);
 
         if (Match) {
-          const OauthScopes = await OauthScopesModel.findOne(
-            { role: Match[1] },
-            { scopes: 1 }
-          );
+          const OauthScopes = await OauthPolicyModel.findOne({
+            role: Match[1],
+          }).project({ scopes: 1 });
 
           if (!OauthScopes)
             e.error(

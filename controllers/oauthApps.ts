@@ -11,65 +11,19 @@ import {
 } from "@Core/common/mod.ts";
 import { Status, type RouterContext } from "oak";
 import e from "validator";
-import mongoose from "mongoose";
-import { OauthAppModel } from "@Models/oauth-app.ts";
+import { ObjectId } from "mongo";
+import { OauthAppSchema, OauthAppModel } from "@Models/oauth-app.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 
 @Controller("/oauth/apps/", { group: "Oauth", name: "oauthApps" })
 export default class OauthAppsController extends BaseController {
-  static DefaultOauthAppID = new mongoose.Types.ObjectId(
-    "63b6a997e1275524350649f4"
-  );
+  static DefaultOauthAppID = new ObjectId("63b6a997e1275524350649f4");
 
   @Post("/")
   public create() {
     // Define Body Schema
-    const BodySchema = e.object({
-      name: e.string().length({ min: 2, max: 50 }),
-      description: e.optional(e.string().length({ min: 30, max: 300 })),
-      consent: e.object({
-        availableCountryCodes: e.optional(
-          e.array(e.string().length({ min: 2, max: 2 })).min(1)
-        ),
-        requiredIdentificationMethods: e
-          .optional(e.array(e.in(Object.values(IdentificationMethod))).min(1))
-          .default([IdentificationMethod.EMAIL]),
-        logo: e.optional(
-          e.object({
-            url: e.string().custom((ctx) => new URL(ctx.output).toString()),
-          })
-        ),
-        primaryColor: e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
-        primaryColorDark: e.optional(
-          e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/)
-        ),
-        secondaryColor: e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
-        secondaryColorDark: e.optional(
-          e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/)
-        ),
-        styling: e.optional(
-          e.object({
-            roundness: e.optional(e.number().amount({ min: 0, max: 100 })),
-          })
-        ),
-        allowedCallbackURLs: e
-          .array(
-            e.string().custom((ctx) => new URL(ctx.output).toString()),
-            { cast: true, splitter: /\s*,\s*/ }
-          )
-          .length({ min: 1 }),
-        homepageURL: e.string().custom((ctx) => new URL(ctx.output).toString()),
-        privacyPolicyURL: e.optional(
-          e.string().custom((ctx) => new URL(ctx.output).toString())
-        ),
-        termsAndConditionsURL: e.optional(
-          e.string().custom((ctx) => new URL(ctx.output).toString())
-        ),
-        supportURL: e.optional(
-          e.string().custom((ctx) => new URL(ctx.output).toString())
-        ),
-      }),
-      metadata: e.optional(e.record(e.string())),
+    const BodySchema = e.omit(OauthAppSchema, {
+      keys: ["_id", "createdAt", "updatedAt", "account", "createdBy"],
     });
 
     return Versioned.add("1.0.0", {
@@ -83,10 +37,9 @@ export default class OauthAppsController extends BaseController {
           { name: "oauthApps.body" }
         );
 
-        const App = new OauthAppModel(Body);
-        await App.save();
-
-        return Response.data(App).statusCode(Status.Created);
+        return Response.data(await OauthAppModel.create(Body)).statusCode(
+          Status.Created
+        );
       },
     });
   }
@@ -125,10 +78,10 @@ export default class OauthAppsController extends BaseController {
     return Versioned.add("1.0.0", {
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         const App =
-          (await OauthAppModel.findOne({
-            _id: OauthAppsController.DefaultOauthAppID,
-          })) ??
-          (await new OauthAppModel({
+          (await OauthAppModel.findOne(
+            OauthAppsController.DefaultOauthAppID
+          )) ??
+          (await OauthAppModel.create({
             _id: OauthAppsController.DefaultOauthAppID,
             name: `${await Env.get("DISPLAY_NAME")} (By Oridune)`,
             description: "The default OAuth application.",
@@ -142,7 +95,7 @@ export default class OauthAppsController extends BaseController {
               ],
               homepageURL: ctx.router.request.url.origin,
             },
-          }).save());
+          }));
 
         if (!App) e.error("Default Oauth app not found!");
 
@@ -155,10 +108,7 @@ export default class OauthAppsController extends BaseController {
   public get() {
     // Define Params Schema
     const ParamsSchema = e.object({
-      appId: e.string().custom((ctx) => {
-        if (!mongoose.Types.ObjectId.isValid(ctx.output))
-          throw "Not a valid id!";
-      }),
+      appId: e.if(ObjectId.isValid),
     });
 
     return Versioned.add("1.0.0", {
@@ -171,7 +121,10 @@ export default class OauthAppsController extends BaseController {
           name: "oauthApps.params",
         });
 
-        const App = await OauthAppModel.findOne({ _id: Params.appId });
+        const App = await OauthAppModel.findOne({
+          _id: new ObjectId(Params.appId),
+        });
+
         if (!App) e.error("Oauth app not found!");
 
         return Response.data(App!);
@@ -183,10 +136,7 @@ export default class OauthAppsController extends BaseController {
   public delete() {
     // Define Params Schema
     const ParamsSchema = e.object({
-      appId: e.string().custom((ctx) => {
-        if (!mongoose.Types.ObjectId.isValid(ctx.output))
-          throw "Not a valid id!";
-
+      appId: e.if(ObjectId.isValid).custom((ctx) => {
         if (OauthAppsController.DefaultOauthAppID.toString() === ctx.output)
           throw "Cannot delete the default Oauth app!";
       }),
@@ -202,7 +152,7 @@ export default class OauthAppsController extends BaseController {
           name: "oauthApps.params",
         });
 
-        await OauthAppModel.deleteOne({ _id: Params.appId });
+        await OauthAppModel.deleteOne({ _id: new ObjectId(Params.appId) });
 
         return Response.status(true);
       },

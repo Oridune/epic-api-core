@@ -15,13 +15,23 @@ import {
 import { Status, type RouterContext } from "oak";
 import e from "validator";
 import * as bcrypt from "bcrypt";
-import mongoose from "mongoose";
+import { Mongo, ObjectId } from "mongo";
 
-import { Gender, IUser, UserModel } from "@Models/user.ts";
+import {
+  TUserInput,
+  CreateUserSchema,
+  UpdateUserSchema,
+  UserModel,
+  UsernameValidator,
+  PasswordValidator,
+  EmailValidator,
+  PhoneValidator,
+} from "@Models/user.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { AccountModel } from "@Models/account.ts";
-import { IOauthApp, OauthAppModel } from "@Models/oauth-app.ts";
+import { OauthAppModel } from "@Models/oauth-app.ts";
 import { OauthSessionModel } from "@Models/oauth-session.ts";
+
 import UsersIdentificationController, {
   IdentificationMethod,
   IdentificationPurpose,
@@ -30,83 +40,69 @@ import OauthController from "@Controllers/oauth.ts";
 import { PermanentlyDeleteUsers } from "@Jobs/delete-users.ts";
 import UploadsController from "@Controllers/uploads.ts";
 import { Uploads } from "@Lib/uploads/mod.ts";
-import { IFile } from "@Models/file.ts";
-
-export const UsernameValidator = () =>
-  e.string().matches({
-    regex: /^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/,
-  });
-
-export const PasswordValidator = () =>
-  e.string().matches({
-    regex:
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=?|\s])[A-Za-z\d!@#$%^&*()_\-+=?|\s]{8,}$/,
-  });
-
-export const EmailValidator = () =>
-  e.string().matches({
-    regex: /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/,
-  });
-
-export const PhoneValidator = () =>
-  e.string().matches({
-    regex:
-      /^\+((?:9[679]|8[035789]|6[789]|5[90]|42|3[578]|2[1-689])|9[0-58]|8[1246]|6[0-6]|5[1-8]|4[013-9]|3[0-469]|2[70]|7|1)(?:\W*\d){7,13}\d$/,
-  });
+import { TFileOutput } from "@Models/file.ts";
 
 @Controller("/users/", { group: "Users", name: "users" })
 export default class UsersController extends BaseController {
-  static async create(user: Partial<IUser>) {
-    const Session = await mongoose.startSession();
-
-    try {
-      Session.startTransaction();
+  static create(user: TUserInput) {
+    return Mongo.transaction(async (session) => {
+      const UserId = new ObjectId();
+      const AccountId = new ObjectId();
+      const CollaboratorId = new ObjectId();
 
       const Password = await bcrypt.hash(
         user.password ?? Math.random().toString(36) + Date.now().toString(36)
       );
 
-      const User = new UserModel({
-        ...user,
-        password: Password,
-      });
-      const Account = new AccountModel({});
-      const Collaborator = new CollaboratorModel({
-        account: Account,
-        isOwned: true,
-        isPrimary: true,
-        role: ["", undefined].includes(
-          await Env.get("VERIFIED_ROLE_POLICY", true)
-        )
-          ? "user"
-          : "unverified",
-      });
+      const Result = {
+        user: await UserModel.create(
+          {
+            ...user,
+            _id: UserId,
+            password: Password,
+            passwordHistory: [Password],
+            collaborates: [CollaboratorId],
+          },
+          { session }
+        ),
+        account: await AccountModel.create(
+          {
+            _id: AccountId,
+            createdBy: UserId,
+            createdFor: UserId,
+          },
+          { session }
+        ),
+        collaborator: await CollaboratorModel.create(
+          {
+            _id: CollaboratorId,
+            createdBy: UserId,
+            createdFor: UserId,
+            account: AccountId,
+            isOwned: true,
+            isPrimary: true,
+            role: ["", undefined].includes(
+              await Env.get("VERIFIED_ROLE_POLICY", true)
+            )
+              ? "user"
+              : "unverified",
+          },
+          { session }
+        ),
+      };
 
-      User.collaborates = [Collaborator];
-      Account.createdBy = Account.createdFor = User;
-      Collaborator.createdBy = Collaborator.createdFor = User;
-
-      await Account.save({ session: Session });
-      await Collaborator.save({ session: Session });
-      await User.save({ session: Session });
-
-      await Session.commitTransaction();
-
-      return User;
-    } catch (error) {
-      await Session.abortTransaction();
-      throw error;
-    }
+      return Result;
+    });
   }
 
   static async verify(method: IdentificationMethod, userId: string) {
     switch (method) {
       case IdentificationMethod.EMAIL:
-        await UserModel.updateOne({ _id: userId }, { isEmailVerified: true });
+        await UserModel.updateOne(userId, { isEmailVerified: true });
         break;
 
       case IdentificationMethod.PHONE:
-        await UserModel.updateOne({ _id: userId }, { isPhoneVerified: true });
+        await UserModel.updateOne(userId, { isPhoneVerified: true });
         break;
 
       default:
@@ -118,59 +114,41 @@ export default class UsersController extends BaseController {
     userId: string,
     options?: { timeoutMs?: number }
   ) {
-    await UserModel.updateOne(
-      { _id: userId },
-      {
-        deletionAt:
-          Date.now() +
+    await UserModel.updateOne(userId, {
+      deletionAt: new Date(
+        Date.now() +
           (options?.timeoutMs ??
             parseFloat(
               (await Env.get("USER_DELETION_TIMEOUT_MS", true)) ?? "1.296e+9" // Deletion in 15 days default
-            )),
-      }
-    );
+            ))
+      ),
+    });
   }
 
   @Post("/:oauthAppId/")
   public create(route: IRoute) {
     // Define Params Schema
     const ParamsSchema = e.object({
-      oauthAppId: e.string().throwsFatal(),
-      oauthApp: e.any().custom(async (ctx) => {
-        const App = await OauthAppModel.findOne({
-          _id: ctx.parent!.output.oauthAppId,
-        });
-
-        if (!App) throw new Error(`Invalid oauth app id!`);
-        return App;
+      oauthAppId: e.string().custom(async (ctx) => {
+        if (!(await OauthAppModel.exists(ctx.parent!.output.oauthAppId)))
+          throw new Error(`Invalid oauth app id!`);
       }),
     });
 
     // Define Body Schema
-    const BodySchema = e.object({
-      oauthApp: e.any().custom((ctx) => ctx.context.oauthApp as IOauthApp),
-      fname: e.string().min(3),
-      mname: e.optional(e.string()),
-      lname: e.optional(e.string()),
-      username: UsernameValidator().custom(async (ctx) => {
-        if (await UserModel.exists({ username: ctx.output }))
-          throw "Username is already taken!";
-      }),
-      password: PasswordValidator(),
-      passwordHistory: e.any().custom((ctx) => [ctx.parent!.output.password]),
-      gender: e.optional(e.in(Object.values(Gender))),
-      dob: e.optional(e.date()),
-      locale: e.optional(e.string()),
-      tags: e.optional(e.array(e.string())),
-      email: e.optional(EmailValidator()),
-      phone: e.optional(PhoneValidator()),
-      country: e.optional(e.string()),
-      state: e.optional(e.string()),
-      city: e.optional(e.string()),
-      address_1: e.optional(e.string()),
-      address_2: e.optional(e.string()),
-      postalCode: e.optional(e.string()),
-    });
+    const BodySchema = e
+      .omit(CreateUserSchema, {
+        keys: ["oauthApp", "username", "password"],
+      })
+      .extends(
+        e.object({
+          username: UsernameValidator().custom(async (ctx) => {
+            if (await UserModel.count({ username: ctx.output }))
+              throw "Username is already taken!";
+          }),
+          password: PasswordValidator(),
+        })
+      );
 
     return {
       postman: {
@@ -186,20 +164,18 @@ export default class UsersController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          {
-            name: `${route.scope}.body`,
-            context: {
-              oauthApp: Params.oauthApp,
-            },
-          }
+          { name: `${route.scope}.body` }
         );
 
-        const User = await UsersController.create(Body);
-
-        User.set("password", undefined);
-        User.set("passwordHistory", undefined);
-        User.set("oauthApp", undefined);
-        User.set("collaborates", undefined);
+        // deno-lint-ignore no-unused-vars
+        const { password, passwordHistory, oauthApp, collaborates, ...User } = (
+          await UsersController.create({
+            oauthApp: new ObjectId(Params.oauthAppId),
+            ...Body,
+            passwordHistory: [],
+            collaborates: [],
+          })
+        ).user;
 
         return Response.statusCode(Status.Created).data(User);
       },
@@ -209,21 +185,7 @@ export default class UsersController extends BaseController {
   @Patch("/me/")
   public update(route: IRoute) {
     // Define Body Schema
-    const BodySchema = e.object({
-      fname: e.optional(e.string().min(3), { nullish: true }),
-      mname: e.optional(e.string(), { nullish: true }),
-      lname: e.optional(e.string(), { nullish: true }),
-      gender: e.optional(e.in(Object.values(Gender)), { nullish: true }),
-      dob: e.optional(e.date(), { nullish: true }),
-      locale: e.optional(e.string(), { nullish: true }),
-      tags: e.optional(e.array(e.string()), { nullish: true }),
-      country: e.optional(e.string(), { nullish: true }),
-      state: e.optional(e.string(), { nullish: true }),
-      city: e.optional(e.string(), { nullish: true }),
-      address_1: e.optional(e.string(), { nullish: true }),
-      address_2: e.optional(e.string(), { nullish: true }),
-      postalCode: e.optional(e.string(), { nullish: true }),
-    });
+    const BodySchema = e.partial(UpdateUserSchema, { nullish: true });
 
     return Versioned.add("1.0.0", {
       postman: {
@@ -239,7 +201,7 @@ export default class UsersController extends BaseController {
         );
 
         // Update user
-        await UserModel.updateOne({ _id: ctx.router.state.auth.userId }, Body);
+        await UserModel.updateOne(ctx.router.state.auth.userId, Body);
 
         return Response.data(Body);
       },
@@ -280,10 +242,9 @@ export default class UsersController extends BaseController {
             Body.method
           ).catch(e.error));
 
-        const User = await UserModel.findOne(
-          { _id: Payload.userId },
-          { passwordHistory: 1 }
-        );
+        const User = await UserModel.findOne(Payload.userId).project({
+          passwordHistory: 1,
+        });
 
         if (!User) e.error(`User not found!`);
 
@@ -295,7 +256,7 @@ export default class UsersController extends BaseController {
           e.error(`Cannot use an old password!`);
 
         await UserModel.updateOne(
-          { _id: Payload.userId },
+          { _id: new ObjectId(Payload.userId) },
           {
             password: Body.hashedPassword,
             $push: { passwordHistory: Body.hashedPassword },
@@ -313,7 +274,7 @@ export default class UsersController extends BaseController {
     // Define Body Schema
     const BodySchema = e.object({
       email: EmailValidator().custom(async (ctx) => {
-        if (await UserModel.exists({ email: ctx.output }))
+        if (await UserModel.count({ email: ctx.output }))
           throw "Please provide a different email!";
       }),
     });
@@ -333,10 +294,10 @@ export default class UsersController extends BaseController {
 
         const Verified = false;
 
-        await UserModel.updateOne(
-          { _id: ctx.router.state.auth.userId },
-          { email: Body.email, isEmailVerified: Verified }
-        );
+        await UserModel.updateOne(ctx.router.state.auth.userId, {
+          email: Body.email,
+          isEmailVerified: Verified,
+        });
 
         return Response.data({
           type: IdentificationMethod.EMAIL,
@@ -352,7 +313,7 @@ export default class UsersController extends BaseController {
     // Define Body Schema
     const BodySchema = e.object({
       phone: PhoneValidator().custom(async (ctx) => {
-        if (await UserModel.exists({ phone: ctx.output }))
+        if (await UserModel.count({ phone: ctx.output }))
           throw "Please provide a different phone!";
       }),
     });
@@ -372,10 +333,10 @@ export default class UsersController extends BaseController {
 
         const Verified = false;
 
-        await UserModel.updateOne(
-          { _id: ctx.router.state.auth.userId },
-          { phone: Body.phone, isPhoneVerified: Verified }
-        );
+        await UserModel.updateOne(ctx.router.state.auth.userId, {
+          phone: Body.phone,
+          isPhoneVerified: Verified,
+        });
 
         return Response.data({
           type: IdentificationMethod.PHONE,
@@ -457,11 +418,13 @@ export default class UsersController extends BaseController {
         });
 
         // Fetch users
-        const Users = await UserModel.find({ _id: Params.userId })
-          .populate({
-            path: "collaborates",
-            populate: "account",
-          })
+        const Users = await UserModel.find(
+          Params.userId ? { _id: new ObjectId(Params.userId) } : {}
+        )
+          .populate(
+            "collaborates",
+            CollaboratorModel.populateOne("account", AccountModel)
+          )
           .skip(Query.offset)
           .limit(Query.limit);
 
@@ -479,12 +442,12 @@ export default class UsersController extends BaseController {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
         // Fetch user
-        const User = await UserModel.findOne({
-          _id: ctx.router.state.auth.userId,
-        }).populate({
-          path: "collaborates",
-          populate: "account",
-        });
+        const User = await UserModel.findOne(
+          ctx.router.state.auth.userId
+        ).populate(
+          "collaborates",
+          CollaboratorModel.populateOne("account", AccountModel)
+        );
 
         return Response.data({
           user: User,
@@ -516,7 +479,7 @@ export default class UsersController extends BaseController {
 
         // Logout all sessions
         await OauthSessionModel.deleteMany({
-          createdBy: ctx.router.state.auth.userId,
+          createdBy: new ObjectId(ctx.router.state.auth.userId),
         });
 
         await UsersController.scheduleDeletion(ctx.router.state.auth.userId, {
@@ -554,7 +517,7 @@ export default class UsersController extends BaseController {
         token: e
           .string()
           .custom((ctx) =>
-            OauthController.verifyToken<IFile>({
+            OauthController.verifyToken<TFileOutput>({
               token: ctx.output,
               type: UploadsController.UploadTokenType,
               secret: ctx.context?.userId,
@@ -588,12 +551,9 @@ export default class UsersController extends BaseController {
           alt: Body.token.alt,
         };
 
-        await UserModel.updateOne(
-          { _id: ctx.router.state.auth.userId },
-          {
-            avatar: Avatar,
-          }
-        );
+        await UserModel.updateOne(ctx.router.state.auth.userId, {
+          avatar: Avatar,
+        });
 
         return Response.data(Avatar);
       },

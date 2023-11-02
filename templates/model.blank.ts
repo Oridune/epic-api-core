@@ -1,18 +1,24 @@
-import mongoose from "mongoose";
+import e, { inferInput, inferOutput } from "validator";
+import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
 
-export interface I$_namePascal {
-  createdAt: Date;
-  updatedAt: Date;
-}
+export const $_namePascalSchema = e.object({
+  _id: e.instanceOf(ObjectId, { instantiate: true }),
+  createdAt: e.optional(e.date()).default(() => new Date()),
+  updatedAt: e.optional(e.date()).default(() => new Date()),
+});
 
-export type I$_namePascalDocument = I$_namePascal & mongoose.Document;
+export type T$_namePascalInput = InputDocument<
+  inferInput<typeof $_namePascalSchema>
+>;
+export type T$_namePascalOutput = OutputDocument<
+  inferOutput<typeof $_namePascalSchema>
+>;
 
-export const $_namePascalSchema = new mongoose.Schema<I$_namePascal>(
-  {},
-  { timestamps: true, versionKey: false }
-);
+export const $_namePascalModel = Mongo.model("$_nameKebab", $_namePascalSchema);
 
-export const $_namePascalModel = mongoose.model<I$_namePascal>(
-  "$_nameKebab",
-  $_namePascalSchema
-);
+$_namePascalModel.pre("update", (details) => {
+  details.updates.$set = {
+    ...details.updates.$set,
+    updatedAt: new Date(),
+  };
+});

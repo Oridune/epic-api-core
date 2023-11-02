@@ -12,8 +12,7 @@ import {
 import e from "validator";
 import { type RouterContext, Status } from "oak";
 import { Novu } from "novu";
-import { UserModel } from "@Models/user.ts";
-import { UsernameValidator } from "@Controllers/users.ts";
+import { UsernameValidator, UserModel } from "@Models/user.ts";
 import OauthController from "@Controllers/oauth.ts";
 
 export enum IdentificationPurpose {
@@ -89,7 +88,7 @@ export default class UsersIdentificationController extends BaseController {
     userFilter: object,
     metadata?: Record<string, any>
   ) {
-    const User = await UserModel.findOne(userFilter, {
+    const User = await UserModel.findOne(userFilter).project({
       _id: 1,
       [method]: 1,
     });
@@ -107,15 +106,17 @@ export default class UsersIdentificationController extends BaseController {
 
       if (method !== IdentificationMethod.IN_APP)
         await Notifier.subscribers
-          .update(User._id, { [method]: User[method] })
+          .update(User._id.toString(), { [method]: User[method] })
           .catch(() =>
-            Notifier.subscribers.identify(User._id, { [method]: User[method] })
+            Notifier.subscribers.identify(User._id.toString(), {
+              [method]: User[method],
+            })
           );
 
       const NovuTemplateId = method + "-identification-otp";
 
       await Notifier.trigger(NovuTemplateId, {
-        to: { subscriberId: User._id },
+        to: { subscriberId: User._id.toString() },
         payload: {
           otp: Challenge.otp,
         },
@@ -136,14 +137,13 @@ export default class UsersIdentificationController extends BaseController {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
         const User = await UserModel.findOne(
-          { _id: ctx.router.state.auth.userId },
-          {
-            email: 1,
-            isEmailVerified: 1,
-            phone: 1,
-            isPhoneVerified: 1,
-          }
-        );
+          ctx.router.state.auth.userId
+        ).project({
+          email: 1,
+          isEmailVerified: 1,
+          phone: 1,
+          isPhoneVerified: 1,
+        });
 
         if (User) {
           return Response.data({
@@ -182,7 +182,7 @@ export default class UsersIdentificationController extends BaseController {
           name: "usersRecoveries.params",
         });
 
-        const User = await UserModel.findOne(Params, {
+        const User = await UserModel.findOne(Params).project({
           email: 1,
           isEmailVerified: 1,
           phone: 1,

@@ -1,9 +1,7 @@
 import { Env } from "@Core/common/env.ts";
 import { Database } from "@Database";
 import * as bcrypt from "bcrypt";
-import mongoose from "mongoose";
-import { AccountModel, IAccount } from "@Models/account.ts";
-import { IUser } from "@Models/user.ts";
+import { ObjectId, ClientSession } from "mongo";
 import { WalletModel } from "@Models/wallet.ts";
 import { TransactionModel, TransactionStatus } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
@@ -31,16 +29,13 @@ export class Wallet {
   }
 
   static async create(
-    account: IAccount | mongoose.Types.ObjectId | string,
+    account: ObjectId | string,
     options?: {
       type?: string;
       currency?: string;
-      databaseSession?: mongoose.mongo.ClientSession;
+      databaseSession?: ClientSession;
     }
   ) {
-    const Account = (
-      account instanceof AccountModel ? account._id : account
-    ) as mongoose.Types.ObjectId | string;
     const Type = options?.type ?? (await this.getDefaultType());
     const Currency = options?.currency ?? (await this.getDefaultCurrency());
 
@@ -52,38 +47,37 @@ export class Wallet {
 
     const Balance = 0;
 
-    return new WalletModel({
-      account: Account,
-      type: Type,
-      currency: Currency,
-      balance: Balance,
-      digest: await bcrypt.hash(Balance.toString()),
-    }).save({ session: options?.databaseSession });
+    return WalletModel.create(
+      {
+        account: new ObjectId(account),
+        type: Type,
+        currency: Currency,
+        balance: Balance,
+        digest: await bcrypt.hash(Balance.toString()),
+      },
+      { session: options?.databaseSession }
+    );
   }
 
   static async get(
-    account: IAccount | mongoose.Types.ObjectId | string,
+    account: ObjectId | string,
     options?: {
       type?: string;
       currency?: string;
-      databaseSession?: mongoose.mongo.ClientSession;
+      databaseSession?: ClientSession;
     }
   ) {
-    const Account = (
-      account instanceof AccountModel ? account._id : account
-    ) as mongoose.Types.ObjectId | string;
     const Type = options?.type ?? (await this.getDefaultType());
     const Currency = options?.currency ?? (await this.getDefaultCurrency());
 
     let Wallet = await WalletModel.findOne(
       {
-        account: Account,
+        account: new ObjectId(account),
         type: Type,
         currency: Currency,
       },
-      { transactions: 0 },
       { session: options?.databaseSession }
-    );
+    ).project({ transactions: 0 });
 
     if (!Wallet) Wallet = await this.create(account, options);
     else if (!(await bcrypt.compare(Wallet.balance.toString(), Wallet.digest)))
@@ -96,10 +90,10 @@ export class Wallet {
     sessionId?: string;
     reference?: string;
     fromName: string;
-    from: IAccount | mongoose.Types.ObjectId | string;
+    from: ObjectId | string;
     toName: string;
-    to: IAccount | mongoose.Types.ObjectId | string;
-    user: IUser | mongoose.Types.ObjectId | string;
+    to: ObjectId | string;
+    user: ObjectId | string;
     type?: string;
     currency?: string;
     amount: number;
@@ -107,14 +101,14 @@ export class Wallet {
     status?: TransactionStatus;
     is3DVerified?: boolean;
     allowOverdraft?: boolean;
-    databaseSession?: mongoose.mongo.ClientSession;
+    databaseSession?: ClientSession;
   }) {
     if (typeof options.amount !== "number" || options.amount <= 0)
       throw new Error(`Please provide a valid non-zero positive amount!`);
 
     if (
       options.sessionId &&
-      (await TransactionModel.exists({ sessionId: options.sessionId }))
+      (await TransactionModel.count({ sessionId: options.sessionId }))
     )
       throw new Error(`Cannot transfer in the same session again!`);
 
@@ -122,20 +116,15 @@ export class Wallet {
       options.reference ??
       `TX${10000 + (await Store.incr("wallet-transaction-reference"))}`;
 
-    if (await TransactionModel.exists({ reference: Reference }))
+    if (await TransactionModel.count({ reference: Reference }))
       throw new Error(
         `A payment with the same transaction reference '${Reference}' already exists!`
       );
 
-    const From = (
-      options.from instanceof AccountModel ? options.from._id : options.from
-    ) as mongoose.Types.ObjectId | string;
-    const To = (
-      options.to instanceof AccountModel ? options.to._id : options.to
-    ) as mongoose.Types.ObjectId | string;
+    const From = options.from.toString();
+    const To = options.to.toString();
 
-    if (From.toString() === To.toString())
-      throw new Error(`Cannot transfer to the same wallet!`);
+    if (From === To) throw new Error(`Cannot transfer to the same wallet!`);
 
     const Type = options?.type ?? (await this.getDefaultType());
     const Currency = options?.currency ?? (await this.getDefaultCurrency());
@@ -174,7 +163,7 @@ export class Wallet {
           (await Env.get("WALLET_OVERDRAFT_ENABLED_ACCOUNTS", true))?.split(
             /\s*,\s*/
           ) ?? []
-        ).includes(From.toString())
+        ).includes(From)
       )
         throw new Error(`Insufficient balance!`);
 
@@ -189,13 +178,13 @@ export class Wallet {
         sessionId: options.sessionId,
         reference: Reference,
         fromName: options.fromName,
-        from: From,
+        from: new ObjectId(From),
         toName: options.toName,
-        to: To,
+        to: new ObjectId(To),
         description: options.description,
         type: Type,
         currency: Currency,
-        createdBy: options.user,
+        createdBy: new ObjectId(options.user),
         is3DVerified: options.is3DVerified,
         amount: options.amount,
         status: options.status ?? TransactionStatus.COMPLETED,

@@ -1,4 +1,4 @@
-import { OauthScopesModel } from "@Models/oauth-scopes.ts";
+import { OauthPolicyModel } from "@Models/oauth-policy.ts";
 
 export const DefaultOauthScopes = {
   root: ["*"],
@@ -67,7 +67,7 @@ export const AreArraysIdentical = (arr1: unknown[], arr2: unknown[]) => {
 };
 
 export const SyncOauthScopes = async () => {
-  const Scopes = await OauthScopesModel.find({
+  const Scopes = await OauthPolicyModel.find({
     role: { $in: Object.keys(OauthScopes) },
   });
 
@@ -79,7 +79,7 @@ export const SyncOauthScopes = async () => {
       );
 
       if (!ExistingScopes || !AreArraysIdentical(ExistingScopes, UpdatedScopes))
-        return OauthScopesModel.updateOne(
+        return OauthPolicyModel.updateOne(
           { role },
           { scopes: UpdatedScopes },
           { upsert: true }

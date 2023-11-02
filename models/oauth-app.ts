@@ -1,85 +1,76 @@
-// deno-lint-ignore-file no-explicit-any
-import mongoose from "mongoose";
-import { IAccount } from "@Models/account.ts";
-import { IUser } from "@Models/user.ts";
-import { IFile, FileSchema } from "@Models/file.ts";
+import e, { inferInput, inferOutput } from "validator";
+import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
+import { FileSchema } from "@Models/file.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 
-export interface IOauthConsentStyling extends mongoose.Types.Subdocument {
-  roundness?: number;
-}
+export const OauthConsentStylingSchema = e.object({
+  roundness: e.optional(e.number({ cast: true }).amount({ min: 0, max: 100 })),
+});
 
-export const OauthConsentStylingSchema =
-  new mongoose.Schema<IOauthConsentStyling>(
-    {
-      roundness: Number,
-    },
-    { _id: false, versionKey: false }
-  );
+export const OauthConsentSchema = e.object({
+  availableCountryCodes: e.optional(
+    e
+      .array(e.string().length({ min: 2, max: 2 }), {
+        cast: true,
+      })
+      .min(1)
+  ),
+  requiredIdentificationMethods: e
+    .optional(
+      e.array(e.in(Object.values(IdentificationMethod)), { cast: true }).min(1)
+    )
+    .default([IdentificationMethod.EMAIL]),
+  logo: e.optional(FileSchema),
+  primaryColor: e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
+  primaryColorDark: e.optional(
+    e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/)
+  ),
+  secondaryColor: e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
+  secondaryColorDark: e.optional(
+    e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/)
+  ),
+  styling: e.optional(OauthConsentStylingSchema),
+  allowedCallbackURLs: e
+    .array(
+      e.string().custom((ctx) => new URL(ctx.output).toString()),
+      { cast: true, splitter: /\s*,\s*/ }
+    )
+    .min(1),
+  homepageURL: e.string().custom((ctx) => new URL(ctx.output).toString()),
+  privacyPolicyURL: e.optional(
+    e.string().custom((ctx) => new URL(ctx.output).toString())
+  ),
+  termsAndConditionsURL: e.optional(
+    e.string().custom((ctx) => new URL(ctx.output).toString())
+  ),
+  supportURL: e.optional(
+    e.string().custom((ctx) => new URL(ctx.output).toString())
+  ),
+});
 
-export interface IOauthConsent extends mongoose.Types.Subdocument {
-  availableCountryCodes?: string[];
-  requiredIdentificationMethods: IdentificationMethod[];
-  logo?: IFile;
-  primaryColor: string;
-  primaryColorDark?: string;
-  secondaryColor: string;
-  secondaryColorDark?: string;
-  styling?: IOauthConsentStyling;
-  allowedCallbackURLs: string[];
-  homepageURL: string;
-  privacyPolicyURL?: string;
-  termsAndConditionsURL?: string;
-  supportURL?: string;
-}
+export const OauthAppSchema = e.object({
+  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+  createdAt: e.optional(e.date()).default(() => new Date()),
+  updatedAt: e.optional(e.date()).default(() => new Date()),
+  account: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+  createdBy: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+  name: e.string().length({ min: 2, max: 50 }),
+  description: e.optional(e.string().length({ min: 30, max: 300 })),
+  enabled: e.optional(e.boolean({ cast: true })).default(true),
+  consent: OauthConsentSchema,
+  metadata: e.optional(e.record(e.string())),
+});
 
-export const OauthConsentSchema = new mongoose.Schema<IOauthConsent>(
-  {
-    availableCountryCodes: [{ type: String }],
-    requiredIdentificationMethods: [
-      { type: String, enum: IdentificationMethod, required: true },
-    ],
-    logo: FileSchema,
-    primaryColor: { type: String, required: true },
-    primaryColorDark: String,
-    secondaryColor: { type: String, required: true },
-    secondaryColorDark: String,
-    styling: OauthConsentStylingSchema,
-    allowedCallbackURLs: [{ type: String, required: true }],
-    homepageURL: { type: String, required: true },
-    privacyPolicyURL: String,
-    termsAndConditionsURL: String,
-    supportURL: String,
-  },
-  { _id: false, versionKey: false }
-);
+export type TOauthAppInput = InputDocument<inferInput<typeof OauthAppSchema>>;
+export type TOauthAppOutput = OutputDocument<
+  inferOutput<typeof OauthAppSchema>
+>;
 
-export interface IOauthApp extends mongoose.Document {
-  account?: IAccount | mongoose.Types.ObjectId;
-  createdBy?: IUser | mongoose.Types.ObjectId;
-  name: string;
-  description?: string;
-  enabled: boolean;
-  consent: IOauthConsent;
-  metadata: Record<string, string>;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export const OauthAppModel = Mongo.model("oauth-app", OauthAppSchema);
 
-export const OauthAppSchema = new mongoose.Schema<IOauthApp>(
-  {
-    account: { type: mongoose.Types.ObjectId, ref: "account" },
-    createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
-    name: { type: String, required: true },
-    description: String,
-    enabled: { type: Boolean, default: false },
-    consent: { type: OauthConsentSchema as any, required: true },
-    metadata: Object,
-  },
-  { timestamps: true, versionKey: false }
-);
-
-export const OauthAppModel = mongoose.model<IOauthApp>(
-  "oauth-app",
-  OauthAppSchema
-);
+OauthAppModel.pre("update", (details) => {
+  details.updates.$set = {
+    ...details.updates.$set,
+    updatedAt: new Date(),
+  };
+});

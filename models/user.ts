@@ -1,7 +1,28 @@
-import mongoose from "mongoose";
-import { IOauthApp } from "@Models/oauth-app.ts";
-import { ICollaborator } from "@Models/collaborator.ts";
-import { FileSchema, IFile } from "@Models/file.ts";
+import e, { inferInput, inferOutput } from "validator";
+import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
+import { FileSchema } from "@Models/file.ts";
+
+export const UsernameValidator = () =>
+  e.string().matches({
+    regex: /^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/,
+  });
+
+export const PasswordValidator = () =>
+  e.string().matches({
+    regex:
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=?|\s])[A-Za-z\d!@#$%^&*()_\-+=?|\s]{8,}$/,
+  });
+
+export const EmailValidator = () =>
+  e.string().matches({
+    regex: /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/,
+  });
+
+export const PhoneValidator = () =>
+  e.string().matches({
+    regex:
+      /^\+((?:9[679]|8[035789]|6[789]|5[90]|42|3[578]|2[1-689])|9[0-58]|8[1246]|6[0-6]|5[1-8]|4[013-9]|3[0-469]|2[70]|7|1)(?:\W*\d){7,13}\d$/,
+  });
 
 export enum Gender {
   MALE = "male",
@@ -9,92 +30,87 @@ export enum Gender {
   OTHER = "other",
 }
 
-export interface IUser extends mongoose.Document {
-  oauthApp: IOauthApp | mongoose.Types.ObjectId;
-  fname: string;
-  mname?: string;
-  lname?: string;
-  username: string;
-  password: string;
-  passwordHistory?: string[];
-  gender?: Gender;
-  dob?: Date;
-  avatar?: IFile;
-  locale?: string;
-  tags: string[];
-  email?: string;
-  isEmailVerified: boolean;
-  phone?: string;
-  isPhoneVerified: boolean;
-  country?: string;
-  state?: string;
-  city?: string;
-  address_1?: string;
-  address_2?: string;
-  postalCode?: string;
-  lastLogin?: Date;
-  loginCount: number;
-  failedLoginAttempts: number;
-  requiresMfa: boolean;
-  isBlocked: boolean;
-  collaborates: ICollaborator[] | mongoose.Types.ObjectId[];
-  deletionAt?: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export const UserSchema = new mongoose.Schema<IUser>(
-  {
-    oauthApp: { type: mongoose.Types.ObjectId, ref: "oauth-app" },
-    fname: { type: String, required: true },
-    mname: String,
-    lname: String,
-    username: { type: String, required: true, index: { unique: true } },
-    password: { type: String, required: true, select: false },
-    passwordHistory: [{ type: String, select: false }],
-    gender: { type: String, enum: Gender },
-    dob: Date,
-    avatar: FileSchema,
-    locale: String,
-    tags: [String],
-    email: {
-      type: String,
-      index: {
-        unique: true,
-        partialFilterExpression: { email: { $exists: true } },
-      },
-    },
-    isEmailVerified: { type: Boolean, default: false },
-    phone: {
-      type: String,
-      index: {
-        unique: true,
-        partialFilterExpression: { phone: { $exists: true } },
-      },
-    },
-    isPhoneVerified: { type: Boolean, default: false },
-    country: String,
-    state: String,
-    city: String,
-    address_1: String,
-    address_2: String,
-    postalCode: String,
-    lastLogin: Date,
-    loginCount: { type: Number, default: 0 },
-    failedLoginAttempts: { type: Number, default: 0 },
-    requiresMfa: { type: Boolean, default: false },
-    isBlocked: { type: Boolean, default: false },
-    collaborates: [{ type: mongoose.Types.ObjectId, ref: "collaborator" }],
-    deletionAt: Date,
-  },
-  { timestamps: true, versionKey: false }
-);
-
-//! This code doesn't seem to work!
-UserSchema.post("init", (user) => {
-  if (user.deletionAt instanceof Date)
-    // Throw an error if the user is deleted
-    throw new Error("Deleted user cannot be fetched!");
+export const UpdateUserSchema = e.object({
+  fname: e.string(),
+  mname: e.optional(e.string()),
+  lname: e.optional(e.string()),
+  gender: e.optional(e.in(Object.values(Gender))),
+  dob: e.optional(e.date()),
+  locale: e.optional(e.string()),
+  country: e.optional(e.string()),
+  state: e.optional(e.string()),
+  city: e.optional(e.string()),
+  address_1: e.optional(e.string()),
+  address_2: e.optional(e.string()),
+  postalCode: e.optional(e.string()),
 });
 
-export const UserModel = mongoose.model<IUser>("user", UserSchema);
+export const CreateUserSchema = e
+  .object({
+    oauthApp: e.instanceOf(ObjectId, { instantiate: true }),
+    username: UsernameValidator(),
+    password: e.string(),
+    avatar: e.optional(FileSchema),
+    tags: e.optional(e.array(e.string(), { cast: true })).default([]),
+    email: e.optional(EmailValidator()),
+    phone: e.optional(PhoneValidator()),
+  })
+  .extends(UpdateUserSchema);
+
+export const UserSchema = CreateUserSchema.extends(
+  e.object({
+    _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+    createdAt: e.optional(e.date()).default(() => new Date()),
+    updatedAt: e.optional(e.date()).default(() => new Date()),
+    passwordHistory: e.array(e.string()),
+    isEmailVerified: e.optional(e.boolean({ cast: true })).default(false),
+    isPhoneVerified: e.optional(e.boolean({ cast: true })).default(false),
+    lastLogin: e.optional(e.date()),
+    loginCount: e.optional(e.number({ cast: true })).default(0),
+    failedLoginAttempts: e.optional(e.number({ cast: true })).default(0),
+    requiresMfa: e.optional(e.boolean({ cast: true })).default(false),
+    isBlocked: e.optional(e.boolean({ cast: true })).default(false),
+    collaborates: e.array(e.instanceOf(ObjectId, { instantiate: true })),
+    deletionAt: e.optional(e.or([e.date(), e.null()])),
+  })
+);
+
+export type TUserInput = InputDocument<inferInput<typeof UserSchema>>;
+export type TUserOutput = OutputDocument<inferOutput<typeof UserSchema>>;
+
+export const UserModel = Mongo.model("user", UserSchema);
+
+UserModel.pre("update", (details) => {
+  details.updates.$set = {
+    ...details.updates.$set,
+    updatedAt: new Date(),
+  };
+});
+
+UserModel.post("read", (details) => {
+  if (details.data.deletionAt instanceof Date)
+    // Throw an error if the user is deleted
+    throw new Error("Deleted user cannot be fetched!");
+
+  return details.data;
+});
+
+await UserModel.createIndex(
+  {
+    key: {
+      username: 1,
+    },
+    unique: true,
+    background: true,
+  },
+  {
+    key: { email: 1 },
+    unique: true,
+    partialFilterExpression: { email: { $exists: true } },
+  },
+  {
+    key: { phone: 1 },
+    unique: true,
+    partialFilterExpression: { phone: { $exists: true } },
+  }
+);

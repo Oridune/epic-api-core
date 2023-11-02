@@ -1,7 +1,10 @@
 import { Loader } from "@Core/common/mod.ts";
 import { createAppServer } from "@Core/server.ts";
 import { expect } from "expect";
+import { Database } from "@Database";
 import e, { inferOutput } from "validator";
+
+import { OauthAppSchema } from "@Models/oauth-app.ts";
 
 const TestUsers = [
   [
@@ -26,21 +29,7 @@ const TestUsers = [
 
 const DefaultOauthAppResponseSchema = e.object({
   status: e.boolean(),
-  data: e.object({
-    _id: e.string(),
-    name: e.string(),
-    description: e.string(),
-    enabled: e.boolean(),
-    consent: e.object({
-      requiredIdentificationMethods: e.array(e.string()),
-      primaryColor: e.string(),
-      secondaryColor: e.string(),
-      allowedCallbackURLs: e.array(e.string()),
-      homepageURL: e.string(),
-    }),
-    createdAt: e.string(),
-    updatedAt: e.string(),
-  }),
+  data: OauthAppSchema,
 });
 
 const UserResponseSchema = e.object({
@@ -133,6 +122,9 @@ Deno.test({
 
     const { start, end, restart } = await createAppServer();
 
+    // Database Cleanup
+    Database.connection.post("connect", () => Database.connection.drop());
+
     const { port } = await start();
 
     const APIHost = `http://localhost:${port}`;
@@ -160,7 +152,10 @@ Deno.test({
 
         Context.defaultOauthApp = await DefaultOauthAppResponseSchema.validate(
           await Response.json()
-        );
+        ).catch((e) => {
+          console.error(e.issues);
+          throw e;
+        });
       }
     );
 
@@ -176,7 +171,12 @@ Deno.test({
 
           expect(Response.status).toBe(201);
 
-          await UserResponseSchema.validate(await Response.json());
+          await UserResponseSchema.validate(await Response.json()).catch(
+            (e) => {
+              console.error(e.issues);
+              throw e;
+            }
+          );
         })
       );
     });

@@ -1,27 +1,27 @@
-import mongoose from "mongoose";
-import { IAccount } from "@Models/account.ts";
+import e, { inferInput, inferOutput } from "validator";
+import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
 
-export interface IWallet {
-  account: IAccount | mongoose.Types.ObjectId;
-  type: string;
-  currency: string;
-  balance: number;
-  digest: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export const WalletSchema = e.object({
+  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+  createdAt: e.optional(e.date()).default(() => new Date()),
+  updatedAt: e.optional(e.date()).default(() => new Date()),
+  account: e.instanceOf(ObjectId, { instantiate: true }),
+  type: e.string(),
+  currency: e.string(),
+  balance: e.number(),
+  digest: e.string(),
+});
 
-export type IWalletDocument = IWallet & mongoose.Document;
+export type TWalletInput = InputDocument<inferInput<typeof WalletSchema>>;
+export type TWalletOutput = OutputDocument<inferOutput<typeof WalletSchema>>;
 
-export const WalletSchema = new mongoose.Schema<IWallet>(
-  {
-    account: { type: mongoose.Types.ObjectId, ref: "account", index: true },
-    type: { type: String, required: true },
-    currency: { type: String, required: true },
-    balance: { type: Number, required: true },
-    digest: { type: String, required: true },
-  },
-  { timestamps: true, versionKey: false }
-);
+export const WalletModel = Mongo.model("wallet", WalletSchema);
 
-export const WalletModel = mongoose.model<IWallet>("wallet", WalletSchema);
+WalletModel.pre("update", (details) => {
+  details.updates.$set = {
+    ...details.updates.$set,
+    updatedAt: new Date(),
+  };
+});
+
+await WalletModel.createIndex({ key: { account: 1 }, background: true });

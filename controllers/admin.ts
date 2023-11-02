@@ -18,7 +18,7 @@ export default class AdminController extends BaseController {
   public updateCore() {
     // Define Body Schema
     const BodySchema = e.object({
-      branch: e.optional(e.string()),
+      template: e.optional(e.string()),
     });
 
     return Versioned.add("1.0.0", {

@@ -1,37 +1,38 @@
-import mongoose from "mongoose";
-import { IUser } from "./user.ts";
-import { IOauthApp } from "./oauth-app.ts";
+import e, { inferInput, inferOutput } from "validator";
+import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
 
 export enum OauthProvider {
   LOCAL = "local",
 }
 
-export interface IOauthSession extends mongoose.Document {
-  createdBy?: IUser | mongoose.Types.ObjectId;
-  useragent?: string;
-  oauthApp: IOauthApp | mongoose.Types.ObjectId;
-  version: number;
-  provider: OauthProvider;
-  scopes: Record<string, string[]>;
-  expiresAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export const OauthSessionSchema = e.object({
+  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+  createdAt: e.optional(e.date()).default(() => new Date()),
+  updatedAt: e.optional(e.date()).default(() => new Date()),
+  expiresAt: e.date(),
+  createdBy: e.instanceOf(ObjectId, { instantiate: true }),
+  oauthApp: e.instanceOf(ObjectId, { instantiate: true }),
+  useragent: e.optional(e.string()),
+  version: e.number({ cast: true }),
+  provider: e.in(Object.values(OauthProvider)),
+  scopes: e.record(e.array(e.string()), { cast: true }),
+});
 
-export const OauthSessionSchema = new mongoose.Schema<IOauthSession>(
-  {
-    createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
-    useragent: String,
-    oauthApp: { type: mongoose.Types.ObjectId, ref: "oauth-app" },
-    version: Number,
-    provider: { type: String, enum: OauthProvider },
-    scopes: { type: Object, required: true },
-    expiresAt: Date,
-  },
-  { timestamps: true, versionKey: false }
-);
+export type TOauthSessionInput = InputDocument<
+  inferInput<typeof OauthSessionSchema>
+>;
+export type TOauthSessionOutput = OutputDocument<
+  inferOutput<typeof OauthSessionSchema>
+>;
 
-export const OauthSessionModel = mongoose.model<IOauthSession>(
+export const OauthSessionModel = Mongo.model(
   "oauth-session",
   OauthSessionSchema
 );
+
+OauthSessionModel.pre("update", (details) => {
+  details.updates.$set = {
+    ...details.updates.$set,
+    updatedAt: new Date(),
+  };
+});

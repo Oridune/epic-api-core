@@ -6,12 +6,11 @@ import { Cron } from "croner";
 import { Database } from "@Database";
 
 export const PermanentlyDeleteUsers = Transaction.add(async (_, next) => {
-  const Users = await UserModel.find(
-    { deletionAt: { $lt: new Date() } },
-    { deletionAt: 0 }
-  ).catch(() => {
-    // Do nothing...
-  });
+  const Users = await UserModel.find({ deletionAt: { $lt: new Date() } })
+    .project({ deletionAt: 0 })
+    .catch(() => {
+      // Do nothing...
+    });
 
   const Transactions: Array<Transaction> = [];
 
@@ -20,29 +19,33 @@ export const PermanentlyDeleteUsers = Transaction.add(async (_, next) => {
       Transactions.push(
         Transaction.add(async (_, next) => {
           await Database.transaction(async (session) => {
-            await UserModel.deleteOne({ _id: User._id }).session(session);
+            await UserModel.deleteOne({ _id: User._id }, { session });
 
-            const Accounts = await AccountModel.find({
-              createdFor: User._id,
-            }).session(session);
+            const Accounts = await AccountModel.find(
+              { createdFor: User._id },
+              { session }
+            );
 
             const AccountIDs = Accounts.map((account) => account._id);
 
-            await AccountModel.deleteMany({
-              _id: { $in: AccountIDs },
-            }).session(session);
+            await AccountModel.deleteMany(
+              { _id: { $in: AccountIDs } },
+              { session }
+            );
 
-            const Collaborations = await CollaboratorModel.find({
-              account: { $in: AccountIDs },
-            }).session(session);
+            const Collaborations = await CollaboratorModel.find(
+              { account: { $in: AccountIDs } },
+              { session }
+            );
 
             const CollaboratorIDs = Collaborations.map(
               (collaboration) => collaboration._id
             );
 
-            await CollaboratorModel.deleteMany({
-              _id: { $in: CollaboratorIDs },
-            }).session(session);
+            await CollaboratorModel.deleteMany(
+              { _id: { $in: CollaboratorIDs } },
+              { session }
+            );
 
             await next({
               user: User,

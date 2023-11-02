@@ -1,6 +1,5 @@
-import mongoose from "mongoose";
-import { IAccount } from "@Models/account.ts";
-import { IUser } from "@Models/user.ts";
+import e, { inferInput, inferOutput } from "validator";
+import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
 
 export enum TransactionStatus {
   PENDING = "pending",
@@ -8,53 +7,68 @@ export enum TransactionStatus {
   CANCELLED = "cancelled",
 }
 
-export interface ITransaction {
-  sessionId?: string;
-  reference: string;
-  fromName: string;
-  from: IAccount | mongoose.Types.ObjectId;
-  toName: string;
-  to: IAccount | mongoose.Types.ObjectId;
-  description: string;
-  type: string;
-  currency: string;
-  amount: number;
-  status: TransactionStatus;
-  is3DVerified: boolean;
-  createdBy: IUser | mongoose.Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export type ITransactionDocument = ITransaction & mongoose.Document;
-
-export const TransactionSchema = new mongoose.Schema<ITransaction>(
-  {
-    sessionId: { type: String, unique: true },
-    reference: { type: String, required: true, unique: true },
-    fromName: { type: String, required: true },
-    from: { type: mongoose.Types.ObjectId, ref: "account", index: true },
-    toName: { type: String, required: true },
-    to: { type: mongoose.Types.ObjectId, ref: "account", index: true },
-    description: String,
-    type: { type: String, required: true },
-    currency: { type: String, required: true },
-    amount: { type: Number, required: true },
-    status: { type: String, enum: TransactionStatus, required: true },
-    is3DVerified: { type: Boolean, default: false },
-    createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
-  },
-  { timestamps: true, versionKey: false }
-);
-
-TransactionSchema.index({
-  reference: "text",
-  fromName: "text",
-  toName: "text",
-  description: "text",
+export const TransactionSchema = e.object({
+  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+  createdAt: e.optional(e.date()).default(() => new Date()),
+  updatedAt: e.optional(e.date()).default(() => new Date()),
+  sessionId: e.optional(e.string()),
+  reference: e.string(),
+  fromName: e.string(),
+  from: e.instanceOf(ObjectId, { instantiate: true }),
+  toName: e.string(),
+  to: e.instanceOf(ObjectId, { instantiate: true }),
+  type: e.string(),
+  description: e.optional(e.string()),
+  currency: e.string(),
+  amount: e.number({ cast: true }),
+  status: e.in(Object.values(TransactionStatus)),
+  is3DVerified: e.optional(e.boolean({ cast: true })).default(false),
+  createdBy: e.instanceOf(ObjectId, { instantiate: true }),
 });
 
-export const TransactionModel = mongoose.model<ITransaction>(
-  "transaction",
-  TransactionSchema
+export type TTransactionInput = InputDocument<
+  inferInput<typeof TransactionSchema>
+>;
+export type TTransactionOutput = OutputDocument<
+  inferOutput<typeof TransactionSchema>
+>;
+
+export const TransactionModel = Mongo.model("transaction", TransactionSchema);
+
+TransactionModel.pre("update", (details) => {
+  details.updates.$set = {
+    ...details.updates.$set,
+    updatedAt: new Date(),
+  };
+});
+
+await TransactionModel.createIndex(
+  {
+    key: { sessionId: 1 },
+    unique: true,
+    partialFilterExpression: { sessionId: { $exists: true } },
+    background: true,
+  },
+  {
+    key: { reference: 1 },
+    unique: true,
+    background: true,
+  },
+  {
+    key: { from: 1 },
+    background: true,
+  },
+  {
+    key: { to: 1 },
+    background: true,
+  },
+  {
+    key: {
+      reference: "text",
+      fromName: "text",
+      toName: "text",
+      description: "text",
+    },
+    background: true,
+  }
 );

@@ -13,15 +13,18 @@ import {
 } from "@Core/common/mod.ts";
 import { Status, type RouterContext } from "oak";
 import e from "validator";
-import { UserModel } from "@Models/user.ts";
+import { ObjectId } from "mongo";
+
 import { Wallet } from "@Lib/wallet.ts";
-import { TransactionModel } from "@Models/transaction.ts";
 import UsersIdentificationController, {
   IdentificationMethod,
   IdentificationPurpose,
 } from "@Controllers/usersIdentification.ts";
+
+import { UserModel } from "@Models/user.ts";
+import { TransactionModel } from "@Models/transaction.ts";
 import { AccountModel } from "@Models/account.ts";
-import { IFile } from "@Models/file.ts";
+import { TFileOutput } from "@Models/file.ts";
 
 @Controller("/wallet/", { name: "wallet" })
 export default class WalletController extends BaseController {
@@ -63,22 +66,19 @@ export default class WalletController extends BaseController {
           name: `${route.scope}.params`,
         });
 
-        const ReceivingUser = await UserModel.findOne(
-          {
-            $or: [
-              { username: Query.receiver },
-              { email: Query.receiver },
-              { phone: Query.receiver },
-            ],
-          },
-          {
-            _id: 1,
-            fname: 1,
-            mname: 1,
-            lname: 1,
-            avatar: 1,
-          }
-        );
+        const ReceivingUser = await UserModel.findOne({
+          $or: [
+            { username: Query.receiver },
+            { email: Query.receiver },
+            { phone: Query.receiver },
+          ],
+        }).project({
+          _id: 1,
+          fname: 1,
+          mname: 1,
+          lname: 1,
+          avatar: 1,
+        });
 
         if (!ReceivingUser)
           throw e.error(
@@ -87,15 +87,14 @@ export default class WalletController extends BaseController {
           );
 
         const SendingUser = await UserModel.findOne(
-          { _id: ctx.router.state.auth.userId },
-          {
-            _id: 1,
-            fname: 1,
-            mname: 1,
-            lname: 1,
-            avatar: 1,
-          }
-        );
+          ctx.router.state.auth.userId
+        ).project({
+          _id: 1,
+          fname: 1,
+          mname: 1,
+          lname: 1,
+          avatar: 1,
+        });
 
         if (!SendingUser) throw e.error("User not found!");
 
@@ -169,7 +168,7 @@ export default class WalletController extends BaseController {
           fname: string;
           mname: string;
           lname: string;
-          avatar: IFile;
+          avatar: TFileOutput;
         };
 
         const Payload = await UsersIdentificationController.verify<{
@@ -189,13 +188,12 @@ export default class WalletController extends BaseController {
         if (ctx.router.state.auth.userId !== Payload.sender._id)
           throw e.error("Invalid transfer request!");
 
-        const ReceiverAccount = await AccountModel.findOne(
-          { createdFor: Payload.receiver._id },
-          {
-            _id: 1,
-            isBlocked: 1,
-          }
-        );
+        const ReceiverAccount = await AccountModel.findOne({
+          createdFor: new ObjectId(Payload.receiver._id),
+        }).project({
+          _id: 1,
+          isBlocked: 1,
+        });
 
         if (!ReceiverAccount) throw e.error("Receiver account not found!");
         if (ReceiverAccount.isBlocked)
@@ -220,16 +218,18 @@ export default class WalletController extends BaseController {
               ]
                 .filter(Boolean)
                 .join(" "),
-              to: ReceiverAccount,
+              to: ReceiverAccount._id,
               user: ctx.router.state.auth.userId,
               type: Payload.transactionDetails.type,
               currency: Payload.transactionDetails.currency,
               amount: Payload.transactionDetails.amount,
               description: Payload.transactionDetails.description,
-              is3DVerified: [
-                IdentificationMethod.EMAIL,
-                IdentificationMethod.PHONE,
-              ].includes(Body.method ?? ""),
+              is3DVerified: (
+                [
+                  IdentificationMethod.EMAIL,
+                  IdentificationMethod.PHONE,
+                ] as string[]
+              ).includes(Body.method ?? ""),
             })
           ).transaction,
         });
@@ -326,13 +326,13 @@ export default class WalletController extends BaseController {
                 }
               : {}),
             $or: [
-              { from: ctx.router.state.auth.accountId },
-              { to: ctx.router.state.auth.accountId },
+              { from: new ObjectId(ctx.router.state.auth.accountId) },
+              { to: new ObjectId(ctx.router.state.auth.accountId) },
             ],
             ...Params,
             createdAt: {
-              $gt: Query.range[0],
-              $lt: Query.range[1],
+              $gt: new Date(Query.range[0]),
+              $lt: new Date(Query.range[1]),
             },
           }).sort(Query.sort as any),
         });

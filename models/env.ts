@@ -1,21 +1,24 @@
-import mongoose from "mongoose";
+import e, { inferInput, inferOutput } from "validator";
+import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
 import { EnvType } from "@Core/common/env.ts";
 
-export interface IEnv extends mongoose.Document {
-  type?: EnvType | "*" | null;
-  key: string;
-  value: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export const EnvSchema = e.object({
+  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+  createdAt: e.optional(e.date()).default(() => new Date()),
+  updatedAt: e.optional(e.date()).default(() => new Date()),
+  type: e.optional(e.or([e.in(Object.values(EnvType)), e.string(), e.null()])),
+  key: e.string(),
+  value: e.string(),
+});
 
-export const EnvSchema = new mongoose.Schema<IEnv>(
-  {
-    type: String,
-    key: String,
-    value: String,
-  },
-  { timestamps: true, versionKey: false }
-);
+export type TEnvInput = InputDocument<inferInput<typeof EnvSchema>>;
+export type TEnvOutput = OutputDocument<inferOutput<typeof EnvSchema>>;
 
-export const EnvModel = mongoose.model<IEnv>("env", EnvSchema);
+export const EnvModel = Mongo.model("env", EnvSchema);
+
+EnvModel.pre("update", (details) => {
+  details.updates.$set = {
+    ...details.updates.$set,
+    updatedAt: new Date(),
+  };
+});

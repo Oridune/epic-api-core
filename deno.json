@@ -1,4 +1,5 @@
 {
+  "template": "default-v1",
   "id": "epic-api-core",
   "name": "Epic API Core",
   "description": "Add core features (Oauth2, Management Tools etc.) to the Epic application.",

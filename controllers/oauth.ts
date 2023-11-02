@@ -12,15 +12,15 @@ import {
 import { Status, type RouterContext } from "oak";
 import e from "validator";
 import * as bcrypt from "bcrypt";
-import mongoose from "mongoose";
 import { SignJWT, jwtVerify, JWTVerifyOptions, JWTPayload } from "jose";
 import { createHash } from "hash";
-import { UserModel } from "@Models/user.ts";
+import { ObjectId } from "mongo";
+import { UsernameValidator, UserModel } from "@Models/user.ts";
 import { OauthProvider, OauthSessionModel } from "@Models/oauth-session.ts";
 import { OauthAppModel } from "@Models/oauth-app.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
-import { OauthScopesModel } from "@Models/oauth-scopes.ts";
-import { UsernameValidator } from "./users.ts";
+import { OauthPolicyModel } from "@Models/oauth-policy.ts";
+import { AccountModel } from "@Models/account.ts";
 
 export enum OauthTokenType {
   AUTHENTICATION = "oauth_authentication",
@@ -123,7 +123,7 @@ export default class OauthController extends BaseController {
 
   static async createOauthAccessTokens(opts: {
     version: number;
-    sessionId: string;
+    sessionId: ObjectId | string;
     payload?: Record<
       string,
       string | string[] | number | boolean | null | undefined
@@ -136,7 +136,7 @@ export default class OauthController extends BaseController {
   }): Promise<IOauthAccessTokens> {
     const Payload = {
       version: opts.version,
-      sessionId: opts.sessionId,
+      sessionId: opts.sessionId.toString(),
       refreshable: !!opts.refreshable,
     };
 
@@ -212,19 +212,19 @@ export default class OauthController extends BaseController {
 
   static async createSession(opts: {
     provider: OauthProvider;
-    sessionId: string;
-    userId: string;
-    oauthAppId: string;
+    sessionId: ObjectId | string;
+    userId: ObjectId | string;
+    oauthAppId: ObjectId | string;
     useragent: string;
     scopes: Record<string, string[]>;
     expiresInSeconds?: number;
   }) {
-    const Session = new OauthSessionModel({
-      _id: new mongoose.Types.ObjectId(opts.sessionId),
-      createdBy: new mongoose.Types.ObjectId(opts.userId),
+    const Session = await OauthSessionModel.create({
+      _id: new ObjectId(opts.sessionId),
+      createdBy: new ObjectId(opts.userId),
       provider: opts.provider,
       useragent: opts.useragent,
-      app: new mongoose.Types.ObjectId(opts.oauthAppId),
+      oauthApp: new ObjectId(opts.oauthAppId),
       version: 0,
       scopes: opts.scopes,
       expiresAt: new Date(
@@ -235,8 +235,6 @@ export default class OauthController extends BaseController {
       ),
     });
 
-    await Session.save();
-
     return Session;
   }
 
@@ -245,24 +243,25 @@ export default class OauthController extends BaseController {
     useragent: string;
     expiresInSeconds?: number;
   }) {
-    const Session = await OauthSessionModel.findOne({
-      _id: opts.sessionId,
+    const Session = await OauthSessionModel.findOne(opts.sessionId).project({
+      _id: 1,
+      version: 1,
+      useragent: 1,
+      expiresAt: 1,
     });
 
     if (!Session) throw new Error("An active session was not found!");
 
-    Session.version += 1;
-    Session.useragent = opts.useragent;
-    Session.expiresAt = new Date(
-      Date.now() +
-        (opts.expiresInSeconds ??
-          OauthController.DefaultRefreshTokenExpirySeconds) *
-          1000
-    );
-
-    await Session.save();
-
-    return Session;
+    return await OauthSessionModel.updateAndFindOne(Session._id, {
+      version: Session.version + 1,
+      useragent: opts.useragent,
+      expiresAt: new Date(
+        Date.now() +
+          (opts.expiresInSeconds ??
+            OauthController.DefaultRefreshTokenExpirySeconds) *
+            1000
+      ),
+    });
   }
 
   static async verifySession(opts: {
@@ -278,7 +277,7 @@ export default class OauthController extends BaseController {
       verifyOpts: opts.verifyOpts,
     });
 
-    const Session = await OauthSessionModel.findOne({ _id: Claims.sessionId });
+    const Session = await OauthSessionModel.findOne(Claims.sessionId as string);
 
     if (!Session) throw new Error(`An active session was not found!`);
 
@@ -289,21 +288,21 @@ export default class OauthController extends BaseController {
       throw new Error(`Your session is invalid!`);
 
     if (Session.version !== Claims.version) {
-      await Session.deleteOne();
+      await OauthSessionModel.deleteOne(Session._id);
       throw new Error(`Your session has been expired!`);
     }
 
     return {
       claims: Claims,
-      session: Session.toObject(),
+      session: Session,
     };
   }
 
   static async createOauthAuthentication(opts: {
     provider: OauthProvider;
-    sessionId: string;
-    userId: string;
-    oauthAppId: string;
+    sessionId: ObjectId | string;
+    userId: ObjectId | string;
+    oauthAppId: ObjectId | string;
     codeChallenge?: string;
     codeChallengeMethod?: string;
     remember?: boolean;
@@ -317,9 +316,9 @@ export default class OauthController extends BaseController {
   }) {
     const Payload = {
       provider: opts.provider,
-      sessionId: opts.sessionId,
-      userId: opts.userId,
-      oauthAppId: opts.oauthAppId,
+      sessionId: opts.sessionId.toString(),
+      userId: opts.userId.toString(),
+      oauthAppId: opts.oauthAppId.toString(),
       codeChallenge: opts.codeChallenge ?? null,
       codeChallengeMethod: opts.codeChallenge
         ? opts.codeChallengeMethod ?? OauthPKCEMethod.SHA256
@@ -395,16 +394,18 @@ export default class OauthController extends BaseController {
     }
   }
 
-  static async getAvailableScopes(userId: string) {
+  static async getAvailableScopes(userId: ObjectId | string) {
     return await Promise.all(
       // Require account details (name, description etc.)
       (
-        await CollaboratorModel.find({ createdFor: userId }).populate("account")
+        await CollaboratorModel.find({
+          createdFor: new ObjectId(userId),
+        }).populateOne("account", AccountModel)
       ).map(async (collaborator) => ({
-        ...collaborator.toJSON(),
+        ...collaborator,
         scopes:
           (
-            await OauthScopesModel.findOne({ role: collaborator.role })
+            await OauthPolicyModel.findOne({ role: collaborator.role })
           )?.scopes ?? [],
       }))
     );
@@ -419,14 +420,11 @@ export default class OauthController extends BaseController {
         .any()
         .custom(async (ctx) => {
           const App = await OauthAppModel.findOne(
-            { _id: ctx.parent!.output.oauthAppId },
-            {
-              _id: 1,
-              consent: {
-                allowedCallbackURLs: 1,
-              },
-            }
-          );
+            ctx.parent!.output.oauthAppId
+          ).project({
+            _id: 1,
+            "consent.allowedCallbackURLs": 1,
+          });
 
           if (!App) throw new Error("Invalid oauth app id!");
           return App;
@@ -470,18 +468,17 @@ export default class OauthController extends BaseController {
           ((await Env.get("ALLOW_CROSS_APP_AUTH", true)) ?? "0") === "1"
             ? { username: Credentials.username }
             : {
-                oauthApp: Body.oauthAppId,
+                oauthApp: new ObjectId(Body.oauthAppId),
                 username: Credentials.username,
-              },
-          {
-            _id: 1,
-            username: 1,
-            password: 1,
-            failedLoginAttempts: 1,
-            loginCount: 1,
-            isBlocked: 1,
-          }
-        );
+              }
+        ).project({
+          _id: 1,
+          username: 1,
+          password: 1,
+          failedLoginAttempts: 1,
+          loginCount: 1,
+          isBlocked: 1,
+        });
 
         login: if (User) {
           if (User.isBlocked)
@@ -496,16 +493,17 @@ export default class OauthController extends BaseController {
           )
             break login;
 
-          User.failedLoginAttempts = 0;
-          User.loginCount += 1;
-          User.deletionAt = null;
-
-          await User.save();
+          // Update User
+          await UserModel.updateOne(User._id, {
+            failedLoginAttempts: 0,
+            loginCount: User.loginCount + 1,
+            deletionAt: null,
+          });
 
           return Response.data({
             ...(await OauthController.createOauthAuthentication({
               provider: OauthProvider.LOCAL,
-              sessionId: new mongoose.Types.ObjectId().toString(),
+              sessionId: new ObjectId(),
               userId: User._id,
               oauthAppId: Body.oauthApp._id,
               codeChallenge: Body.codeChallenge,
@@ -554,9 +552,11 @@ export default class OauthController extends BaseController {
           await Promise.all(
             Object.keys(ctx.output).map(async (account) => {
               if (
-                !(await CollaboratorModel.exists({
-                  account,
-                  createdFor: ctx.parent?.output.tokenPayload.userId ?? "",
+                !(await CollaboratorModel.count({
+                  account: new ObjectId(account),
+                  createdFor: new ObjectId(
+                    ctx.parent?.output.tokenPayload.userId ?? ""
+                  ),
                 }))
               )
                 throw "Invalid account id in the scope!";
@@ -648,7 +648,9 @@ export default class OauthController extends BaseController {
           useragent: ctx.router.request.headers.get("User-Agent") ?? "",
         });
 
-        if (Session.version > 1) e.error("Oauth code has been expired!");
+        if (!Session) throw e.error("Invalid oauth code! Session not found.");
+
+        if (Session.version > 1) throw e.error("Oauth code has been expired!");
 
         return Response.data(
           await OauthController.createOauthAccessTokens({
@@ -700,9 +702,11 @@ export default class OauthController extends BaseController {
           useragent: ctx.router.request.headers.get("User-Agent") ?? "",
         });
 
+        if (!Session) throw e.error("Session refreshing failed!");
+
         return Response.data(
           await OauthController.createOauthAccessTokens({
-            sessionId: Session._id.toString(),
+            sessionId: Session._id,
             version: Session.version,
             refreshable: true,
           })
@@ -737,12 +741,9 @@ export default class OauthController extends BaseController {
         // Delete OauthSession
         if (Query.allDevices)
           await OauthSessionModel.deleteMany({
-            createdBy: ctx.router.state.auth.userId,
+            createdBy: new ObjectId(ctx.router.state.auth.userId),
           });
-        else
-          await OauthSessionModel.deleteOne({
-            _id: ctx.router.state.auth.sessionId,
-          });
+        else await OauthSessionModel.deleteOne(ctx.router.state.auth.sessionId);
 
         return Response.true();
       },

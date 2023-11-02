@@ -7,11 +7,11 @@
     "api-key.ts",
     "oauth-app.ts",
     "file.ts",
-    "oauth-scopes.ts",
     "env.ts",
     "collaborator.ts",
     "transaction.ts",
-    "wallet.ts"
+    "wallet.ts",
+    "oauth-policy.ts"
   ],
   "excludes": []
 }

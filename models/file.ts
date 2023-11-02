@@ -1,20 +1,13 @@
-import mongoose from "mongoose";
+import e, { inferInput, inferOutput } from "validator";
+import { InputDocument, OutputDocument } from "mongo";
 
-export interface IFile extends mongoose.Types.Subdocument {
-  name?: string;
-  url: string;
-  mimeType?: string;
-  sizeInBytes?: number;
-  alt?: string;
-}
+export const FileSchema = e.object({
+  name: e.optional(e.string()),
+  url: e.string(),
+  mimeType: e.optional(e.string()),
+  sizeInBytes: e.optional(e.number({ cast: true })),
+  alt: e.optional(e.string()),
+});
 
-export const FileSchema = new mongoose.Schema<IFile>(
-  {
-    name: String,
-    url: { type: String, required: true },
-    mimeType: String,
-    sizeInBytes: Number,
-    alt: String,
-  },
-  { _id: false, versionKey: false }
-);
+export type TFileInput = InputDocument<inferInput<typeof FileSchema>>;
+export type TFileOutput = OutputDocument<inferOutput<typeof FileSchema>>;

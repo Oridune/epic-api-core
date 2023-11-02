@@ -1,34 +1,45 @@
-import mongoose from "mongoose";
-import { IUser } from "@Models/user.ts";
-import { IAccount } from "@Models/account.ts";
+import e, { inferInput, inferOutput } from "validator";
+import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
 
-export interface ICollaborator extends mongoose.Document {
-  createdBy: IUser | mongoose.Types.ObjectId;
-  createdFor: IUser | mongoose.Types.ObjectId;
-  role: string;
-  isPrimary: boolean;
-  isOwned: boolean;
-  account: IAccount | mongoose.Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export const CollaboratorSchema = e.object({
+  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+  createdAt: e.optional(e.date()).default(() => new Date()),
+  updatedAt: e.optional(e.date()).default(() => new Date()),
+  createdBy: e.instanceOf(ObjectId, { instantiate: true }),
+  createdFor: e.instanceOf(ObjectId, { instantiate: true }),
+  role: e.string(),
+  isPrimary: e.boolean({ cast: true }),
+  isOwned: e.boolean({ cast: true }),
+  account: e.instanceOf(ObjectId, { instantiate: true }),
+});
 
-export const CollaboratorSchema = new mongoose.Schema<ICollaborator>(
-  {
-    createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
-    createdFor: { type: mongoose.Types.ObjectId, ref: "user" },
-    role: { type: String, required: true },
-    isPrimary: { type: Boolean, required: true },
-    isOwned: { type: Boolean, required: true },
-    account: { type: mongoose.Types.ObjectId, ref: "account" },
-  },
-  { timestamps: true, versionKey: false }
-);
+export type TCollaboratorInput = InputDocument<
+  inferInput<typeof CollaboratorSchema>
+>;
+export type TCollaboratorOutput = OutputDocument<
+  inferOutput<typeof CollaboratorSchema>
+>;
 
-CollaboratorSchema.index({ createdFor: 1, account: 1 });
-CollaboratorSchema.index({ createdFor: 1, isPrimary: 1 }, { unique: true });
-
-export const CollaboratorModel = mongoose.model<ICollaborator>(
+export const CollaboratorModel = Mongo.model(
   "collaborator",
   CollaboratorSchema
+);
+
+CollaboratorModel.pre("update", (details) => {
+  details.updates.$set = {
+    ...details.updates.$set,
+    updatedAt: new Date(),
+  };
+});
+
+await CollaboratorModel.createIndex(
+  {
+    key: { createdFor: 1, account: 1 },
+    background: true,
+  },
+  {
+    key: { createdFor: 1, isPrimary: 1 },
+    unique: true,
+    background: true,
+  }
 );

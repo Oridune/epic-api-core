@@ -1,18 +1,19 @@
+import { Mongo } from "mongo";
 import { Env, EnvType } from "@Core/common/env.ts";
-import mongoose from "mongoose";
+import { Store } from "@Core/common/store.ts";
 
 export class Database {
   /**
    * The database connection driver
    */
-  static connection?: typeof mongoose;
+  static connection = Mongo;
 
   /**
    * Is database connected?
    * @returns
    */
   static isConnected() {
-    return this.connection?.connection.readyState === 1;
+    return !!this.connection?.isConnected();
   }
 
   /**
@@ -27,11 +28,18 @@ export class Database {
       "mongodb://localhost:27017/epic-api";
 
     // Assign the database connection object
-    this.connection = await mongoose.connect(ConnectionString);
+    await this.connection.connect(ConnectionString);
+
+    // Setup Caching
+    this.connection.setCachingMethods(
+      (key, value, ttl) => Store.set(key, value, { expiresInMs: ttl * 1000 }),
+      (key) => Store.get(key),
+      (key) => Store.del(key)
+    );
 
     if (!Env.is(EnvType.PRODUCTION)) {
       // Enable mongoose logs in development
-      this.connection.set("debug", true);
+      this.connection.enableLogs = true;
 
       // Parse Connection String
       const ParsedConnectionString = new URL(ConnectionString);
@@ -51,10 +59,7 @@ export class Database {
     // You can modify this function to connect to a different database...
 
     // Disconnect the database
-    await this.connection?.disconnect();
-
-    // Delete connection object
-    delete this.connection;
+    await this.connection.disconnect();
   }
 
   /**
@@ -63,27 +68,5 @@ export class Database {
    * @param session Optionally pass an external (parent) session
    * @returns
    */
-  static async transaction<T extends Promise<unknown>>(
-    callback: (session: mongoose.mongo.ClientSession) => T,
-    session?: mongoose.mongo.ClientSession
-  ) {
-    if (session) return callback(session);
-
-    const Session = session ?? (await mongoose.startSession());
-
-    try {
-      Session.startTransaction();
-
-      const Results = await callback(Session);
-
-      await Session.commitTransaction();
-
-      return Results;
-    } catch (error) {
-      await Session.abortTransaction();
-      throw error;
-    } finally {
-      await Session.endSession();
-    }
-  }
+  static transaction = Mongo.transaction;
 }

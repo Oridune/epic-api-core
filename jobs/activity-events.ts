@@ -8,12 +8,13 @@ import {
   Response,
 } from "@Core/common/mod.ts";
 import e from "validator";
+import { ObjectId } from "mongo";
 import { Novu } from "novu";
-import { IUser, UserModel } from "@Models/user.ts";
+import { TUserOutput, UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauth-session.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
-import { IFile } from "@Models/file.ts";
-import { ICollaborator } from "@Models/collaborator.ts";
+import { CollaboratorModel } from "@Models/collaborator.ts";
+import { TFileOutput } from "@Models/file.ts";
 
 export const isUserVerified = async (input: {
   isEmailVerified?: boolean;
@@ -44,14 +45,13 @@ export const syncUserVerifiedRole = async (
     verifiedRole?: string;
   }
 ) => {
-  const User = await UserModel.findOne(
-    { _id: userId },
-    {
+  const User = await UserModel.findOne(userId)
+    .populate("collaborates", CollaboratorModel, { project: { role: 1 } })
+    .project({
       isEmailVerified: 1,
       isPhoneVerified: 1,
       collaborates: 1,
-    }
-  ).populate(["collaborates"]);
+    });
 
   if (!User)
     throw new Error(
@@ -63,17 +63,18 @@ export const syncUserVerifiedRole = async (
 
   const Verified = await isUserVerified(User);
 
-  const Collaborator = (User.collaborates as ICollaborator[]).find(
+  const Collaborator = User.collaborates.find(
     (collaborator) => collaborator.isOwned && collaborator.isPrimary
   );
 
   if (Collaborator) {
     const Role = Verified ? options?.verifiedRole ?? "user" : "unverified";
 
-    if (Collaborator.role !== Role) {
-      Collaborator.role = Role;
-      await Collaborator.save();
-    }
+    if (Collaborator.role !== Role)
+      await CollaboratorModel.updateOne(
+        { _id: Collaborator._id },
+        { role: Role }
+      );
   }
 
   return Verified;
@@ -83,7 +84,10 @@ export default () => {
   Events.listen<{
     ctx: IRequestContext<RouterContext<string>>;
     res: Response<
-      Omit<IUser, "password" | "passwordHistory" | "oauthApp" | "collaborates">
+      Omit<
+        TUserOutput,
+        "password" | "passwordHistory" | "oauthApp" | "collaborates"
+      >
     >;
   }>(EventChannel.REQUEST, "users.create", async (event) => {
     if (Env.is(EnvType.TEST)) return;
@@ -93,7 +97,7 @@ export default () => {
     const Body = event.detail.res.getBody();
 
     if (Body.status && Body.data)
-      await Notifier.subscribers.identify(Body.data._id, {
+      await Notifier.subscribers.identify(Body.data._id.toString(), {
         avatar: Body.data.avatar?.url,
         firstName: Body.data.fname,
         lastName: Body.data.lname,
@@ -164,7 +168,7 @@ export default () => {
     res: Response<
       Partial<
         Omit<
-          IUser,
+          TUserOutput,
           | "email"
           | "isEmailVerified"
           | "phone"
@@ -203,7 +207,7 @@ export default () => {
 
   Events.listen<{
     ctx: IRequestContext<RouterContext<string>>;
-    res: Response<IFile>;
+    res: Response<TFileOutput>;
   }>(EventChannel.REQUEST, "users.updateAvatar", async (event) => {
     const Request = event.detail.ctx;
     const Body = event.detail.res.getBody();
@@ -246,7 +250,7 @@ export default () => {
         .validate(Request.router.state.verifyTokenPayload);
 
       await OauthSessionModel.deleteMany({
-        createdBy: VerifyTokenPayload.userId,
+        createdBy: new ObjectId(VerifyTokenPayload.userId),
       });
     }
   });

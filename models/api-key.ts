@@ -1,25 +1,28 @@
-import mongoose from "mongoose";
-import { IUser } from "./user.ts";
+import e, { inferInput, inferOutput } from "validator";
+import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
 
 export enum ApiKeyStatus {
   ACTIVE = "active",
   BLOCKED = "blocked",
 }
-export interface IApiKey extends mongoose.Document {
-  createdBy: IUser | mongoose.Types.ObjectId;
-  secret: string;
-  status: ApiKeyStatus;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
-export const ApiKeySchema = new mongoose.Schema<IApiKey>(
-  {
-    createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
-    secret: { type: String, required: true },
-    status: { type: String, enum: ApiKeyStatus },
-  },
-  { timestamps: true, versionKey: false }
-);
+export const ApiKeySchema = e.object({
+  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+  createdAt: e.optional(e.date()).default(() => new Date()),
+  updatedAt: e.optional(e.date()).default(() => new Date()),
+  createdBy: e.instanceOf(ObjectId, { instantiate: true }),
+  secret: e.string(),
+  status: e.in(Object.values(ApiKeyStatus)),
+});
 
-export const ApiKeyModel = mongoose.model<IApiKey>("api-key", ApiKeySchema);
+export type TApiKeyInput = InputDocument<inferInput<typeof ApiKeySchema>>;
+export type TApiKeyOutput = OutputDocument<inferOutput<typeof ApiKeySchema>>;
+
+export const ApiKeyModel = Mongo.model("api-key", ApiKeySchema);
+
+ApiKeyModel.pre("update", (details) => {
+  details.updates.$set = {
+    ...details.updates.$set,
+    updatedAt: new Date(),
+  };
+});

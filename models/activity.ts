@@ -1,25 +1,25 @@
-// deno-lint-ignore-file no-explicit-any
-import mongoose from "mongoose";
-import { IUser } from "./user.ts";
+import e, { inferInput, inferOutput } from "validator";
+import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
 
-export interface IActivity extends mongoose.Document {
-  createdBy: IUser | mongoose.Types.ObjectId;
-  subject: string;
-  payload?: any;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export const ActivitySchema = e.object({
+  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+  createdAt: e.optional(e.date()).default(() => new Date()),
+  updatedAt: e.optional(e.date()).default(() => new Date()),
+  createdBy: e.instanceOf(ObjectId, { instantiate: true }),
+  subject: e.optional(e.string()),
+  payload: e.any(),
+});
 
-export const ActivitySchema = new mongoose.Schema<IActivity>(
-  {
-    createdBy: { type: mongoose.Types.ObjectId, ref: "user" },
-    subject: String,
-    payload: Object,
-  },
-  { timestamps: true, versionKey: false }
-);
+export type TActivityInput = InputDocument<inferInput<typeof ActivitySchema>>;
+export type TActivityOutput = OutputDocument<
+  inferOutput<typeof ActivitySchema>
+>;
 
-export const ActivityModel = mongoose.model<IActivity>(
-  "activity",
-  ActivitySchema
-);
+export const ActivityModel = Mongo.model("activity", ActivitySchema);
+
+ActivityModel.pre("update", (details) => {
+  details.updates.$set = {
+    ...details.updates.$set,
+    updatedAt: new Date(),
+  };
+});
