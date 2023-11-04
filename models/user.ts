@@ -1,4 +1,5 @@
 import e, { inferInput, inferOutput } from "validator";
+import { Store } from "@Core/common/store.ts";
 import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
 import { FileSchema } from "@Models/file.ts";
 
@@ -62,6 +63,11 @@ export const UserSchema = CreateUserSchema.extends(
     _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
     createdAt: e.optional(e.date()).default(() => new Date()),
     updatedAt: e.optional(e.date()).default(() => new Date()),
+    reference: e
+      .optional(e.string())
+      .default(
+        async () => `UID${10000 + (await Store.incr("user-reference"))}`
+      ),
     passwordHistory: e.array(e.string()),
     isEmailVerified: e.optional(e.boolean({ cast: true })).default(false),
     isPhoneVerified: e.optional(e.boolean({ cast: true })).default(false),
