@@ -317,24 +317,19 @@ export default class WalletController extends BaseController {
         });
 
         return Response.data({
-          results: await TransactionModel.find({
-            ...(Query.search
-              ? {
-                  $text: {
-                    $search: Query.search,
-                  },
-                }
-              : {}),
-            $or: [
-              { from: new ObjectId(ctx.router.state.auth.accountId) },
-              { to: new ObjectId(ctx.router.state.auth.accountId) },
-            ],
-            ...Params,
-            createdAt: {
-              $gt: new Date(Query.range[0]),
-              $lt: new Date(Query.range[1]),
-            },
-          }).sort(Query.sort as any),
+          results: await TransactionModel.search(Query.search)
+            .filter({
+              $or: [
+                { from: new ObjectId(ctx.router.state.auth.accountId) },
+                { to: new ObjectId(ctx.router.state.auth.accountId) },
+              ],
+              ...Params,
+              createdAt: {
+                $gt: new Date(Query.range[0]),
+                $lt: new Date(Query.range[1]),
+              },
+            })
+            .sort(Query.sort as any),
         });
       },
     });
