@@ -10,8 +10,8 @@ import {
   OutlinedInput,
   FormHelperText,
 } from "@mui/material";
-import Flag from "react-world-flags";
 import { DialingRules } from "../../data/dialingRules";
+import { Flag } from "./Flag";
 
 export interface PhoneFieldProps extends OutlinedInputProps {
   id: string;
@@ -56,13 +56,13 @@ export const PhoneField = React.forwardRef<any, PhoneFieldProps>(
     );
 
     const [CountryCode, setCountryCode] = React.useState(
-      DefaultCountryCode ?? "us"
+      DefaultCountryCode ?? "pk"
     );
 
     const TargetDialingRule = DialingRules[CountryCode];
 
     const [PhoneNumber, setPhoneNumber] = React.useState(
-      `+${TargetDialingRule?.dialingCode ?? "1"}`
+      `+${TargetDialingRule?.dialingCode ?? "92"}`
     );
 
     return (
@@ -122,14 +122,18 @@ export const PhoneField = React.forwardRef<any, PhoneFieldProps>(
                   );
                 }}
                 renderValue={(value) => (
-                  <Flag code={value} style={{ marginTop: "4px" }} width={25} />
+                  <Flag
+                    iso2Code={value}
+                    style={{ marginRight: "8px" }}
+                    width={25}
+                  />
                 )}
               >
                 {AvailableDialingRules.map((rule) => {
                   return (
                     <MenuItem key={rule.countryCode} value={rule.countryCode}>
                       <Flag
-                        code={rule.countryCode}
+                        iso2Code={rule.countryCode}
                         style={{ marginRight: "8px" }}
                         width={25}
                       />
