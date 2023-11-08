@@ -8,6 +8,11 @@ export const UsernameValidator = () =>
     regex: /^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/,
   });
 
+export const UserReferenceValidator = () =>
+  e.string().matches({
+    regex: /^UID[0-9]{5,}$/,
+  });
+
 export const PasswordValidator = () =>
   e.string().matches({
     regex:
@@ -64,7 +69,7 @@ export const UserSchema = CreateUserSchema.extends(
     createdAt: e.optional(e.date()).default(() => new Date()),
     updatedAt: e.optional(e.date()).default(() => new Date()),
     reference: e
-      .optional(e.string())
+      .optional(UserReferenceValidator())
       .default(
         async () => `UID${10000 + (await Store.incr("user-reference"))}`
       ),
