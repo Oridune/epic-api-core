@@ -28,6 +28,25 @@ export class Wallet {
     ).includes(currency);
   }
 
+  static createBalanceDigest(
+    account: ObjectId | string,
+    type: string,
+    currency: string,
+    balance: number
+  ) {
+    return bcrypt.hash(`${account}:${type}:${currency}:${balance}`);
+  }
+
+  static compareBalanceDigest(
+    account: ObjectId | string,
+    type: string,
+    currency: string,
+    balance: number,
+    digest: string
+  ) {
+    return bcrypt.compare(`${account}:${type}:${currency}:${balance}`, digest);
+  }
+
   static async create(
     account: ObjectId | string,
     options?: {
@@ -53,7 +72,12 @@ export class Wallet {
         type: Type,
         currency: Currency,
         balance: Balance,
-        digest: await bcrypt.hash(Balance.toString()),
+        digest: await this.createBalanceDigest(
+          account,
+          Type,
+          Currency,
+          Balance
+        ),
       },
       { session: options?.databaseSession }
     );
@@ -80,7 +104,15 @@ export class Wallet {
     ).project({ transactions: 0 });
 
     if (!Wallet) Wallet = await this.create(account, options);
-    else if (!(await bcrypt.compare(Wallet.balance.toString(), Wallet.digest)))
+    else if (
+      !(await this.compareBalanceDigest(
+        Wallet.account,
+        Wallet.type,
+        Wallet.currency,
+        Wallet.balance,
+        Wallet.digest
+      ))
+    )
       throw new Error(`Balance tampering detected!`);
 
     return Wallet;
@@ -192,7 +224,13 @@ export class Wallet {
 
       // Debit Balance
       WalletA.balance -= Transaction.amount;
-      WalletA.digest = await bcrypt.hash(WalletA.balance.toString());
+      WalletA.digest = await this.createBalanceDigest(
+        WalletA.account,
+        WalletA.type,
+        WalletA.currency,
+        WalletA.balance
+      );
+
       await WalletModel.updateOne(
         { _id: WalletA._id },
         {
@@ -205,7 +243,13 @@ export class Wallet {
       // Credit Balance
       if (Transaction.status === TransactionStatus.COMPLETED) {
         WalletB.balance += Transaction.amount;
-        WalletB.digest = await bcrypt.hash(WalletB.balance.toString());
+        WalletB.digest = await this.createBalanceDigest(
+          WalletB.account,
+          WalletB.type,
+          WalletB.currency,
+          WalletB.balance
+        );
+
         await WalletModel.updateOne(
           { _id: WalletB._id },
           {

@@ -14,6 +14,7 @@ export const Flag = (props: FlagProps) => {
 
   return (
     <img
+      loading="lazy"
       {...rest}
       src={new URL(
         `${import.meta.env.BASE_URL}flags/${props.iso2Code}.svg`,
