@@ -28,23 +28,32 @@ export class Wallet {
     ).includes(currency);
   }
 
-  static createBalanceDigest(
+  static async createBalanceDigest(
     account: ObjectId | string,
     type: string,
     currency: string,
     balance: number
   ) {
-    return bcrypt.hash(`${account}:${type}:${currency}:${balance}`);
+    return bcrypt.hash(
+      `${await Env.get(
+        "ENCRYPTION_KEY"
+      )}:${account}:${type}:${currency}:${balance}`
+    );
   }
 
-  static compareBalanceDigest(
+  static async compareBalanceDigest(
     account: ObjectId | string,
     type: string,
     currency: string,
     balance: number,
     digest: string
   ) {
-    return bcrypt.compare(`${account}:${type}:${currency}:${balance}`, digest);
+    return bcrypt.compare(
+      `${await Env.get(
+        "ENCRYPTION_KEY"
+      )}:${account}:${type}:${currency}:${balance}`,
+      digest
+    );
   }
 
   static async create(
