@@ -1,9 +1,10 @@
 {
   "sequence": [
     "activity-events.ts",
-    "create-initial-oauth-scopes.ts",
     "env-resolver.ts",
-    "delete-users.ts"
+    "delete-users.ts",
+    "create-initial-oauth-policies.ts"
   ],
-  "excludes": []
+  "excludes": [],
+  "sequenceProps": {}
 }

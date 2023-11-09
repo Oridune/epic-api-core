@@ -1,6 +1,6 @@
 import { OauthPolicyModel } from "@Models/oauth-policy.ts";
 
-export const DefaultOauthScopes = {
+export const DefaultOauthPolicies = {
   root: ["*"],
   unauthenticated: [
     "api",
@@ -24,8 +24,6 @@ export const DefaultOauthScopes = {
     "users.updateEmail",
     "users.updatePhone",
     "usersIdentification",
-    "wallet.signTransfer",
-    "wallet.transfer",
     "wallet.balance",
     "wallet.transactions",
   ],
@@ -47,8 +45,8 @@ export const DefaultOauthScopes = {
   ],
 };
 
-export const OauthScopes: Record<string, string[]> = {
-  ...DefaultOauthScopes,
+export const OauthPolicies: Record<string, string[]> = {
+  ...DefaultOauthPolicies,
 };
 
 export const AreArraysIdentical = (arr1: unknown[], arr2: unknown[]) => {
@@ -66,14 +64,14 @@ export const AreArraysIdentical = (arr1: unknown[], arr2: unknown[]) => {
   return true;
 };
 
-export const SyncOauthScopes = async () => {
-  const Scopes = await OauthPolicyModel.find({
-    role: { $in: Object.keys(OauthScopes) },
+export const SyncOauthPolicies = async () => {
+  const Policies = await OauthPolicyModel.find({
+    role: { $in: Object.keys(OauthPolicies) },
   });
 
   await Promise.all(
-    Object.entries(OauthScopes).map(([role, scopes]) => {
-      const ExistingScopes = Scopes.find((doc) => doc.role === role)?.scopes;
+    Object.entries(OauthPolicies).map(([role, scopes]) => {
+      const ExistingScopes = Policies.find((doc) => doc.role === role)?.scopes;
       const UpdatedScopes = Array.from(
         new Set([...scopes, ...(ExistingScopes ?? [])])
       );
@@ -88,4 +86,4 @@ export const SyncOauthScopes = async () => {
   );
 };
 
-export default SyncOauthScopes;
+export default SyncOauthPolicies;
