@@ -5,6 +5,7 @@ import { ObjectId } from "mongo";
 
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { OauthPolicyModel } from "@Models/oauth-policy.ts";
+import { UserModel } from "@Models/user.ts";
 
 import { SecurityGuard } from "@Lib/security-guard.ts";
 
@@ -69,17 +70,31 @@ export default {
       }).project({ scopes: 1 });
 
       if (!OauthScopes)
-        e.error(
+        throw e.error(
           `Unable to fetch the available scopes for the role '${
             Collaborator!.role
           }'!`
         );
+
+      const User = await UserModel.findOne(SessionInfo.session.createdBy, {
+        cache: {
+          key: "auth-user",
+          ttl: 60 * 5, // Cache for 5 minutes
+        },
+      }).project({
+        password: 0,
+        passwordHistory: 0,
+        collaborates: 0,
+      });
+
+      if (!User) throw e.error(`Authorized user not found!`);
 
       ctx.router.state.auth = {
         sessionId: SessionInfo.claims.sessionId,
         userId: SessionInfo.session.createdBy,
         accountId: AccountId,
         role: Collaborator!.role,
+        user: User,
       };
 
       AvailableScopes = OauthScopes?.scopes ?? [];

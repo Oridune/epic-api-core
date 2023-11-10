@@ -3,6 +3,7 @@ import "ts-reset";
 import "@Core/common/controller/base.ts";
 import { IValidatorJSONSchema } from "validator";
 import { SecurityGuard } from "@Lib/security-guard.ts";
+import { TUserOutput } from "@Models/user.ts";
 
 type SessionInfo = {
   claims: {
@@ -22,6 +23,7 @@ type Authorization = {
   userId: string;
   accountId: string;
   role: string;
+  user: Omit<TUserOutput, "password" | "passwordHistory" | "collaborates">;
 };
 
 declare module "@Core/common/controller/base.ts" {
