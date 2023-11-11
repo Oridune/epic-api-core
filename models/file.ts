@@ -10,4 +10,4 @@ export const FileSchema = e.object({
 });
 
 export type TFileInput = InputDocument<inferInput<typeof FileSchema>>;
-export type TFileOutput = OutputDocument<inferOutput<typeof FileSchema>>;
+export type TFileOutput = InputDocument<inferInput<typeof FileSchema>>;

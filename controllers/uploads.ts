@@ -2,14 +2,17 @@ import {
   Controller,
   BaseController,
   Get,
+  Put,
+  RequestMethod,
   Versioned,
   Response,
   type IRoute,
   type IRequestContext,
 } from "@Core/common/mod.ts";
-import { type RouterContext } from "oak";
+import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { Uploads, AwsS3ACLs } from "@Lib/uploads/mod.ts";
+import { TFileOutput } from "@Models/file.ts";
 import OauthController from "@Controllers/oauth.ts";
 
 @Controller("/uploads/", { name: "uploads" })
@@ -92,5 +95,73 @@ export default class UploadsController extends BaseController {
         });
       },
     });
+  }
+
+  @Get("/")
+  @Put("/")
+  static upload(
+    route: IRoute,
+    options?: {
+      allowedContentTypes?: string[] | RegExp;
+      minContentLength?: number;
+      maxContentLength?: number;
+      location?: string;
+      expiresInMs?: number;
+    },
+    onSuccess?: (
+      ctx: IRequestContext<RouterContext<string>>,
+      file: TFileOutput
+    ) => Promise<Response>
+  ) {
+    if (route.options.method === RequestMethod.GET)
+      return UploadsController.sign(route, options);
+
+    if (route.options.method === RequestMethod.PUT) {
+      // Define Body Schema
+      const BodySchema = e
+        .object({
+          token: e
+            .string()
+            .custom((ctx) =>
+              OauthController.verifyToken<TFileOutput>({
+                token: ctx.output,
+                type: UploadsController.UploadTokenType,
+                secret: ctx.context?.userId,
+              })
+            )
+            .checkpoint(),
+        })
+        .custom(async (ctx) => {
+          if (!(await Uploads.objectExists(ctx.output.token.url)))
+            throw new Error(`File is not uploaded yet!`);
+        });
+
+      return Versioned.add("1.0.0", {
+        postman: {
+          body: BodySchema.toSample(),
+        },
+        handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+          if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+          // Body Validation
+          const Body = await BodySchema.validate(
+            await ctx.router.request.body({ type: "json" }).value,
+            { name: `${route.scope}.body`, context: ctx.router.state.auth }
+          );
+
+          const Upload = {
+            name: Body.token.name,
+            url: Body.token.url,
+            mimeType: Body.token.mimeType,
+            sizeInBytes: Body.token.sizeInBytes,
+            alt: Body.token.alt,
+          };
+
+          return (await onSuccess?.(ctx, Upload)) ?? Response.data(Upload);
+        },
+      });
+    }
+
+    throw new Error("Unsupported upload method!");
   }
 }
