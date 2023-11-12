@@ -49,8 +49,8 @@ export default class OauthAppsController extends BaseController {
     // Define Query Schema
     const QuerySchema = e.object(
       {
-        limit: e.optional(e.number({ cast: true })).default(Infinity),
-        offset: e.optional(e.number({ cast: true })).default(0),
+        limit: e.optional(e.number({ cast: true }).max(2000)).default(2000),
+        offset: e.optional(e.number({ cast: true }).min(0)).default(0),
       },
       { allowUnexpectedProps: true }
     );
