@@ -1,5 +1,5 @@
 import e, { inferInput, inferOutput } from "validator";
-import { InputDocument, OutputDocument } from "mongo";
+import { InputDocument } from "mongo";
 
 export const FileSchema = e.object({
   name: e.optional(e.string()),
@@ -10,4 +10,4 @@ export const FileSchema = e.object({
 });
 
 export type TFileInput = InputDocument<inferInput<typeof FileSchema>>;
-export type TFileOutput = InputDocument<inferInput<typeof FileSchema>>;
+export type TFileOutput = InputDocument<inferOutput<typeof FileSchema>>;

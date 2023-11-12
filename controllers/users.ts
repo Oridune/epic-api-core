@@ -32,15 +32,12 @@ import { AccountModel } from "@Models/account.ts";
 import { OauthAppModel } from "@Models/oauth-app.ts";
 import { OauthSessionModel } from "@Models/oauth-session.ts";
 
+import { PermanentlyDeleteUsers } from "@Jobs/delete-users.ts";
 import UsersIdentificationController, {
   IdentificationMethod,
   IdentificationPurpose,
 } from "@Controllers/usersIdentification.ts";
-import OauthController from "@Controllers/oauth.ts";
-import { PermanentlyDeleteUsers } from "@Jobs/delete-users.ts";
 import UploadsController from "@Controllers/uploads.ts";
-import { Uploads } from "@Lib/uploads/mod.ts";
-import { TFileOutput } from "@Models/file.ts";
 
 @Controller("/users/", { group: "Users", name: "users" })
 export default class UsersController extends BaseController {
@@ -495,68 +492,28 @@ export default class UsersController extends BaseController {
   }
 
   @Get("/avatar/sign/")
-  public signAvatar(route: IRoute) {
-    return UploadsController.sign(route, {
-      allowedContentTypes: [
-        "image/png",
-        "image/jpg",
-        "image/jpeg",
-        "image/svg+xml",
-        "image/webp",
-      ],
-      maxContentLength: 2e6,
-      location: "{{userId}}/avatar/",
-    });
-  }
-
   @Put("/avatar/")
   public updateAvatar(route: IRoute) {
-    // Define Body Schema
-    const BodySchema = e
-      .object({
-        token: e
-          .string()
-          .custom((ctx) =>
-            OauthController.verifyToken<TFileOutput>({
-              token: ctx.output,
-              type: UploadsController.UploadTokenType,
-              secret: ctx.context?.userId,
-            })
-          )
-          .checkpoint(),
-      })
-      .custom(async (ctx) => {
-        if (!(await Uploads.objectExists(ctx.output.token.url)))
-          throw new Error(`File is not uploaded yet!`);
-      });
-
-    return Versioned.add("1.0.0", {
-      postman: {
-        body: BodySchema.toSample(),
+    return UploadsController.upload(
+      route,
+      {
+        allowedContentTypes: [
+          "image/png",
+          "image/jpg",
+          "image/jpeg",
+          "image/svg+xml",
+          "image/webp",
+        ],
+        maxContentLength: 2e6,
+        location: "{{userId}}/avatar/",
       },
-      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
-
-        // Body Validation
-        const Body = await BodySchema.validate(
-          await ctx.router.request.body({ type: "json" }).value,
-          { name: `${route.scope}.body`, context: ctx.router.state.auth }
-        );
-
-        const Avatar = {
-          name: Body.token.name,
-          url: Body.token.url,
-          mimeType: Body.token.mimeType,
-          sizeInBytes: Body.token.sizeInBytes,
-          alt: Body.token.alt,
-        };
-
-        await UserModel.updateOne(ctx.router.state.auth.userId, {
-          avatar: Avatar,
+      async (ctx, avatar) => {
+        await UserModel.updateOne(ctx.router.state.auth!.userId, {
+          avatar,
         });
 
-        return Response.data(Avatar);
-      },
-    });
+        return Response.data(avatar);
+      }
+    );
   }
 }
