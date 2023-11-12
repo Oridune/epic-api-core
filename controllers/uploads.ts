@@ -111,7 +111,7 @@ export default class UploadsController extends BaseController {
     onSuccess?: (
       ctx: IRequestContext<RouterContext<string>>,
       file: TFileOutput
-    ) => Promise<Response>
+    ) => Promise<Response | void> | void
   ) {
     if (route.options.method === RequestMethod.GET)
       return UploadsController.sign(route, options);

@@ -511,8 +511,6 @@ export default class UsersController extends BaseController {
         await UserModel.updateOne(ctx.router.state.auth!.userId, {
           avatar,
         });
-
-        return Response.data(avatar);
       }
     );
   }
