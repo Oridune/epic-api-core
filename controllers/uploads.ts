@@ -119,18 +119,21 @@ export default class UploadsController extends BaseController {
     if (route.options.method === RequestMethod.PUT) {
       // Define Body Schema
       const BodySchema = e
-        .object({
-          token: e
-            .string()
-            .custom((ctx) =>
-              OauthController.verifyToken<TFileOutput>({
-                token: ctx.output,
-                type: UploadsController.UploadTokenType,
-                secret: ctx.context?.userId,
-              })
-            )
-            .checkpoint(),
-        })
+        .object(
+          {
+            token: e
+              .string()
+              .custom((ctx) =>
+                OauthController.verifyToken<TFileOutput>({
+                  token: ctx.output,
+                  type: UploadsController.UploadTokenType,
+                  secret: ctx.context?.userId,
+                })
+              )
+              .checkpoint(),
+          },
+          { allowUnexpectedProps: true }
+        )
         .custom(async (ctx) => {
           if (!(await Uploads.objectExists(ctx.output.token.url)))
             throw new Error(`File is not uploaded yet!`);
