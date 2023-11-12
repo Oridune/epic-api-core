@@ -36,6 +36,7 @@ const UserResponseSchema = e.object({
   status: e.boolean(),
   data: e.object({
     _id: e.string(),
+    reference: e.string(),
     fname: e.string(),
     mname: e.string(),
     lname: e.string(),
