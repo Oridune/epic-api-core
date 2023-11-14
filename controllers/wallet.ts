@@ -1,4 +1,3 @@
-// deno-lint-ignore-file no-explicit-any
 import {
   Controller,
   BaseController,
@@ -272,16 +271,23 @@ export default class WalletController extends BaseController {
     const QuerySchema = e.object(
       {
         search: e.optional(e.string()),
-        range: e
-          .optional(
-            e.tuple([e.date().end(CurrentTimestamp), e.date()], { cast: true })
-          )
-          .default([Date.now() - 86400000 * 7, Date.now()]),
+        range: e.optional(
+          e.tuple([e.date().end(CurrentTimestamp), e.date()], { cast: true })
+        ),
+        offset: e.optional(e.number({ cast: true }).min(0)).default(0),
+        limit: e.optional(e.number({ cast: true }).max(2000)).default(2000),
         sort: e
           .optional(
             e.record(e.number({ cast: true }).min(-1).max(1), { cast: true })
           )
           .default({ _id: -1 }),
+        includeTotalCount: e.optional(
+          e
+            .boolean({ cast: true })
+            .describe(
+              "If `true` is passed, the system will return a total items count for pagination purpose."
+            )
+        ),
       },
       { allowUnexpectedProps: true }
     );
@@ -308,28 +314,37 @@ export default class WalletController extends BaseController {
           { name: `${route.scope}.query` }
         );
 
-        if (Query.range[1] <= Query.range[0])
-          throw e.error(`Please provide a valid date range!`);
-
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {
           name: `${route.scope}.params`,
         });
 
+        const TransactionListQuery = TransactionModel.search(Query.search)
+          .filter({
+            $or: [
+              { from: new ObjectId(ctx.router.state.auth.accountId) },
+              { to: new ObjectId(ctx.router.state.auth.accountId) },
+            ],
+            ...Params,
+            ...(Query.range instanceof Array
+              ? {
+                  createdAt: {
+                    $gt: new Date(Query.range[0]),
+                    $lt: new Date(Query.range[1]),
+                  },
+                }
+              : {}),
+          })
+          .skip(Query.offset)
+          .limit(Query.limit)
+          .sort(Query.sort);
+
         return Response.data({
-          results: await TransactionModel.search(Query.search)
-            .filter({
-              $or: [
-                { from: new ObjectId(ctx.router.state.auth.accountId) },
-                { to: new ObjectId(ctx.router.state.auth.accountId) },
-              ],
-              ...Params,
-              createdAt: {
-                $gt: new Date(Query.range[0]),
-                $lt: new Date(Query.range[1]),
-              },
-            })
-            .sort(Query.sort as any),
+          totalCount: Query.includeTotalCount
+            ? //? Make sure to pass any limiting conditions for count if needed.
+              await TransactionModel.count()
+            : undefined,
+          results: await TransactionListQuery,
         });
       },
     });
