@@ -9,27 +9,30 @@ import {
   type IRoute,
   type IRequestContext,
 } from "@Core/common/mod.ts";
-import { type RouterContext, Status } from "oak";
+import { type RouterContext } from "oak";
 import e from "validator";
 import { Uploads, AwsS3ACLs } from "@Lib/uploads/mod.ts";
 import { TFileOutput } from "@Models/file.ts";
 import OauthController from "@Controllers/oauth.ts";
+
+export type SignUploadOptions = {
+  allowedContentTypes?: string[] | RegExp;
+  minContentLength?: number;
+  maxContentLength?: number;
+  location?:
+    | string
+    | ((
+        ctx: IRequestContext<RouterContext<string>>
+      ) => string | Promise<string>);
+  expiresInMs?: number;
+};
 
 @Controller("/uploads/", { name: "uploads" })
 export default class UploadsController extends BaseController {
   static UploadTokenType = "upload_request";
 
   @Get("/")
-  static sign(
-    route: IRoute,
-    options?: {
-      allowedContentTypes?: string[] | RegExp;
-      minContentLength?: number;
-      maxContentLength?: number;
-      location?: string;
-      expiresInMs?: number;
-    }
-  ) {
+  static sign(route: IRoute, options?: SignUploadOptions) {
     // Define Query Schema
     const QuerySchema = e.object(
       {
@@ -60,7 +63,12 @@ export default class UploadsController extends BaseController {
           { name: `${route.scope}.query` }
         );
 
-        let Location = options?.location ?? "/public/";
+        let Location =
+          typeof options?.location === "function"
+            ? await options.location(ctx)
+            : typeof options?.location === "string"
+            ? options.location
+            : "/public/";
 
         if (ctx.router.state.auth)
           Location = Location
@@ -101,13 +109,7 @@ export default class UploadsController extends BaseController {
   @Put("/")
   static upload(
     route: IRoute,
-    options?: {
-      allowedContentTypes?: string[] | RegExp;
-      minContentLength?: number;
-      maxContentLength?: number;
-      location?: string;
-      expiresInMs?: number;
-    },
+    options?: SignUploadOptions,
     onSuccess?: (
       ctx: IRequestContext<RouterContext<string>>,
       file: TFileOutput
@@ -144,8 +146,6 @@ export default class UploadsController extends BaseController {
           body: BodySchema.toSample(),
         },
         handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-          if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
-
           // Body Validation
           const Body = await BodySchema.validate(
             await ctx.router.request.body({ type: "json" }).value,
