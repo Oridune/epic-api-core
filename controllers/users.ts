@@ -505,7 +505,7 @@ export default class UsersController extends BaseController {
           "image/webp",
         ],
         maxContentLength: 2e6,
-        location: "{{userId}}/avatar/",
+        location: "users/{{userId}}/avatar/",
       },
       async (ctx, avatar) => {
         await UserModel.updateOne(ctx.router.state.auth!.userId, {
