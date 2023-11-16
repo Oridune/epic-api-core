@@ -96,32 +96,30 @@ UserModel.pre("update", (details) => {
     ...details.updates.$set,
     updatedAt: new Date(),
   };
-});
+})
+  .post("read", (details) => {
+    if (details.data.deletionAt instanceof Date)
+      // Throw an error if the user is deleted
+      throw new Error("Deleted user cannot be fetched!");
 
-UserModel.post("read", (details) => {
-  if (details.data.deletionAt instanceof Date)
-    // Throw an error if the user is deleted
-    throw new Error("Deleted user cannot be fetched!");
-
-  return details.data;
-});
-
-await UserModel.createIndex(
-  {
-    key: {
-      username: 1,
+    return details.data;
+  })
+  .createIndex(
+    {
+      key: {
+        username: 1,
+      },
+      unique: true,
+      background: true,
     },
-    unique: true,
-    background: true,
-  },
-  {
-    key: { email: 1 },
-    unique: true,
-    partialFilterExpression: { email: { $exists: true } },
-  },
-  {
-    key: { phone: 1 },
-    unique: true,
-    partialFilterExpression: { phone: { $exists: true } },
-  }
-);
+    {
+      key: { email: 1 },
+      unique: true,
+      partialFilterExpression: { email: { $exists: true } },
+    },
+    {
+      key: { phone: 1 },
+      unique: true,
+      partialFilterExpression: { phone: { $exists: true } },
+    }
+  );

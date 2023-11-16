@@ -76,12 +76,9 @@ export default {
           }'!`
         );
 
-      const User = await UserModel.findOne(SessionInfo.session.createdBy, {
-        cache: {
-          key: "auth-user",
-          ttl: 60 * 5, // Cache for 5 minutes
-        },
-      }).project({
+      const User = await UserModel.findOne(
+        SessionInfo.session.createdBy
+      ).project({
         password: 0,
         passwordHistory: 0,
         collaborates: 0,
