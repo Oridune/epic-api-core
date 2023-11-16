@@ -281,6 +281,9 @@ export default class WalletController extends BaseController {
             e.record(e.number({ cast: true }).min(-1).max(1), { cast: true })
           )
           .default({ _id: -1 }),
+        project: e.optional(
+          e.record(e.number({ cast: true }).min(0).max(1), { cast: true })
+        ),
         includeTotalCount: e.optional(
           e
             .boolean({ cast: true })
@@ -338,6 +341,8 @@ export default class WalletController extends BaseController {
           .skip(Query.offset)
           .limit(Query.limit)
           .sort(Query.sort);
+
+        if (Query.project) TransactionListQuery.project(Query.project);
 
         return Response.data({
           totalCount: Query.includeTotalCount
