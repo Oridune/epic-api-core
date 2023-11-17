@@ -5,7 +5,6 @@ import { CollaboratorModel } from "@Models/collaborator.ts";
 import { Cron } from "croner";
 import { Database } from "@Database";
 import { WalletModel } from "@Models/wallet.ts";
-import { TransactionModel } from "@Models/transaction.ts";
 
 export const PermanentlyDeleteUsers = Transaction.add(async (_, next) => {
   const Users = await UserModel.find({ deletionAt: { $lt: new Date() } })

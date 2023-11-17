@@ -45,7 +45,10 @@ export const DefaultOauthPolicies = {
   ],
 };
 
-export const OauthPolicies: Record<string, string[]> = {
+export type TOauthPolicies = typeof DefaultOauthPolicies &
+  Partial<Record<string, string[]>>;
+
+export const OauthPolicies: TOauthPolicies = {
   ...DefaultOauthPolicies,
 };
 
@@ -71,17 +74,24 @@ export const SyncOauthPolicies = async () => {
 
   await Promise.all(
     Object.entries(OauthPolicies).map(([role, scopes]) => {
-      const ExistingScopes = Policies.find((doc) => doc.role === role)?.scopes;
-      const UpdatedScopes = Array.from(
-        new Set([...scopes, ...(ExistingScopes ?? [])])
-      );
-
-      if (!ExistingScopes || !AreArraysIdentical(ExistingScopes, UpdatedScopes))
-        return OauthPolicyModel.updateOne(
-          { role },
-          { scopes: UpdatedScopes },
-          { upsert: true }
+      if (scopes instanceof Array) {
+        const ExistingScopes = Policies.find(
+          (doc) => doc.role === role
+        )?.scopes;
+        const UpdatedScopes = Array.from(
+          new Set([...scopes, ...(ExistingScopes ?? [])])
         );
+
+        if (
+          !ExistingScopes ||
+          !AreArraysIdentical(ExistingScopes, UpdatedScopes)
+        )
+          return OauthPolicyModel.updateOne(
+            { role },
+            { scopes: UpdatedScopes },
+            { upsert: true }
+          );
+      }
     })
   );
 };
