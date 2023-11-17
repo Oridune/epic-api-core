@@ -85,20 +85,8 @@ export default class WalletController extends BaseController {
             `${route.scope}.query.receiver`
           );
 
-        const SendingUser = await UserModel.findOne(
-          ctx.router.state.auth.userId
-        ).project({
-          _id: 1,
-          fname: 1,
-          mname: 1,
-          lname: 1,
-          avatar: 1,
-        });
-
-        if (!SendingUser) throw e.error("User not found!");
-
         const TransferDetails = {
-          sender: SendingUser,
+          sender: ctx.router.state.auth.user,
           receiver: ReceivingUser,
           transactionDetails: {
             type: Params.type,

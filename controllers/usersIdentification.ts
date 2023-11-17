@@ -133,34 +133,23 @@ export default class UsersIdentificationController extends BaseController {
   @Get("/methods/me/")
   public methods() {
     return new Versioned().add("1.0.0", {
-      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+      handler: (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
-        const User = await UserModel.findOne(
-          ctx.router.state.auth.userId
-        ).project({
-          email: 1,
-          isEmailVerified: 1,
-          phone: 1,
-          isPhoneVerified: 1,
+        return Response.data({
+          availableMethods: [
+            {
+              type: IdentificationMethod.EMAIL,
+              value: ctx.router.state.auth.user.email,
+              verified: ctx.router.state.auth.user.isEmailVerified,
+            },
+            {
+              type: IdentificationMethod.PHONE,
+              value: ctx.router.state.auth.user.phone,
+              verified: ctx.router.state.auth.user.isPhoneVerified,
+            },
+          ],
         });
-
-        if (User) {
-          return Response.data({
-            availableMethods: [
-              {
-                type: IdentificationMethod.EMAIL,
-                value: User.email,
-                verified: User.isEmailVerified,
-              },
-              {
-                type: IdentificationMethod.PHONE,
-                value: User.phone,
-                verified: User.isPhoneVerified,
-              },
-            ],
-          });
-        } else e.error("User not found!");
       },
     });
   }
