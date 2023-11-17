@@ -4,6 +4,8 @@ import { AccountModel } from "@Models/account.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { Cron } from "croner";
 import { Database } from "@Database";
+import { WalletModel } from "@Models/wallet.ts";
+import { TransactionModel } from "@Models/transaction.ts";
 
 export const PermanentlyDeleteUsers = Transaction.add(async (_, next) => {
   const Users = await UserModel.find({ deletionAt: { $lt: new Date() } })
@@ -47,10 +49,25 @@ export const PermanentlyDeleteUsers = Transaction.add(async (_, next) => {
               { session }
             );
 
+            const Wallets = await WalletModel.find(
+              { account: { $in: AccountIDs } },
+              { session }
+            );
+
+            for (const Wallet of Wallets)
+              if (Wallet.balance !== 0) throw new Error("Wallet balance is 0!");
+
+            // Just delete Wallet. Transactions cannot be deleted as they are shared.
+            await WalletModel.deleteMany(
+              { account: { $in: AccountIDs } },
+              { session }
+            );
+
             await next({
               user: User,
               collaborations: Collaborations,
               accounts: Accounts,
+              wallets: Wallets,
             });
           }).catch(console.error);
         })
