@@ -470,21 +470,39 @@ export default class UsersController extends BaseController {
   }
 
   @Get("/me/")
-  public get() {
+  public get(route: IRoute) {
+    // Define Query Schema
+    const QuerySchema = e.object(
+      {
+        project: e.optional(
+          e.record(e.number({ cast: true }).min(0).max(1), { cast: true })
+        ),
+      },
+      { allowUnexpectedProps: true }
+    );
+
     return Versioned.add("1.0.0", {
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
+        // Query Validation
+        const Query = await QuerySchema.validate(
+          Object.fromEntries(ctx.router.request.url.searchParams),
+          { name: `${route.scope}.query` }
+        );
+
         // Fetch user
-        const User = await UserModel.findOne(
+        const UserQuery = UserModel.findOne(
           ctx.router.state.auth.userId
         ).populate(
           "collaborates",
           CollaboratorModel.populateOne("account", AccountModel)
         );
 
+        if (Query.project) UserQuery.project(Query.project);
+
         return Response.data({
-          user: User,
+          user: await UserQuery,
         });
       },
     });
