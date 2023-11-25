@@ -130,9 +130,9 @@ export class Wallet {
   static async transfer(options: {
     sessionId?: string;
     reference?: string;
-    fromName: string;
+    fromName: string | string[];
     from: ObjectId | string;
-    toName: string;
+    toName: string | string[];
     to: ObjectId | string;
     user: ObjectId | string;
     type?: string;
@@ -140,7 +140,7 @@ export class Wallet {
     amount: number;
     description?: string;
     status?: TransactionStatus;
-    is3DVerified?: boolean;
+    methodOf3DSecurity?: string;
     allowOverdraft?: boolean;
     databaseSession?: ClientSession;
   }) {
@@ -162,7 +162,16 @@ export class Wallet {
         `A payment with the same transaction reference '${Reference}' already exists!`
       );
 
+    const FromName =
+      options.fromName instanceof Array
+        ? options.fromName.filter(Boolean).join(" ")
+        : options.fromName;
     const From = options.from.toString();
+
+    const ToName =
+      options.toName instanceof Array
+        ? options.toName.filter(Boolean).join(" ")
+        : options.toName;
     const To = options.to.toString();
 
     if (From === To) throw new Error(`Cannot transfer to the same wallet!`);
@@ -218,15 +227,15 @@ export class Wallet {
       const Transaction = await TransactionModel.create({
         sessionId: options.sessionId,
         reference: Reference,
-        fromName: options.fromName,
+        fromName: FromName,
         from: new ObjectId(From),
-        toName: options.toName,
+        toName: ToName,
         to: new ObjectId(To),
         description: options.description,
         type: Type,
         currency: Currency,
         createdBy: new ObjectId(options.user),
-        is3DVerified: options.is3DVerified,
+        methodOf3DSecurity: options.methodOf3DSecurity,
         amount: options.amount,
         status: options.status ?? TransactionStatus.COMPLETED,
       });

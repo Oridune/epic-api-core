@@ -22,7 +22,7 @@ export const TransactionSchema = e.object({
   currency: e.string(),
   amount: e.number({ cast: true }),
   status: e.in(Object.values(TransactionStatus)),
-  is3DVerified: e.optional(e.boolean({ cast: true })).default(false),
+  methodOf3DSecurity: e.optional(e.string()),
   createdBy: e.instanceOf(ObjectId, { instantiate: true }),
 });
 

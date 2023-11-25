@@ -32,7 +32,9 @@ export default class WalletController extends BaseController {
     // Define Query Schema
     const QuerySchema = e.object(
       {
-        method: e.optional(e.in(Object.values(IdentificationMethod))),
+        method: e
+          .optional(e.in(Object.values(IdentificationMethod)))
+          .describe("Provide a 3D security method to verify the transfer."),
         receiver: e.string(),
         amount: e.number({ cast: true }),
         description: e.optional(e.string().max(300)),
@@ -85,9 +87,34 @@ export default class WalletController extends BaseController {
             `${route.scope}.query.receiver`
           );
 
+        const ReceiverAccount = await AccountModel.findOne({
+          createdFor: ReceivingUser._id,
+        }).project({
+          _id: 1,
+          isBlocked: 1,
+        });
+
+        if (!ReceiverAccount) throw e.error("Receiver account not found!");
+        if (ReceiverAccount.isBlocked)
+          throw e.error("Receiver account is not available!");
+
         const TransferDetails = {
-          sender: ctx.router.state.auth.user,
-          receiver: ReceivingUser,
+          sender: {
+            accountId: ctx.router.state.auth.accountId,
+            userId: ctx.router.state.auth.user._id,
+            fname: ctx.router.state.auth.user.fname,
+            mname: ctx.router.state.auth.user.mname,
+            lname: ctx.router.state.auth.user.lname,
+            avatar: ctx.router.state.auth.user.avatar,
+          },
+          receiver: {
+            accountId: ReceiverAccount._id,
+            userId: ReceivingUser._id,
+            fname: ReceivingUser.fname,
+            mname: ReceivingUser.mname,
+            lname: ReceivingUser.lname,
+            avatar: ReceivingUser.avatar,
+          },
           transactionDetails: {
             type: Params.type,
             currency: Params.currency,
@@ -109,6 +136,8 @@ export default class WalletController extends BaseController {
             ...TransferDetails,
             challenge: {
               token: Challenge.token,
+
+              // Return OTP if its a test.
               otp: Env.is(EnvType.TEST) ? Challenge.otp : undefined,
             },
           });
@@ -151,7 +180,8 @@ export default class WalletController extends BaseController {
         );
 
         type TransferEntity = {
-          _id: string;
+          accountId: string;
+          userId: string;
           fname: string;
           mname: string;
           lname: string;
@@ -165,60 +195,43 @@ export default class WalletController extends BaseController {
             type: string;
             currency: string;
             amount: number;
-            fee: number; //! Do not use this fee as it is not authentic! Possible Reasons: (Fee change, Account Change after signTransfer etc.)
+            fee: number;
             description: string;
           };
         }>(Body.token, Body.code, IdentificationPurpose.VERIFICATION).catch(
           e.error
         );
 
-        if (ctx.router.state.auth.userId !== Payload.sender._id)
+        if (
+          ctx.router.state.auth.userId !== Payload.sender.userId ||
+          ctx.router.state.auth.accountId !== Payload.sender.accountId
+        )
           throw e.error("Invalid transfer request!");
 
-        const ReceiverAccount = await AccountModel.findOne({
-          createdFor: new ObjectId(Payload.receiver._id),
-        }).project({
-          _id: 1,
-          isBlocked: 1,
+        const Transfer = await Wallet.transfer({
+          sessionId: Payload.challengeId,
+          fromName: [
+            Payload.sender.fname,
+            Payload.sender.mname,
+            Payload.sender.lname,
+          ],
+          from: Payload.sender.accountId,
+          toName: [
+            Payload.receiver.fname,
+            Payload.receiver.mname,
+            Payload.receiver.lname,
+          ],
+          to: Payload.receiver.accountId,
+          user: ctx.router.state.auth.userId,
+          type: Payload.transactionDetails.type,
+          currency: Payload.transactionDetails.currency,
+          amount: Payload.transactionDetails.amount,
+          description: Payload.transactionDetails.description,
+          methodOf3DSecurity: Body.method,
         });
 
-        if (!ReceiverAccount) throw e.error("Receiver account not found!");
-        if (ReceiverAccount.isBlocked)
-          throw e.error("Receiver account is not available!");
-
         return Response.statusCode(Status.Created).data({
-          transaction: (
-            await Wallet.transfer({
-              sessionId: Payload.challengeId,
-              fromName: [
-                Payload.sender.fname,
-                Payload.sender.mname,
-                Payload.sender.lname,
-              ]
-                .filter(Boolean)
-                .join(" "),
-              from: ctx.router.state.auth.accountId,
-              toName: [
-                Payload.receiver.fname,
-                Payload.receiver.mname,
-                Payload.receiver.lname,
-              ]
-                .filter(Boolean)
-                .join(" "),
-              to: ReceiverAccount._id,
-              user: ctx.router.state.auth.userId,
-              type: Payload.transactionDetails.type,
-              currency: Payload.transactionDetails.currency,
-              amount: Payload.transactionDetails.amount,
-              description: Payload.transactionDetails.description,
-              is3DVerified: (
-                [
-                  IdentificationMethod.EMAIL,
-                  IdentificationMethod.PHONE,
-                ] as string[]
-              ).includes(Body.method ?? ""),
-            })
-          ).transaction,
+          transaction: Transfer.transaction,
         });
       },
     });
