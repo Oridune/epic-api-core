@@ -1,16 +1,22 @@
 import e, { inferInput, inferOutput } from "validator";
 import { Store } from "@Core/common/store.ts";
+import { Env } from "@Core/common/env.ts";
 import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
 import { FileSchema } from "@Models/file.ts";
+
+const UserReferencePrefix = Env.getSync("USER_REFERENCE_PREFIX", true) ?? "UID";
+const UserReferenceStart = Env.getSync("USER_REFERENCE_START", true) ?? "10000";
+
+export const UserReferenceValidator = () =>
+  e.string().matches({
+    regex: new RegExp(
+      `^${UserReferencePrefix}[0-9]{${UserReferenceStart.length},}$`
+    ),
+  });
 
 export const UsernameValidator = () =>
   e.string().matches({
     regex: /^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/,
-  });
-
-export const UserReferenceValidator = () =>
-  e.string().matches({
-    regex: /^UID[0-9]{5,}$/,
   });
 
 export const PasswordValidator = () =>
@@ -71,7 +77,10 @@ export const UserSchema = CreateUserSchema.extends(
     reference: e
       .optional(UserReferenceValidator())
       .default(
-        async () => `UID${10000 + (await Store.incr("user-reference"))}`
+        async () =>
+          `${UserReferencePrefix}${
+            parseInt(UserReferenceStart) + (await Store.incr("user-reference"))
+          }`
       ),
     passwordHistory: e.array(e.string()),
     isEmailVerified: e.optional(e.boolean({ cast: true })).default(false),
