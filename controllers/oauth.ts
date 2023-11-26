@@ -159,7 +159,8 @@ export default class OauthController extends BaseController {
         audience: opts.audience,
         expiresInSeconds:
           opts.accessTokenExpiresInSeconds ??
-          OauthController.DefaultAccessTokenExpirySeconds,
+          OauthController.DefaultAccessTokenExpirySeconds *
+            (opts.refreshable ? 1 : 12),
       }),
     };
   }
@@ -190,7 +191,7 @@ export default class OauthController extends BaseController {
         audience: opts.audience,
         expiresInSeconds:
           opts.expiresInSeconds ??
-          OauthController.DefaultAccessTokenExpirySeconds,
+          OauthController.DefaultAccessTokenExpirySeconds * 2,
       }),
     };
   }
