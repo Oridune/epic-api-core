@@ -79,7 +79,8 @@ export const UserSchema = CreateUserSchema.extends(
       .default(
         async () =>
           `${UserReferencePrefix}${
-            parseInt(UserReferenceStart) + (await Store.incr("user-reference"))
+            parseInt(UserReferenceStart) +
+            (await Store.incr(`user-reference-${UserReferencePrefix}`))
           }`
       ),
     passwordHistory: e.array(e.string()),
