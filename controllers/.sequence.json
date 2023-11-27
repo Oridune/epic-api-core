@@ -7,7 +7,9 @@
     "adminPlugins.ts",
     "usersIdentification.ts",
     "uploads.ts",
-    "wallet.ts"
+    "wallet.ts",
+    "accounts.ts"
   ],
-  "excludes": []
+  "excludes": [],
+  "sequenceProps": {}
 }
