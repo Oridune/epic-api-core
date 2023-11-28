@@ -1,13 +1,14 @@
 import e, { inferInput, inferOutput } from "validator";
 import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
 
-export const OauthPolicySchema = e.object({
-  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
-  createdAt: e.optional(e.date()).default(() => new Date()),
-  updatedAt: e.optional(e.date()).default(() => new Date()),
-  role: e.string(),
-  scopes: e.array(e.string()),
-});
+export const OauthPolicySchema = () =>
+  e.object({
+    _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+    createdAt: e.optional(e.date()).default(() => new Date()),
+    updatedAt: e.optional(e.date()).default(() => new Date()),
+    role: e.string(),
+    scopes: e.array(e.string()),
+  });
 
 export type TOauthPolicyInput = InputDocument<
   inferInput<typeof OauthPolicySchema>

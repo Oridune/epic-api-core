@@ -7,24 +7,25 @@ export enum TransactionStatus {
   CANCELLED = "cancelled",
 }
 
-export const TransactionSchema = e.object({
-  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
-  createdAt: e.optional(e.date()).default(() => new Date()),
-  updatedAt: e.optional(e.date()).default(() => new Date()),
-  sessionId: e.optional(e.string()),
-  reference: e.string(),
-  fromName: e.string(),
-  from: e.instanceOf(ObjectId, { instantiate: true }),
-  toName: e.string(),
-  to: e.instanceOf(ObjectId, { instantiate: true }),
-  type: e.string(),
-  description: e.optional(e.string()),
-  currency: e.string(),
-  amount: e.number({ cast: true }),
-  status: e.in(Object.values(TransactionStatus)),
-  methodOf3DSecurity: e.optional(e.string()),
-  createdBy: e.instanceOf(ObjectId, { instantiate: true }),
-});
+export const TransactionSchema = () =>
+  e.object({
+    _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+    createdAt: e.optional(e.date()).default(() => new Date()),
+    updatedAt: e.optional(e.date()).default(() => new Date()),
+    sessionId: e.optional(e.string()),
+    reference: e.string(),
+    fromName: e.string(),
+    from: e.instanceOf(ObjectId, { instantiate: true }),
+    toName: e.string(),
+    to: e.instanceOf(ObjectId, { instantiate: true }),
+    type: e.string(),
+    description: e.optional(e.string()),
+    currency: e.string(),
+    amount: e.number({ cast: true }),
+    status: e.in(Object.values(TransactionStatus)),
+    methodOf3DSecurity: e.optional(e.string()),
+    createdBy: e.instanceOf(ObjectId, { instantiate: true }),
+  });
 
 export type TTransactionInput = InputDocument<
   inferInput<typeof TransactionSchema>

@@ -56,10 +56,10 @@
           "name": "users",
           "item": [
             {
-              "name": "signAvatar",
+              "name": "updateAvatar",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/users/avatar/sign?name=&alt=&contentType=image/png|image/jpg|image/jpeg|image/svg+xml|image/webp&contentLength=259129",
+                  "raw": "{{host}}/api/users/avatar/sign?name=&alt=&contentType=image/png|image/jpg|image/jpeg|image/svg+xml|image/webp&contentLength=1364582",
                   "host": [
                     "{{host}}"
                   ],
@@ -87,7 +87,7 @@
                     },
                     {
                       "key": "contentLength",
-                      "value": 259129,
+                      "value": 1364582,
                       "description": ""
                     }
                   ],
@@ -178,7 +178,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-11-11T18:17:03.602Z\",\n  \"locale\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\"\n}",
+                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-11-28T13:29:54.300Z\",\n  \"locale\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -289,7 +289,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"method\": \"email|phone|in-app\",\n  \"token\": \"\",\n  \"code\": 100000\n}",
+                  "raw": "{\n  \"method\": \"email|phone|in-app\",\n  \"token\": \"\",\n  \"code\": 200000\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -351,7 +351,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"avatar\": {\n    \"name\": \"\",\n    \"url\": \"\",\n    \"mimeType\": \"\",\n    \"sizeInBytes\": 1,\n    \"alt\": \"\"\n  },\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\",\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-11-11T18:17:03.622Z\",\n  \"locale\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\",\n  \"username\": \"\",\n  \"password\": \"\"\n}",
+                  "raw": "{\n  \"avatar\": {\n    \"name\": \"\",\n    \"url\": \"\",\n    \"mimeType\": \"\",\n    \"sizeInBytes\": 1,\n    \"alt\": \"\"\n  },\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\",\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-11-28T13:29:54.305Z\",\n  \"locale\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\",\n  \"username\": \"\",\n  \"password\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -365,7 +365,7 @@
               "name": "listAll",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/users/:userId?limit=1&offset=2",
+                  "raw": "{{host}}/api/users/:userId?search=&range=Tue Nov 28 2023 18:29:54 GMT+0500 (Pakistan Standard Time),Tue Nov 28 2023 18:29:54 GMT+0500 (Pakistan Standard Time)&offset=0&limit=853&sort=[object Object]&project=[object Object]&includeTotalCount=false",
                   "host": [
                     "{{host}}"
                   ],
@@ -376,14 +376,42 @@
                   ],
                   "query": [
                     {
-                      "key": "limit",
-                      "value": 1,
+                      "key": "search",
+                      "value": "",
+                      "description": "(Optional)"
+                    },
+                    {
+                      "key": "range",
+                      "value": [
+                        "2023-11-28T13:29:54.306Z",
+                        "2023-11-28T13:29:54.306Z"
+                      ],
                       "description": "(Optional)"
                     },
                     {
                       "key": "offset",
-                      "value": 2,
+                      "value": 0,
                       "description": "(Optional)"
+                    },
+                    {
+                      "key": "limit",
+                      "value": 853,
+                      "description": "(Optional)"
+                    },
+                    {
+                      "key": "sort",
+                      "value": {},
+                      "description": "(Optional)"
+                    },
+                    {
+                      "key": "project",
+                      "value": {},
+                      "description": "(Optional)"
+                    },
+                    {
+                      "key": "includeTotalCount",
+                      "value": false,
+                      "description": "(Optional) If `true` is passed, the system will return a total items count for pagination purpose."
                     }
                   ],
                   "variable": [
@@ -491,7 +519,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"oauthAppId\": \"\",\n  \"callbackURL\": \"\",\n  \"codeChallenge\": \"\",\n  \"codeChallengeMethod\": \"sha256\",\n  \"remember\": false\n}",
+                  "raw": "{\n  \"oauthAppId\": \"\",\n  \"callbackURL\": \"\",\n  \"codeChallenge\": \"\",\n  \"codeChallengeMethod\": \"sha256\",\n  \"remember\": true\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -635,7 +663,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"\",\n  \"description\": \"\",\n  \"enabled\": true,\n  \"consent\": {\n    \"availableCountryCodes\": [\n      \"\"\n    ],\n    \"requiredIdentificationMethods\": [\n      \"email|phone|in-app\"\n    ],\n    \"logo\": {\n      \"name\": \"\",\n      \"url\": \"\",\n      \"mimeType\": \"\",\n      \"sizeInBytes\": 2,\n      \"alt\": \"\"\n    },\n    \"primaryColor\": \"\",\n    \"primaryColorDark\": \"\",\n    \"secondaryColor\": \"\",\n    \"secondaryColorDark\": \"\",\n    \"styling\": {\n      \"roundness\": 71\n    },\n    \"allowedCallbackURLs\": [\n      \"\"\n    ],\n    \"homepageURL\": \"\",\n    \"privacyPolicyURL\": \"\",\n    \"termsAndConditionsURL\": \"\",\n    \"supportURL\": \"\"\n  },\n  \"metadata\": {}\n}",
+                  "raw": "{\n  \"name\": \"\",\n  \"description\": \"\",\n  \"enabled\": true,\n  \"consent\": {\n    \"availableCountryCodes\": [\n      \"\"\n    ],\n    \"requiredIdentificationMethods\": [\n      \"email|phone|in-app\"\n    ],\n    \"logo\": {\n      \"name\": \"\",\n      \"url\": \"\",\n      \"mimeType\": \"\",\n      \"sizeInBytes\": 2,\n      \"alt\": \"\"\n    },\n    \"primaryColor\": \"\",\n    \"primaryColorDark\": \"\",\n    \"secondaryColor\": \"\",\n    \"secondaryColorDark\": \"\",\n    \"styling\": {\n      \"roundness\": 3\n    },\n    \"allowedCallbackURLs\": [\n      \"\"\n    ],\n    \"homepageURL\": \"\",\n    \"privacyPolicyURL\": \"\",\n    \"termsAndConditionsURL\": \"\",\n    \"supportURL\": \"\"\n  },\n  \"metadata\": {}\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -649,7 +677,7 @@
               "name": "list",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/oauth/apps?limit=2&offset=2",
+                  "raw": "{{host}}/api/oauth/apps?limit=1802&offset=1",
                   "host": [
                     "{{host}}"
                   ],
@@ -661,12 +689,12 @@
                   "query": [
                     {
                       "key": "limit",
-                      "value": 2,
+                      "value": 1802,
                       "description": "(Optional)"
                     },
                     {
                       "key": "offset",
-                      "value": 2,
+                      "value": 1,
                       "description": "(Optional)"
                     }
                   ],
@@ -997,7 +1025,7 @@
           "name": "sign",
           "request": {
             "url": {
-              "raw": "{{host}}/api/uploads?name=&alt=&contentType=&contentLength=1",
+              "raw": "{{host}}/api/uploads?name=&alt=&contentType=&contentLength=2",
               "host": [
                 "{{host}}"
               ],
@@ -1023,7 +1051,7 @@
                 },
                 {
                   "key": "contentLength",
-                  "value": 1,
+                  "value": 2,
                   "description": ""
                 }
               ],
@@ -1067,7 +1095,7 @@
           "name": "upload",
           "request": {
             "url": {
-              "raw": "{{host}}/api/uploads?name=&alt=&contentType=&contentLength=2",
+              "raw": "{{host}}/api/uploads?name=&alt=&contentType=&contentLength=1",
               "host": [
                 "{{host}}"
               ],
@@ -1093,7 +1121,7 @@
                 },
                 {
                   "key": "contentLength",
-                  "value": 2,
+                  "value": 1,
                   "description": ""
                 }
               ],
@@ -1233,7 +1261,7 @@
           "name": "transactions",
           "request": {
             "url": {
-              "raw": "{{host}}/api/wallet/transactions/:type/:currency??search=&range=&sort=[object Object]",
+              "raw": "{{host}}/api/wallet/transactions/:type/:currency??search=&range=Tue Nov 28 2023 18:29:54 GMT+0500 (Pakistan Standard Time),Tue Nov 28 2023 18:29:54 GMT+0500 (Pakistan Standard Time)&offset=0&limit=321&sort=[object Object]&project=[object Object]&includeTotalCount=false",
               "host": [
                 "{{host}}"
               ],
@@ -1252,13 +1280,36 @@
                 },
                 {
                   "key": "range",
-                  "value": [],
+                  "value": [
+                    "2023-11-28T13:29:54.314Z",
+                    "2023-11-28T13:29:54.314Z"
+                  ],
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "offset",
+                  "value": 0,
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "limit",
+                  "value": 321,
                   "description": "(Optional)"
                 },
                 {
                   "key": "sort",
                   "value": {},
                   "description": "(Optional)"
+                },
+                {
+                  "key": "project",
+                  "value": {},
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "includeTotalCount",
+                  "value": false,
+                  "description": "(Optional) If `true` is passed, the system will return a total items count for pagination purpose."
                 }
               ],
               "variable": [
@@ -1269,6 +1320,169 @@
                 },
                 {
                   "key": "currency",
+                  "value": "",
+                  "description": "(Optional)"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "accounts",
+      "item": [
+        {
+          "name": "create",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/accounts",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "accounts"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"description\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/accounts/:id",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                ":id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"description\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/accounts/:id",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                ":id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "get",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/accounts/:id?search=&range=Tue Nov 28 2023 18:29:54 GMT+0500 (Pakistan Standard Time),Tue Nov 28 2023 18:29:54 GMT+0500 (Pakistan Standard Time)&offset=2&limit=463&sort=[object Object]&project=[object Object]&includeTotalCount=true",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                ":id"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "range",
+                  "value": [
+                    "2023-11-28T13:29:54.315Z",
+                    "2023-11-28T13:29:54.315Z"
+                  ],
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "offset",
+                  "value": 2,
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "limit",
+                  "value": 463,
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "sort",
+                  "value": {},
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "project",
+                  "value": {},
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "includeTotalCount",
+                  "value": true,
+                  "description": "(Optional) If `true` is passed, the system will return a total items count for pagination purpose."
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
                   "value": "",
                   "description": "(Optional)"
                 }

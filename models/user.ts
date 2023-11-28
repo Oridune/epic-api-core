@@ -42,59 +42,62 @@ export enum Gender {
   OTHER = "other",
 }
 
-export const UpdateUserSchema = e.object({
-  fname: e.string(),
-  mname: e.optional(e.string()),
-  lname: e.optional(e.string()),
-  gender: e.optional(e.in(Object.values(Gender))),
-  dob: e.optional(e.date()),
-  locale: e.optional(e.string()),
-  country: e.optional(e.string()),
-  state: e.optional(e.string()),
-  city: e.optional(e.string()),
-  address_1: e.optional(e.string()),
-  address_2: e.optional(e.string()),
-  postalCode: e.optional(e.string()),
-});
-
-export const CreateUserSchema = e
-  .object({
-    oauthApp: e.instanceOf(ObjectId, { instantiate: true }),
-    username: UsernameValidator(),
-    password: e.string(),
-    avatar: e.optional(FileSchema),
-    tags: e.optional(e.array(e.string(), { cast: true })).default([]),
-    email: e.optional(EmailValidator()),
-    phone: e.optional(PhoneValidator()),
-  })
-  .extends(UpdateUserSchema);
-
-export const UserSchema = CreateUserSchema.extends(
+export const UpdateUserSchema = () =>
   e.object({
-    _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
-    createdAt: e.optional(e.date()).default(() => new Date()),
-    updatedAt: e.optional(e.date()).default(() => new Date()),
-    reference: e
-      .optional(UserReferenceValidator())
-      .default(
-        async () =>
-          `${UserReferencePrefix}${
-            parseInt(UserReferenceStart) +
-            (await Store.incr(`user-reference-${UserReferencePrefix}`))
-          }`
-      ),
-    passwordHistory: e.array(e.string()),
-    isEmailVerified: e.optional(e.boolean({ cast: true })).default(false),
-    isPhoneVerified: e.optional(e.boolean({ cast: true })).default(false),
-    lastLogin: e.optional(e.date()),
-    loginCount: e.optional(e.number({ cast: true })).default(0),
-    failedLoginAttempts: e.optional(e.number({ cast: true })).default(0),
-    requiresMfa: e.optional(e.boolean({ cast: true })).default(false),
-    isBlocked: e.optional(e.boolean({ cast: true })).default(false),
-    collaborates: e.array(e.instanceOf(ObjectId, { instantiate: true })),
-    deletionAt: e.optional(e.or([e.date(), e.null()])),
-  })
-);
+    fname: e.string(),
+    mname: e.optional(e.string()),
+    lname: e.optional(e.string()),
+    gender: e.optional(e.in(Object.values(Gender))),
+    dob: e.optional(e.date()),
+    locale: e.optional(e.string()),
+    country: e.optional(e.string()),
+    state: e.optional(e.string()),
+    city: e.optional(e.string()),
+    address_1: e.optional(e.string()),
+    address_2: e.optional(e.string()),
+    postalCode: e.optional(e.string()),
+  });
+
+export const CreateUserSchema = () =>
+  e
+    .object({
+      oauthApp: e.instanceOf(ObjectId, { instantiate: true }),
+      username: UsernameValidator(),
+      password: e.string(),
+      avatar: e.optional(FileSchema),
+      tags: e.optional(e.array(e.string(), { cast: true })).default([]),
+      email: e.optional(EmailValidator()),
+      phone: e.optional(PhoneValidator()),
+    })
+    .extends(UpdateUserSchema);
+
+export const UserSchema = () =>
+  CreateUserSchema().extends(
+    e.object({
+      _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+      createdAt: e.optional(e.date()).default(() => new Date()),
+      updatedAt: e.optional(e.date()).default(() => new Date()),
+      reference: e
+        .optional(UserReferenceValidator())
+        .default(
+          async () =>
+            `${UserReferencePrefix}${
+              parseInt(UserReferenceStart) +
+              (await Store.incr(`user-reference-${UserReferencePrefix}`))
+            }`
+        ),
+      passwordHistory: e.array(e.string()),
+      isEmailVerified: e.optional(e.boolean({ cast: true })).default(false),
+      isPhoneVerified: e.optional(e.boolean({ cast: true })).default(false),
+      lastLogin: e.optional(e.date()),
+      loginCount: e.optional(e.number({ cast: true })).default(0),
+      failedLoginAttempts: e.optional(e.number({ cast: true })).default(0),
+      requiresMfa: e.optional(e.boolean({ cast: true })).default(false),
+      isBlocked: e.optional(e.boolean({ cast: true })).default(false),
+      collaborates: e.array(e.instanceOf(ObjectId, { instantiate: true })),
+      deletionAt: e.optional(e.or([e.date(), e.null()])),
+    })
+  );
 
 export type TUserInput = InputDocument<inferInput<typeof UserSchema>>;
 export type TUserOutput = OutputDocument<inferOutput<typeof UserSchema>>;

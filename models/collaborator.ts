@@ -1,17 +1,18 @@
 import e, { inferInput, inferOutput } from "validator";
 import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
 
-export const CollaboratorSchema = e.object({
-  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
-  createdAt: e.optional(e.date()).default(() => new Date()),
-  updatedAt: e.optional(e.date()).default(() => new Date()),
-  createdBy: e.instanceOf(ObjectId, { instantiate: true }),
-  createdFor: e.instanceOf(ObjectId, { instantiate: true }),
-  role: e.string(),
-  isPrimary: e.boolean({ cast: true }),
-  isOwned: e.boolean({ cast: true }),
-  account: e.instanceOf(ObjectId, { instantiate: true }),
-});
+export const CollaboratorSchema = () =>
+  e.object({
+    _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+    createdAt: e.optional(e.date()).default(() => new Date()),
+    updatedAt: e.optional(e.date()).default(() => new Date()),
+    createdBy: e.instanceOf(ObjectId, { instantiate: true }),
+    createdFor: e.instanceOf(ObjectId, { instantiate: true }),
+    role: e.string(),
+    isPrimary: e.boolean({ cast: true }),
+    isOwned: e.boolean({ cast: true }),
+    account: e.instanceOf(ObjectId, { instantiate: true }),
+  });
 
 export type TCollaboratorInput = InputDocument<
   inferInput<typeof CollaboratorSchema>
