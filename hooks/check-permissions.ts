@@ -44,9 +44,10 @@ export default {
         name: `${scope}.state.sessionInfo`,
       });
 
-    let AvailableScopes: string[] = [];
-    let RequestedScopes: string[] = [];
-    let PermittedScopes: string[] = [];
+    let AllScopes: string[];
+    let AvailableScopes: string[];
+    let RequestedScopes: string[];
+    let PermittedScopes: string[];
 
     if (SessionInfo) {
       const AccountId = await e
@@ -58,30 +59,9 @@ export default {
           { name: `${scope}.headers.x-account-id` }
         );
 
-      const Collaborator = await CollaboratorModel.findOne({
-        account: new ObjectId(AccountId),
-        createdFor: new ObjectId(SessionInfo.session.createdBy),
-      }).project({ role: 1 });
-
-      if (!Collaborator) e.error("You don't have access to this account!");
-
-      const OauthScopes = await OauthPolicyModel.findOne({
-        role: Collaborator!.role,
-      }).project({ scopes: 1 });
-
-      if (!OauthScopes)
-        throw e.error(
-          `Unable to fetch the available scopes for the role '${
-            Collaborator!.role
-          }'!`
-        );
-
-      const User = await UserModel.findOne(SessionInfo.session.createdBy, {
-        cache: {
-          key: `auth-user:${SessionInfo.session.createdBy}`,
-          ttl: 60 * 5, // Cache for 5 minutes...
-        },
-      }).project({
+      const User = await UserModel.findOne(
+        SessionInfo.session.createdBy
+      ).project({
         password: 0,
         passwordHistory: 0,
         collaborates: 0,
@@ -89,61 +69,54 @@ export default {
 
       if (!User) throw e.error(`Authorized user not found!`);
 
+      const Collaborator = await CollaboratorModel.findOne({
+        account: new ObjectId(AccountId),
+        createdFor: new ObjectId(SessionInfo.session.createdBy),
+      }).project({ role: 1 });
+
+      if (!Collaborator)
+        throw e.error("You don't have access to this account!");
+
       ctx.router.state.auth = {
         sessionId: SessionInfo.claims.sessionId,
         userId: SessionInfo.session.createdBy,
         accountId: AccountId,
-        role: Collaborator!.role,
+        role: User.role,
+        accountRole: Collaborator.role,
         user: User,
       };
 
-      AvailableScopes = OauthScopes?.scopes ?? [];
+      AllScopes = [`role:${User.role}`];
+      AvailableScopes = [`role:${Collaborator.role}`];
       RequestedScopes = SessionInfo.session.scopes[AccountId] ?? [];
       PermittedScopes = SessionInfo.claims.scopes ?? ["*"];
     } else {
-      const UnauthenticatedRole = "unauthenticated";
-      const OauthScopes = await OauthPolicyModel.findOne({
-        role: UnauthenticatedRole,
-      }).project({ scopes: 1 });
-
-      if (!OauthScopes)
-        e.error(
-          `Unable to fetch the available scopes for the role '${UnauthenticatedRole}'!`
-        );
-
-      AvailableScopes = OauthScopes?.scopes ?? [];
+      AllScopes = ["role:unauthenticated"];
+      AvailableScopes = ["*"];
       RequestedScopes = ["*"];
       PermittedScopes = ["*"];
     }
 
-    const NormalizedAvailableScopes = await AvailableScopes.reduce(
-      async (scopes, scope) => {
-        const Scopes = await scopes;
-        const Match = scope.match(/^role:(.*)/);
+    const Guard = (ctx.router.state.guard = new SecurityGuard())
+      .addStage(AllScopes)
+      .addStage(AvailableScopes)
+      .addStage(RequestedScopes)
+      .addStage(PermittedScopes);
 
-        if (Match) {
-          const OauthScopes = await OauthPolicyModel.findOne({
-            role: Match[1],
-          }).project({ scopes: 1 });
+    await Guard.parse({
+      resolveRole: async (role) => {
+        const OauthScopes = await OauthPolicyModel.findOne({
+          role,
+        }).project({ scopes: 1 });
 
-          if (!OauthScopes)
-            e.error(
-              `Unable to fetch the available scopes for the role '${Match[1]}'!`
-            );
+        if (!OauthScopes)
+          throw e.error(
+            `Unable to fetch the available scopes for the role '${role}'!`
+          );
 
-          return [...Scopes, ...(OauthScopes?.scopes ?? [])];
-        }
-
-        return [...Scopes, scope];
+        return OauthScopes.scopes;
       },
-      Promise.resolve<string[]>([])
-    );
-
-    const Guard = (ctx.router.state.guard = new SecurityGuard(
-      NormalizedAvailableScopes,
-      RequestedScopes,
-      PermittedScopes
-    ));
+    });
 
     if (!Guard.isPermitted(scope, name))
       ctx.router.throw(

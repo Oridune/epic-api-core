@@ -13,7 +13,7 @@ import { type RouterContext } from "oak";
 import e from "validator";
 import { Uploads, AwsS3ACLs } from "@Lib/uploads/mod.ts";
 import { TFileOutput } from "@Models/file.ts";
-import OauthController from "@Controllers/oauth.ts";
+import OauthController, { TokenPayload } from "@Controllers/oauth.ts";
 
 export type SignUploadOptions = {
   allowedContentTypes?: string[] | RegExp;
@@ -34,8 +34,8 @@ export default class UploadsController extends BaseController {
   @Get("/")
   static sign(route: IRoute, options?: SignUploadOptions) {
     // Define Query Schema
-    const QuerySchema = e.object(
-      {
+    const QuerySchema = e
+      .object({
         name: e.optional(e.string().max(50)),
         alt: e.optional(e.string().max(50)),
         contentType:
@@ -48,13 +48,16 @@ export default class UploadsController extends BaseController {
           min: options?.minContentLength,
           max: options?.maxContentLength,
         }),
-      },
-      { allowUnexpectedProps: true }
-    );
+      })
+      .rest(e.any);
+
+    // Define Params Schema
+    const ParamsSchema = e.record(e.string);
 
     return Versioned.add("1.0.0", {
       postman: {
         query: QuerySchema.toSample(),
+        params: ParamsSchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
@@ -63,6 +66,11 @@ export default class UploadsController extends BaseController {
           { name: `${route.scope}.query` }
         );
 
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
+
         let Location =
           typeof options?.location === "function"
             ? await options.location(ctx)
@@ -70,16 +78,22 @@ export default class UploadsController extends BaseController {
             ? options.location
             : "/public/";
 
-        if (ctx.router.state.auth)
-          Location = Location
-            // Interpolation
-            .replace(/{{\s*accountId\s*}}/g, ctx.router.state.auth.accountId)
-            .replace(/{{\s*userId\s*}}/g, ctx.router.state.auth.userId);
+        const Injection: Record<string, unknown> = {
+          ...ctx.router.state.auth,
+          ...Query,
+          ...Params,
+        };
+
+        Location = Location.replace(/{{\s*([^{}\s]*)\s*}}/g, (match, key) =>
+          Injection[key] !== undefined ? `${Injection[key]}` : match
+        );
+
+        const { name, alt, contentType, contentLength, ...restQuery } = Query;
 
         const UploadRequest = await Uploads.signUploadUrl({
           awsS3ACL: AwsS3ACLs.PUBLIC_READ,
-          contentType: Query.contentType,
-          contentLength: Query.contentLength,
+          contentType,
+          contentLength,
           location: Location,
           expiresInMs: options?.expiresInMs,
         });
@@ -90,13 +104,17 @@ export default class UploadsController extends BaseController {
             await OauthController.createToken({
               type: this.UploadTokenType,
               payload: {
-                name: Query.name,
+                name,
                 url: UploadRequest.getUrl,
-                mimeType: Query.contentType,
-                sizeInBytes: Query.contentLength,
-                alt: Query.alt,
+                mimeType: contentType,
+                sizeInBytes: contentLength,
+                alt,
+                metadata: {
+                  ...restQuery,
+                  ...Params,
+                },
               },
-              secret: ctx.router.state.auth?.userId,
+              secret: `${ctx.router.state.auth?.accountId}:${ctx.router.state.auth?.userId}`,
               expiresInSeconds: UploadRequest.expiresInSeconds + 30,
             })
           ).token,
@@ -107,12 +125,13 @@ export default class UploadsController extends BaseController {
 
   @Get("/")
   @Put("/")
-  static upload(
+  static upload<T extends TokenPayload>(
     route: IRoute,
     options?: SignUploadOptions,
     onSuccess?: (
       ctx: IRequestContext<RouterContext<string>>,
-      file: TFileOutput
+      file: TFileOutput,
+      metadata: T
     ) => Promise<Response | void> | void
   ) {
     if (route.options.method === RequestMethod.GET)
@@ -160,7 +179,10 @@ export default class UploadsController extends BaseController {
             alt: Body.token.alt,
           };
 
-          return (await onSuccess?.(ctx, Upload)) ?? Response.data(Upload);
+          return (
+            (await onSuccess?.(ctx, Upload, Body.token.metadata as T)) ??
+            Response.data(Upload)
+          );
         },
       });
     }

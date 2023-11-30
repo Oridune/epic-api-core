@@ -13,7 +13,6 @@ import { Novu } from "novu";
 import { TUserOutput, UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauth-session.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
-import { CollaboratorModel } from "@Models/collaborator.ts";
 import { TFileOutput } from "@Models/file.ts";
 
 export const isUserVerified = async (input: {
@@ -45,39 +44,27 @@ export const syncUserVerifiedRole = async (
     verifiedRole?: string;
   }
 ) => {
-  const User = await UserModel.findOne(userId)
-    .populate("collaborates", CollaboratorModel, { project: { role: 1 } })
-    .project({
-      isEmailVerified: 1,
-      isPhoneVerified: 1,
-      collaborates: 1,
-    });
+  const User = await UserModel.findOne(userId).project({
+    role: 1,
+    isEmailVerified: 1,
+    isPhoneVerified: 1,
+  });
 
   if (!User)
     throw new Error(
       `A user who just updated his email or phone, was not found!`
     );
 
-  if (!User.collaborates.length)
-    throw new Error("A user exists but is not collaborating on any account!");
-
   const Verified = await isUserVerified(User);
 
-  const Collaborator = User.collaborates.find(
-    (collaborator) => collaborator.isOwned && collaborator.isPrimary
-  );
+  const Role = Verified ? options?.verifiedRole ?? "user" : "unverified";
 
-  if (Collaborator) {
-    const Role = Verified ? options?.verifiedRole ?? "user" : "unverified";
+  if (User.role !== Role) await UserModel.updateOne(User._id, { role: Role });
 
-    if (Collaborator.role !== Role)
-      await CollaboratorModel.updateOne(
-        { _id: Collaborator._id },
-        { role: Role }
-      );
-  }
-
-  return Verified;
+  return {
+    verified: Verified,
+    role: Role,
+  };
 };
 
 export default () => {

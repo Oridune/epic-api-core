@@ -1,75 +1,79 @@
+export type TScopeResolverOptions = {
+  resolveRole?: (role: string) => Promise<Array<string> | undefined>;
+};
+
 export class SecurityGuard {
-  protected AllScopes: Set<string>;
-  protected RequestedScopes: Set<string>;
-  protected PermittedScopes: Set<string>;
+  protected ScopesCache: Record<string, Array<string>> = {};
+  protected RawScopePipeline: Array<Array<string>> = [];
+  protected ScopePipeline: Array<Set<string>> = [];
 
-  protected AllPermissionsExists: boolean;
-  protected AllPermissionsRequested: boolean;
-  protected AllPermissionsPermitted: boolean;
+  protected resolveScopes(scopes: string[], options?: TScopeResolverOptions) {
+    const RoleRegExp = /^role:(.*)/;
 
-  protected findCommonElements<T>(
-    arr1: T[] | Set<T>,
-    arr2: T[] | Set<T>
-  ): Set<T> {
-    const Set1 = new Set(arr1);
-    return new Set(Array.from(arr2).filter((element) => Set1.delete(element)));
+    const ResolveRole = async (
+      role: string,
+      set: Set<string>
+    ): Promise<Set<string>> =>
+      (this.ScopesCache[role] ??=
+        (await options?.resolveRole?.(role)) ?? []).reduce(
+        async (set, scope) => {
+          const Set = await set;
+          const Match = scope.match(RoleRegExp);
+
+          if (Match) return ResolveRole(Match[1], Set);
+
+          return Set.add(scope);
+        },
+        Promise.resolve(set)
+      );
+
+    return scopes.reduce(async (set, scope) => {
+      const Set = await set;
+      const Match = scope.match(RoleRegExp);
+
+      if (Match) return ResolveRole(Match[1], Set);
+
+      return Set.add(scope);
+    }, Promise.resolve<Set<string>>(new Set()));
   }
 
-  constructor(
-    allScopes: string[],
-    requestedScopes: string[],
-    permittedScopes: string[]
-  ) {
-    this.AllScopes = new Set(allScopes);
-    this.RequestedScopes = new Set(requestedScopes);
-    this.PermittedScopes = new Set(permittedScopes);
+  constructor() {}
 
-    this.AllPermissionsExists = this.AllScopes.has("*");
-    this.AllPermissionsRequested = this.RequestedScopes.has("*");
-    this.AllPermissionsPermitted = this.PermittedScopes.has("*");
+  public addStage(scopes: Array<string>) {
+    this.RawScopePipeline.push(scopes);
+    return this;
+  }
+
+  public async parse(options?: TScopeResolverOptions) {
+    const Resolvers: Array<Promise<Set<string>>> = [];
+
+    do {
+      const TargetPipeline = this.RawScopePipeline.shift();
+
+      if (TargetPipeline instanceof Array)
+        Resolvers.push(this.resolveScopes(TargetPipeline, options));
+    } while (this.RawScopePipeline.length);
+
+    this.ScopePipeline.push(
+      ...(await Promise.all(Resolvers)).map((list) => new Set(list))
+    );
   }
 
   public isPermitted(scope: string, permission?: string) {
-    let Allowed = false;
-    let Permitted = false;
+    let Permitted = true;
 
-    if (this.AllPermissionsExists) {
-      if (this.AllPermissionsRequested) Allowed = true;
-      else if (
-        this.RequestedScopes.has(scope) ||
-        (typeof permission === "string" &&
-          this.RequestedScopes.has(`${scope}.${permission}`))
-      )
-        Allowed = true;
-    } else {
-      if (this.AllPermissionsRequested) {
-        if (
-          this.AllScopes.has(scope) ||
-          (typeof permission === "string" &&
-            this.AllScopes.has(`${scope}.${permission}`))
-        )
-          Allowed = true;
-      } else {
-        const Scopes = this.findCommonElements(
-          this.AllScopes,
-          this.RequestedScopes
-        );
+    for (let i = 0; i < this.ScopePipeline.length; i++) {
+      if (!Permitted) break;
 
-        if (
-          Scopes.has(scope) ||
-          (typeof permission === "string" &&
-            Scopes.has(`${scope}.${permission}`))
-        )
-          Allowed = true;
-      }
-    }
+      const Stage = this.ScopePipeline[i];
 
-    if (Allowed) {
+      if (Stage.has("*")) continue;
+      if (Stage.has(scope)) continue;
+
       Permitted =
-        this.AllPermissionsPermitted ||
-        this.PermittedScopes.has(scope) ||
-        (typeof permission === "string" &&
-          this.PermittedScopes.has(`${scope}.${permission}`));
+        typeof permission === "string"
+          ? Stage.has(`${scope}.${permission}`)
+          : false;
     }
 
     return Permitted;

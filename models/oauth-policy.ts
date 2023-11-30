@@ -26,4 +26,4 @@ OauthPolicyModel.pre("update", (details) => {
   };
 });
 
-await OauthPolicyModel.createIndex({ key: { role: 1 }, unique: true });
+OauthPolicyModel.createIndex({ key: { role: 1 }, unique: true });

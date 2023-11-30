@@ -54,7 +54,8 @@ export const PermanentlyDeleteUsers = Transaction.add(async (_, next) => {
             );
 
             for (const Wallet of Wallets)
-              if (Wallet.balance !== 0) throw new Error("Wallet balance is 0!");
+              if (Wallet.balance !== 0)
+                throw new Error("Wallet balance is not 0!");
 
             // Just delete Wallet. Transactions cannot be deleted as they are shared.
             await WalletModel.deleteMany(
@@ -83,5 +84,12 @@ export default async () => {
   await PermanentlyDeleteUsers.exec();
 
   // Delete every day...
-  new Cron("0 0 0 * * *").schedule(() => PermanentlyDeleteUsers.exec());
+  const Job = new Cron("0 0 0 * * *").schedule(() =>
+    PermanentlyDeleteUsers.exec()
+  );
+
+  return () => {
+    // Job cleanup...
+    Job.stop();
+  };
 };

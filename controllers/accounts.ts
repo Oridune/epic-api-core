@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Patch,
+  Put,
   Delete,
   Versioned,
   Response,
@@ -13,8 +14,12 @@ import {
 import { Status, type RouterContext } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
+import { Database } from "@Database";
 
+import UploadsController from "@Controllers/uploads.ts";
 import { InputAccountSchema, AccountModel } from "@Models/account.ts";
+import { CollaboratorModel } from "@Models/collaborator.ts";
+import { UserModel } from "@Models/user.ts";
 
 @Controller("/accounts/", { name: "accounts" })
 export default class AccountsController extends BaseController {
@@ -37,10 +42,32 @@ export default class AccountsController extends BaseController {
         );
 
         return Response.statusCode(Status.Created).data(
-          await AccountModel.create({
-            createdBy: ctx.router.state.auth.userId,
-            createdFor: ctx.router.state.auth.userId,
-            ...Body,
+          await Database.transaction(async (session) => {
+            const Account = await AccountModel.create(
+              {
+                createdBy: ctx.router.state.auth!.userId,
+                createdFor: ctx.router.state.auth!.userId,
+                ...Body,
+              },
+              { session }
+            );
+
+            const Collaborator = await CollaboratorModel.create(
+              {
+                createdBy: ctx.router.state.auth!.userId,
+                createdFor: ctx.router.state.auth!.userId,
+                account: Account._id,
+                isOwned: true,
+                isPrimary: false,
+              },
+              { session }
+            );
+
+            await UserModel.updateOne(ctx.router.state.auth!.userId, {
+              $push: { collaborates: Collaborator._id },
+            });
+
+            return Account;
           })
         );
       },
@@ -216,5 +243,39 @@ export default class AccountsController extends BaseController {
         // return Response.true();
       },
     });
+  }
+
+  @Get("/logo/:account/")
+  @Put("/logo/")
+  public updateLogo(route: IRoute) {
+    return UploadsController.upload<{
+      account: string;
+    }>(
+      route,
+      {
+        allowedContentTypes: [
+          "image/png",
+          "image/jpg",
+          "image/jpeg",
+          "image/svg+xml",
+          "image/webp",
+        ],
+        maxContentLength: 2e6,
+        location: "accounts/{{account}}/avatar/",
+      },
+      async (ctx, logo, metadata) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        const TargetUser = ctx.router.state.auth!.userId;
+
+        await AccountModel.updateOne(
+          {
+            _id: new ObjectId(metadata.account),
+            $or: [{ createdBy: TargetUser }, { createdFor: TargetUser }],
+          },
+          { logo }
+        );
+      }
+    );
   }
 }

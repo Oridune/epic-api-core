@@ -23,6 +23,7 @@ type Authorization = {
   userId: string;
   accountId: string;
   role: string;
+  accountRole: string;
   user: Omit<TUserOutput, "password" | "passwordHistory" | "collaborates">;
 };
 

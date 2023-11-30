@@ -25,4 +25,4 @@ WalletModel.pre("update", (details) => {
   };
 });
 
-await WalletModel.createIndex({ key: { account: 1 }, background: true });
+WalletModel.createIndex({ key: { account: 1 }, background: true });

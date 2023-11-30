@@ -43,7 +43,7 @@ TransactionModel.pre("update", (details) => {
   };
 });
 
-await TransactionModel.createIndex(
+TransactionModel.createIndex(
   {
     key: { sessionId: 1 },
     unique: true,

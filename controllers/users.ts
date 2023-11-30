@@ -41,7 +41,9 @@ import UploadsController from "@Controllers/uploads.ts";
 
 @Controller("/users/", { group: "Users", name: "users" })
 export default class UsersController extends BaseController {
-  static create(user: TUserInput) {
+  static create(
+    user: Omit<TUserInput, "role" | "passwordHistory" | "collaborates">
+  ) {
     return Mongo.transaction(async (session) => {
       const UserId = new ObjectId();
       const AccountId = new ObjectId();
@@ -58,6 +60,11 @@ export default class UsersController extends BaseController {
             _id: UserId,
             password: Password,
             passwordHistory: [Password],
+            role: ["", undefined].includes(
+              await Env.get("VERIFIED_ROLE_POLICY", true)
+            )
+              ? "user"
+              : "unverified",
             collaborates: [CollaboratorId],
           },
           { session }
@@ -78,11 +85,6 @@ export default class UsersController extends BaseController {
             account: AccountId,
             isOwned: true,
             isPrimary: true,
-            role: ["", undefined].includes(
-              await Env.get("VERIFIED_ROLE_POLICY", true)
-            )
-              ? "user"
-              : "unverified",
           },
           { session }
         ),
@@ -169,8 +171,6 @@ export default class UsersController extends BaseController {
           await UsersController.create({
             oauthApp: new ObjectId(Params.oauthAppId),
             ...Body,
-            passwordHistory: [],
-            collaborates: [],
           })
         ).user;
 
@@ -563,6 +563,8 @@ export default class UsersController extends BaseController {
         location: "users/{{userId}}/avatar/",
       },
       async (ctx, avatar) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
         await UserModel.updateOne(ctx.router.state.auth!.userId, {
           avatar,
         });

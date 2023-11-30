@@ -59,7 +59,7 @@
               "name": "updateAvatar",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/users/avatar/sign?name=&alt=&contentType=image/png|image/jpg|image/jpeg|image/svg+xml|image/webp&contentLength=1364582",
+                  "raw": "{{host}}/api/users/avatar/sign?name=&alt=&contentType=image/png|image/jpg|image/jpeg|image/svg+xml|image/webp&contentLength=426039",
                   "host": [
                     "{{host}}"
                   ],
@@ -87,7 +87,7 @@
                     },
                     {
                       "key": "contentLength",
-                      "value": 1364582,
+                      "value": 426039,
                       "description": ""
                     }
                   ],
@@ -178,7 +178,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-11-28T13:29:54.300Z\",\n  \"locale\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\"\n}",
+                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-11-30T16:59:52.584Z\",\n  \"locale\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -303,7 +303,7 @@
               "name": "delete",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/users?deletionTimeoutMs=1",
+                  "raw": "{{host}}/api/users?deletionTimeoutMs=2",
                   "host": [
                     "{{host}}"
                   ],
@@ -314,7 +314,7 @@
                   "query": [
                     {
                       "key": "deletionTimeoutMs",
-                      "value": 1,
+                      "value": 2,
                       "description": "(Optional)"
                     }
                   ],
@@ -351,7 +351,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"avatar\": {\n    \"name\": \"\",\n    \"url\": \"\",\n    \"mimeType\": \"\",\n    \"sizeInBytes\": 1,\n    \"alt\": \"\"\n  },\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\",\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-11-28T13:29:54.305Z\",\n  \"locale\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\",\n  \"username\": \"\",\n  \"password\": \"\"\n}",
+                  "raw": "{\n  \"avatar\": {\n    \"name\": \"\",\n    \"url\": \"\",\n    \"mimeType\": \"\",\n    \"sizeInBytes\": 1,\n    \"alt\": \"\"\n  },\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\",\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-11-30T16:59:52.588Z\",\n  \"locale\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\",\n  \"username\": \"\",\n  \"password\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -365,7 +365,7 @@
               "name": "listAll",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/users/:userId?search=&range=Tue Nov 28 2023 18:29:54 GMT+0500 (Pakistan Standard Time),Tue Nov 28 2023 18:29:54 GMT+0500 (Pakistan Standard Time)&offset=0&limit=853&sort=[object Object]&project=[object Object]&includeTotalCount=false",
+                  "raw": "{{host}}/api/users/:userId?search=&range=Thu Nov 30 2023 21:59:52 GMT+0500 (Pakistan Standard Time),Thu Nov 30 2023 21:59:52 GMT+0500 (Pakistan Standard Time)&offset=2&limit=309&sort=[object Object]&project=[object Object]&includeTotalCount=false",
                   "host": [
                     "{{host}}"
                   ],
@@ -383,19 +383,19 @@
                     {
                       "key": "range",
                       "value": [
-                        "2023-11-28T13:29:54.306Z",
-                        "2023-11-28T13:29:54.306Z"
+                        "2023-11-30T16:59:52.589Z",
+                        "2023-11-30T16:59:52.589Z"
                       ],
                       "description": "(Optional)"
                     },
                     {
                       "key": "offset",
-                      "value": 0,
+                      "value": 2,
                       "description": "(Optional)"
                     },
                     {
                       "key": "limit",
-                      "value": 853,
+                      "value": 309,
                       "description": "(Optional)"
                     },
                     {
@@ -519,7 +519,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"oauthAppId\": \"\",\n  \"callbackURL\": \"\",\n  \"codeChallenge\": \"\",\n  \"codeChallengeMethod\": \"sha256\",\n  \"remember\": true\n}",
+                  "raw": "{\n  \"oauthAppId\": \"\",\n  \"callbackURL\": \"\",\n  \"codeChallenge\": \"\",\n  \"codeChallengeMethod\": \"sha256\",\n  \"remember\": false\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -533,7 +533,7 @@
               "name": "logout",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/oauth/logout?allDevices=false",
+                  "raw": "{{host}}/api/oauth/logout?allDevices=true",
                   "host": [
                     "{{host}}"
                   ],
@@ -545,7 +545,7 @@
                   "query": [
                     {
                       "key": "allDevices",
-                      "value": false,
+                      "value": true,
                       "description": "(Optional)"
                     }
                   ],
@@ -663,7 +663,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"\",\n  \"description\": \"\",\n  \"enabled\": true,\n  \"consent\": {\n    \"availableCountryCodes\": [\n      \"\"\n    ],\n    \"requiredIdentificationMethods\": [\n      \"email|phone|in-app\"\n    ],\n    \"logo\": {\n      \"name\": \"\",\n      \"url\": \"\",\n      \"mimeType\": \"\",\n      \"sizeInBytes\": 2,\n      \"alt\": \"\"\n    },\n    \"primaryColor\": \"\",\n    \"primaryColorDark\": \"\",\n    \"secondaryColor\": \"\",\n    \"secondaryColorDark\": \"\",\n    \"styling\": {\n      \"roundness\": 3\n    },\n    \"allowedCallbackURLs\": [\n      \"\"\n    ],\n    \"homepageURL\": \"\",\n    \"privacyPolicyURL\": \"\",\n    \"termsAndConditionsURL\": \"\",\n    \"supportURL\": \"\"\n  },\n  \"metadata\": {}\n}",
+                  "raw": "{\n  \"name\": \"\",\n  \"description\": \"\",\n  \"enabled\": true,\n  \"consent\": {\n    \"availableCountryCodes\": [\n      \"\"\n    ],\n    \"requiredIdentificationMethods\": [\n      \"email|phone|in-app\"\n    ],\n    \"logo\": {\n      \"name\": \"\",\n      \"url\": \"\",\n      \"mimeType\": \"\",\n      \"sizeInBytes\": 2,\n      \"alt\": \"\"\n    },\n    \"primaryColor\": \"\",\n    \"primaryColorDark\": \"\",\n    \"secondaryColor\": \"\",\n    \"secondaryColorDark\": \"\",\n    \"styling\": {\n      \"roundness\": 1\n    },\n    \"allowedCallbackURLs\": [\n      \"\"\n    ],\n    \"homepageURL\": \"\",\n    \"privacyPolicyURL\": \"\",\n    \"termsAndConditionsURL\": \"\",\n    \"supportURL\": \"\"\n  },\n  \"metadata\": {}\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -677,7 +677,7 @@
               "name": "list",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/oauth/apps?limit=1802&offset=1",
+                  "raw": "{{host}}/api/oauth/apps?limit=1285&offset=0",
                   "host": [
                     "{{host}}"
                   ],
@@ -689,12 +689,12 @@
                   "query": [
                     {
                       "key": "limit",
-                      "value": 1802,
+                      "value": 1285,
                       "description": "(Optional)"
                     },
                     {
                       "key": "offset",
-                      "value": 1,
+                      "value": 0,
                       "description": "(Optional)"
                     }
                   ],
@@ -1025,7 +1025,7 @@
           "name": "sign",
           "request": {
             "url": {
-              "raw": "{{host}}/api/uploads?name=&alt=&contentType=&contentLength=2",
+              "raw": "{{host}}/api/uploads?name=&alt=&contentType=&contentLength=1",
               "host": [
                 "{{host}}"
               ],
@@ -1051,7 +1051,7 @@
                 },
                 {
                   "key": "contentLength",
-                  "value": 2,
+                  "value": 1,
                   "description": ""
                 }
               ],
@@ -1095,7 +1095,7 @@
           "name": "upload",
           "request": {
             "url": {
-              "raw": "{{host}}/api/uploads?name=&alt=&contentType=&contentLength=1",
+              "raw": "{{host}}/api/uploads?name=&alt=&contentType=&contentLength=2",
               "host": [
                 "{{host}}"
               ],
@@ -1121,7 +1121,7 @@
                 },
                 {
                   "key": "contentLength",
-                  "value": 1,
+                  "value": 2,
                   "description": ""
                 }
               ],
@@ -1157,7 +1157,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"method\": \"email|phone|in-app\",\n  \"token\": \"\",\n  \"code\": 200000\n}",
+              "raw": "{\n  \"method\": \"email|phone|in-app\",\n  \"token\": \"\",\n  \"code\": 100000\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1261,7 +1261,7 @@
           "name": "transactions",
           "request": {
             "url": {
-              "raw": "{{host}}/api/wallet/transactions/:type/:currency??search=&range=Tue Nov 28 2023 18:29:54 GMT+0500 (Pakistan Standard Time),Tue Nov 28 2023 18:29:54 GMT+0500 (Pakistan Standard Time)&offset=0&limit=321&sort=[object Object]&project=[object Object]&includeTotalCount=false",
+              "raw": "{{host}}/api/wallet/transactions/:type/:currency??search=&range=Thu Nov 30 2023 21:59:52 GMT+0500 (Pakistan Standard Time),Thu Nov 30 2023 21:59:52 GMT+0500 (Pakistan Standard Time)&offset=2&limit=1630&sort=[object Object]&project=[object Object]&includeTotalCount=false",
               "host": [
                 "{{host}}"
               ],
@@ -1281,19 +1281,19 @@
                 {
                   "key": "range",
                   "value": [
-                    "2023-11-28T13:29:54.314Z",
-                    "2023-11-28T13:29:54.314Z"
+                    "2023-11-30T16:59:52.596Z",
+                    "2023-11-30T16:59:52.596Z"
                   ],
                   "description": "(Optional)"
                 },
                 {
                   "key": "offset",
-                  "value": 0,
+                  "value": 2,
                   "description": "(Optional)"
                 },
                 {
                   "key": "limit",
-                  "value": 321,
+                  "value": 1630,
                   "description": "(Optional)"
                 },
                 {
@@ -1336,6 +1336,36 @@
       "name": "accounts",
       "item": [
         {
+          "name": "updateLogo",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/accounts/logo",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "logo"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
           "name": "create",
           "request": {
             "url": {
@@ -1361,6 +1391,49 @@
                 }
               }
             }
+          },
+          "response": []
+        },
+        {
+          "name": "updateLogo",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/accounts/logo/:account?name=&alt=&contentType=image/png|image/jpg|image/jpeg|image/svg+xml|image/webp&contentLength=65898",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "logo",
+                ":account"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "",
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "alt",
+                  "value": "",
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "contentType",
+                  "value": "image/png|image/jpg|image/jpeg|image/svg+xml|image/webp",
+                  "description": ""
+                },
+                {
+                  "key": "contentLength",
+                  "value": 65898,
+                  "description": ""
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET",
+            "header": []
           },
           "response": []
         },
@@ -1431,7 +1504,7 @@
           "name": "get",
           "request": {
             "url": {
-              "raw": "{{host}}/api/accounts/:id?search=&range=Tue Nov 28 2023 18:29:54 GMT+0500 (Pakistan Standard Time),Tue Nov 28 2023 18:29:54 GMT+0500 (Pakistan Standard Time)&offset=2&limit=463&sort=[object Object]&project=[object Object]&includeTotalCount=true",
+              "raw": "{{host}}/api/accounts/:id?search=&range=Thu Nov 30 2023 21:59:52 GMT+0500 (Pakistan Standard Time),Thu Nov 30 2023 21:59:52 GMT+0500 (Pakistan Standard Time)&offset=0&limit=779&sort=[object Object]&project=[object Object]&includeTotalCount=false",
               "host": [
                 "{{host}}"
               ],
@@ -1449,19 +1522,19 @@
                 {
                   "key": "range",
                   "value": [
-                    "2023-11-28T13:29:54.315Z",
-                    "2023-11-28T13:29:54.315Z"
+                    "2023-11-30T16:59:52.597Z",
+                    "2023-11-30T16:59:52.597Z"
                   ],
                   "description": "(Optional)"
                 },
                 {
                   "key": "offset",
-                  "value": 2,
+                  "value": 0,
                   "description": "(Optional)"
                 },
                 {
                   "key": "limit",
-                  "value": 463,
+                  "value": 779,
                   "description": "(Optional)"
                 },
                 {
@@ -1476,7 +1549,7 @@
                 },
                 {
                   "key": "includeTotalCount",
-                  "value": true,
+                  "value": false,
                   "description": "(Optional) If `true` is passed, the system will return a total items count for pagination purpose."
                 }
               ],

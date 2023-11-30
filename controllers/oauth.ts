@@ -53,6 +53,17 @@ export interface IOauthAccessTokens {
   access: IOauthToken;
 }
 
+export type TokenPayload = {
+  [K: string]:
+    | string
+    | string[]
+    | number
+    | boolean
+    | null
+    | undefined
+    | TokenPayload;
+};
+
 export const DefaultOauthIssuer = await Env.get("DISPLAY_NAME");
 export const DefaultOauthAudience = await Env.get("DISPLAY_NAME");
 
@@ -69,10 +80,7 @@ export default class OauthController extends BaseController {
 
   static async createToken<T extends string>(opts: {
     type: T;
-    payload: Record<
-      string,
-      string | string[] | number | boolean | null | undefined
-    >;
+    payload: TokenPayload;
     secret?: string;
     issuer?: string;
     audience?: string;

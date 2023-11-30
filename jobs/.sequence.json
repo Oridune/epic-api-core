@@ -3,7 +3,7 @@
     "activity-events.ts",
     "env-resolver.ts",
     "delete-users.ts",
-    "create-initial-oauth-policies.ts"
+    "sync-oauth-policies.ts"
   ],
   "excludes": [],
   "sequenceProps": {}

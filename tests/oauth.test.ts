@@ -41,6 +41,7 @@ const UserResponseSchema = e.object({
     mname: e.string(),
     lname: e.string(),
     username: e.string(),
+    role: e.string(),
     gender: e.string(),
     dob: e.string(),
     locale: e.string(),
@@ -500,6 +501,25 @@ Deno.test({
           (Context.oauthExchangeCode ??= []).push(
             await ExchangeCodeResponseSchema.validate(await Response.json())
           );
+        })
+      );
+    });
+
+    await t.step("PATCH /api/admin/core Update System Core", async () => {
+      expect(Context.oauthExchangeCode).toBeInstanceOf(Array);
+
+      await Promise.all(
+        TestUsers.map(async (_, index) => {
+          const Response = await fetch(new URL("/api/admin/core", APIHost), {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${
+                Context.oauthExchangeCode![index].data.access.token
+              }`,
+            },
+          });
+
+          expect(Response.status).toBe(401);
         })
       );
     });

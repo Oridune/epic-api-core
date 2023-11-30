@@ -8,7 +8,7 @@ export const CollaboratorSchema = () =>
     updatedAt: e.optional(e.date()).default(() => new Date()),
     createdBy: e.instanceOf(ObjectId, { instantiate: true }),
     createdFor: e.instanceOf(ObjectId, { instantiate: true }),
-    role: e.string(),
+    role: e.optional(e.string()).default("root"),
     isPrimary: e.boolean({ cast: true }),
     isOwned: e.boolean({ cast: true }),
     account: e.instanceOf(ObjectId, { instantiate: true }),
@@ -33,7 +33,7 @@ CollaboratorModel.pre("update", (details) => {
   };
 });
 
-await CollaboratorModel.createIndex(
+CollaboratorModel.createIndex(
   {
     key: { createdFor: 1, account: 1 },
     background: true,

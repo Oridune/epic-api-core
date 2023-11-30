@@ -87,6 +87,7 @@ export const UserSchema = () =>
             }`
         ),
       passwordHistory: e.array(e.string()),
+      role: e.string(),
       isEmailVerified: e.optional(e.boolean({ cast: true })).default(false),
       isPhoneVerified: e.optional(e.boolean({ cast: true })).default(false),
       lastLogin: e.optional(e.date()),
