@@ -6,14 +6,14 @@ import {
   Get,
   Versioned,
   Response,
-  type IRequestContext,
   EnvType,
+  type IRequestContext,
 } from "@Core/common/mod.ts";
 import e from "validator";
 import { type RouterContext, Status } from "oak";
-import { Novu } from "novu";
 import { UsernameValidator, UserModel } from "@Models/user.ts";
 import OauthController from "@Controllers/oauth.ts";
+import { Notify } from "@Lib/notify.ts";
 
 export enum IdentificationPurpose {
   VERIFICATION = "verification",
@@ -73,19 +73,7 @@ export default class UsersIdentificationController extends BaseController {
   static async request(
     purpose: IdentificationPurpose | (string & {}),
     method: IdentificationMethod,
-    userFilter: { userId: string },
-    metadata?: Record<string, any>
-  ): Promise<{ token: string; otp: number }>;
-  static async request(
-    purpose: IdentificationPurpose | (string & {}),
-    method: IdentificationMethod,
-    userFilter: { username: string },
-    metadata?: Record<string, any>
-  ): Promise<{ token: string; otp: number }>;
-  static async request(
-    purpose: IdentificationPurpose | (string & {}),
-    method: IdentificationMethod,
-    userFilter: object,
+    userFilter: Parameters<(typeof UserModel)["findOne"]>[0],
     metadata?: Record<string, any>
   ) {
     const User = await UserModel.findOne(userFilter).project({
@@ -101,31 +89,15 @@ export default class UsersIdentificationController extends BaseController {
       { userId: User._id, ...metadata }
     );
 
-    if (!Env.is(EnvType.TEST)) {
-      const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
-
-      if (method !== IdentificationMethod.IN_APP)
-        await Notifier.subscribers
-          .update(User._id.toString(), { [method]: User[method] })
-          .catch(() =>
-            Notifier.subscribers.identify(User._id.toString(), {
-              [method]: User[method],
-            })
-          );
-
-      const NovuTemplateId = method + "-identification-otp";
-
-      await Notifier.trigger(NovuTemplateId, {
-        to: { subscriberId: User._id.toString() },
+    if (!Env.is(EnvType.TEST))
+      await Notify.sendWithNovu({
+        subscriberId: User._id.toString(),
+        [method]: User[method as "email" | "phone"],
+        template: method + "-identification-otp",
         payload: {
           otp: Challenge.otp,
         },
-      }).catch((error) => {
-        if (error.response.data.message === "workflow_not_found")
-          throw new Error(`Notification workflow template not found!`);
-        else throw new Error(error.response.data.message, { cause: error });
       });
-    }
 
     return Challenge;
   }

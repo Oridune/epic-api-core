@@ -72,21 +72,32 @@ export default {
       const Collaborator = await CollaboratorModel.findOne({
         account: new ObjectId(AccountId),
         createdFor: new ObjectId(SessionInfo.session.createdBy),
-      }).project({ role: 1 });
+      }).project({ createdBy: 1, role: 1 });
 
       if (!Collaborator)
         throw e.error("You don't have access to this account!");
+
+      let GlobalRole = User.role;
+
+      if (Collaborator.createdBy !== User._id) {
+        const ParentUser =
+          (await UserModel.findOne(Collaborator.createdBy).project({
+            role: 1,
+          })) ?? User;
+
+        GlobalRole = ParentUser.role;
+      }
 
       ctx.router.state.auth = {
         sessionId: SessionInfo.claims.sessionId,
         userId: SessionInfo.session.createdBy,
         accountId: AccountId,
-        role: User.role,
+        role: GlobalRole,
         accountRole: Collaborator.role,
         user: User,
       };
 
-      AllScopes = [`role:${User.role}`];
+      AllScopes = [`role:${GlobalRole}`];
       AvailableScopes = [`role:${Collaborator.role}`];
       RequestedScopes = SessionInfo.session.scopes[AccountId] ?? [];
       PermittedScopes = SessionInfo.claims.scopes ?? ["*"];

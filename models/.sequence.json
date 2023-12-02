@@ -11,7 +11,9 @@
     "collaborator.ts",
     "transaction.ts",
     "wallet.ts",
-    "oauth-policy.ts"
+    "oauth-policy.ts",
+    "accountInvite.ts"
   ],
-  "excludes": []
+  "excludes": [],
+  "sequenceProps": {}
 }

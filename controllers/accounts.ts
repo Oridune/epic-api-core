@@ -67,7 +67,10 @@ export default class AccountsController extends BaseController {
               $push: { collaborates: Collaborator._id },
             });
 
-            return Account;
+            return {
+              account: Account,
+              collaborator: Collaborator,
+            };
           })
         );
       },

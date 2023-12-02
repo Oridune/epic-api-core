@@ -41,6 +41,7 @@ CollaboratorModel.createIndex(
   {
     key: { createdFor: 1, isPrimary: 1 },
     unique: true,
+    partialFilterExpression: { isPrimary: true },
     background: true,
   }
 );
