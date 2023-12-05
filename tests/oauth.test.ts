@@ -4,7 +4,7 @@ import { expect } from "expect";
 import { Database } from "@Database";
 import e, { inferOutput } from "validator";
 
-import { OauthAppSchema } from "@Models/oauth-app.ts";
+import { OauthAppSchema } from "@Models/oauthApp.ts";
 
 const TestUsers = [
   [

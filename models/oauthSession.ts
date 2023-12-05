@@ -27,7 +27,7 @@ export type TOauthSessionOutput = OutputDocument<
 >;
 
 export const OauthSessionModel = Mongo.model(
-  "oauth-session",
+  "oauthSession",
   OauthSessionSchema
 );
 

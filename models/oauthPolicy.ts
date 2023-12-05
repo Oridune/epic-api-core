@@ -17,7 +17,7 @@ export type TOauthPolicyOutput = OutputDocument<
   inferOutput<typeof OauthPolicySchema>
 >;
 
-export const OauthPolicyModel = Mongo.model("oauth-policy", OauthPolicySchema);
+export const OauthPolicyModel = Mongo.model("oauthPolicy", OauthPolicySchema);
 
 OauthPolicyModel.pre("update", (details) => {
   details.updates.$set = {

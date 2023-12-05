@@ -1,9 +1,9 @@
 {
   "sequence": [
-    "activity-events.ts",
-    "env-resolver.ts",
-    "delete-users.ts",
-    "sync-oauth-policies.ts"
+    "activityEvents.ts",
+    "envResolver.ts",
+    "deleteUsers.ts",
+    "syncOauthPolicies.ts"
   ],
   "excludes": [],
   "sequenceProps": {}

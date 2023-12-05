@@ -4,10 +4,10 @@ import e from "validator";
 import { ObjectId } from "mongo";
 
 import { CollaboratorModel } from "@Models/collaborator.ts";
-import { OauthPolicyModel } from "@Models/oauth-policy.ts";
+import { OauthPolicyModel } from "@Models/oauthPolicy.ts";
 import { UserModel } from "@Models/user.ts";
 
-import { SecurityGuard } from "@Lib/security-guard.ts";
+import { SecurityGuard } from "../lib/securityGuard.ts";
 
 export default {
   pre: async (

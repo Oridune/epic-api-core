@@ -12,7 +12,7 @@ import {
 import { Status, type RouterContext } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
-import { OauthAppSchema, OauthAppModel } from "@Models/oauth-app.ts";
+import { OauthAppSchema, OauthAppModel } from "@Models/oauthApp.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 
 @Controller("/oauth/apps/", { group: "Oauth", name: "oauthApps" })

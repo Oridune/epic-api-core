@@ -9,7 +9,9 @@
     "uploads.ts",
     "wallet.ts",
     "accounts.ts",
-    "accountInvites.ts"
+    "accountInvites.ts",
+    "collaborators.ts",
+    "oauthPolicies.ts"
   ],
   "excludes": [],
   "sequenceProps": {}

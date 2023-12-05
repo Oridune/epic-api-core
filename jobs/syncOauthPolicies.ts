@@ -1,4 +1,4 @@
-import { OauthPolicyModel } from "@Models/oauth-policy.ts";
+import { OauthPolicyModel } from "@Models/oauthPolicy.ts";
 
 export const DefaultOauthPolicies = {
   root: ["*"],

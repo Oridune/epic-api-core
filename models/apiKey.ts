@@ -19,7 +19,7 @@ export const ApiKeySchema = () =>
 export type TApiKeyInput = InputDocument<inferInput<typeof ApiKeySchema>>;
 export type TApiKeyOutput = OutputDocument<inferOutput<typeof ApiKeySchema>>;
 
-export const ApiKeyModel = Mongo.model("api-key", ApiKeySchema);
+export const ApiKeyModel = Mongo.model("apiKey", ApiKeySchema);
 
 ApiKeyModel.pre("update", (details) => {
   details.updates.$set = {

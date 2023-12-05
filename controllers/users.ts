@@ -29,10 +29,10 @@ import {
 } from "@Models/user.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { AccountModel } from "@Models/account.ts";
-import { OauthAppModel } from "@Models/oauth-app.ts";
-import { OauthSessionModel } from "@Models/oauth-session.ts";
+import { OauthAppModel } from "@Models/oauthApp.ts";
+import { OauthSessionModel } from "@Models/oauthSession.ts";
 
-import { PermanentlyDeleteUsers } from "@Jobs/delete-users.ts";
+import { PermanentlyDeleteUsers } from "@Jobs/deleteUsers.ts";
 import UsersIdentificationController, {
   IdentificationMethod,
   IdentificationPurpose,

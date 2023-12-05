@@ -2,7 +2,7 @@
 import "ts-reset";
 import "@Core/common/controller/base.ts";
 import { IValidatorJSONSchema } from "validator";
-import { SecurityGuard } from "@Lib/security-guard.ts";
+import { SecurityGuard } from "./lib/securityGuard.ts";
 import { TUserOutput } from "@Models/user.ts";
 
 type SessionInfo = {

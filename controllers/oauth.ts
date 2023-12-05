@@ -16,10 +16,10 @@ import { SignJWT, jwtVerify, JWTVerifyOptions, JWTPayload } from "jose";
 import { createHash } from "hash";
 import { ObjectId } from "mongo";
 import { UsernameValidator, UserModel } from "@Models/user.ts";
-import { OauthProvider, OauthSessionModel } from "@Models/oauth-session.ts";
-import { OauthAppModel } from "@Models/oauth-app.ts";
+import { OauthProvider, OauthSessionModel } from "@Models/oauthSession.ts";
+import { OauthAppModel } from "@Models/oauthApp.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
-import { OauthPolicyModel } from "@Models/oauth-policy.ts";
+import { OauthPolicyModel } from "@Models/oauthPolicy.ts";
 import { AccountModel } from "@Models/account.ts";
 
 export enum OauthTokenType {

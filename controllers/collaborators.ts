@@ -3,41 +3,89 @@ import {
   BaseController,
   Get,
   Post,
+  Patch,
   Delete,
   Versioned,
   Response,
   type IRoute,
   type IRequestContext,
-  Env,
-  EnvType,
 } from "@Core/common/mod.ts";
 import { Status, type RouterContext } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
-import { Notify } from "@Lib/notify.ts";
+import { Database } from "@Database";
 
 import { AccountInviteModel } from "@Models/accountInvite.ts";
-import { EmailValidator, PhoneValidator } from "@Models/user.ts";
+import { CollaboratorModel } from "@Models/collaborator.ts";
 
-export const InputAccountInviteSchema = () =>
-  e.object({
-    recipient: e.string(),
-    role: e.string(),
-  });
-
-@Controller("/account/invites/", { name: "accountInvites" })
-export default class AccountInvitesController extends BaseController {
-  @Post("/")
+@Controller("/collaborators/", { name: "collaborators" })
+export default class CollaboratorsController extends BaseController {
+  @Post("/:token/")
   public create(route: IRoute) {
-    // Define Body Schema
-    const BodySchema = InputAccountInviteSchema();
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      token: e.string(),
+    });
 
     return new Versioned().add("1.0.0", {
       postman: {
+        params: ParamsSchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
+
+        const Invite = await AccountInviteModel.findOne(Params);
+
+        if (!Invite) throw e.error("Invalid or expired invitation token!");
+
+        return Response.statusCode(Status.Created).data(
+          await Database.transaction(async (session) => {
+            await AccountInviteModel.deleteOne(Invite._id, { session });
+            return await CollaboratorModel.create(
+              {
+                createdBy: Invite.createdBy,
+                createdFor: ctx.router.state.auth!.userId,
+                account: Invite.account,
+                isOwned: false,
+                isPrimary: false,
+              },
+              { session }
+            );
+          })
+        );
+      },
+    });
+  }
+
+  @Patch("/:id/")
+  public update(route: IRoute) {
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      id: e.string(),
+    });
+
+    // Define Body Schema
+    const BodySchema = e.object({
+      role: e.string(),
+    });
+
+    return new Versioned().add("1.0.0", {
+      postman: {
+        params: ParamsSchema.toSample(),
         body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
 
         // Body Validation
         const Body = await BodySchema.validate(
@@ -45,36 +93,15 @@ export default class AccountInvitesController extends BaseController {
           { name: `${route.scope}.body` }
         );
 
-        const Invite = await AccountInviteModel.create({
-          ...Body,
-          createdBy: ctx.router.state.auth.userId,
-          account: ctx.router.state.auth.accountId,
-        });
+        await CollaboratorModel.updateOne(
+          {
+            _id: new ObjectId(Params.id),
+            account: new ObjectId(ctx.router.state.auth.accountId),
+          },
+          Body
+        );
 
-        if (!Env.is(EnvType.TEST)) {
-          const [isEmail, isPhone] = await Promise.all([
-            e.is(EmailValidator, Body.recipient),
-            e.is(PhoneValidator, Body.recipient),
-          ]);
-
-          await Notify.sendWithNovu({
-            userFilter: {
-              $or: [
-                { username: Body.recipient },
-                { email: Body.recipient },
-                { phone: Body.recipient },
-              ],
-            },
-            email: isEmail ? Body.recipient : undefined,
-            phone: isPhone ? Body.recipient : undefined,
-            template: "account-invitation-token",
-            payload: {
-              token: Invite.token,
-            },
-          });
-        }
-
-        return Response.statusCode(Status.Created).data(Invite);
+        return Response.true();
       },
     });
   }
@@ -141,7 +168,7 @@ export default class AccountInvitesController extends BaseController {
           name: `${route.scope}.params`,
         });
 
-        const AccountInvitesListQuery = AccountInviteModel.search(Query.search)
+        const CollaboratorsListQuery = CollaboratorModel.search(Query.search)
           .filter({
             ...(Params.id ? { _id: new ObjectId(Params.id) } : {}),
             account: new ObjectId(ctx.router.state.auth.accountId),
@@ -158,16 +185,16 @@ export default class AccountInvitesController extends BaseController {
           .limit(Query.limit)
           .sort(Query.sort);
 
-        if (Query.project) AccountInvitesListQuery.project(Query.project);
+        if (Query.project) CollaboratorsListQuery.project(Query.project);
 
         return Response.data({
           totalCount: Query.includeTotalCount
             ? //? Make sure to pass any limiting conditions for count if needed.
-              await AccountInviteModel.count({
+              await CollaboratorModel.count({
                 account: new ObjectId(ctx.router.state.auth.accountId),
               })
             : undefined,
-          results: await AccountInvitesListQuery,
+          results: await CollaboratorsListQuery,
         });
       },
     });
@@ -192,7 +219,7 @@ export default class AccountInvitesController extends BaseController {
           name: `${route.scope}.params`,
         });
 
-        await AccountInviteModel.deleteOne({
+        await CollaboratorModel.deleteOne({
           _id: new ObjectId(Params.id),
           account: new ObjectId(ctx.router.state.auth.accountId),
         });

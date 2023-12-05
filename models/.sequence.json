@@ -3,16 +3,16 @@
     "account.ts",
     "user.ts",
     "activity.ts",
-    "oauth-session.ts",
-    "api-key.ts",
-    "oauth-app.ts",
     "file.ts",
     "env.ts",
     "collaborator.ts",
     "transaction.ts",
     "wallet.ts",
-    "oauth-policy.ts",
-    "accountInvite.ts"
+    "accountInvite.ts",
+    "oauthSession.ts",
+    "apiKey.ts",
+    "oauthApp.ts",
+    "oauthPolicy.ts"
   ],
   "excludes": [],
   "sequenceProps": {}

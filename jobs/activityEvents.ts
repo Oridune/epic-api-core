@@ -11,7 +11,7 @@ import e from "validator";
 import { ObjectId } from "mongo";
 import { Novu } from "novu";
 import { TUserOutput, UserModel } from "@Models/user.ts";
-import { OauthSessionModel } from "@Models/oauth-session.ts";
+import { OauthSessionModel } from "@Models/oauthSession.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 import { TFileOutput } from "@Models/file.ts";
 

@@ -73,7 +73,7 @@ export type TOauthAppOutput = OutputDocument<
   inferOutput<typeof OauthAppSchema>
 >;
 
-export const OauthAppModel = Mongo.model("oauth-app", OauthAppSchema);
+export const OauthAppModel = Mongo.model("oauthApp", OauthAppSchema);
 
 OauthAppModel.pre("update", (details) => {
   details.updates.$set = {

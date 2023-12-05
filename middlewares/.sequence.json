@@ -1,5 +1,5 @@
 {
   "sequence": [
-    "parse-authorization.ts"
+    "parseAuthorization.ts"
   ]
 }
