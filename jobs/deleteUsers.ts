@@ -1,92 +1,96 @@
-import { Transaction } from "@Core/common/mod.ts";
+import { TransactionQueue } from "@Core/common/mod.ts";
+import { Cron } from "croner";
+import { ClientSession, ObjectId } from "mongo";
+import { Database } from "@Database";
+
 import { UserModel } from "@Models/user.ts";
 import { AccountModel } from "@Models/account.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
-import { Cron } from "croner";
-import { Database } from "@Database";
+import { AccountInviteModel } from "@Models/accountInvite.ts";
 import { WalletModel } from "@Models/wallet.ts";
 
-export const PermanentlyDeleteUsers = Transaction.add(async (_, next) => {
-  const Users = await UserModel.find({ deletionAt: { $lt: new Date() } })
-    .project({ deletionAt: 0 })
-    .catch(() => {
-      // Do nothing...
-    });
+export const PermanentlyDeleteUser = TransactionQueue.add<{
+  userId: ObjectId;
+  databaseSession?: ClientSession;
+}>(async (ctx, next) => {
+  await Database.transaction(async (session) => {
+    await UserModel.deleteOne({ _id: ctx.input.userId }, { session });
 
-  const Transactions: Array<Transaction> = [];
+    const Accounts = await AccountModel.find(
+      { createdFor: ctx.input.userId },
+      { session }
+    ).project({ _id: 1 });
+
+    for (const Account of Accounts)
+      await PermanentlyDeleteAccount.exec({
+        userId: ctx.input.userId,
+        accountId: Account._id,
+        databaseSession: ctx.input.databaseSession,
+      });
+
+    await next();
+  }, ctx.input.databaseSession);
+});
+
+export const PermanentlyDeleteAccount = TransactionQueue.add<{
+  userId: ObjectId;
+  accountId: ObjectId;
+  databaseSession?: ClientSession;
+}>(async (ctx, next) => {
+  await Database.transaction(async (session) => {
+    const { deletedCount } = await AccountModel.deleteOne(
+      { _id: ctx.input.accountId, createdFor: ctx.input.userId },
+      { session }
+    );
+
+    if (deletedCount === 1) {
+      await CollaboratorModel.deleteMany(
+        { account: ctx.input.accountId },
+        { session }
+      );
+
+      await AccountInviteModel.deleteMany(
+        { account: ctx.input.accountId },
+        { session }
+      );
+
+      const Wallets = await WalletModel.find(
+        { account: ctx.input.accountId },
+        { session }
+      ).project({ balance: 1 });
+
+      for (const Wallet of Wallets)
+        if (Wallet.balance !== 0) throw new Error("Wallet balance is not 0!");
+
+      // Just delete Wallet. Transactions cannot be deleted as they are shared.
+      await WalletModel.deleteMany(
+        { account: ctx.input.accountId },
+        { session }
+      );
+    }
+
+    await next();
+  }, ctx.input.databaseSession);
+});
+
+export const deleteScheduledUsers = async () => {
+  const Users = await UserModel.find({ deletionAt: { $lt: new Date() } })
+    .project({ _id: 1 })
+    .catch(console.error);
 
   if (Users?.length)
     for (const User of Users)
-      Transactions.push(
-        Transaction.add(async (_, next) => {
-          await Database.transaction(async (session) => {
-            await UserModel.deleteOne({ _id: User._id }, { session });
-
-            const Accounts = await AccountModel.find(
-              { createdFor: User._id },
-              { session }
-            );
-
-            const AccountIDs = Accounts.map((account) => account._id);
-
-            await AccountModel.deleteMany(
-              { _id: { $in: AccountIDs } },
-              { session }
-            );
-
-            const Collaborations = await CollaboratorModel.find(
-              { account: { $in: AccountIDs } },
-              { session }
-            );
-
-            const CollaboratorIDs = Collaborations.map(
-              (collaboration) => collaboration._id
-            );
-
-            await CollaboratorModel.deleteMany(
-              { _id: { $in: CollaboratorIDs } },
-              { session }
-            );
-
-            const Wallets = await WalletModel.find(
-              { account: { $in: AccountIDs } },
-              { session }
-            );
-
-            for (const Wallet of Wallets)
-              if (Wallet.balance !== 0)
-                throw new Error("Wallet balance is not 0!");
-
-            // Just delete Wallet. Transactions cannot be deleted as they are shared.
-            await WalletModel.deleteMany(
-              { account: { $in: AccountIDs } },
-              { session }
-            );
-
-            await next({
-              user: User,
-              collaborations: Collaborations,
-              accounts: Accounts,
-              wallets: Wallets,
-            });
-          }).catch(console.error);
-        })
+      await PermanentlyDeleteUser.exec({ userId: User._id }).catch(
+        console.error
       );
-
-  await next({ eachDeletion: Transactions });
-
-  for (const Transaction of Transactions)
-    await Transaction.exec().catch(console.error);
-});
+};
 
 export default async () => {
   // Delete scheduled users on start
-  await PermanentlyDeleteUsers.exec();
+  await deleteScheduledUsers();
 
   // Delete every day...
-  const Job = new Cron("0 0 0 * * *").schedule(() =>
-    PermanentlyDeleteUsers.exec()
-  );
+  const Job = new Cron("0 0 0 * * *").schedule(deleteScheduledUsers);
 
   return () => {
     // Job cleanup...

@@ -20,6 +20,7 @@ import UploadsController from "@Controllers/uploads.ts";
 import { InputAccountSchema, AccountModel } from "@Models/account.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { UserModel } from "@Models/user.ts";
+import { PermanentlyDeleteAccount } from "@Jobs/deleteUsers.ts";
 
 @Controller("/accounts/", { name: "accounts" })
 export default class AccountsController extends BaseController {
@@ -216,7 +217,7 @@ export default class AccountsController extends BaseController {
   }
 
   @Delete("/:id/")
-  public delete(_route: IRoute) {
+  public delete(route: IRoute) {
     // Define Params Schema
     const ParamsSchema = e.object({
       id: e.string(),
@@ -226,24 +227,26 @@ export default class AccountsController extends BaseController {
       postman: {
         params: ParamsSchema.toSample(),
       },
-      handler: (_ctx: IRequestContext<RouterContext<string>>) => {
-        throw e.error("Account deletion is not available yet!");
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
-        // if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
 
-        // // Params Validation
-        // const Params = await ParamsSchema.validate(ctx.router.params, {
-        //   name: `${route.scope}.params`,
-        // });
+        if (ctx.router.state.auth.accountId === Params.id)
+          throw e.error("Cannot delete the current account!");
 
-        // const TargetUser = new ObjectId(ctx.router.state.auth.userId);
+        const UserId = new ObjectId(ctx.router.state.auth!.userId);
+        const AccountId = new ObjectId(Params.id);
 
-        // await AccountModel.deleteOne({
-        //   _id: new ObjectId(Params.id),
-        //   $or: [{ createdBy: TargetUser }, { createdFor: TargetUser }],
-        // });
+        await PermanentlyDeleteAccount.exec({
+          userId: UserId,
+          accountId: AccountId,
+        });
 
-        // return Response.true();
+        return Response.true();
       },
     });
   }
@@ -261,7 +264,6 @@ export default class AccountsController extends BaseController {
           "image/jpg",
           "image/jpeg",
           "image/svg+xml",
-          "image/svg xml",
           "image/webp",
         ],
         maxContentLength: 2e6,
@@ -270,12 +272,13 @@ export default class AccountsController extends BaseController {
       async (ctx, logo, metadata) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
-        const TargetUser = ctx.router.state.auth!.userId;
+        const UserId = new ObjectId(ctx.router.state.auth!.userId);
+        const AccountId = new ObjectId(metadata.account);
 
         await AccountModel.updateOne(
           {
-            _id: new ObjectId(metadata.account),
-            $or: [{ createdBy: TargetUser }, { createdFor: TargetUser }],
+            _id: AccountId,
+            $or: [{ createdBy: UserId }, { createdFor: UserId }],
           },
           { logo }
         );

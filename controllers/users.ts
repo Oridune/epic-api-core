@@ -32,7 +32,7 @@ import { AccountModel } from "@Models/account.ts";
 import { OauthAppModel } from "@Models/oauthApp.ts";
 import { OauthSessionModel } from "@Models/oauthSession.ts";
 
-import { PermanentlyDeleteUsers } from "@Jobs/deleteUsers.ts";
+import { PermanentlyDeleteUser } from "@Jobs/deleteUsers.ts";
 import UsersIdentificationController, {
   IdentificationMethod,
   IdentificationPurpose,
@@ -529,17 +529,20 @@ export default class UsersController extends BaseController {
           { name: `${route.scope}.query` }
         );
 
+        const UserId = new ObjectId(ctx.router.state.auth.userId);
+
         // Logout all sessions
         await OauthSessionModel.deleteMany({
-          createdBy: new ObjectId(ctx.router.state.auth.userId),
+          createdBy: UserId,
         });
 
-        await UsersController.scheduleDeletion(ctx.router.state.auth.userId, {
-          timeoutMs: Query.deletionTimeoutMs,
-        });
-
-        // Instant user deletion
-        if (Query.deletionTimeoutMs === 0) await PermanentlyDeleteUsers.exec();
+        if (Query.deletionTimeoutMs === 0)
+          // Instant user deletion
+          await PermanentlyDeleteUser.exec({ userId: UserId });
+        else
+          await UsersController.scheduleDeletion(ctx.router.state.auth.userId, {
+            timeoutMs: Query.deletionTimeoutMs,
+          });
 
         return Response.true();
       },
@@ -557,7 +560,6 @@ export default class UsersController extends BaseController {
           "image/jpg",
           "image/jpeg",
           "image/svg+xml",
-          "image/svg xml",
           "image/webp",
         ],
         maxContentLength: 2e6,
