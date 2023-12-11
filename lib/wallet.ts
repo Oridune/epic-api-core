@@ -56,6 +56,31 @@ export class Wallet {
     );
   }
 
+  static async hasOverdraftMargin(
+    account: ObjectId | string,
+    type: string,
+    currency: string,
+    postTransactionBalance: number
+  ) {
+    const Accounts =
+      (await Env.get("WALLET_OVERDRAFT_ENABLED_ACCOUNTS", true))?.split(
+        /\s*,\s*/
+      ) ?? [];
+
+    if (!Accounts.includes(`${account}`)) return false;
+
+    const RawLimit = await Env.get(
+      `WALLET_OVERDRAFT_LIMIT_${type.toUpperCase()}_${currency.toUpperCase()}`,
+      true
+    );
+
+    const Limit = !isNaN(RawLimit as unknown as number)
+      ? parseFloat(RawLimit!)
+      : 0;
+
+    return postTransactionBalance >= Limit;
+  }
+
   static async create(
     account: ObjectId | string,
     options?: {
@@ -206,14 +231,17 @@ export class Wallet {
       });
 
       // Check to allow negative balance
+      const PostTransactionBalance = WalletA.balance - options.amount;
+
       if (
-        WalletA.balance - options.amount < 0 &&
+        PostTransactionBalance < 0 &&
         !options.allowOverdraft &&
-        !(
-          (await Env.get("WALLET_OVERDRAFT_ENABLED_ACCOUNTS", true))?.split(
-            /\s*,\s*/
-          ) ?? []
-        ).includes(From)
+        !(await this.hasOverdraftMargin(
+          From,
+          Type,
+          Currency,
+          PostTransactionBalance
+        ))
       )
         throw new Error(`Insufficient balance!`);
 
