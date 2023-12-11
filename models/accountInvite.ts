@@ -26,7 +26,7 @@ export type TAccountInviteOutput = OutputDocument<
 >;
 
 export const AccountInviteModel = Mongo.model(
-  "account-invite",
+  "accountInvite",
   AccountInviteSchema
 );
 
