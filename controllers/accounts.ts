@@ -261,6 +261,7 @@ export default class AccountsController extends BaseController {
           "image/jpg",
           "image/jpeg",
           "image/svg+xml",
+          "image/svg xml",
           "image/webp",
         ],
         maxContentLength: 2e6,

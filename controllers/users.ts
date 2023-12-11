@@ -557,6 +557,7 @@ export default class UsersController extends BaseController {
           "image/jpg",
           "image/jpeg",
           "image/svg+xml",
+          "image/svg xml",
           "image/webp",
         ],
         maxContentLength: 2e6,

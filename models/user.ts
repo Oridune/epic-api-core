@@ -121,6 +121,20 @@ UserModel.pre("update", (details) => {
   .createIndex(
     {
       key: {
+        reference: "text",
+        username: "text",
+        fname: "text",
+        mname: "text",
+        lname: "text",
+        tags: "text",
+        email: "text",
+        phone: "text",
+        role: "text",
+      },
+      background: true,
+    },
+    {
+      key: {
         username: 1,
       },
       unique: true,

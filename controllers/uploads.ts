@@ -148,7 +148,7 @@ export default class UploadsController extends BaseController {
                 OauthController.verifyToken<TFileOutput>({
                   token: ctx.output,
                   type: UploadsController.UploadTokenType,
-                  secret: ctx.context?.userId,
+                  secret: `${ctx.context?.accountId}:${ctx.context?.userId}`,
                 })
               )
               .checkpoint(),

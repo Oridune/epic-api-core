@@ -108,7 +108,7 @@ export default class OauthAppsController extends BaseController {
   public get() {
     // Define Params Schema
     const ParamsSchema = e.object({
-      appId: e.if(ObjectId.isValid),
+      appId: e.string(),
     });
 
     return Versioned.add("1.0.0", {
@@ -121,8 +121,8 @@ export default class OauthAppsController extends BaseController {
           name: "oauthApps.params",
         });
 
-        const App = await OauthAppModel.findOne({
-          _id: new ObjectId(Params.appId),
+        const App = await OauthAppModel.findOne(Params.appId, {
+          cache: { key: `oauth-app:${Params.appId}`, ttl: 60 * 60 }, // Cache for 1 hour
         });
 
         if (!App) e.error("Oauth app not found!");
