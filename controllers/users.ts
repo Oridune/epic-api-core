@@ -448,6 +448,10 @@ export default class UsersController extends BaseController {
                 }
               : {}),
           })
+          .project({
+            password: 0,
+            passwordHistory: 0,
+          })
           .populate(
             "collaborates",
             CollaboratorModel.populateOne("account", AccountModel)
@@ -492,12 +496,15 @@ export default class UsersController extends BaseController {
         );
 
         // Fetch user
-        const UserQuery = UserModel.findOne(
-          ctx.router.state.auth.userId
-        ).populate(
-          "collaborates",
-          CollaboratorModel.populateOne("account", AccountModel)
-        );
+        const UserQuery = UserModel.findOne(ctx.router.state.auth.userId)
+          .project({
+            password: 0,
+            passwordHistory: 0,
+          })
+          .populate(
+            "collaborates",
+            CollaboratorModel.populateOne("account", AccountModel)
+          );
 
         if (Query.project) UserQuery.project(Query.project);
 

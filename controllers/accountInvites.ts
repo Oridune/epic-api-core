@@ -45,6 +45,15 @@ export default class AccountInvitesController extends BaseController {
           { name: `${route.scope}.body` }
         );
 
+        if (
+          [
+            ctx.router.state.auth.user.username,
+            ctx.router.state.auth.user.email,
+            ctx.router.state.auth.user.phone,
+          ].includes(Body.recipient)
+        )
+          throw e.error("You cannot invite yourself!");
+
         const Invite = await AccountInviteModel.create({
           ...Body,
           createdBy: ctx.router.state.auth.userId,
@@ -69,6 +78,14 @@ export default class AccountInvitesController extends BaseController {
             phone: isPhone ? Body.recipient : undefined,
             template: "account-invitation-token",
             payload: {
+              sender: [
+                ctx.router.state.auth.user.fname,
+                ctx.router.state.auth.user.mname,
+                ctx.router.state.auth.user.lname,
+              ]
+                .filter(Boolean)
+                .join(" "),
+              role: Invite.role,
               token: Invite.token,
             },
           });
