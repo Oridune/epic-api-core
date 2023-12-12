@@ -94,6 +94,8 @@ export default {
         accountId: AccountId,
         role: GlobalRole,
         accountRole: Collaborator.role,
+        resolvedRole:
+          Collaborator.role === "root" ? GlobalRole : Collaborator.role,
         user: User,
       };
 

@@ -25,6 +25,7 @@ export const TransactionSchema = () =>
     status: e.in(Object.values(TransactionStatus)),
     methodOf3DSecurity: e.optional(e.string()),
     createdBy: e.instanceOf(ObjectId, { instantiate: true }),
+    metadata: e.optional(e.record(e.any)),
   });
 
 export type TTransactionInput = InputDocument<

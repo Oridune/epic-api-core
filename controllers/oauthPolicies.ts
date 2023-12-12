@@ -20,6 +20,7 @@ export const InputOauthPolicySchema = () =>
   e.object({
     role: e.string(),
     scopes: e.array(e.string()),
+    subRoles: e.optional(e.array(e.string())),
   });
 
 @Controller("/oauth/policies/", { name: "oauthPolicies" })
@@ -166,6 +167,23 @@ export default class OauthPoliciesController extends BaseController {
             : undefined,
           results: await OauthPoliciesListQuery,
         });
+      },
+    });
+  }
+
+  @Get("/me/")
+  public me() {
+    return new Versioned().add("1.0.0", {
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        const Policy = await OauthPolicyModel.findOne({
+          role: ctx.router.state.auth.resolvedRole,
+        });
+
+        if (!Policy) throw e.error("Policy not found!");
+
+        return Response.data(Policy);
       },
     });
   }

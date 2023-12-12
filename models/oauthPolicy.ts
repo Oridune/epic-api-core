@@ -8,6 +8,7 @@ export const OauthPolicySchema = () =>
     updatedAt: e.optional(e.date()).default(() => new Date()),
     role: e.string(),
     scopes: e.array(e.string()),
+    subRoles: e.optional(e.array(e.string())),
   });
 
 export type TOauthPolicyInput = InputDocument<

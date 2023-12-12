@@ -24,25 +24,11 @@ export const DefaultOauthPolicies = {
     "users.updateEmail",
     "users.updatePhone",
     "usersIdentification",
+    "oauthPolicies.me",
     "wallet.balance",
     "wallet.transactions",
   ],
-  user: [
-    "users.get",
-    "users.update",
-    "users.delete",
-    "oauth.logout",
-    "oauth.createPermit",
-    "users.signAvatar",
-    "users.updateAvatar",
-    "users.updateEmail",
-    "users.updatePhone",
-    "usersIdentification",
-    "wallet.signTransfer",
-    "wallet.transfer",
-    "wallet.balance",
-    "wallet.transactions",
-  ],
+  user: ["role:unverified", "wallet.signTransfer", "wallet.transfer"],
 };
 
 export type TOauthPolicies = typeof DefaultOauthPolicies &

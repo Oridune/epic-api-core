@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { Env } from "@Core/common/env.ts";
 import { Database } from "@Database";
 import * as bcrypt from "bcrypt";
@@ -167,6 +168,7 @@ export class Wallet {
     status?: TransactionStatus;
     methodOf3DSecurity?: string;
     allowOverdraft?: boolean;
+    metadata?: Record<string, any>;
     databaseSession?: ClientSession;
   }) {
     if (typeof options.amount !== "number" || options.amount <= 0)
@@ -266,6 +268,7 @@ export class Wallet {
         methodOf3DSecurity: options.methodOf3DSecurity,
         amount: options.amount,
         status: options.status ?? TransactionStatus.COMPLETED,
+        metadata: options.metadata,
       });
 
       // Debit Balance

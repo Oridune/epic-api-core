@@ -24,6 +24,7 @@ type Authorization = {
   accountId: string;
   role: string;
   accountRole: string;
+  resolvedRole: string;
   user: Omit<TUserOutput, "password" | "passwordHistory" | "collaborates">;
 };
 

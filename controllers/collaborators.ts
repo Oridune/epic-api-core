@@ -43,9 +43,13 @@ export default class CollaboratorsController extends BaseController {
 
         if (!Invite) throw e.error("Invalid or expired invitation token!");
 
+        if (ctx.router.state.auth!.userId === Invite.createdBy.toString())
+          throw e.error("You cannot consume an invite token by yourself!");
+
         return Response.statusCode(Status.Created).data(
           await Database.transaction(async (session) => {
             await AccountInviteModel.deleteOne(Invite._id, { session });
+
             return await CollaboratorModel.create(
               {
                 createdBy: Invite.createdBy,
