@@ -54,11 +54,7 @@ export default class AccountInvitesController extends BaseController {
         )
           throw e.error("You cannot invite yourself!");
 
-        const Invite = await AccountInviteModel.create({
-          ...Body,
-          createdBy: ctx.router.state.auth.userId,
-          account: ctx.router.state.auth.accountId,
-        });
+        const Token = crypto.randomUUID();
 
         if (!Env.is(EnvType.TEST)) {
           const [isEmail, isPhone] = await Promise.all([
@@ -85,11 +81,18 @@ export default class AccountInvitesController extends BaseController {
               ]
                 .filter(Boolean)
                 .join(" "),
-              role: Invite.role,
-              token: Invite.token,
+              role: Body.role,
+              token: Token,
             },
           });
         }
+
+        const Invite = await AccountInviteModel.create({
+          ...Body,
+          token: Token,
+          createdBy: ctx.router.state.auth.userId,
+          account: ctx.router.state.auth.accountId,
+        });
 
         return Response.statusCode(Status.Created).data(Invite);
       },
