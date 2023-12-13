@@ -270,6 +270,7 @@ export default class CollaboratorsController extends BaseController {
             {
               _id: CollaboratorId,
               account: new ObjectId(ctx.router.state.auth!.accountId),
+              isPrimary: false,
             },
             { session }
           );

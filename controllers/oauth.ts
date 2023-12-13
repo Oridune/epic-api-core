@@ -404,13 +404,13 @@ export default class OauthController extends BaseController {
   }
 
   static async getAvailableScopes(userId: ObjectId | string) {
+    const Collaborators = await CollaboratorModel.find({
+      createdFor: new ObjectId(userId),
+    }).populateOne("account", AccountModel);
+
     return await Promise.all(
       // Require account details (name, description etc.)
-      (
-        await CollaboratorModel.find({
-          createdFor: new ObjectId(userId),
-        }).populateOne("account", AccountModel)
-      ).map(async (collaborator) => ({
+      Collaborators.map(async (collaborator) => ({
         ...collaborator,
         scopes:
           (
@@ -558,8 +558,12 @@ export default class OauthController extends BaseController {
       scopes: e
         .record(e.array(e.string().matches(/\w+(\.\w+)*|^\*$/), { cast: true }))
         .custom(async (ctx) => {
+          const AccountIds = Object.keys(ctx.output);
+
+          if (!AccountIds.length) throw "Invalid scope object!";
+
           await Promise.all(
-            Object.keys(ctx.output).map(async (account) => {
+            AccountIds.map(async (account) => {
               if (
                 !(await CollaboratorModel.count({
                   account: new ObjectId(account),
