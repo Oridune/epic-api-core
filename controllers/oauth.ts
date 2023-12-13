@@ -406,7 +406,9 @@ export default class OauthController extends BaseController {
   static async getAvailableScopes(userId: ObjectId | string) {
     const Collaborators = await CollaboratorModel.find({
       createdFor: new ObjectId(userId),
-    }).populateOne("account", AccountModel);
+    })
+      .sort({ isPrimary: -1 })
+      .populateOne("account", AccountModel);
 
     return await Promise.all(
       // Require account details (name, description etc.)
