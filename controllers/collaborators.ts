@@ -17,6 +17,7 @@ import { Database } from "@Database";
 
 import { AccountInviteModel } from "@Models/accountInvite.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
+import { UserModel } from "@Models/user.ts";
 
 @Controller("/collaborators/", { name: "collaborators" })
 export default class CollaboratorsController extends BaseController {
@@ -41,25 +42,56 @@ export default class CollaboratorsController extends BaseController {
 
         const Invite = await AccountInviteModel.findOne(Params);
 
-        if (!Invite) throw e.error("Invalid or expired invitation token!");
+        if (
+          !Invite ||
+          ![
+            ctx.router.state.auth.user.username,
+            ctx.router.state.auth.user.email,
+            ctx.router.state.auth.user.phone,
+          ].includes(Invite.recipient)
+        )
+          throw e.error("Invalid or expired invitation token!");
 
         if (ctx.router.state.auth!.userId === Invite.createdBy.toString())
           throw e.error("You cannot consume an invite token by yourself!");
+
+        const CreatedFor = new ObjectId(ctx.router.state.auth!.userId);
+
+        if (
+          await CollaboratorModel.exists({
+            account: Invite.account,
+            createdFor: CreatedFor,
+          })
+        )
+          throw e.error("You already have access to this account!");
 
         return Response.statusCode(Status.Created).data(
           await Database.transaction(async (session) => {
             await AccountInviteModel.deleteOne(Invite._id, { session });
 
-            return await CollaboratorModel.create(
+            const Collaborator = await CollaboratorModel.create(
               {
                 createdBy: Invite.createdBy,
-                createdFor: ctx.router.state.auth!.userId,
+                createdFor: CreatedFor,
                 account: Invite.account,
+                role: Invite.role,
                 isOwned: false,
                 isPrimary: false,
               },
               { session }
             );
+
+            await UserModel.updateOne(
+              ctx.router.state.auth!.userId,
+              {
+                $push: {
+                  collaborates: Collaborator._id,
+                },
+              },
+              { session }
+            );
+
+            return Collaborator;
           })
         );
       },
@@ -187,7 +219,15 @@ export default class CollaboratorsController extends BaseController {
           })
           .skip(Query.offset)
           .limit(Query.limit)
-          .sort(Query.sort);
+          .sort(Query.sort)
+          .populateOne("createdFor", UserModel, {
+            project: {
+              fname: 1,
+              mname: 1,
+              lname: 1,
+              avatar: 1,
+            },
+          });
 
         if (Query.project) CollaboratorsListQuery.project(Query.project);
 
@@ -223,9 +263,27 @@ export default class CollaboratorsController extends BaseController {
           name: `${route.scope}.params`,
         });
 
-        await CollaboratorModel.deleteOne({
-          _id: new ObjectId(Params.id),
-          account: new ObjectId(ctx.router.state.auth.accountId),
+        const CollaboratorId = new ObjectId(Params.id);
+
+        await Database.transaction(async (session) => {
+          const { deletedCount } = await CollaboratorModel.deleteOne(
+            {
+              _id: CollaboratorId,
+              account: new ObjectId(ctx.router.state.auth!.accountId),
+            },
+            { session }
+          );
+
+          if (deletedCount)
+            await UserModel.updateOne(
+              ctx.router.state.auth!.userId,
+              {
+                $pull: {
+                  collaborates: CollaboratorId,
+                },
+              },
+              { session }
+            );
         });
 
         return Response.true();

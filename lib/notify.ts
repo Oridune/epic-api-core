@@ -29,7 +29,7 @@ export class Notify {
       if (!SubscriberId) SubscriberId = options.email ?? options.phone;
     }
 
-    if (!SubscriberId) throw new Error("No recipient provided!");
+    if (!SubscriberId) throw new Error("Recipient not found!");
 
     const SubscriberData = { email: options.email, phone: options.phone };
 

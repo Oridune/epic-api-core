@@ -452,13 +452,13 @@ export default class UsersController extends BaseController {
             password: 0,
             passwordHistory: 0,
           })
+          .skip(Query.offset)
+          .limit(Query.limit)
+          .sort(Query.sort)
           .populate(
             "collaborates",
             CollaboratorModel.populateOne("account", AccountModel)
-          )
-          .skip(Query.offset)
-          .limit(Query.limit)
-          .sort(Query.sort);
+          );
 
         if (Query.project) UsersListQuery.project(Query.project);
 

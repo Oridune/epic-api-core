@@ -27,6 +27,7 @@ export const DefaultOauthPolicies = {
     "oauthPolicies.me",
     "wallet.balance",
     "wallet.transactions",
+    "collaborators",
   ],
   user: ["role:unverified", "wallet.signTransfer", "wallet.transfer"],
 };
