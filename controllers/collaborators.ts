@@ -129,12 +129,46 @@ export default class CollaboratorsController extends BaseController {
           { name: `${route.scope}.body` }
         );
 
-        await CollaboratorModel.updateOne(
+        await CollaboratorModel.updateOneOrFail(
           {
             _id: new ObjectId(Params.id),
             account: new ObjectId(ctx.router.state.auth.accountId),
           },
           Body
+        );
+
+        return Response.true();
+      },
+    });
+  }
+
+  @Patch("/toggle/block/:id/")
+  public toggleBlock(route: IRoute) {
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      id: e.string(),
+    });
+
+    return new Versioned().add("1.0.0", {
+      postman: {
+        params: ParamsSchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
+
+        await CollaboratorModel.updateOneOrFail(
+          {
+            _id: new ObjectId(Params.id),
+            account: new ObjectId(ctx.router.state.auth.accountId),
+          },
+          {
+            isBlocked: { $not: "$isBlocked" },
+          }
         );
 
         return Response.true();

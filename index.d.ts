@@ -22,6 +22,8 @@ type Authorization = {
   sessionId: string;
   userId: string;
   accountId: string;
+  isAccountOwned: boolean;
+  isAccountPrimary: boolean;
   role: string;
   accountRole: string;
   resolvedRole: string;

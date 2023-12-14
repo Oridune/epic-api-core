@@ -3,9 +3,10 @@ import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
 
-import { CollaboratorModel } from "@Models/collaborator.ts";
 import { OauthPolicyModel } from "@Models/oauthPolicy.ts";
 import { UserModel } from "@Models/user.ts";
+import { CollaboratorModel } from "@Models/collaborator.ts";
+import { AccountModel } from "@Models/account.ts";
 
 import { SecurityGuard } from "../lib/securityGuard.ts";
 
@@ -51,8 +52,7 @@ export default {
 
     if (SessionInfo) {
       const AccountId = await e
-        .string()
-        .length({ min: 1 })
+        .instanceOf(ObjectId, { instantiate: true })
         .validate(
           ctx.router.request.headers.get("X-Account-ID") ??
             Object.keys(SessionInfo.session.scopes)[0],
@@ -70,12 +70,30 @@ export default {
       if (!User) throw e.error(`Authorized user not found!`);
 
       const Collaborator = await CollaboratorModel.findOne({
-        account: new ObjectId(AccountId),
+        account: AccountId,
         createdFor: new ObjectId(SessionInfo.session.createdBy),
-      }).project({ createdBy: 1, role: 1 });
+      }).project({
+        createdBy: 1,
+        role: 1,
+        isOwned: 1,
+        isPrimary: 1,
+        isBlocked: 1,
+      });
 
       if (!Collaborator)
-        throw e.error("You don't have access to this account!");
+        ctx.router.throw(
+          Status.Unauthorized,
+          "You don't have access to this account!"
+        );
+
+      if (Collaborator.isBlocked)
+        ctx.router.throw(
+          Status.Unauthorized,
+          "Your access to this account has been blocked!"
+        );
+
+      if (await AccountModel.exists({ _id: AccountId, isBlocked: true }))
+        ctx.router.throw(Status.Unauthorized, "Account is blocked!");
 
       let GlobalRole = User.role;
 
@@ -91,7 +109,9 @@ export default {
       ctx.router.state.auth = {
         sessionId: SessionInfo.claims.sessionId,
         userId: SessionInfo.session.createdBy,
-        accountId: AccountId,
+        accountId: AccountId.toString(),
+        isAccountOwned: Collaborator.isOwned,
+        isAccountPrimary: Collaborator.isPrimary,
         role: GlobalRole,
         accountRole: Collaborator.role,
         resolvedRole:
@@ -101,7 +121,7 @@ export default {
 
       AllScopes = [`role:${GlobalRole}`];
       AvailableScopes = [`role:${Collaborator.role}`];
-      RequestedScopes = SessionInfo.session.scopes[AccountId] ?? [];
+      RequestedScopes = SessionInfo.session.scopes[AccountId.toString()] ?? [];
       PermittedScopes = SessionInfo.claims.scopes ?? ["*"];
     } else {
       AllScopes = ["role:unauthenticated"];

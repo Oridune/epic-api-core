@@ -43,6 +43,7 @@ export const LoginPage = () => {
   const CodeChallenge = Query.get("codeChallenge");
   const CodeChallengeMethod = Query.get("codeChallengeMethod");
   const CallbackURL = Query.get("callbackURL");
+  const CallbackState = Query.get("state");
   const Remember = Query.has("remember")
     ? Query.get("remember") === "true"
     : undefined;
@@ -174,6 +175,9 @@ export const LoginPage = () => {
                 "code",
                 ExchangeResponse.data.data.oauthCode.token
               );
+
+              if (CallbackState)
+                RedirectURLWithCode.searchParams.set("state", CallbackState);
 
               window.location.replace(RedirectURLWithCode.toString());
             }

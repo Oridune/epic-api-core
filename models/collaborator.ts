@@ -9,9 +9,10 @@ export const CollaboratorSchema = () =>
     createdBy: e.instanceOf(ObjectId, { instantiate: true }),
     createdFor: e.instanceOf(ObjectId, { instantiate: true }),
     role: e.optional(e.string()).default("root"),
-    isPrimary: e.boolean({ cast: true }),
     isOwned: e.boolean({ cast: true }),
+    isPrimary: e.boolean({ cast: true }),
     account: e.instanceOf(ObjectId, { instantiate: true }),
+    isBlocked: e.optional(e.boolean()).default(false),
   });
 
 export type TCollaboratorInput = InputDocument<
