@@ -97,6 +97,7 @@ const AuthenticationResponseSchema = e.object({
         createdAt: e.string(),
         updatedAt: e.string(),
         scopes: e.array(e.string()),
+        isBlocked: e.boolean(),
       })
     ),
   }),
@@ -417,7 +418,10 @@ Deno.test({
             await AuthenticationResponseSchema.validate(await Response.json())
           );
         })
-      );
+      ).catch((error) => {
+        console.error(error);
+        throw error;
+      });
     });
 
     await t.step(
