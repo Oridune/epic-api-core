@@ -78,4 +78,10 @@ export class SecurityGuard {
 
     return Permitted;
   }
+
+  public toJSON() {
+    return {
+      scopePipeline: this.ScopePipeline.map((stage) => Array.from(stage)),
+    };
+  }
 }

@@ -1,4 +1,9 @@
-import { type IRequestContext } from "@Core/common/mod.ts";
+import {
+  Env,
+  EnvType,
+  type IRequestContext,
+  Response,
+} from "@Core/common/mod.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
@@ -151,10 +156,15 @@ export default {
       },
     });
 
-    if (!Guard.isPermitted(scope, name))
-      ctx.router.throw(
-        Status.Unauthorized,
-        `You are not permitted! Missing permission '${`${scope}.${name}`}'.`
-      );
+    if (!Guard.isPermitted(scope, name)) {
+      const Message = `You are not permitted! Missing permission '${`${scope}.${name}`}'.`;
+
+      if (Env.is(EnvType.PRODUCTION))
+        ctx.router.throw(Status.Unauthorized, Message);
+
+      throw Response.statusCode(Status.Unauthorized)
+        .message(Message)
+        .data(Guard);
+    }
   },
 };
