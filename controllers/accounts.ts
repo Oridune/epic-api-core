@@ -21,6 +21,7 @@ import { InputAccountSchema, AccountModel } from "@Models/account.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { UserModel } from "@Models/user.ts";
 import { PermanentlyDeleteAccount } from "@Jobs/deleteUsers.ts";
+import { OauthSessionModel } from "@Models/oauthSession.ts";
 
 @Controller("/accounts/", { name: "accounts" })
 export default class AccountsController extends BaseController {
@@ -64,9 +65,17 @@ export default class AccountsController extends BaseController {
               { session }
             );
 
-            await UserModel.updateOne(ctx.router.state.auth!.userId, {
+            await UserModel.updateOneOrFail(ctx.router.state.auth!.userId, {
               $push: { collaborates: Collaborator._id },
             });
+
+            await OauthSessionModel.updateOneOrFail(
+              ctx.router.state.auth!.sessionId,
+              {
+                [`scopes.${Account._id.toString()}`]: ["*"],
+              },
+              { session }
+            );
 
             return {
               account: Account,
