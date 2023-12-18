@@ -73,7 +73,7 @@ export const SignupPage = () => {
               matchFailed: t("Please provide a valid username format!"),
             },
           })
-          .matches(/^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/)
+          .matches(/^(?=[a-z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/)
           .length(50),
         password: e
           .string({

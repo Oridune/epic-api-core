@@ -247,7 +247,9 @@ export default class AccountsController extends BaseController {
         });
 
         if (ctx.router.state.auth.accountId === Params.id)
-          throw e.error("Cannot delete the current account!");
+          throw e.error(
+            "Cannot delete the current account! Please switch to a different account first!"
+          );
 
         const UserId = new ObjectId(ctx.router.state.auth!.userId);
         const AccountId = new ObjectId(Params.id);

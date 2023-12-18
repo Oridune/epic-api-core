@@ -16,7 +16,7 @@ export const UserReferenceValidator = () =>
 
 export const UsernameValidator = () =>
   e.string().matches({
-    regex: /^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/,
+    regex: /^(?=[a-z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/,
   });
 
 export const PasswordValidator = () =>
