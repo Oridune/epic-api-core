@@ -183,7 +183,10 @@ export default class OauthPoliciesController extends BaseController {
 
         if (!Policy) throw e.error("Policy not found!");
 
-        return Response.data(Policy);
+        return Response.data({
+          policy: Policy,
+          scopePipeline: ctx.router.state.guard.toJSON().scopePipeline,
+        });
       },
     });
   }
