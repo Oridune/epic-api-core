@@ -138,11 +138,22 @@ export default class CollaboratorsController extends BaseController {
           { name: `${route.scope}.body` }
         );
 
+        const CollaboratorId = new ObjectId(Params.id);
+        const AccountId = new ObjectId(ctx.router.state.auth.accountId);
+        const UserId = new ObjectId(ctx.router.state.auth.userId);
+
+        // Either the account owner or the collaboration creator should be able to update
         await CollaboratorModel.updateOneOrFail(
-          {
-            _id: new ObjectId(Params.id),
-            account: new ObjectId(ctx.router.state.auth.accountId),
-          },
+          ctx.router.state.auth.isAccountOwned
+            ? {
+                _id: CollaboratorId,
+                account: AccountId,
+              }
+            : {
+                _id: CollaboratorId,
+                account: AccountId,
+                createdBy: UserId,
+              },
           Body
         );
 
@@ -170,11 +181,23 @@ export default class CollaboratorsController extends BaseController {
           name: `${route.scope}.params`,
         });
 
+        const CollaboratorId = new ObjectId(Params.id);
+        const AccountId = new ObjectId(ctx.router.state.auth.accountId);
+
+        // Either the account owner or the collaboration creator should be able to block
         await CollaboratorModel.updateOneOrFail(
-          {
-            _id: new ObjectId(Params.id),
-            account: new ObjectId(ctx.router.state.auth.accountId),
-          },
+          ctx.router.state.auth!.isAccountOwned
+            ? {
+                _id: CollaboratorId,
+                account: AccountId,
+                isPrimary: false,
+              }
+            : {
+                _id: CollaboratorId,
+                account: new ObjectId(ctx.router.state.auth!.accountId),
+                createdBy: AccountId,
+                isPrimary: false,
+              },
           {
             isBlocked: { $not: "$isBlocked" },
           }
@@ -307,27 +330,36 @@ export default class CollaboratorsController extends BaseController {
         });
 
         const CollaboratorId = new ObjectId(Params.id);
+        const AccountId = new ObjectId(ctx.router.state.auth.accountId);
+        const UserId = new ObjectId(ctx.router.state.auth.userId);
 
         await Database.transaction(async (session) => {
-          const { deletedCount } = await CollaboratorModel.deleteOne(
-            {
-              _id: CollaboratorId,
-              account: new ObjectId(ctx.router.state.auth!.accountId),
-              isPrimary: false,
-            },
+          // Either the account owner or the collaboration creator should be able to delete
+          await CollaboratorModel.deleteOneOrFail(
+            ctx.router.state.auth!.isAccountOwned
+              ? {
+                  _id: CollaboratorId,
+                  account: AccountId,
+                  isPrimary: false,
+                }
+              : {
+                  _id: CollaboratorId,
+                  account: AccountId,
+                  createdBy: UserId,
+                  isPrimary: false,
+                },
             { session }
           );
 
-          if (deletedCount)
-            await UserModel.updateOne(
-              ctx.router.state.auth!.userId,
-              {
-                $pull: {
-                  collaborates: CollaboratorId,
-                },
+          await UserModel.updateOne(
+            ctx.router.state.auth!.userId,
+            {
+              $pull: {
+                collaborates: CollaboratorId,
               },
-              { session }
-            );
+            },
+            { session }
+          );
         });
 
         return Response.true();

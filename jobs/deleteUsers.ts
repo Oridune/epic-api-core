@@ -14,7 +14,7 @@ export const PermanentlyDeleteUser = TransactionQueue.add<{
   databaseSession?: ClientSession;
 }>(async (ctx, next) => {
   await Database.transaction(async (session) => {
-    await UserModel.deleteOne({ _id: ctx.input.userId }, { session });
+    await UserModel.deleteOneOrFail({ _id: ctx.input.userId }, { session });
 
     const Accounts = await AccountModel.find(
       { createdFor: ctx.input.userId },
@@ -38,36 +38,31 @@ export const PermanentlyDeleteAccount = TransactionQueue.add<{
   databaseSession?: ClientSession;
 }>(async (ctx, next) => {
   await Database.transaction(async (session) => {
-    const { deletedCount } = await AccountModel.deleteOne(
+    await AccountModel.deleteOneOrFail(
       { _id: ctx.input.accountId, createdFor: ctx.input.userId },
       { session }
     );
 
-    if (deletedCount === 1) {
-      await CollaboratorModel.deleteMany(
-        { account: ctx.input.accountId },
-        { session }
-      );
+    await CollaboratorModel.deleteMany(
+      { account: ctx.input.accountId },
+      { session }
+    );
 
-      await AccountInviteModel.deleteMany(
-        { account: ctx.input.accountId },
-        { session }
-      );
+    await AccountInviteModel.deleteMany(
+      { account: ctx.input.accountId },
+      { session }
+    );
 
-      const Wallets = await WalletModel.find(
-        { account: ctx.input.accountId },
-        { session }
-      ).project({ balance: 1 });
+    const Wallets = await WalletModel.find(
+      { account: ctx.input.accountId },
+      { session }
+    ).project({ balance: 1 });
 
-      for (const Wallet of Wallets)
-        if (Wallet.balance !== 0) throw new Error("Wallet balance is not 0!");
+    for (const Wallet of Wallets)
+      if (Wallet.balance !== 0) throw new Error("Wallet balance is not 0!");
 
-      // Just delete Wallet. Transactions cannot be deleted as they are shared.
-      await WalletModel.deleteMany(
-        { account: ctx.input.accountId },
-        { session }
-      );
-    }
+    // Just delete Wallet. Transactions cannot be deleted as they are shared.
+    await WalletModel.deleteMany({ account: ctx.input.accountId }, { session });
 
     await next();
   }, ctx.input.databaseSession);

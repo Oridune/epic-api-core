@@ -68,7 +68,7 @@ export class Wallet {
         /\s*,\s*/
       ) ?? [];
 
-    if (!Accounts.includes(`${account}`)) return false;
+    if (!Accounts.includes(account.toString())) return false;
 
     const RawLimit = await Env.get(
       `WALLET_OVERDRAFT_LIMIT_${type.toUpperCase()}_${currency.toUpperCase()}`,

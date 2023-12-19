@@ -118,15 +118,13 @@ export default class AccountsController extends BaseController {
 
         const TargetUser = new ObjectId(ctx.router.state.auth.userId);
 
-        const { modifiedCount } = await AccountModel.updateOne(
+        await AccountModel.updateOneOrFail(
           {
             _id: new ObjectId(Params.id),
             $or: [{ createdBy: TargetUser }, { createdFor: TargetUser }],
           },
           Body
         );
-
-        if (!modifiedCount) throw new Error("Account update failed!");
 
         return Response.true();
       },
