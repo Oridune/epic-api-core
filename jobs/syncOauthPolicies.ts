@@ -26,7 +26,7 @@ export const DefaultOauthPolicies = {
     "usersIdentification",
     "oauthPolicies.me",
     "wallet.balance",
-    "wallet.getBalances",
+    "wallet.balanceList",
     "wallet.transactions",
     "accountInvites",
     "collaborators",
