@@ -264,7 +264,7 @@ export default class WalletController extends BaseController {
     });
   }
 
-  @Get("/balances/")
+  @Post("/balances/")
   public balances(route: IRoute) {
     // Define Body Schema
     const BodySchema = e.object({
