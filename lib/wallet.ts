@@ -153,6 +153,41 @@ export class Wallet {
     return Wallet;
   }
 
+  static async list(
+    account: ObjectId | string,
+    options: {
+      types: string[];
+      currencies: string[];
+      databaseSession?: ClientSession;
+    }
+  ) {
+    return await Promise.all(
+      (
+        await WalletModel.find(
+          {
+            account: new ObjectId(account),
+            type: { $in: options.types },
+            currency: { $in: options.currencies },
+          },
+          { session: options?.databaseSession }
+        ).project({ transactions: 0 })
+      ).map(async (wallet) => {
+        if (
+          !(await this.compareBalanceDigest(
+            wallet.account,
+            wallet.type,
+            wallet.currency,
+            wallet.balance,
+            wallet.digest
+          ))
+        )
+          wallet.balance = 0;
+
+        return wallet;
+      })
+    );
+  }
+
   static async transfer(options: {
     sessionId?: string;
     reference?: string;

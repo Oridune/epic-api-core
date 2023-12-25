@@ -264,6 +264,34 @@ export default class WalletController extends BaseController {
     });
   }
 
+  @Get("/balances/")
+  public balances(route: IRoute) {
+    // Define Body Schema
+    const BodySchema = e.object({
+      types: e.array(e.string()),
+      currencies: e.array(e.string()),
+    });
+
+    return Versioned.add("1.0.0", {
+      postman: {
+        body: BodySchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: `${route.scope}.body` }
+        );
+
+        return Response.data(
+          await Wallet.list(ctx.router.state.auth.accountId, Body)
+        );
+      },
+    });
+  }
+
   @Get("/transactions/:type?/:currency?/")
   public transactions(route: IRoute) {
     const CurrentTimestamp = Date.now();
