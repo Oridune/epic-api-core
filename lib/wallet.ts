@@ -61,14 +61,19 @@ export class Wallet {
     account: ObjectId | string,
     type: string,
     currency: string,
-    postTransactionBalance: number
+    postTransactionBalance: number,
+    options?: {
+      skipAccountCheck?: boolean;
+    }
   ) {
-    const Accounts =
-      (await Env.get("WALLET_OVERDRAFT_ENABLED_ACCOUNTS", true))?.split(
-        /\s*,\s*/
-      ) ?? [];
+    if (!options?.skipAccountCheck) {
+      const Accounts =
+        (await Env.get("WALLET_OVERDRAFT_ENABLED_ACCOUNTS", true))?.split(
+          /\s*,\s*/
+        ) ?? [];
 
-    if (!Accounts.includes(account.toString())) return false;
+      if (!Accounts.includes(account.toString())) return false;
+    }
 
     const RawLimit = await Env.get(
       `WALLET_OVERDRAFT_LIMIT_${type.toUpperCase()}_${currency.toUpperCase()}`,
@@ -272,12 +277,14 @@ export class Wallet {
 
       if (
         PostTransactionBalance < 0 &&
-        !options.allowOverdraft &&
         !(await this.hasOverdraftMargin(
           From,
           Type,
           Currency,
-          PostTransactionBalance
+          PostTransactionBalance,
+          {
+            skipAccountCheck: options.allowOverdraft,
+          }
         ))
       )
         throw new Error(`Insufficient balance!`);
