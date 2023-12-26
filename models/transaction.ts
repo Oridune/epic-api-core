@@ -20,6 +20,7 @@ export const TransactionSchema = () =>
     to: e.instanceOf(ObjectId, { instantiate: true }),
     type: e.string(),
     description: e.optional(e.string()),
+    tags: e.optional(e.array(e.string())),
     currency: e.string(),
     amount: e.number({ cast: true }),
     status: e.in(Object.values(TransactionStatus)),
@@ -65,11 +66,16 @@ TransactionModel.createIndex(
     background: true,
   },
   {
+    key: { tags: 1 },
+    background: true,
+  },
+  {
     key: {
       reference: "text",
       fromName: "text",
       toName: "text",
       description: "text",
+      tags: "text",
     },
     background: true,
   }
