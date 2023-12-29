@@ -1,8 +1,11 @@
 import e, { inferInput, inferOutput } from "validator";
-import { InputDocument } from "mongo";
+import { ObjectId, InputDocument } from "mongo";
 
 export const FileSchema = () =>
   e.object({
+    _id: e
+      .optional(e.instanceOf(ObjectId, { instantiate: true }))
+      .default(() => new ObjectId()),
     name: e.optional(e.string()),
     url: e.string(),
     mimeType: e.optional(e.string()),
