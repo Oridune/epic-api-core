@@ -31,7 +31,7 @@ export default class WalletController extends BaseController {
   public currency() {
     return async () =>
       Response.data({
-        defaultCurrency: await Wallet.getCurrencies(),
+        defaultCurrency: await Wallet.getDefaultCurrency(),
         availableCurrencies: await Wallet.getCurrencies(),
       });
   }
