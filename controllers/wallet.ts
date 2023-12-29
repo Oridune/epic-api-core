@@ -27,11 +27,12 @@ import { TFileOutput } from "@Models/file.ts";
 
 @Controller("/wallet/", { name: "wallet" })
 export default class WalletController extends BaseController {
-  @Get("/available/currencies/")
-  public availableCurrencies(_: IRoute) {
+  @Get("/currency/")
+  public currency() {
     return async () =>
       Response.data({
-        iso3Codes: await Wallet.getCurrencies(),
+        defaultCurrency: await Wallet.getCurrencies(),
+        availableCurrencies: await Wallet.getCurrencies(),
       });
   }
 
