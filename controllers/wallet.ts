@@ -27,6 +27,14 @@ import { TFileOutput } from "@Models/file.ts";
 
 @Controller("/wallet/", { name: "wallet" })
 export default class WalletController extends BaseController {
+  @Get("/available/currencies/")
+  public availableCurrencies(_: IRoute) {
+    return async () =>
+      Response.data({
+        iso3Codes: await Wallet.getCurrencies(),
+      });
+  }
+
   @Get("/transfer/sign/:type?/:currency?/")
   public signTransfer(route: IRoute) {
     // Define Query Schema

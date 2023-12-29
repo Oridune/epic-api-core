@@ -12,21 +12,29 @@ export class Wallet {
     return Env.get("DEFAULT_WALLET_TYPE");
   }
 
-  static async isValidType(type: string) {
+  static async getTypes() {
     return (
       (await Env.get("SUPPORTED_WALLET_TYPES", true))?.split(/\s*,\s*/) ?? []
-    ).includes(type);
+    );
+  }
+
+  static async isValidType(type: string) {
+    return (await this.getTypes()).includes(type);
   }
 
   static getDefaultCurrency() {
     return Env.get("DEFAULT_WALLET_CURRENCY");
   }
 
-  static async isValidCurrency(currency: string) {
+  static async getCurrencies() {
     return (
       (await Env.get("SUPPORTED_WALLET_CURRENCIES", true))?.split(/\s*,\s*/) ??
       []
-    ).includes(currency);
+    );
+  }
+
+  static async isValidCurrency(currency: string) {
+    return (await this.getCurrencies()).includes(currency);
   }
 
   static async createBalanceDigest(
