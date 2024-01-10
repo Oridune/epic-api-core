@@ -169,8 +169,8 @@ export class Wallet {
   static async list(
     account: ObjectId | string,
     options: {
-      types: string[];
-      currencies: string[];
+      types?: string[];
+      currencies?: string[];
       databaseSession?: ClientSession;
     }
   ) {
@@ -179,8 +179,12 @@ export class Wallet {
         await WalletModel.find(
           {
             account: new ObjectId(account),
-            type: { $in: options.types },
-            currency: { $in: options.currencies },
+            ...(options.types instanceof Array
+              ? { type: { $in: options.types } }
+              : {}),
+            ...(options.currencies instanceof Array
+              ? { currency: { $in: options.currencies } }
+              : {}),
           },
           { session: options?.databaseSession }
         ).project({ transactions: 0 })

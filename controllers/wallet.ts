@@ -27,10 +27,12 @@ import { TFileOutput } from "@Models/file.ts";
 
 @Controller("/wallet/", { name: "wallet" })
 export default class WalletController extends BaseController {
-  @Get("/currency/")
-  public currency() {
+  @Get("/metadata/")
+  public metadata() {
     return async () =>
       Response.data({
+        defaultType: await Wallet.getDefaultType(),
+        availableTypes: await Wallet.getTypes(),
         defaultCurrency: await Wallet.getDefaultCurrency(),
         availableCurrencies: await Wallet.getCurrencies(),
       });
@@ -277,8 +279,8 @@ export default class WalletController extends BaseController {
   public balanceList(route: IRoute) {
     // Define Body Schema
     const BodySchema = e.object({
-      types: e.array(e.string()),
-      currencies: e.array(e.string()),
+      types: e.optional(e.array(e.string())),
+      currencies: e.optional(e.array(e.string())),
     });
 
     return Versioned.add("1.0.0", {
