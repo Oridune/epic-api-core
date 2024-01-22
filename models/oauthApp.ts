@@ -35,7 +35,7 @@ export const OauthConsentSchema = () =>
     secondaryColorDark: e.optional(
       e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/)
     ),
-    styling: e.optional(OauthConsentStylingSchema),
+    styling: e.optional(OauthConsentStylingSchema()),
     allowedCallbackURLs: e
       .array(
         e.string().custom((ctx) => new URL(ctx.output).toString()),
@@ -64,7 +64,7 @@ export const OauthAppSchema = () =>
     name: e.string().length({ min: 2, max: 50 }),
     description: e.optional(e.string().length({ min: 30, max: 300 })),
     enabled: e.optional(e.boolean({ cast: true })).default(true),
-    consent: OauthConsentSchema,
+    consent: OauthConsentSchema(),
     metadata: e.optional(e.record(e.string())),
   });
 
