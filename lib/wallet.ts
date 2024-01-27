@@ -72,6 +72,7 @@ export class Wallet {
     postTransactionBalance: number,
     options?: {
       skipAccountCheck?: boolean;
+      overdraftLimit?: number;
     }
   ) {
     if (!options?.skipAccountCheck) {
@@ -83,10 +84,14 @@ export class Wallet {
       if (!Accounts.includes(account.toString())) return false;
     }
 
-    const RawLimit = await Env.get(
-      `WALLET_OVERDRAFT_LIMIT_${type.toUpperCase()}_${currency.toUpperCase()}`,
-      true
-    );
+    if (typeof options?.overdraftLimit === "number")
+      return postTransactionBalance >= options.overdraftLimit;
+
+    const RawLimit =
+      (await Env.get(
+        `WALLET_OVERDRAFT_LIMIT_${type.toUpperCase()}_${currency.toUpperCase()}`,
+        true
+      )) ?? (await Env.get(`WALLET_OVERDRAFT_LIMIT`, true));
 
     const Limit = !isNaN(RawLimit as unknown as number)
       ? parseFloat(RawLimit!)
@@ -168,7 +173,7 @@ export class Wallet {
 
   static async list(
     account: ObjectId | string,
-    options: {
+    options?: {
       types?: string[];
       currencies?: string[];
       databaseSession?: ClientSession;
@@ -179,10 +184,10 @@ export class Wallet {
         await WalletModel.find(
           {
             account: new ObjectId(account),
-            ...(options.types instanceof Array
+            ...(options?.types instanceof Array
               ? { type: { $in: options.types } }
               : {}),
-            ...(options.currencies instanceof Array
+            ...(options?.currencies instanceof Array
               ? { currency: { $in: options.currencies } }
               : {}),
           },
@@ -220,6 +225,7 @@ export class Wallet {
     status?: TransactionStatus;
     methodOf3DSecurity?: string;
     allowOverdraft?: boolean;
+    overdraftLimit?: number;
     metadata?: Record<string, any>;
     databaseSession?: ClientSession;
   }) {
@@ -296,6 +302,7 @@ export class Wallet {
           PostTransactionBalance,
           {
             skipAccountCheck: options.allowOverdraft,
+            overdraftLimit: options.overdraftLimit,
           }
         ))
       )
