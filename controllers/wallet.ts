@@ -224,12 +224,6 @@ export default class WalletController extends BaseController {
           e.error
         );
 
-        if (
-          ctx.router.state.auth.userId !== Payload.sender.userId ||
-          ctx.router.state.auth.accountId !== Payload.sender.accountId
-        )
-          throw e.error("Invalid transfer request!");
-
         const Transfer = await Wallet.transfer({
           sessionId: Payload.challengeId,
           fromName: [
