@@ -297,7 +297,13 @@ export default class OauthController extends BaseController {
       [undefined, true].includes(opts.useragentCheck) &&
       Session.useragent !== opts.useragent
     )
-      throw new Error(`Your session is invalid!`);
+      throw new Error(`Your session is invalid!`, {
+        cause: {
+          message: "User-Agent didn't match!",
+          gotUserAgent: Session.useragent,
+          expectedUserAgent: opts.useragent,
+        },
+      });
 
     if (Session.version !== Claims.version) {
       await OauthSessionModel.deleteOne(Session._id);

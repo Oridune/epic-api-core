@@ -7,13 +7,12 @@ import {
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
+import { SecurityGuard } from "@Lib/securityGuard.ts";
 
 import { OauthPolicyModel } from "@Models/oauthPolicy.ts";
 import { UserModel } from "@Models/user.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { AccountModel } from "@Models/account.ts";
-
-import { SecurityGuard } from "../lib/securityGuard.ts";
 
 export const ResolveScopeRole = async (role: string) => {
   const OauthScopes = await OauthPolicyModel.findOne(
