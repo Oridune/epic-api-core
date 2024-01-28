@@ -78,11 +78,14 @@ export default class WalletController extends BaseController {
           name: `${route.scope}.params`,
         });
 
+        const [receiverId, accountId] = Query.receiver.split(":");
+
         const ReceivingUser = await UserModel.findOne({
           $or: [
-            { username: Query.receiver },
-            { email: Query.receiver },
-            { phone: Query.receiver },
+            { _id: new ObjectId(receiverId) },
+            { username: receiverId },
+            { email: receiverId },
+            { phone: receiverId },
           ],
         }).project({
           _id: 1,
@@ -99,9 +102,13 @@ export default class WalletController extends BaseController {
           );
 
         const ReceiverAccount = await AccountModel.findOne({
+          ...(typeof accountId === "string"
+            ? { _id: new ObjectId(accountId) }
+            : {}),
           createdFor: ReceivingUser._id,
         }).project({
-          _id: 1,
+          name: 1,
+          logo: 1,
           isBlocked: 1,
         });
 
@@ -120,6 +127,8 @@ export default class WalletController extends BaseController {
           },
           receiver: {
             accountId: ReceiverAccount._id,
+            accountName: ReceiverAccount.name,
+            accountLogo: ReceiverAccount.logo,
             userId: ReceivingUser._id,
             fname: ReceivingUser.fname,
             mname: ReceivingUser.mname,
