@@ -800,6 +800,8 @@ export default class OauthController extends BaseController {
           {
             method: "POST",
             headers: {
+              ["User-Agent"]:
+                ctx.router.request.headers.get("User-Agent") ?? "",
               Authorization: `Basic ${btoa(
                 `${Credentials.username}:${Credentials.password}`
               )}`,
@@ -819,6 +821,7 @@ export default class OauthController extends BaseController {
             .message("Authentication failed!")
             .data(Context);
 
+        // Exchange authentication token
         const ExchangeAuthentication = (await fetch(
           new URL(
             "/api/oauth/exchange/authentication/",
@@ -826,6 +829,10 @@ export default class OauthController extends BaseController {
           ),
           {
             method: "POST",
+            headers: {
+              ["User-Agent"]:
+                ctx.router.request.headers.get("User-Agent") ?? "",
+            },
             body: JSON.stringify({
               authenticationToken:
                 Authentication.data.authenticationToken.token,
@@ -843,10 +850,15 @@ export default class OauthController extends BaseController {
             .message("Exchange authentication failed!")
             .data(Context);
 
+        // Exchange oauth code
         const ExchangeCode = (await fetch(
           new URL("/api/oauth/exchange/code/", ctx.router.request.url.origin),
           {
             method: "POST",
+            headers: {
+              ["User-Agent"]:
+                ctx.router.request.headers.get("User-Agent") ?? "",
+            },
             body: JSON.stringify({
               code: ExchangeAuthentication.data.oauthCode.token,
             }),
