@@ -82,7 +82,9 @@ export default class WalletController extends BaseController {
 
         const ReceivingUser = await UserModel.findOne({
           $or: [
-            { _id: new ObjectId(receiverId) },
+            ...(ObjectId.isValid(receiverId)
+              ? [{ _id: new ObjectId(receiverId) }]
+              : []),
             { username: receiverId },
             { email: receiverId },
             { phone: receiverId },
@@ -102,7 +104,7 @@ export default class WalletController extends BaseController {
           );
 
         const ReceiverAccount = await AccountModel.findOne({
-          ...(typeof accountId === "string"
+          ...(ObjectId.isValid(accountId)
             ? { _id: new ObjectId(accountId) }
             : {}),
           createdFor: ReceivingUser._id,
