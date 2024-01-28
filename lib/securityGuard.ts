@@ -1,26 +1,23 @@
 export type TScopeResolverOptions = {
-  resolveRole?: (role: string) => Promise<Array<string> | undefined>;
+  resolveScopeRole?: (role: string) => Promise<Array<string> | undefined>;
 };
 
 export class SecurityGuard {
-  protected ScopesCache: Record<string, Array<string>> = {};
-  protected RawScopePipeline: Array<Array<string>> = [];
-  protected ScopePipeline: Array<Set<string>> = [];
-
-  protected resolveScopes(scopes: string[], options?: TScopeResolverOptions) {
+  static resolveScopes(scopes: string[], options?: TScopeResolverOptions) {
     const RoleRegExp = /^role:(.*)/;
+    const ScopesCache: Record<string, Array<string>> = {};
 
-    const ResolveRole = async (
+    const ResolveScopeRole = async (
       role: string,
       set: Set<string>
     ): Promise<Set<string>> =>
-      (this.ScopesCache[role] ??=
-        (await options?.resolveRole?.(role)) ?? []).reduce(
+      (ScopesCache[role] ??=
+        (await options?.resolveScopeRole?.(role)) ?? []).reduce(
         async (set, scope) => {
           const Set = await set;
           const Match = scope.match(RoleRegExp);
 
-          if (Match) return ResolveRole(Match[1], Set);
+          if (Match) return ResolveScopeRole(Match[1], Set);
 
           return Set.add(scope);
         },
@@ -31,11 +28,14 @@ export class SecurityGuard {
       const Set = await set;
       const Match = scope.match(RoleRegExp);
 
-      if (Match) return ResolveRole(Match[1], Set);
+      if (Match) return ResolveScopeRole(Match[1], Set);
 
       return Set.add(scope);
     }, Promise.resolve<Set<string>>(new Set()));
   }
+
+  protected RawScopePipeline: Array<Array<string>> = [];
+  protected ScopePipeline: Array<Set<string>> = [];
 
   constructor() {}
 
@@ -51,7 +51,7 @@ export class SecurityGuard {
       const TargetPipeline = this.RawScopePipeline.shift();
 
       if (TargetPipeline instanceof Array)
-        Resolvers.push(this.resolveScopes(TargetPipeline, options));
+        Resolvers.push(SecurityGuard.resolveScopes(TargetPipeline, options));
     } while (this.RawScopePipeline.length);
 
     this.ScopePipeline.push(

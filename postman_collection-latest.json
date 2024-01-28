@@ -59,7 +59,7 @@
               "name": "updateAvatar",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/users/avatar/sign?name=&alt=&contentType=image/png|image/jpg|image/jpeg|image/svg+xml|image/webp&contentLength=426039",
+                  "raw": "{{host}}/api/users/avatar/sign?name=&alt=&contentType=image/png|image/jpg|image/jpeg|image/svg+xml|image/webp&contentLength=1878769",
                   "host": [
                     "{{host}}"
                   ],
@@ -87,7 +87,7 @@
                     },
                     {
                       "key": "contentLength",
-                      "value": 426039,
+                      "value": 1878769,
                       "description": ""
                     }
                   ],
@@ -178,7 +178,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-11-30T16:59:52.584Z\",\n  \"locale\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\"\n}",
+                  "raw": "{\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2024-01-28T19:49:13.383Z\",\n  \"locale\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -303,7 +303,7 @@
               "name": "delete",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/users?deletionTimeoutMs=2",
+                  "raw": "{{host}}/api/users?deletionTimeoutMs=1",
                   "host": [
                     "{{host}}"
                   ],
@@ -314,7 +314,7 @@
                   "query": [
                     {
                       "key": "deletionTimeoutMs",
-                      "value": 2,
+                      "value": 1,
                       "description": "(Optional)"
                     }
                   ],
@@ -351,7 +351,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"avatar\": {\n    \"name\": \"\",\n    \"url\": \"\",\n    \"mimeType\": \"\",\n    \"sizeInBytes\": 1,\n    \"alt\": \"\"\n  },\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\",\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2023-11-30T16:59:52.588Z\",\n  \"locale\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\",\n  \"username\": \"\",\n  \"password\": \"\"\n}",
+                  "raw": "{\n  \"avatar\": {\n    \"_id\": {},\n    \"name\": \"\",\n    \"url\": \"\",\n    \"mimeType\": \"\",\n    \"sizeInBytes\": 1,\n    \"alt\": \"\"\n  },\n  \"tags\": [\n    \"\"\n  ],\n  \"email\": \"\",\n  \"phone\": \"\",\n  \"fname\": \"\",\n  \"mname\": \"\",\n  \"lname\": \"\",\n  \"gender\": \"male|female|other\",\n  \"dob\": \"2024-01-28T19:49:13.390Z\",\n  \"locale\": \"\",\n  \"country\": \"\",\n  \"state\": \"\",\n  \"city\": \"\",\n  \"address_1\": \"\",\n  \"address_2\": \"\",\n  \"postalCode\": \"\",\n  \"username\": \"\",\n  \"password\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -365,7 +365,7 @@
               "name": "listAll",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/users/:userId?search=&range=Thu Nov 30 2023 21:59:52 GMT+0500 (Pakistan Standard Time),Thu Nov 30 2023 21:59:52 GMT+0500 (Pakistan Standard Time)&offset=2&limit=309&sort=[object Object]&project=[object Object]&includeTotalCount=false",
+                  "raw": "{{host}}/api/users/:userId?search=&range=Mon Jan 29 2024 00:49:13 GMT+0500 (Pakistan Standard Time),Mon Jan 29 2024 00:49:13 GMT+0500 (Pakistan Standard Time)&offset=2&limit=1411&sort=[object Object]&project=[object Object]&includeTotalCount=false",
                   "host": [
                     "{{host}}"
                   ],
@@ -383,8 +383,8 @@
                     {
                       "key": "range",
                       "value": [
-                        "2023-11-30T16:59:52.589Z",
-                        "2023-11-30T16:59:52.589Z"
+                        "2024-01-28T19:49:13.392Z",
+                        "2024-01-28T19:49:13.392Z"
                       ],
                       "description": "(Optional)"
                     },
@@ -395,7 +395,7 @@
                     },
                     {
                       "key": "limit",
-                      "value": 309,
+                      "value": 1411,
                       "description": "(Optional)"
                     },
                     {
@@ -437,6 +437,38 @@
         {
           "name": "oauth",
           "item": [
+            {
+              "name": "quickLogin",
+              "request": {
+                "url": {
+                  "raw": "{{host}}/api/oauth/local/quick/login",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "oauth",
+                    "local",
+                    "quick",
+                    "login"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
             {
               "name": "exchangeAuthentication",
               "request": {
@@ -663,7 +695,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"\",\n  \"description\": \"\",\n  \"enabled\": true,\n  \"consent\": {\n    \"availableCountryCodes\": [\n      \"\"\n    ],\n    \"requiredIdentificationMethods\": [\n      \"email|phone|in-app\"\n    ],\n    \"logo\": {\n      \"name\": \"\",\n      \"url\": \"\",\n      \"mimeType\": \"\",\n      \"sizeInBytes\": 2,\n      \"alt\": \"\"\n    },\n    \"primaryColor\": \"\",\n    \"primaryColorDark\": \"\",\n    \"secondaryColor\": \"\",\n    \"secondaryColorDark\": \"\",\n    \"styling\": {\n      \"roundness\": 1\n    },\n    \"allowedCallbackURLs\": [\n      \"\"\n    ],\n    \"homepageURL\": \"\",\n    \"privacyPolicyURL\": \"\",\n    \"termsAndConditionsURL\": \"\",\n    \"supportURL\": \"\"\n  },\n  \"metadata\": {}\n}",
+                  "raw": "{\n  \"name\": \"\",\n  \"description\": \"\",\n  \"enabled\": false,\n  \"consent\": {\n    \"availableCountryCodes\": [\n      \"\"\n    ],\n    \"requiredIdentificationMethods\": [\n      \"email|phone|in-app\"\n    ],\n    \"logo\": {\n      \"_id\": {},\n      \"name\": \"\",\n      \"url\": \"\",\n      \"mimeType\": \"\",\n      \"sizeInBytes\": 1,\n      \"alt\": \"\"\n    },\n    \"primaryColor\": \"\",\n    \"primaryColorDark\": \"\",\n    \"secondaryColor\": \"\",\n    \"secondaryColorDark\": \"\",\n    \"styling\": {\n      \"roundness\": 50\n    },\n    \"allowedCallbackURLs\": [\n      \"\"\n    ],\n    \"homepageURL\": \"\",\n    \"privacyPolicyURL\": \"\",\n    \"termsAndConditionsURL\": \"\",\n    \"supportURL\": \"\"\n  },\n  \"metadata\": {}\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -677,7 +709,7 @@
               "name": "list",
               "request": {
                 "url": {
-                  "raw": "{{host}}/api/oauth/apps?limit=1285&offset=0",
+                  "raw": "{{host}}/api/oauth/apps?limit=1732&offset=1",
                   "host": [
                     "{{host}}"
                   ],
@@ -689,12 +721,12 @@
                   "query": [
                     {
                       "key": "limit",
-                      "value": 1285,
+                      "value": 1732,
                       "description": "(Optional)"
                     },
                     {
                       "key": "offset",
-                      "value": 0,
+                      "value": 1,
                       "description": "(Optional)"
                     }
                   ],
@@ -723,7 +755,7 @@
                   "variable": [
                     {
                       "key": "appId",
-                      "value": {},
+                      "value": "",
                       "description": ""
                     }
                   ]
@@ -1025,7 +1057,7 @@
           "name": "sign",
           "request": {
             "url": {
-              "raw": "{{host}}/api/uploads?name=&alt=&contentType=&contentLength=1",
+              "raw": "{{host}}/api/uploads?name=&alt=&contentType=&contentLength=2",
               "host": [
                 "{{host}}"
               ],
@@ -1051,7 +1083,7 @@
                 },
                 {
                   "key": "contentLength",
-                  "value": 1,
+                  "value": 2,
                   "description": ""
                 }
               ],
@@ -1095,7 +1127,7 @@
           "name": "upload",
           "request": {
             "url": {
-              "raw": "{{host}}/api/uploads?name=&alt=&contentType=&contentLength=2",
+              "raw": "{{host}}/api/uploads?name=&alt=&contentType=&contentLength=1",
               "host": [
                 "{{host}}"
               ],
@@ -1121,7 +1153,7 @@
                 },
                 {
                   "key": "contentLength",
-                  "value": 2,
+                  "value": 1,
                   "description": ""
                 }
               ],
@@ -1137,6 +1169,58 @@
     {
       "name": "wallet",
       "item": [
+        {
+          "name": "balanceList",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/wallet/balance/list",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "wallet",
+                "balance",
+                "list"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"types\": [\n    \"\"\n  ],\n  \"currencies\": [\n    \"\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "metadata",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/wallet/metadata",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "wallet",
+                "metadata"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
         {
           "name": "transfer",
           "request": {
@@ -1157,7 +1241,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"method\": \"email|phone|in-app\",\n  \"token\": \"\",\n  \"code\": 100000\n}",
+              "raw": "{\n  \"method\": \"email|phone|in-app\",\n  \"token\": \"\",\n  \"code\": 200000\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1261,7 +1345,7 @@
           "name": "transactions",
           "request": {
             "url": {
-              "raw": "{{host}}/api/wallet/transactions/:type/:currency??search=&range=Thu Nov 30 2023 21:59:52 GMT+0500 (Pakistan Standard Time),Thu Nov 30 2023 21:59:52 GMT+0500 (Pakistan Standard Time)&offset=2&limit=1630&sort=[object Object]&project=[object Object]&includeTotalCount=false",
+              "raw": "{{host}}/api/wallet/transactions/:type/:currency??search=&range=Mon Jan 29 2024 00:49:13 GMT+0500 (Pakistan Standard Time),Mon Jan 29 2024 00:49:13 GMT+0500 (Pakistan Standard Time)&offset=1&limit=1825&sort=[object Object]&project=[object Object]&includeTotalCount=true",
               "host": [
                 "{{host}}"
               ],
@@ -1281,19 +1365,19 @@
                 {
                   "key": "range",
                   "value": [
-                    "2023-11-30T16:59:52.596Z",
-                    "2023-11-30T16:59:52.596Z"
+                    "2024-01-28T19:49:13.403Z",
+                    "2024-01-28T19:49:13.403Z"
                   ],
                   "description": "(Optional)"
                 },
                 {
                   "key": "offset",
-                  "value": 2,
+                  "value": 1,
                   "description": "(Optional)"
                 },
                 {
                   "key": "limit",
-                  "value": 1630,
+                  "value": 1825,
                   "description": "(Optional)"
                 },
                 {
@@ -1308,7 +1392,7 @@
                 },
                 {
                   "key": "includeTotalCount",
-                  "value": false,
+                  "value": true,
                   "description": "(Optional) If `true` is passed, the system will return a total items count for pagination purpose."
                 }
               ],
@@ -1398,7 +1482,7 @@
           "name": "updateLogo",
           "request": {
             "url": {
-              "raw": "{{host}}/api/accounts/logo/:account?name=&alt=&contentType=image/png|image/jpg|image/jpeg|image/svg+xml|image/webp&contentLength=65898",
+              "raw": "{{host}}/api/accounts/logo/:account?name=&alt=&contentType=image/png|image/jpg|image/jpeg|image/svg+xml|image/webp&contentLength=1330275",
               "host": [
                 "{{host}}"
               ],
@@ -1426,7 +1510,7 @@
                 },
                 {
                   "key": "contentLength",
-                  "value": 65898,
+                  "value": 1330275,
                   "description": ""
                 }
               ],
@@ -1504,7 +1588,7 @@
           "name": "get",
           "request": {
             "url": {
-              "raw": "{{host}}/api/accounts/:id?search=&range=Thu Nov 30 2023 21:59:52 GMT+0500 (Pakistan Standard Time),Thu Nov 30 2023 21:59:52 GMT+0500 (Pakistan Standard Time)&offset=0&limit=779&sort=[object Object]&project=[object Object]&includeTotalCount=false",
+              "raw": "{{host}}/api/accounts/:id?search=&range=Mon Jan 29 2024 00:49:13 GMT+0500 (Pakistan Standard Time),Mon Jan 29 2024 00:49:13 GMT+0500 (Pakistan Standard Time)&offset=0&limit=856&sort=[object Object]&project=[object Object]&includeTotalCount=true",
               "host": [
                 "{{host}}"
               ],
@@ -1522,8 +1606,8 @@
                 {
                   "key": "range",
                   "value": [
-                    "2023-11-30T16:59:52.597Z",
-                    "2023-11-30T16:59:52.597Z"
+                    "2024-01-28T19:49:13.405Z",
+                    "2024-01-28T19:49:13.405Z"
                   ],
                   "description": "(Optional)"
                 },
@@ -1534,7 +1618,516 @@
                 },
                 {
                   "key": "limit",
-                  "value": 779,
+                  "value": 856,
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "sort",
+                  "value": {},
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "project",
+                  "value": {},
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "includeTotalCount",
+                  "value": true,
+                  "description": "(Optional) If `true` is passed, the system will return a total items count for pagination purpose."
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "(Optional)"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "accountInvites",
+      "item": [
+        {
+          "name": "create",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/account/invites",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "account",
+                "invites"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipient\": \"\",\n  \"role\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/account/invites/:id",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "account",
+                "invites",
+                ":id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "get",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/account/invites/:id?search=&range=Mon Jan 29 2024 00:49:13 GMT+0500 (Pakistan Standard Time),Mon Jan 29 2024 00:49:13 GMT+0500 (Pakistan Standard Time)&offset=0&limit=1009&sort=[object Object]&project=[object Object]&includeTotalCount=true",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "account",
+                "invites",
+                ":id"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "range",
+                  "value": [
+                    "2024-01-28T19:49:13.406Z",
+                    "2024-01-28T19:49:13.406Z"
+                  ],
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "offset",
+                  "value": 0,
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "limit",
+                  "value": 1009,
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "sort",
+                  "value": {},
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "project",
+                  "value": {},
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "includeTotalCount",
+                  "value": true,
+                  "description": "(Optional) If `true` is passed, the system will return a total items count for pagination purpose."
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "(Optional)"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "collaborators",
+      "item": [
+        {
+          "name": "toggleBlock",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/collaborators/toggle/block/:id",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "collaborators",
+                "toggle",
+                "block",
+                ":id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "update",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/collaborators/:id",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "collaborators",
+                ":id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/collaborators/:id",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "collaborators",
+                ":id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "get",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/collaborators/:id?search=&range=Mon Jan 29 2024 00:49:13 GMT+0500 (Pakistan Standard Time),Mon Jan 29 2024 00:49:13 GMT+0500 (Pakistan Standard Time)&offset=0&limit=1634&sort=[object Object]&project=[object Object]&includeTotalCount=false",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "collaborators",
+                ":id"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "range",
+                  "value": [
+                    "2024-01-28T19:49:13.407Z",
+                    "2024-01-28T19:49:13.407Z"
+                  ],
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "offset",
+                  "value": 0,
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "limit",
+                  "value": 1634,
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "sort",
+                  "value": {},
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "project",
+                  "value": {},
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "includeTotalCount",
+                  "value": false,
+                  "description": "(Optional) If `true` is passed, the system will return a total items count for pagination purpose."
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "(Optional)"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "create",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/collaborators/:token",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "collaborators",
+                ":token"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "method": "POST",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "oauthPolicies",
+      "item": [
+        {
+          "name": "me",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/policies/me",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "policies",
+                "me"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "create",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/policies",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "policies"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"\",\n  \"scopes\": [\n    \"\"\n  ],\n  \"subRoles\": [\n    \"\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/policies/:id",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "policies",
+                ":id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"\",\n  \"scopes\": [\n    \"\"\n  ],\n  \"subRoles\": [\n    \"\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/policies/:id",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "policies",
+                ":id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "get",
+          "request": {
+            "url": {
+              "raw": "{{host}}/api/oauth/policies/:id?search=&range=Mon Jan 29 2024 00:49:13 GMT+0500 (Pakistan Standard Time),Mon Jan 29 2024 00:49:13 GMT+0500 (Pakistan Standard Time)&offset=0&limit=1186&sort=[object Object]&project=[object Object]&includeTotalCount=false",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "oauth",
+                "policies",
+                ":id"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "range",
+                  "value": [
+                    "2024-01-28T19:49:13.409Z",
+                    "2024-01-28T19:49:13.409Z"
+                  ],
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "offset",
+                  "value": 0,
+                  "description": "(Optional)"
+                },
+                {
+                  "key": "limit",
+                  "value": 1186,
                   "description": "(Optional)"
                 },
                 {

@@ -15,6 +15,27 @@ import { AccountModel } from "@Models/account.ts";
 
 import { SecurityGuard } from "../lib/securityGuard.ts";
 
+export const ResolveScopeRole = async (role: string) => {
+  const OauthScopes = await OauthPolicyModel.findOne(
+    {
+      role,
+    },
+    {
+      cache: {
+        key: `oauthPolicy:${role}`,
+        ttl: 60 * 10, // 10 minutes cache
+      },
+    }
+  ).project({ scopes: 1 });
+
+  if (!OauthScopes)
+    throw e.error(
+      `Unable to fetch the available scopes for the role '${role}'!`
+    );
+
+  return OauthScopes.scopes;
+};
+
 export default {
   pre: async (
     scope: string,
@@ -142,18 +163,7 @@ export default {
       .addStage(PermittedScopes);
 
     await Guard.parse({
-      resolveRole: async (role) => {
-        const OauthScopes = await OauthPolicyModel.findOne({
-          role,
-        }).project({ scopes: 1 });
-
-        if (!OauthScopes)
-          throw e.error(
-            `Unable to fetch the available scopes for the role '${role}'!`
-          );
-
-        return OauthScopes.scopes;
-      },
+      resolveScopeRole: ResolveScopeRole,
     });
 
     if (!Guard.isPermitted(scope, name)) {
