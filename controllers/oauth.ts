@@ -777,6 +777,7 @@ export default class OauthController extends BaseController {
           { name: `${route.scope}.body` }
         );
 
+        const UserAgent = ctx.router.request.headers.get("User-Agent") ?? "";
         const Context: Record<string, any> = {};
 
         // Fetch oauth app for authentication
@@ -800,8 +801,7 @@ export default class OauthController extends BaseController {
           {
             method: "POST",
             headers: {
-              ["User-Agent"]:
-                ctx.router.request.headers.get("User-Agent") ?? "",
+              "User-Agent": UserAgent,
               Authorization: `Basic ${btoa(
                 `${Credentials.username}:${Credentials.password}`
               )}`,
@@ -830,8 +830,7 @@ export default class OauthController extends BaseController {
           {
             method: "POST",
             headers: {
-              ["User-Agent"]:
-                ctx.router.request.headers.get("User-Agent") ?? "",
+              "User-Agent": UserAgent,
             },
             body: JSON.stringify({
               authenticationToken:
@@ -856,8 +855,7 @@ export default class OauthController extends BaseController {
           {
             method: "POST",
             headers: {
-              ["User-Agent"]:
-                ctx.router.request.headers.get("User-Agent") ?? "",
+              "User-Agent": UserAgent,
             },
             body: JSON.stringify({
               code: ExchangeAuthentication.data.oauthCode.token,

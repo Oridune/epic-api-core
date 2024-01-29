@@ -15,6 +15,8 @@ import { CollaboratorModel } from "@Models/collaborator.ts";
 import { AccountModel } from "@Models/account.ts";
 
 export const ResolveScopeRole = async (role: string) => {
+  if (!role) throw new Error("Role not provided!");
+
   const OauthScopes = await OauthPolicyModel.findOne(
     {
       role,
@@ -121,6 +123,12 @@ export default {
         ctx.router.throw(Status.Unauthorized, "Account is blocked!");
 
       let GlobalRole = User.role;
+
+      if (!GlobalRole)
+        ctx.router.throw(
+          Status.Unauthorized,
+          "You don't have a role assigned!"
+        );
 
       if (Collaborator.createdBy !== User._id) {
         const ParentUser =
