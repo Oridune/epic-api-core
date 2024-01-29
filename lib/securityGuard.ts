@@ -1,3 +1,5 @@
+import { Store } from "@Core/common/store.ts";
+
 export type TScopeResolverOptions = {
   resolveScopeRole?: (role: string) => Promise<Array<string> | undefined>;
 };
@@ -9,29 +11,33 @@ export class SecurityGuard {
 
     const ResolveScopeRole = async (
       role: string,
-      set: Set<string>
-    ): Promise<Set<string>> =>
+      prevScopes: Array<string>
+    ): Promise<Array<string>> =>
       (ScopesCache[role] ??=
         (await options?.resolveScopeRole?.(role)) ?? []).reduce(
-        async (set, scope) => {
-          const Set = await set;
+        async (scopes, scope) => {
+          const Scopes = await scopes;
           const Match = scope.match(RoleRegExp);
 
-          if (Match) return ResolveScopeRole(Match[1], Set);
+          if (Match) return ResolveScopeRole(Match[1], Scopes);
 
-          return Set.add(scope);
+          Scopes.push(scope);
+
+          return Scopes;
         },
-        Promise.resolve(set)
+        Promise.resolve(prevScopes)
       );
 
-    return scopes.reduce(async (set, scope) => {
-      const Set = await set;
+    return scopes.reduce(async (scopes, scope) => {
+      const Scopes = await scopes;
       const Match = scope.match(RoleRegExp);
 
-      if (Match) return ResolveScopeRole(Match[1], Set);
+      if (Match) return ResolveScopeRole(Match[1], Scopes);
 
-      return Set.add(scope);
-    }, Promise.resolve<Set<string>>(new Set()));
+      Scopes.push(scope);
+
+      return Scopes;
+    }, Promise.resolve<Array<string>>([]));
   }
 
   protected RawScopePipeline: Array<Array<string>> = [];
@@ -44,18 +50,28 @@ export class SecurityGuard {
     return this;
   }
 
-  public async parse(options?: TScopeResolverOptions) {
-    const Resolvers: Array<Promise<Set<string>>> = [];
-
-    do {
-      const TargetPipeline = this.RawScopePipeline.shift();
-
-      if (TargetPipeline instanceof Array)
-        Resolvers.push(SecurityGuard.resolveScopes(TargetPipeline, options));
-    } while (this.RawScopePipeline.length);
+  public async parse(
+    options?: TScopeResolverOptions & { cacheTimeMs?: number }
+  ) {
+    const CacheKey = this.RawScopePipeline.map((_) => _.join(",")).join("|");
 
     this.ScopePipeline.push(
-      ...(await Promise.all(Resolvers)).map((list) => new Set(list))
+      ...(
+        await Store.cache(
+          CacheKey,
+          () => {
+            const Resolvers: Array<Promise<Array<string>>> = [];
+
+            this.RawScopePipeline.forEach((pipeline) => {
+              if (pipeline instanceof Array)
+                Resolvers.push(SecurityGuard.resolveScopes(pipeline, options));
+            });
+
+            return Promise.all(Resolvers);
+          },
+          options?.cacheTimeMs ?? 60 * 10 * 1000 // 10 minutes default cache
+        )
+      ).map((list) => new Set(list))
     );
   }
 

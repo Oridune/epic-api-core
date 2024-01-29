@@ -2,7 +2,7 @@ import { Loader } from "@Core/common/mod.ts";
 import { createAppServer } from "@Core/server.ts";
 import { expect } from "expect";
 import { Database } from "@Database";
-import e, { inferOutput } from "validator";
+import e, { ObjectValidator, inferOutput } from "validator";
 
 import { OauthAppSchema } from "@Models/oauthApp.ts";
 
@@ -27,14 +27,21 @@ const TestUsers = [
   ],
 ];
 
-const DefaultOauthAppResponseSchema = e.object({
-  status: e.boolean(),
-  data: OauthAppSchema,
-});
+const ResponseWrapperSchema = (dataValidator: ObjectValidator<any, any, any>) =>
+  e.object(
+    {
+      status: e.boolean(),
+      messages: e.optional(e.array(e.object({ message: e.string() }))),
+      data: dataValidator,
+      metrics: e.record(e.any()),
+    },
+    { cast: true }
+  );
 
-const UserResponseSchema = e.object({
-  status: e.boolean(),
-  data: e.object({
+const DefaultOauthAppResponseSchema = ResponseWrapperSchema(OauthAppSchema());
+
+const UserResponseSchema = ResponseWrapperSchema(
+  e.object({
     _id: e.string(),
     reference: e.string(),
     fname: e.string(),
@@ -56,16 +63,15 @@ const UserResponseSchema = e.object({
     isBlocked: e.boolean(),
     createdAt: e.string(),
     updatedAt: e.string(),
-  }),
-});
+  })
+);
 
-const IdentificationResponseSchema = e.object({
-  status: e.true(),
-  data: e.object({
+const IdentificationResponseSchema = ResponseWrapperSchema(
+  e.object({
     token: e.string(),
     otp: e.number(),
-  }),
-});
+  })
+);
 
 const OAuthTokenSchema = e.object({
   issuer: e.string(),
@@ -74,9 +80,8 @@ const OAuthTokenSchema = e.object({
   expiresAtSeconds: e.number(),
 });
 
-const AuthenticationResponseSchema = e.object({
-  status: e.boolean(),
-  data: e.object({
+const AuthenticationResponseSchema = ResponseWrapperSchema(
+  e.object({
     authenticationToken: OAuthTokenSchema,
     availableScopes: e.array(
       e.object({
@@ -100,23 +105,21 @@ const AuthenticationResponseSchema = e.object({
         isBlocked: e.boolean(),
       })
     ),
-  }),
-});
+  })
+);
 
-const ExchangeAuthenticationResponseSchema = e.object({
-  status: e.boolean(),
-  data: e.object({
+const ExchangeAuthenticationResponseSchema = ResponseWrapperSchema(
+  e.object({
     oauthCode: OAuthTokenSchema,
-  }),
-});
+  })
+);
 
-const ExchangeCodeResponseSchema = e.object({
-  status: e.boolean(),
-  data: e.object({
+const ExchangeCodeResponseSchema = ResponseWrapperSchema(
+  e.object({
     access: OAuthTokenSchema,
     refresh: e.optional(OAuthTokenSchema),
-  }),
-});
+  })
+);
 
 Deno.test({
   name: "Oauth Flow Test",

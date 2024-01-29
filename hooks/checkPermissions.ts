@@ -17,17 +17,9 @@ import { AccountModel } from "@Models/account.ts";
 export const ResolveScopeRole = async (role: string) => {
   if (!role) throw new Error("Role not provided!");
 
-  const OauthScopes = await OauthPolicyModel.findOne(
-    {
-      role,
-    },
-    {
-      cache: {
-        key: `oauthPolicy:${role}`,
-        ttl: 60 * 10, // 10 minutes cache
-      },
-    }
-  ).project({ scopes: 1 });
+  const OauthScopes = await OauthPolicyModel.findOne({
+    role,
+  }).project({ scopes: 1 });
 
   if (!OauthScopes)
     throw e.error(
@@ -37,40 +29,43 @@ export const ResolveScopeRole = async (role: string) => {
   return OauthScopes.scopes;
 };
 
+export const SessionValidator = e.optional(
+  e.object({
+    claims: e.object(
+      {
+        sessionId: e.string(),
+        version: e.number(),
+        refreshable: e.optional(e.boolean()),
+        scopes: e.optional(e.array(e.string())),
+      },
+      { allowUnexpectedProps: true }
+    ),
+    session: e.any().custom((ctx) =>
+      e
+        .object(
+          {
+            scopes: e.record(e.array(e.string())),
+            createdBy: e.string({ cast: true }),
+          },
+          { allowUnexpectedProps: true }
+        )
+        .validate(ctx.output)
+    ),
+  })
+);
+
 export default {
   pre: async (
     scope: string,
     name: string,
     ctx: IRequestContext<RouterContext<string>>
   ) => {
-    const SessionInfo = await e
-      .optional(
-        e.object({
-          claims: e.object(
-            {
-              sessionId: e.string(),
-              version: e.number(),
-              refreshable: e.optional(e.boolean()),
-              scopes: e.optional(e.array(e.string())),
-            },
-            { allowUnexpectedProps: true }
-          ),
-          session: e.any().custom((ctx) =>
-            e
-              .object(
-                {
-                  scopes: e.record(e.array(e.string())),
-                  createdBy: e.string({ cast: true }),
-                },
-                { allowUnexpectedProps: true }
-              )
-              .validate(ctx.output)
-          ),
-        })
-      )
-      .validate(ctx.router.state.sessionInfo, {
+    const SessionInfo = await SessionValidator.validate(
+      ctx.router.state.sessionInfo,
+      {
         name: `${scope}.state.sessionInfo`,
-      });
+      }
+    );
 
     let AllScopes: string[];
     let AvailableScopes: string[];
