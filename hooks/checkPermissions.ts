@@ -21,10 +21,11 @@ export const ResolveScopeRole = async (role: string) => {
     role,
   }).project({ scopes: 1 });
 
-  if (!OauthScopes)
+  if (!OauthScopes) {
     throw e.error(
-      `Unable to fetch the available scopes for the role '${role}'!`
+      `Unable to fetch the available scopes for the role '${role}'!`,
     );
+  }
 
   return OauthScopes.scopes;
 };
@@ -38,7 +39,7 @@ export const SessionValidator = e.optional(
         refreshable: e.optional(e.boolean()),
         scopes: e.optional(e.array(e.string())),
       },
-      { allowUnexpectedProps: true }
+      { allowUnexpectedProps: true },
     ),
     session: e.any().custom((ctx) =>
       e
@@ -47,24 +48,24 @@ export const SessionValidator = e.optional(
             scopes: e.record(e.array(e.string())),
             createdBy: e.string({ cast: true }),
           },
-          { allowUnexpectedProps: true }
+          { allowUnexpectedProps: true },
         )
         .validate(ctx.output)
     ),
-  })
+  }),
 );
 
 export default {
   pre: async (
     scope: string,
     name: string,
-    ctx: IRequestContext<RouterContext<string>>
+    ctx: IRequestContext<RouterContext<string>>,
   ) => {
     const SessionInfo = await SessionValidator.validate(
       ctx.router.state.sessionInfo,
       {
         name: `${scope}.state.sessionInfo`,
-      }
+      },
     );
 
     let AllScopes: string[];
@@ -78,11 +79,13 @@ export default {
         .validate(
           ctx.router.request.headers.get("X-Account-ID") ??
             Object.keys(SessionInfo.session.scopes)[0],
-          { name: `${scope}.headers.x-account-id` }
+          { name: `${scope}.headers.x-account-id` },
         );
 
+      const UserId = new ObjectId(SessionInfo.session.createdBy);
+
       const User = await UserModel.findOne(
-        SessionInfo.session.createdBy
+        UserId,
       ).project({
         password: 0,
         passwordHistory: 0,
@@ -93,37 +96,49 @@ export default {
 
       const Collaborator = await CollaboratorModel.findOne({
         account: AccountId,
-        createdFor: new ObjectId(SessionInfo.session.createdBy),
-      }).project({
-        createdBy: 1,
-        role: 1,
-        isOwned: 1,
-        isPrimary: 1,
-        isBlocked: 1,
+        createdFor: UserId,
+      }, { cache: { key: `collaborator:${AccountId}:${UserId}`, ttl: 60 } })
+        .project({
+          createdBy: 1,
+          role: 1,
+          isOwned: 1,
+          isPrimary: 1,
+          isBlocked: 1,
+        });
+
+      if (!Collaborator) {
+        ctx.router.throw(
+          Status.Unauthorized,
+          "You don't have access to this account!",
+        );
+      }
+
+      if (Collaborator.isBlocked) {
+        ctx.router.throw(
+          Status.Unauthorized,
+          "Your access to this account has been blocked!",
+        );
+      }
+
+      const Account = await AccountModel.findOne(AccountId, {
+        cache: { key: `account:${AccountId}`, ttl: 60 },
       });
 
-      if (!Collaborator)
+      if (!Account || Account.isBlocked) {
         ctx.router.throw(
           Status.Unauthorized,
-          "You don't have access to this account!"
+          "Account not found or is blocked!",
         );
-
-      if (Collaborator.isBlocked)
-        ctx.router.throw(
-          Status.Unauthorized,
-          "Your access to this account has been blocked!"
-        );
-
-      if (await AccountModel.exists({ _id: AccountId, isBlocked: true }))
-        ctx.router.throw(Status.Unauthorized, "Account is blocked!");
+      }
 
       let GlobalRole = User.role;
 
-      if (!GlobalRole)
+      if (!GlobalRole) {
         ctx.router.throw(
           Status.Unauthorized,
-          "You don't have a role assigned!"
+          "You don't have a role assigned!",
         );
+      }
 
       if (Collaborator.createdBy !== User._id) {
         const ParentUser =
@@ -142,9 +157,11 @@ export default {
         isAccountPrimary: Collaborator.isPrimary,
         role: GlobalRole,
         accountRole: Collaborator.role,
-        resolvedRole:
-          Collaborator.role === "root" ? GlobalRole : Collaborator.role,
+        resolvedRole: Collaborator.role === "root"
+          ? GlobalRole
+          : Collaborator.role,
         user: User,
+        account: Account,
       };
 
       AllScopes = [`role:${GlobalRole}`];
@@ -169,10 +186,12 @@ export default {
     });
 
     if (!Guard.isPermitted(scope, name)) {
-      const Message = `You are not permitted! Missing permission '${`${scope}.${name}`}'.`;
+      const Message =
+        `You are not permitted! Missing permission '${`${scope}.${name}`}'.`;
 
-      if (Env.is(EnvType.PRODUCTION))
+      if (Env.is(EnvType.PRODUCTION)) {
         ctx.router.throw(Status.Unauthorized, Message);
+      }
 
       throw Response.statusCode(Status.Unauthorized)
         .message(Message)

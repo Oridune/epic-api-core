@@ -4,6 +4,7 @@ import "@Core/common/controller/base.ts";
 import { IValidatorJSONSchema } from "validator";
 import { SecurityGuard } from "./lib/securityGuard.ts";
 import { TUserOutput } from "@Models/user.ts";
+import { TAccountOutput } from "@Models/account.ts";
 
 type SessionInfo = {
   claims: {
@@ -28,6 +29,7 @@ type Authorization = {
   accountRole: string;
   resolvedRole: string;
   user: Omit<TUserOutput, "password" | "passwordHistory" | "collaborates">;
+  account: TAccountOutput;
 };
 
 declare module "@Core/common/controller/base.ts" {
