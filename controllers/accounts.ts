@@ -1,23 +1,24 @@
 import {
-  Controller,
   BaseController,
-  Get,
-  Post,
-  Patch,
-  Put,
+  Controller,
   Delete,
-  Versioned,
-  Response,
-  type IRoute,
+  Env,
+  Get,
   type IRequestContext,
+  type IRoute,
+  Patch,
+  Post,
+  Put,
+  Response,
+  Versioned,
 } from "@Core/common/mod.ts";
-import { Status, type RouterContext } from "oak";
+import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
 import { Database } from "@Database";
 
 import UploadsController from "@Controllers/uploads.ts";
-import { InputAccountSchema, AccountModel } from "@Models/account.ts";
+import { AccountModel, InputAccountSchema } from "@Models/account.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { UserModel } from "@Models/user.ts";
 import { PermanentlyDeleteAccount } from "@Jobs/deleteUsers.ts";
@@ -40,8 +41,27 @@ export default class AccountsController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: `${route.scope}.body` }
+          { name: `${route.scope}.body` },
         );
+
+        const AccountCount = await AccountModel.count({
+          createdFor: new ObjectId(ctx.router.state.auth!.userId),
+        });
+
+        const MaxAccountCount = parseInt(
+          await Env.get("MAX_ACCOUNT_COUNT", true) ?? "1",
+        );
+
+        const UserMaxAccountCount = parseInt(
+          (await Env.get("USER_MAX_ACCOUNT_COUNT", true) ?? "").split(",").map(
+            (_) => _.split(":"),
+          ).find((_) => _[0] === ctx.router.state.auth!.userId)?.[1] ??
+            MaxAccountCount.toString(),
+        );
+
+        if (AccountCount >= UserMaxAccountCount) {
+          throw new Error(`You have reached your account creation limit!`);
+        }
 
         return Response.statusCode(Status.Created).data(
           await Database.transaction(async (session) => {
@@ -51,7 +71,7 @@ export default class AccountsController extends BaseController {
                 createdFor: ctx.router.state.auth!.userId,
                 ...Body,
               },
-              { session }
+              { session },
             );
 
             const Collaborator = await CollaboratorModel.create(
@@ -62,7 +82,7 @@ export default class AccountsController extends BaseController {
                 isOwned: true,
                 isPrimary: false,
               },
-              { session }
+              { session },
             );
 
             await UserModel.updateOneOrFail(ctx.router.state.auth!.userId, {
@@ -74,14 +94,14 @@ export default class AccountsController extends BaseController {
               {
                 [`scopes.${Account._id.toString()}`]: ["*"],
               },
-              { session }
+              { session },
             );
 
             return {
               account: Account,
               collaborator: Collaborator,
             };
-          })
+          }),
         );
       },
     });
@@ -113,7 +133,7 @@ export default class AccountsController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: `${route.scope}.body` }
+          { name: `${route.scope}.body` },
         );
 
         const TargetUser = new ObjectId(ctx.router.state.auth.userId);
@@ -123,7 +143,7 @@ export default class AccountsController extends BaseController {
             _id: new ObjectId(Params.id),
             $or: [{ createdBy: TargetUser }, { createdFor: TargetUser }],
           },
-          Body
+          Body,
         );
 
         return Response.true();
@@ -140,27 +160,27 @@ export default class AccountsController extends BaseController {
       {
         search: e.optional(e.string()),
         range: e.optional(
-          e.tuple([e.date().end(CurrentTimestamp), e.date()], { cast: true })
+          e.tuple([e.date().end(CurrentTimestamp), e.date()], { cast: true }),
         ),
         offset: e.optional(e.number({ cast: true }).min(0)).default(0),
         limit: e.optional(e.number({ cast: true }).max(2000)).default(2000),
         sort: e
           .optional(
-            e.record(e.number({ cast: true }).min(-1).max(1), { cast: true })
+            e.record(e.number({ cast: true }).min(-1).max(1), { cast: true }),
           )
           .default({ _id: -1 }),
         project: e.optional(
-          e.record(e.number({ cast: true }).min(0).max(1), { cast: true })
+          e.record(e.number({ cast: true }).min(0).max(1), { cast: true }),
         ),
         includeTotalCount: e.optional(
           e
             .boolean({ cast: true })
             .describe(
-              "If `true` is passed, the system will return a total items count for pagination purpose."
-            )
+              "If `true` is passed, the system will return a total items count for pagination purpose.",
+            ),
         ),
       },
-      { allowUnexpectedProps: true }
+      { allowUnexpectedProps: true },
     );
 
     // Define Params Schema
@@ -179,14 +199,13 @@ export default class AccountsController extends BaseController {
         // Query Validation
         const Query = await QuerySchema.validate(
           Object.fromEntries(ctx.router.request.url.searchParams),
-          { name: `${route.scope}.query` }
+          { name: `${route.scope}.query` },
         );
 
         /**
          * It is recommended to keep the following validators in place even if you don't want to validate any data.
          * It will prevent the client from injecting unexpected data into the request.
-         *
-         * */
+         */
 
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {
@@ -201,11 +220,11 @@ export default class AccountsController extends BaseController {
             $or: [{ createdBy: TargetUser }, { createdFor: TargetUser }],
             ...(Query.range instanceof Array
               ? {
-                  createdAt: {
-                    $gt: new Date(Query.range[0]),
-                    $lt: new Date(Query.range[1]),
-                  },
-                }
+                createdAt: {
+                  $gt: new Date(Query.range[0]),
+                  $lt: new Date(Query.range[1]),
+                },
+              }
               : {}),
           })
           .skip(Query.offset)
@@ -216,8 +235,8 @@ export default class AccountsController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            ? //? Make sure to pass any limiting conditions for count if needed.
-              await AccountModel.count()
+            //? Make sure to pass any limiting conditions for count if needed.
+            ? await AccountModel.count()
             : undefined,
           results: await AccountListQuery,
         });
@@ -244,10 +263,11 @@ export default class AccountsController extends BaseController {
           name: `${route.scope}.params`,
         });
 
-        if (ctx.router.state.auth.accountId === Params.id)
+        if (ctx.router.state.auth.accountId === Params.id) {
           throw e.error(
-            "Cannot delete the current account! Please switch to a different account first!"
+            "Cannot delete the current account! Please switch to a different account first!",
           );
+        }
 
         const UserId = new ObjectId(ctx.router.state.auth!.userId);
         const AccountId = new ObjectId(Params.id);
@@ -291,9 +311,9 @@ export default class AccountsController extends BaseController {
             _id: AccountId,
             $or: [{ createdBy: UserId }, { createdFor: UserId }],
           },
-          { logo }
+          { logo },
         );
-      }
+      },
     );
   }
 }
