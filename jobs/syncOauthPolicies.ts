@@ -14,7 +14,7 @@ export const DefaultOauthPolicies = {
     "usersIdentification.request",
   ],
   unverified: [
-    "users.get",
+    "users.me",
     "users.update",
     "users.delete",
     "oauth.logout",
@@ -39,8 +39,9 @@ export const DefaultOauthPolicies = {
   user: ["role:unverified", "wallet.signTransfer", "wallet.transfer"],
 };
 
-export type TOauthPolicies = typeof DefaultOauthPolicies &
-  Partial<Record<string, string[]>>;
+export type TOauthPolicies =
+  & typeof DefaultOauthPolicies
+  & Partial<Record<string, string[]>>;
 
 export const OauthPolicies: TOauthPolicies = {
   ...DefaultOauthPolicies,
@@ -70,23 +71,24 @@ export const SyncOauthPolicies = async () => {
     Object.entries(OauthPolicies).map(([role, scopes]) => {
       if (scopes instanceof Array) {
         const ExistingScopes = Policies.find(
-          (doc) => doc.role === role
+          (doc) => doc.role === role,
         )?.scopes;
         const UpdatedScopes = Array.from(
-          new Set([...scopes, ...(ExistingScopes ?? [])])
+          new Set([...scopes, ...(ExistingScopes ?? [])]),
         );
 
         if (
           !ExistingScopes ||
           !AreArraysIdentical(ExistingScopes, UpdatedScopes)
-        )
+        ) {
           return OauthPolicyModel.updateOne(
             { role },
             { scopes: UpdatedScopes },
-            { upsert: true }
+            { upsert: true },
           );
+        }
       }
-    })
+    }),
   );
 };
 
