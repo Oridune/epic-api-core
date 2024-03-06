@@ -316,4 +316,31 @@ export default class AccountsController extends BaseController {
       },
     );
   }
+
+  @Patch("/toggle/blocked/:id/")
+  public toggleBlocked(route: IRoute) {
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      id: e.string(),
+    });
+
+    return new Versioned().add("1.0.0", {
+      postman: {
+        params: ParamsSchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
+
+        // Update account's blocking status
+        await AccountModel.updateOneOrFail(Params.id, {
+          isBlocked: { $not: "$isBlocked" },
+        });
+
+        return Response.true();
+      },
+    });
+  }
 }

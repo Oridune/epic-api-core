@@ -1,16 +1,16 @@
 import {
-  Controller,
   BaseController,
-  Get,
-  Post,
-  Patch,
+  Controller,
   Delete,
-  Versioned,
-  Response,
-  type IRoute,
+  Get,
   type IRequestContext,
+  type IRoute,
+  Patch,
+  Post,
+  Response,
+  Versioned,
 } from "@Core/common/mod.ts";
-import { Status, type RouterContext } from "oak";
+import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
 import { Database } from "@Database";
@@ -50,11 +50,13 @@ export default class CollaboratorsController extends BaseController {
             ctx.router.state.auth.user.email,
             ctx.router.state.auth.user.phone,
           ].includes(Invite.recipient)
-        )
+        ) {
           throw e.error("Invalid or expired invitation token!");
+        }
 
-        if (ctx.router.state.auth!.userId === Invite.createdBy.toString())
+        if (ctx.router.state.auth!.userId === Invite.createdBy.toString()) {
           throw e.error("You cannot consume an invite token by yourself!");
+        }
 
         const CreatedFor = new ObjectId(ctx.router.state.auth!.userId);
 
@@ -63,8 +65,9 @@ export default class CollaboratorsController extends BaseController {
             account: Invite.account,
             createdFor: CreatedFor,
           })
-        )
+        ) {
           throw e.error("You already have access to this account!");
+        }
 
         return Response.statusCode(Status.Created).data(
           await Database.transaction(async (session) => {
@@ -79,7 +82,7 @@ export default class CollaboratorsController extends BaseController {
                 isOwned: false,
                 isPrimary: false,
               },
-              { session }
+              { session },
             );
 
             await UserModel.updateOne(
@@ -89,7 +92,7 @@ export default class CollaboratorsController extends BaseController {
                   collaborates: Collaborator._id,
                 },
               },
-              { session }
+              { session },
             );
 
             await OauthSessionModel.updateOneOrFail(
@@ -97,11 +100,11 @@ export default class CollaboratorsController extends BaseController {
               {
                 [`scopes.${Invite.account.toString()}`]: ["*"],
               },
-              { session }
+              { session },
             );
 
             return Collaborator;
-          })
+          }),
         );
       },
     });
@@ -135,7 +138,7 @@ export default class CollaboratorsController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: `${route.scope}.body` }
+          { name: `${route.scope}.body` },
         );
 
         const CollaboratorId = new ObjectId(Params.id);
@@ -146,15 +149,15 @@ export default class CollaboratorsController extends BaseController {
         await CollaboratorModel.updateOneOrFail(
           ctx.router.state.auth.isAccountOwned
             ? {
-                _id: CollaboratorId,
-                account: AccountId,
-              }
+              _id: CollaboratorId,
+              account: AccountId,
+            }
             : {
-                _id: CollaboratorId,
-                account: AccountId,
-                createdBy: UserId,
-              },
-          Body
+              _id: CollaboratorId,
+              account: AccountId,
+              createdBy: UserId,
+            },
+          Body,
         );
 
         return Response.true();
@@ -162,8 +165,8 @@ export default class CollaboratorsController extends BaseController {
     });
   }
 
-  @Patch("/toggle/block/:id/")
-  public toggleBlock(route: IRoute) {
+  @Patch("/toggle/blocked/:id/")
+  public toggleBlocked(route: IRoute) {
     // Define Params Schema
     const ParamsSchema = e.object({
       id: e.string(),
@@ -183,24 +186,25 @@ export default class CollaboratorsController extends BaseController {
 
         const CollaboratorId = new ObjectId(Params.id);
         const AccountId = new ObjectId(ctx.router.state.auth.accountId);
+        const UserId = new ObjectId(ctx.router.state.auth.userId);
 
         // Either the account owner or the collaboration creator should be able to block
         await CollaboratorModel.updateOneOrFail(
           ctx.router.state.auth!.isAccountOwned
             ? {
-                _id: CollaboratorId,
-                account: AccountId,
-                isPrimary: false,
-              }
+              _id: CollaboratorId,
+              account: AccountId,
+              isPrimary: false,
+            }
             : {
-                _id: CollaboratorId,
-                account: new ObjectId(ctx.router.state.auth!.accountId),
-                createdBy: AccountId,
-                isPrimary: false,
-              },
+              _id: CollaboratorId,
+              account: AccountId,
+              createdBy: UserId,
+              isPrimary: false,
+            },
           {
             isBlocked: { $not: "$isBlocked" },
-          }
+          },
         );
 
         return Response.true();
@@ -217,27 +221,27 @@ export default class CollaboratorsController extends BaseController {
       {
         search: e.optional(e.string()),
         range: e.optional(
-          e.tuple([e.date().end(CurrentTimestamp), e.date()], { cast: true })
+          e.tuple([e.date().end(CurrentTimestamp), e.date()], { cast: true }),
         ),
         offset: e.optional(e.number({ cast: true }).min(0)).default(0),
         limit: e.optional(e.number({ cast: true }).max(2000)).default(2000),
         sort: e
           .optional(
-            e.record(e.number({ cast: true }).min(-1).max(1), { cast: true })
+            e.record(e.number({ cast: true }).min(-1).max(1), { cast: true }),
           )
           .default({ _id: -1 }),
         project: e.optional(
-          e.record(e.number({ cast: true }).min(0).max(1), { cast: true })
+          e.record(e.number({ cast: true }).min(0).max(1), { cast: true }),
         ),
         includeTotalCount: e.optional(
           e
             .boolean({ cast: true })
             .describe(
-              "If `true` is passed, the system will return a total items count for pagination purpose."
-            )
+              "If `true` is passed, the system will return a total items count for pagination purpose.",
+            ),
         ),
       },
-      { allowUnexpectedProps: true }
+      { allowUnexpectedProps: true },
     );
 
     // Define Params Schema
@@ -256,14 +260,13 @@ export default class CollaboratorsController extends BaseController {
         // Query Validation
         const Query = await QuerySchema.validate(
           Object.fromEntries(ctx.router.request.url.searchParams),
-          { name: `${route.scope}.query` }
+          { name: `${route.scope}.query` },
         );
 
         /**
          * It is recommended to keep the following validators in place even if you don't want to validate any data.
          * It will prevent the client from injecting unexpected data into the request.
-         *
-         * */
+         */
 
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {
@@ -276,11 +279,11 @@ export default class CollaboratorsController extends BaseController {
             account: new ObjectId(ctx.router.state.auth.accountId),
             ...(Query.range instanceof Array
               ? {
-                  createdAt: {
-                    $gt: new Date(Query.range[0]),
-                    $lt: new Date(Query.range[1]),
-                  },
-                }
+                createdAt: {
+                  $gt: new Date(Query.range[0]),
+                  $lt: new Date(Query.range[1]),
+                },
+              }
               : {}),
           })
           .skip(Query.offset)
@@ -299,10 +302,10 @@ export default class CollaboratorsController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            ? //? Make sure to pass any limiting conditions for count if needed.
-              await CollaboratorModel.count({
-                account: new ObjectId(ctx.router.state.auth.accountId),
-              })
+            //? Make sure to pass any limiting conditions for count if needed.
+            ? await CollaboratorModel.count({
+              account: new ObjectId(ctx.router.state.auth.accountId),
+            })
             : undefined,
           results: await CollaboratorsListQuery,
         });
@@ -338,17 +341,17 @@ export default class CollaboratorsController extends BaseController {
           await CollaboratorModel.deleteOneOrFail(
             ctx.router.state.auth!.isAccountOwned
               ? {
-                  _id: CollaboratorId,
-                  account: AccountId,
-                  isPrimary: false,
-                }
+                _id: CollaboratorId,
+                account: AccountId,
+                isPrimary: false,
+              }
               : {
-                  _id: CollaboratorId,
-                  account: AccountId,
-                  createdBy: UserId,
-                  isPrimary: false,
-                },
-            { session }
+                _id: CollaboratorId,
+                account: AccountId,
+                createdBy: UserId,
+                isPrimary: false,
+              },
+            { session },
           );
 
           await UserModel.updateOne(
@@ -358,7 +361,7 @@ export default class CollaboratorsController extends BaseController {
                 collaborates: CollaboratorId,
               },
             },
-            { session }
+            { session },
           );
         });
 
