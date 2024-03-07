@@ -9,17 +9,15 @@ export default () => {
 
     if (typeof CachedValue === "string") return CachedValue;
 
-    const Value =
-      (await EnvModel.findOne({ type: Env.getType(), key }))?.value ??
-      (await EnvModel.findOne({ type: null, key }))?.value ??
-      (await EnvModel.findOne({ type: "*", key }))?.value;
+    const Value = (await EnvModel.findOne({ key }))?.value;
 
-    if (typeof Value === "string")
+    if (typeof Value === "string") {
       await Store.set(CacheKey, Value, {
         expiresInMs: parseFloat(
-          (await Env.get("ENV_CACHE_TTL_MS", true)) ?? "600000" // Default TTL 10 minutes
+          (await Env.get("ENV_CACHE_TTL_MS", true)) ?? "600000", // Default TTL 10 minutes
         ),
       });
+    }
 
     return Value;
   };

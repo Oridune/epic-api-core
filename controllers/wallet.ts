@@ -1,16 +1,16 @@
 import {
-  Controller,
   BaseController,
-  Get,
-  Post,
-  Versioned,
-  Response,
-  type IRoute,
-  type IRequestContext,
+  Controller,
   Env,
   EnvType,
+  Get,
+  type IRequestContext,
+  type IRoute,
+  Post,
+  Response,
+  Versioned,
 } from "@Core/common/mod.ts";
-import { Status, type RouterContext } from "oak";
+import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
 
@@ -29,13 +29,26 @@ import { TFileOutput } from "@Models/file.ts";
 export default class WalletController extends BaseController {
   @Get("/metadata/")
   public metadata() {
-    return async () =>
-      Response.data({
-        defaultType: await Wallet.getDefaultType(),
-        availableTypes: await Wallet.getTypes(),
-        defaultCurrency: await Wallet.getDefaultCurrency(),
-        availableCurrencies: await Wallet.getCurrencies(),
+    return async () => {
+      const [
+        defaultType,
+        availableTypes,
+        defaultCurrency,
+        availableCurrencies,
+      ] = await Promise.all([
+        Wallet.getDefaultType(),
+        Wallet.getTypes(),
+        Wallet.getDefaultCurrency(),
+        Wallet.getCurrencies(),
+      ]);
+
+      return Response.data({
+        defaultType,
+        availableTypes,
+        defaultCurrency,
+        availableCurrencies,
       });
+    };
   }
 
   @Get("/transfer/sign/:type?/:currency?/")
@@ -50,7 +63,7 @@ export default class WalletController extends BaseController {
         amount: e.number({ cast: true }),
         description: e.optional(e.string().max(300)),
       },
-      { allowUnexpectedProps: true }
+      { allowUnexpectedProps: true },
     );
 
     // Define Params Schema
@@ -70,7 +83,7 @@ export default class WalletController extends BaseController {
         // Query Validation
         const Query = await QuerySchema.validate(
           Object.fromEntries(ctx.router.request.url.searchParams),
-          { name: `${route.scope}.query` }
+          { name: `${route.scope}.query` },
         );
 
         // Params Validation
@@ -97,11 +110,12 @@ export default class WalletController extends BaseController {
           avatar: 1,
         });
 
-        if (!ReceivingUser)
+        if (!ReceivingUser) {
           throw e.error(
             `Receiving user not found!`,
-            `${route.scope}.query.receiver`
+            `${route.scope}.query.receiver`,
           );
+        }
 
         const ReceiverAccount = await AccountModel.findOne({
           ...(ObjectId.isValid(accountId)
@@ -115,8 +129,9 @@ export default class WalletController extends BaseController {
         });
 
         if (!ReceiverAccount) throw e.error("Receiver account not found!");
-        if (ReceiverAccount.isBlocked)
+        if (ReceiverAccount.isBlocked) {
           throw e.error("Receiver account is not available!");
+        }
 
         const TransferDetails = {
           sender: {
@@ -151,7 +166,7 @@ export default class WalletController extends BaseController {
             IdentificationPurpose.VERIFICATION,
             Query.method,
             { userId: ctx.router.state.auth.userId },
-            TransferDetails
+            TransferDetails,
           );
 
           return Response.statusCode(Status.Created).data({
@@ -168,7 +183,7 @@ export default class WalletController extends BaseController {
         const Challenge = await UsersIdentificationController.sign(
           IdentificationPurpose.VERIFICATION,
           null,
-          TransferDetails
+          TransferDetails,
         );
 
         return Response.statusCode(Status.Created).data({
@@ -198,7 +213,7 @@ export default class WalletController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: `${route.scope}.body` }
+          { name: `${route.scope}.body` },
         );
 
         type TransferEntity = {
@@ -221,7 +236,7 @@ export default class WalletController extends BaseController {
             description: string;
           };
         }>(Body.token, Body.code, IdentificationPurpose.VERIFICATION).catch(
-          e.error
+          e.error,
         );
 
         const Transfer = await Wallet.transfer({
@@ -274,7 +289,7 @@ export default class WalletController extends BaseController {
         });
 
         return Response.data(
-          await Wallet.get(ctx.router.state.auth.accountId, Params)
+          await Wallet.get(ctx.router.state.auth.accountId, Params),
         );
       },
     });
@@ -298,11 +313,11 @@ export default class WalletController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: `${route.scope}.body` }
+          { name: `${route.scope}.body` },
         );
 
         return Response.data(
-          await Wallet.list(ctx.router.state.auth.accountId, Body)
+          await Wallet.list(ctx.router.state.auth.accountId, Body),
         );
       },
     });
@@ -317,27 +332,27 @@ export default class WalletController extends BaseController {
       {
         search: e.optional(e.string()),
         range: e.optional(
-          e.tuple([e.date().end(CurrentTimestamp), e.date()], { cast: true })
+          e.tuple([e.date().end(CurrentTimestamp), e.date()], { cast: true }),
         ),
         offset: e.optional(e.number({ cast: true }).min(0)).default(0),
         limit: e.optional(e.number({ cast: true }).max(2000)).default(2000),
         sort: e
           .optional(
-            e.record(e.number({ cast: true }).min(-1).max(1), { cast: true })
+            e.record(e.number({ cast: true }).min(-1).max(1), { cast: true }),
           )
           .default({ _id: -1 }),
         project: e.optional(
-          e.record(e.number({ cast: true }).min(0).max(1), { cast: true })
+          e.record(e.number({ cast: true }).min(0).max(1), { cast: true }),
         ),
         includeTotalCount: e.optional(
           e
             .boolean({ cast: true })
             .describe(
-              "If `true` is passed, the system will return a total items count for pagination purpose."
-            )
+              "If `true` is passed, the system will return a total items count for pagination purpose.",
+            ),
         ),
       },
-      { allowUnexpectedProps: true }
+      { allowUnexpectedProps: true },
     );
 
     // Define Params Schema
@@ -359,7 +374,7 @@ export default class WalletController extends BaseController {
         // Query Validation
         const Query = await QuerySchema.validate(
           Object.fromEntries(ctx.router.request.url.searchParams),
-          { name: `${route.scope}.query` }
+          { name: `${route.scope}.query` },
         );
 
         // Params Validation
@@ -376,11 +391,11 @@ export default class WalletController extends BaseController {
             ...Params,
             ...(Query.range instanceof Array
               ? {
-                  createdAt: {
-                    $gt: new Date(Query.range[0]),
-                    $lt: new Date(Query.range[1]),
-                  },
-                }
+                createdAt: {
+                  $gt: new Date(Query.range[0]),
+                  $lt: new Date(Query.range[1]),
+                },
+              }
               : {}),
           })
           .skip(Query.offset)
@@ -391,8 +406,8 @@ export default class WalletController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            ? //? Make sure to pass any limiting conditions for count if needed.
-              await TransactionModel.count()
+            //? Make sure to pass any limiting conditions for count if needed.
+            ? await TransactionModel.count()
             : undefined,
           results: await TransactionListQuery,
         });

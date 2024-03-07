@@ -1,15 +1,11 @@
 import e, { inferInput, inferOutput } from "validator";
-import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
-import { EnvType } from "@Core/common/env.ts";
+import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 
 export const EnvSchema = () =>
   e.object({
     _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
     createdAt: e.optional(e.date()).default(() => new Date()),
     updatedAt: e.optional(e.date()).default(() => new Date()),
-    type: e.optional(
-      e.or([e.in(Object.values(EnvType)), e.string(), e.null()])
-    ),
     key: e.string(),
     value: e.string(),
   });
