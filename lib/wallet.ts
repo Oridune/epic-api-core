@@ -2,7 +2,7 @@
 import { Env } from "@Core/common/env.ts";
 import { Database } from "@Database";
 import * as bcrypt from "bcrypt";
-import { ObjectId, ClientSession } from "mongo";
+import { ClientSession, ObjectId } from "mongo";
 import { WalletModel } from "@Models/wallet.ts";
 import { TransactionModel, TransactionStatus } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
@@ -29,7 +29,7 @@ export class Wallet {
   static async getCurrencies() {
     return (
       (await Env.get("SUPPORTED_WALLET_CURRENCIES", true))?.split(/\s*,\s*/) ??
-      []
+        []
     );
   }
 
@@ -41,12 +41,12 @@ export class Wallet {
     account: ObjectId | string,
     type: string,
     currency: string,
-    balance: number
+    balance: number,
   ) {
     return bcrypt.hash(
       `${await Env.get(
-        "ENCRYPTION_KEY"
-      )}:${account}:${type}:${currency}:${balance}`
+        "ENCRYPTION_KEY",
+      )}:${account}:${type}:${currency}:${balance}`,
     );
   }
 
@@ -55,13 +55,13 @@ export class Wallet {
     type: string,
     currency: string,
     balance: number,
-    digest: string
+    digest: string,
   ) {
     return bcrypt.compare(
       `${await Env.get(
-        "ENCRYPTION_KEY"
+        "ENCRYPTION_KEY",
       )}:${account}:${type}:${currency}:${balance}`,
-      digest
+      digest,
     );
   }
 
@@ -73,25 +73,25 @@ export class Wallet {
     options?: {
       skipAccountCheck?: boolean;
       overdraftLimit?: number;
-    }
+    },
   ) {
     if (!options?.skipAccountCheck) {
       const Accounts =
         (await Env.get("WALLET_OVERDRAFT_ENABLED_ACCOUNTS", true))?.split(
-          /\s*,\s*/
+          /\s*,\s*/,
         ) ?? [];
 
       if (!Accounts.includes(account.toString())) return false;
     }
 
-    if (typeof options?.overdraftLimit === "number")
+    if (typeof options?.overdraftLimit === "number") {
       return postTransactionBalance >= options.overdraftLimit;
+    }
 
-    const RawLimit =
-      (await Env.get(
-        `WALLET_OVERDRAFT_LIMIT_${type.toUpperCase()}_${currency.toUpperCase()}`,
-        true
-      )) ?? (await Env.get(`WALLET_OVERDRAFT_LIMIT`, true));
+    const RawLimit = (await Env.get(
+      `WALLET_OVERDRAFT_LIMIT_${type.toUpperCase()}_${currency.toUpperCase()}`,
+      true,
+    )) ?? (await Env.get(`WALLET_OVERDRAFT_LIMIT`, true));
 
     const Limit = !isNaN(RawLimit as unknown as number)
       ? parseFloat(RawLimit!)
@@ -106,16 +106,18 @@ export class Wallet {
       type?: string;
       currency?: string;
       databaseSession?: ClientSession;
-    }
+    },
   ) {
     const Type = options?.type ?? (await this.getDefaultType());
     const Currency = options?.currency ?? (await this.getDefaultCurrency());
 
-    if (!(await this.isValidType(Type)))
+    if (!(await this.isValidType(Type))) {
       throw new Error(`Invalid wallet type '${Type}'!`);
+    }
 
-    if (!(await this.isValidCurrency(Currency)))
+    if (!(await this.isValidCurrency(Currency))) {
       throw new Error(`Invalid currency '${Currency}'!`);
+    }
 
     const Balance = 0;
 
@@ -129,10 +131,10 @@ export class Wallet {
           account,
           Type,
           Currency,
-          Balance
+          Balance,
         ),
       },
-      { session: options?.databaseSession }
+      { session: options?.databaseSession },
     );
   }
 
@@ -142,7 +144,7 @@ export class Wallet {
       type?: string;
       currency?: string;
       databaseSession?: ClientSession;
-    }
+    },
   ) {
     const Type = options?.type ?? (await this.getDefaultType());
     const Currency = options?.currency ?? (await this.getDefaultCurrency());
@@ -153,7 +155,7 @@ export class Wallet {
         type: Type,
         currency: Currency,
       },
-      { session: options?.databaseSession }
+      { session: options?.databaseSession },
     ).project({ transactions: 0 });
 
     if (!Wallet) Wallet = await this.create(account, options);
@@ -163,10 +165,11 @@ export class Wallet {
         Wallet.type,
         Wallet.currency,
         Wallet.balance,
-        Wallet.digest
+        Wallet.digest,
       ))
-    )
+    ) {
       throw new Error(`Balance tampering detected!`);
+    }
 
     return Wallet;
   }
@@ -177,7 +180,7 @@ export class Wallet {
       types?: string[];
       currencies?: string[];
       databaseSession?: ClientSession;
-    }
+    },
   ) {
     return await Promise.all(
       (
@@ -191,7 +194,7 @@ export class Wallet {
               ? { currency: { $in: options.currencies } }
               : {}),
           },
-          { session: options?.databaseSession }
+          { session: options?.databaseSession },
         ).project({ transactions: 0 })
       ).map(async (wallet) => {
         if (
@@ -200,13 +203,14 @@ export class Wallet {
             wallet.type,
             wallet.currency,
             wallet.balance,
-            wallet.digest
+            wallet.digest,
           ))
-        )
+        ) {
           wallet.balance = 0;
+        }
 
         return wallet;
-      })
+      }),
     );
   }
 
@@ -229,34 +233,34 @@ export class Wallet {
     metadata?: Record<string, any>;
     databaseSession?: ClientSession;
   }) {
-    if (typeof options.amount !== "number" || options.amount <= 0)
+    if (typeof options.amount !== "number" || options.amount <= 0) {
       throw new Error(`Please provide a valid non-zero positive amount!`);
+    }
 
     if (
       options.sessionId &&
       (await TransactionModel.count({ sessionId: options.sessionId }))
-    )
+    ) {
       throw new Error(`Cannot transfer in the same session again!`);
+    }
 
-    const Reference =
-      options.reference ??
+    const Reference = options.reference ??
       `TX${10000 + (await Store.incr("wallet-transaction-reference"))}`;
 
-    if (await TransactionModel.count({ reference: Reference }))
+    if (await TransactionModel.count({ reference: Reference })) {
       throw new Error(
-        `A payment with the same transaction reference '${Reference}' already exists!`
+        `A payment with the same transaction reference '${Reference}' already exists!`,
       );
+    }
 
-    const FromName =
-      options.fromName instanceof Array
-        ? options.fromName.filter(Boolean).join(" ")
-        : options.fromName;
+    const FromName = options.fromName instanceof Array
+      ? options.fromName.filter(Boolean).join(" ")
+      : options.fromName;
     const From = options.from.toString();
 
-    const ToName =
-      options.toName instanceof Array
-        ? options.toName.filter(Boolean).join(" ")
-        : options.toName;
+    const ToName = options.toName instanceof Array
+      ? options.toName.filter(Boolean).join(" ")
+      : options.toName;
     const To = options.to.toString();
 
     if (From === To) throw new Error(`Cannot transfer to the same wallet!`);
@@ -273,15 +277,17 @@ export class Wallet {
     const MinTransferAmount = parseFloat(MinTransfer ?? "1");
     const MaxTransferAmount = parseFloat(MaxTransfer ?? "1e500");
 
-    if (options.amount < MinTransferAmount)
+    if (options.amount < MinTransferAmount) {
       throw new Error(
-        `Minimum transfer amount required is ${MinTransferAmount}`
+        `Minimum transfer amount required is ${MinTransferAmount}`,
       );
+    }
 
-    if (options.amount > MaxTransferAmount)
+    if (options.amount > MaxTransferAmount) {
       throw new Error(
-        `Maximum transfer amount allowed is ${MaxTransferAmount}`
+        `Maximum transfer amount allowed is ${MaxTransferAmount}`,
       );
+    }
 
     return Database.transaction(async (session) => {
       const WalletA = await this.get(From, {
@@ -303,10 +309,11 @@ export class Wallet {
           {
             skipAccountCheck: options.allowOverdraft,
             overdraftLimit: options.overdraftLimit,
-          }
+          },
         ))
-      )
+      ) {
         throw new Error(`Insufficient balance!`);
+      }
 
       const WalletB = await this.get(To, {
         type: Type,
@@ -338,7 +345,7 @@ export class Wallet {
         WalletA.account,
         WalletA.type,
         WalletA.currency,
-        WalletA.balance
+        WalletA.balance,
       );
 
       await WalletModel.updateOne(
@@ -347,7 +354,7 @@ export class Wallet {
           balance: WalletA.balance,
           digest: WalletA.digest,
         },
-        { session }
+        { session },
       );
 
       // Credit Balance
@@ -357,7 +364,7 @@ export class Wallet {
           WalletB.account,
           WalletB.type,
           WalletB.currency,
-          WalletB.balance
+          WalletB.balance,
         );
 
         await WalletModel.updateOne(
@@ -366,7 +373,7 @@ export class Wallet {
             balance: WalletB.balance,
             digest: WalletB.digest,
           },
-          { session }
+          { session },
         );
       }
 
@@ -375,5 +382,42 @@ export class Wallet {
         transaction: Transaction,
       };
     }, options.databaseSession);
+  }
+
+  static async refund(options: {
+    sessionId?: string;
+    reference?: string;
+    transactionId: ObjectId | string;
+    user: ObjectId | string;
+    description?: string;
+    allowOverdraft?: boolean;
+    overdraftLimit?: number;
+    metadata?: Record<string, any>;
+    databaseSession?: ClientSession;
+  }) {
+    const Transaction = await TransactionModel.findOne({
+      _id: new ObjectId(options.transactionId),
+      status: TransactionStatus.COMPLETED,
+    });
+
+    if (!Transaction) throw new Error("A completed transaction was not found!");
+
+    return await Wallet.transfer({
+      sessionId: options.sessionId,
+      reference: options.reference,
+      type: Transaction.type,
+      fromName: Transaction.toName,
+      from: Transaction.to,
+      toName: Transaction.fromName,
+      to: Transaction.to,
+      user: options.user,
+      currency: Transaction.currency,
+      amount: Transaction.amount,
+      description: options.description ??
+        ["(Refund)", Transaction.description].join(" "),
+      metadata: options.metadata,
+      allowOverdraft: options.allowOverdraft,
+      overdraftLimit: options.overdraftLimit,
+    });
   }
 }
