@@ -418,6 +418,7 @@ export class Wallet {
       metadata: options.metadata,
       allowOverdraft: options.allowOverdraft,
       overdraftLimit: options.overdraftLimit,
+      databaseSession: options.databaseSession,
     });
   }
 }
