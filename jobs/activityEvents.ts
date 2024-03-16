@@ -2,8 +2,8 @@ import { RouterContext } from "oak";
 import {
   Env,
   EnvType,
-  Events,
   EventChannel,
+  Events,
   IRequestContext,
   Response,
 } from "@Core/common/mod.ts";
@@ -14,6 +14,7 @@ import { TUserOutput, UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauthSession.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 import { TFileOutput } from "@Models/file.ts";
+import { Store } from "@Core/common/store.ts";
 
 export const isUserVerified = async (input: {
   isEmailVerified?: boolean;
@@ -25,13 +26,11 @@ export const isUserVerified = async (input: {
 
   let verified = true;
 
-  verified =
-    verified &&
+  verified = verified &&
     (!Policy.includes("email") ||
       (Policy.includes("email") && !!input.isEmailVerified));
 
-  verified =
-    verified &&
+  verified = verified &&
     (!Policy.includes("phone") ||
       (Policy.includes("phone") && !!input.isPhoneVerified));
 
@@ -42,7 +41,7 @@ export const syncUserVerifiedRole = async (
   userId: string,
   options?: {
     verifiedRole?: string;
-  }
+  },
 ) => {
   const User = await UserModel.findOne(userId).project({
     role: 1,
@@ -50,10 +49,11 @@ export const syncUserVerifiedRole = async (
     isPhoneVerified: 1,
   });
 
-  if (!User)
+  if (!User) {
     throw new Error(
-      `A user who just updated his email or phone, was not found!`
+      `A user who just updated his email or phone, was not found!`,
     );
+  }
 
   const Verified = await isUserVerified(User);
 
@@ -83,7 +83,7 @@ export default () => {
 
     const Body = event.detail.res.getBody();
 
-    if (Body.status && Body.data)
+    if (Body.status && Body.data) {
       await Notifier.subscribers.identify(Body.data._id.toString(), {
         avatar: Body.data.avatar?.url,
         firstName: Body.data.fname,
@@ -92,13 +92,16 @@ export default () => {
         email: Body.data.email,
         phone: Body.data.phone,
       });
+    }
   });
 
   Events.listen<{
     ctx: IRequestContext<RouterContext<string>>;
     res: Response;
   }>(EventChannel.REQUEST, "users.verify", async (event) => {
-    const Body = event.detail.res.getBody();
+    const { ctx, res } = event.detail;
+
+    const Body = res.getBody();
 
     if (Body.status) {
       const VerifyTokenPayload = await e
@@ -107,11 +110,16 @@ export default () => {
             method: e.string(),
             userId: e.string(),
           },
-          { allowUnexpectedProps: true }
+          { allowUnexpectedProps: true },
         )
-        .validate(event.detail.ctx.router.state.verifyTokenPayload);
+        .validate(ctx.router.state.verifyTokenPayload);
 
       await syncUserVerifiedRole(VerifyTokenPayload.userId);
+
+      // Invalidate Cached Session
+      await Store.del(
+        `checkPermissions:${ctx.router.state.sessionInfo?.claims.sessionId}:${ctx.router.state.auth?.accountId}`,
+      );
     }
   });
 
@@ -147,7 +155,7 @@ export default () => {
             );
         }
       }
-    }
+    },
   );
 
   Events.listen<{
@@ -171,7 +179,7 @@ export default () => {
     const Request = event.detail.ctx;
     const Body = event.detail.res.getBody();
 
-    if (typeof Request.router.state.auth?.userId === "string")
+    if (typeof Request.router.state.auth?.userId === "string") {
       if (Body.status && Body.data) {
         const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
 
@@ -186,10 +194,11 @@ export default () => {
           .catch(() =>
             Notifier.subscribers.identify(
               Request.router.state.auth!.userId,
-              Payload
+              Payload,
             )
           );
       }
+    }
   });
 
   Events.listen<{
@@ -199,7 +208,7 @@ export default () => {
     const Request = event.detail.ctx;
     const Body = event.detail.res.getBody();
 
-    if (typeof Request.router.state.auth?.userId === "string")
+    if (typeof Request.router.state.auth?.userId === "string") {
       if (Body.status && Body.data) {
         const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
 
@@ -212,10 +221,11 @@ export default () => {
           .catch(() =>
             Notifier.subscribers.identify(
               Request.router.state.auth!.userId,
-              Payload
+              Payload,
             )
           );
       }
+    }
   });
 
   Events.listen<{
@@ -232,7 +242,7 @@ export default () => {
             method: e.string(),
             userId: e.string(),
           },
-          { allowUnexpectedProps: true }
+          { allowUnexpectedProps: true },
         )
         .validate(Request.router.state.verifyTokenPayload);
 
