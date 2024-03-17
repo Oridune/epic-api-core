@@ -1,5 +1,6 @@
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+import { Helmet } from "react-helmet";
 import { useTranslation } from "react-i18next";
 
 import "@fontsource/roboto/300.css";
@@ -16,6 +17,8 @@ import { AppRoutes } from "./App.Routes";
 import { useOauthApp } from "./context/OauthApp";
 import { NoAppPage } from "./pages/NoApp";
 import { LoadingFormPage } from "./pages/LoadingForm";
+
+import Logo from "../assets/logo.png";
 
 export const AppTheme = () => {
   const { app, loading } = useOauthApp();
@@ -111,7 +114,22 @@ export const AppTheme = () => {
       })}
     >
       <CssBaseline />
-      {loading ? <LoadingFormPage /> : !app ? <NoAppPage /> : <AppRoutes />}
+      {loading ? (
+        <LoadingFormPage />
+      ) : !app ? (
+        <NoAppPage />
+      ) : (
+        <>
+          <Helmet>
+            <link
+              rel="shortcut icon"
+              href={app.consent.logo?.url ?? Logo}
+              type="image/x-icon"
+            />
+          </Helmet>
+          <AppRoutes />
+        </>
+      )}
     </ThemeProvider>
   );
 };
