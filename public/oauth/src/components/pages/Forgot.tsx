@@ -29,6 +29,11 @@ import axios, { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
+import {
+  PasswordFormatValidator,
+  UsernameValidator,
+} from "../utils/validators";
+
 import { useOauthApp } from "../context/OauthApp";
 
 import { ConsentFooter } from "../misc/ConsentFooter";
@@ -62,14 +67,7 @@ export const ForgotPage = () => {
   const ForgotSchema = React.useMemo(
     () =>
       e.object({
-        username: e
-          .string({
-            messages: {
-              matchFailed: t("Please provide a valid username format!"),
-            },
-          })
-          .matches(/^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/)
-          .length(50),
+        username: UsernameValidator(t),
       }),
     [i18n.language]
   );
@@ -78,17 +76,7 @@ export const ForgotPage = () => {
     () =>
       e.object({
         code: e.number({ cast: true }).length(6),
-        password: e
-          .string({
-            messages: {
-              matchFailed: t(
-                "A password should be 8 characters long, must contain an uppercase, a lowercase, a number and a special character!"
-              ),
-            },
-          })
-          .matches(
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=?|\s])[A-Za-z\d!@#$%^&*()_\-+=?|\s]{8,}$/
-          ),
+        password: PasswordFormatValidator(t),
         confirmPassword: e.string().custom((ctx) => {
           if (ctx.parent!.output.password !== ctx.output)
             throw t("Password doesn't match!");

@@ -28,6 +28,8 @@ import axios, { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
+import { EmailValidator, PhoneValidator } from "../utils/validators";
+
 import { useOauthApp } from "../context/OauthApp";
 
 import { DotMenu } from "../misc/DotMenu";
@@ -61,25 +63,8 @@ export const ContactsPage = () => {
   const ChangeContactSchema = React.useMemo(
     () =>
       e.object({
-        email: e.optional(
-          e
-            .string({
-              messages: { matchFailed: t("Please provide a valid email!") },
-            })
-            .matches({
-              regex:
-                /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/,
-            })
-        ),
-        phone: e.optional(
-          e
-            .string({
-              messages: { matchFailed: t("Please provide a valid phone!") },
-            })
-            .matches({
-              regex: /^\+[0-9]{6,14}$/,
-            })
-        ),
+        email: e.optional(EmailValidator(t)),
+        phone: e.optional(PhoneValidator(t)),
       }),
     [i18n.language]
   );

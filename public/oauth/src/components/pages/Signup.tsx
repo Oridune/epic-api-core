@@ -24,6 +24,13 @@ import axios, { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
+import {
+  EmailValidator,
+  PasswordFormatValidator,
+  PhoneValidator,
+  UsernameValidator,
+} from "../utils/validators";
+
 import { useOauthApp } from "../context/OauthApp";
 
 import { ConsentFooter } from "../misc/ConsentFooter";
@@ -49,43 +56,13 @@ export const SignupPage = () => {
         fname: e.string().length({ min: 2, max: 30 }),
         lname: e.string(),
         email: app?.consent.requiredIdentificationMethods.includes("email")
-          ? e
-              .string({
-                messages: { matchFailed: t("Please provide a valid email!") },
-              })
-              .matches({
-                regex:
-                  /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/,
-              })
+          ? EmailValidator(t)
           : undefined,
         phone: app?.consent.requiredIdentificationMethods.includes("phone")
-          ? e
-              .string({
-                messages: { matchFailed: t("Please provide a valid phone!") },
-              })
-              .matches({
-                regex: /^\+[0-9]{6,14}$/,
-              })
+          ? PhoneValidator(t)
           : undefined,
-        username: e
-          .string({
-            messages: {
-              matchFailed: t("Please provide a valid username format!"),
-            },
-          })
-          .matches(/^(?=[a-z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/)
-          .length(50),
-        password: e
-          .string({
-            messages: {
-              matchFailed: t(
-                "A password should be 8 characters long, must contain an uppercase, a lowercase, a number and a special character!"
-              ),
-            },
-          })
-          .matches(
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=?|\s])[A-Za-z\d!@#$%^&*()_\-+=?|\s]{8,}$/
-          ),
+        username: UsernameValidator(t),
+        password: PasswordFormatValidator(t),
         confirmPassword: e.string().custom((ctx) => {
           if (ctx.parent!.output.password !== ctx.output)
             throw t("Password doesn't match!");

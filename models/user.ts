@@ -1,7 +1,7 @@
 import e, { inferInput, inferOutput } from "validator";
 import { Store } from "@Core/common/store.ts";
 import { Env } from "@Core/common/env.ts";
-import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
+import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 import { FileSchema } from "@Models/file.ts";
 
 const UserReferencePrefix = Env.getSync("USER_REFERENCE_PREFIX", true) ?? "UID";
@@ -10,14 +10,14 @@ const UserReferenceStart = Env.getSync("USER_REFERENCE_START", true) ?? "10000";
 export const UserReferenceValidator = () =>
   e.string().matches({
     regex: new RegExp(
-      `^${UserReferencePrefix}[0-9]{${UserReferenceStart.length},}$`
+      `^${UserReferencePrefix}[0-9]{${UserReferenceStart.length},}$`,
     ),
   });
 
 export const UsernameValidator = () =>
   e.string().matches({
-    regex: /^(?=[a-z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/,
-  });
+    regex: /^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/,
+  }).custom((ctx) => ctx.output.toLowerCase());
 
 export const PasswordValidator = () =>
   e.string().matches({
@@ -84,7 +84,7 @@ export const UserSchema = () =>
             `${UserReferencePrefix}${
               parseInt(UserReferenceStart) +
               (await Store.incr(`user-reference-${UserReferencePrefix}`))
-            }`
+            }`,
         ),
       passwordHistory: e.array(e.string()),
       role: e.string(),
@@ -97,7 +97,7 @@ export const UserSchema = () =>
       isBlocked: e.optional(e.boolean({ cast: true })).default(false),
       collaborates: e.array(e.instanceOf(ObjectId, { instantiate: true })),
       deletionAt: e.optional(e.or([e.date(), e.null()])),
-    })
+    }),
   );
 
 export type TUserInput = InputDocument<inferInput<typeof UserSchema>>;
@@ -112,9 +112,10 @@ UserModel.pre("update", (details) => {
   };
 })
   .post("read", (details) => {
-    if (details.data.deletionAt instanceof Date)
+    if (details.data.deletionAt instanceof Date) {
       // Throw an error if the user is deleted
       throw new Error("Deleted user cannot be fetched!");
+    }
 
     return details.data;
   })
@@ -149,5 +150,5 @@ UserModel.pre("update", (details) => {
       key: { phone: 1 },
       unique: true,
       partialFilterExpression: { phone: { $exists: true } },
-    }
+    },
   );

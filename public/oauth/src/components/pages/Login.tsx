@@ -26,6 +26,8 @@ import axios, { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
+import { PasswordValidator, UsernameValidator } from "../utils/validators";
+
 import { useOauthApp } from "../context/OauthApp";
 
 import { ConsentFooter } from "../misc/ConsentFooter";
@@ -59,22 +61,8 @@ export const LoginPage = () => {
   const LoginSchema = React.useMemo(
     () =>
       e.object({
-        username: e
-          .string({
-            messages: {
-              matchFailed: t("Please provide a valid username format!"),
-            },
-          })
-          .matches(/^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/)
-          .length(50),
-        password: e
-          .string({
-            messages: {
-              typeError: t("Please provide a valid password!"),
-              smallerLength: t("Password is required!"),
-            },
-          })
-          .length({ min: 1, max: 300 }),
+        username: UsernameValidator(t),
+        password: PasswordValidator(t),
         remember: e
           .optional(
             e.or([e.string(), e.boolean()]).custom((ctx) => !!ctx.output)
