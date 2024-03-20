@@ -165,11 +165,12 @@ export default class CollaboratorsController extends BaseController {
     });
   }
 
-  @Patch("/toggle/blocked/:id/")
+  @Patch("/toggle/blocked/:id/:isBlocked/")
   public toggleBlocked(route: IRoute) {
     // Define Params Schema
     const ParamsSchema = e.object({
       id: e.string(),
+      isBlocked: e.boolean({ cast: true }),
     });
 
     return new Versioned().add("1.0.0", {
@@ -203,7 +204,7 @@ export default class CollaboratorsController extends BaseController {
               isPrimary: false,
             },
           {
-            isBlocked: { $not: "$isBlocked" },
+            isBlocked: Params.isBlocked,
           },
         );
 
