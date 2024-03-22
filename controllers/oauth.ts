@@ -1,22 +1,25 @@
 import {
-  Controller,
   BaseController,
-  Response,
-  Post,
+  Controller,
   Delete,
-  type IRequestContext,
-  type IRoute,
   Env,
   EnvType,
+  type IRequestContext,
+  type IRoute,
+  Post,
+  Response,
   Versioned,
 } from "@Core/common/mod.ts";
-import { Status, type RouterContext } from "oak";
+import { type RouterContext, Status } from "oak";
 import e from "validator";
 import * as bcrypt from "bcrypt";
-import { SignJWT, jwtVerify, JWTVerifyOptions, JWTPayload } from "jose";
+import { JWTPayload, jwtVerify, JWTVerifyOptions, SignJWT } from "jose";
 import { createHash } from "hash";
 import { ObjectId } from "mongo";
-import { UsernameValidator, UserModel } from "@Models/user.ts";
+// @deno-types="npm:@types/ua-parser-js"
+import { UAParser } from "useragent";
+
+import { UserModel, UsernameValidator } from "@Models/user.ts";
 import { OauthProvider, OauthSessionModel } from "@Models/oauthSession.ts";
 import { OauthAppModel } from "@Models/oauthApp.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
@@ -90,7 +93,7 @@ export default class OauthController extends BaseController {
     expiresInSeconds?: number;
   }) {
     const JWTSecret = new TextEncoder().encode(
-      (opts.secret ?? "") + (await Env.get("ENCRYPTION_KEY"))
+      (opts.secret ?? "") + (await Env.get("ENCRYPTION_KEY")),
     );
     const Issuer = opts.issuer ?? OauthController.DefaultOauthIssuer;
     const Audience = opts.audience ?? OauthController.DefaultOauthAudience;
@@ -101,7 +104,7 @@ export default class OauthController extends BaseController {
         CurrentDate / 1000 +
         (opts.expiresInSeconds ??
           OauthController.DefaultOauthTokenExpirySeconds)
-      ).toString()
+      ).toString(),
     );
 
     return {
@@ -154,22 +157,20 @@ export default class OauthController extends BaseController {
     return {
       refresh: opts.refreshable
         ? await OauthController.createOauthToken({
-            type: OauthTokenType.REFRESH,
-            payload: { ...opts.payload, ...Payload },
-            issuer: opts.issuer,
-            audience: opts.audience,
-            expiresInSeconds:
-              opts.refreshTokenExpiresInSeconds ??
-              OauthController.DefaultRefreshTokenExpirySeconds,
-          })
+          type: OauthTokenType.REFRESH,
+          payload: { ...opts.payload, ...Payload },
+          issuer: opts.issuer,
+          audience: opts.audience,
+          expiresInSeconds: opts.refreshTokenExpiresInSeconds ??
+            OauthController.DefaultRefreshTokenExpirySeconds,
+        })
         : undefined,
       access: await OauthController.createOauthToken({
         type: OauthTokenType.ACCESS,
         payload: { ...opts.payload, ...Payload },
         issuer: opts.issuer,
         audience: opts.audience,
-        expiresInSeconds:
-          opts.accessTokenExpiresInSeconds ??
+        expiresInSeconds: opts.accessTokenExpiresInSeconds ??
           OauthController.DefaultAccessTokenExpirySeconds *
             (opts.refreshable ? 1 : 12),
       }),
@@ -200,8 +201,7 @@ export default class OauthController extends BaseController {
         payload: { ...opts.payload, ...Payload },
         issuer: opts.issuer,
         audience: opts.audience,
-        expiresInSeconds:
-          opts.expiresInSeconds ??
+        expiresInSeconds: opts.expiresInSeconds ??
           OauthController.DefaultAccessTokenExpirySeconds * 2,
       }),
     };
@@ -209,7 +209,7 @@ export default class OauthController extends BaseController {
 
   static async verifyToken<P>(opts: IOauthVerifyOptions) {
     const JWTSecret = new TextEncoder().encode(
-      (opts.secret ?? "") + (await Env.get("ENCRYPTION_KEY"))
+      (opts.secret ?? "") + (await Env.get("ENCRYPTION_KEY")),
     );
 
     const JWTResults = await jwtVerify(opts.token, JWTSecret, {
@@ -220,6 +220,24 @@ export default class OauthController extends BaseController {
     });
 
     return JWTResults.payload as P & JWTPayload;
+  }
+
+  static resolveUserAgent(useragent: string) {
+    const ParsedUA = new UAParser(useragent);
+
+    const Device = ParsedUA.getDevice();
+    const Browser = ParsedUA.getBrowser();
+    const BrowserEngine = ParsedUA.getEngine();
+    const OS = ParsedUA.getOS();
+    const CPU = ParsedUA.getCPU();
+
+    return [
+      Device.type,
+      OS.name,
+      CPU.architecture,
+      Browser.name,
+      BrowserEngine.name,
+    ].filter(Boolean).join(";");
   }
 
   static async createSession(opts: {
@@ -235,15 +253,15 @@ export default class OauthController extends BaseController {
       _id: new ObjectId(opts.sessionId),
       createdBy: new ObjectId(opts.userId),
       provider: opts.provider,
-      useragent: opts.useragent,
+      useragent: OauthController.resolveUserAgent(opts.useragent),
       oauthApp: new ObjectId(opts.oauthAppId),
       version: 0,
       scopes: opts.scopes,
       expiresAt: new Date(
         Date.now() +
           (opts.expiresInSeconds ??
-            OauthController.DefaultRefreshTokenExpirySeconds) *
-            1000
+              OauthController.DefaultRefreshTokenExpirySeconds) *
+            1000,
       ),
     });
 
@@ -266,12 +284,12 @@ export default class OauthController extends BaseController {
 
     return await OauthSessionModel.updateAndFindOne(Session._id, {
       version: Session.version + 1,
-      useragent: opts.useragent,
+      useragent: OauthController.resolveUserAgent(opts.useragent),
       expiresAt: new Date(
         Date.now() +
           (opts.expiresInSeconds ??
-            OauthController.DefaultRefreshTokenExpirySeconds) *
-            1000
+              OauthController.DefaultRefreshTokenExpirySeconds) *
+            1000,
       ),
     });
   }
@@ -293,17 +311,19 @@ export default class OauthController extends BaseController {
 
     if (!Session) throw new Error(`An active session was not found!`);
 
-    if (
-      [undefined, true].includes(opts.useragentCheck) &&
-      Session.useragent !== opts.useragent
-    )
-      throw new Error(`Your session is invalid!`, {
-        cause: {
-          message: "User-Agent didn't match!",
-          gotUserAgent: Session.useragent,
-          expectedUserAgent: opts.useragent,
-        },
-      });
+    if (opts.useragentCheck !== false) {
+      const UserAgent = OauthController.resolveUserAgent(opts.useragent);
+
+      if (Session.useragent !== UserAgent) {
+        throw new Error(`Your session is invalid!`, {
+          cause: {
+            message: "User-Agent didn't match!",
+            gotUserAgent: Session.useragent,
+            expectedUserAgent: UserAgent,
+          },
+        });
+      }
+    }
 
     if (Session.version !== Claims.version) {
       await OauthSessionModel.deleteOne(Session._id);
@@ -350,8 +370,7 @@ export default class OauthController extends BaseController {
         payload: { ...opts.payload, ...Payload },
         issuer: opts.issuer,
         audience: opts.audience,
-        expiresInSeconds:
-          opts.expiresInSeconds ??
+        expiresInSeconds: opts.expiresInSeconds ??
           OauthController.DefaultOauthAuthenticationExpirySeconds,
       }),
     };
@@ -385,8 +404,7 @@ export default class OauthController extends BaseController {
         payload: { ...opts.payload, ...Payload },
         issuer: opts.issuer,
         audience: opts.audience,
-        expiresInSeconds:
-          opts.expiresInSeconds ??
+        expiresInSeconds: opts.expiresInSeconds ??
           OauthController.DefaultOauthCodeExpirySeconds,
       }),
     };
@@ -405,7 +423,7 @@ export default class OauthController extends BaseController {
           .split("=")[0]
           .replaceAll("+", "-")
           .replaceAll("/", "_") ===
-        opts.challenge.split("=")[0].replaceAll("+", "-").replaceAll("/", "_")
+          opts.challenge.split("=")[0].replaceAll("+", "-").replaceAll("/", "_")
       );
     } catch {
       return false;
@@ -430,10 +448,10 @@ export default class OauthController extends BaseController {
             )?.scopes ?? [],
             {
               resolveScopeRole: ResolveScopeRole,
-            }
-          )
+            },
+          ),
         ),
-      }))
+      })),
     );
   }
 
@@ -446,7 +464,7 @@ export default class OauthController extends BaseController {
         .any()
         .custom(async (ctx) => {
           const App = await OauthAppModel.findOne(
-            ctx.parent!.output.oauthAppId
+            ctx.parent!.output.oauthAppId,
           ).project({
             _id: 1,
             "consent.allowedCallbackURLs": 1,
@@ -459,10 +477,11 @@ export default class OauthController extends BaseController {
       callbackURL: e.string().custom((ctx) => {
         if (
           !ctx.parent?.output.oauthApp.consent.allowedCallbackURLs.includes(
-            new URL(ctx.output).toString()
+            new URL(ctx.output).toString(),
           )
-        )
+        ) {
           throw "Return host not allowed!";
+        }
       }),
       codeChallenge: e.optional(e.string().length({ min: 1, max: 500 })),
       codeChallengeMethod: e.optional(e.in(Object.values(OauthPKCEMethod))),
@@ -487,16 +506,16 @@ export default class OauthController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: "oauth.body" }
+          { name: "oauth.body" },
         );
 
         const User = await UserModel.findOne(
           ((await Env.get("ALLOW_CROSS_APP_AUTH", true)) ?? "0") === "1"
             ? { username: Credentials.username }
             : {
-                oauthApp: new ObjectId(Body.oauthAppId),
-                username: Credentials.username,
-              }
+              oauthApp: new ObjectId(Body.oauthAppId),
+              username: Credentials.username,
+            },
         ).project({
           _id: 1,
           username: 1,
@@ -507,17 +526,19 @@ export default class OauthController extends BaseController {
         });
 
         login: if (User) {
-          if (User.isBlocked)
+          if (User.isBlocked) {
             return Response.status(false).message(
-              "You have been blocked! Please reset your password."
+              "You have been blocked! Please reset your password.",
             );
+          }
 
           // Authentication will always fail even if the password is correct, if multiple wrong attempts found!
           if (
             User.failedLoginAttempts > 5 ||
             !(await bcrypt.compare(Credentials.password, User.password))
-          )
+          ) {
             break login;
+          }
 
           // Update User
           await UserModel.updateOne(User._id, {
@@ -542,7 +563,7 @@ export default class OauthController extends BaseController {
 
         await UserModel.updateOne(
           { username: Credentials.username },
-          { $inc: { failedLoginAttempts: 1 } }
+          { $inc: { failedLoginAttempts: 1 } },
         );
 
         e.error("Invalid username or password!");
@@ -585,12 +606,13 @@ export default class OauthController extends BaseController {
                 !(await CollaboratorModel.count({
                   account: new ObjectId(account),
                   createdFor: new ObjectId(
-                    ctx.parent?.output.tokenPayload.userId ?? ""
+                    ctx.parent?.output.tokenPayload.userId ?? "",
                   ),
                 }))
-              )
+              ) {
                 throw "Invalid account id in the scope!";
-            })
+              }
+            }),
           );
         }),
     });
@@ -603,7 +625,7 @@ export default class OauthController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: "oauth.body" }
+          { name: "oauth.body" },
         );
 
         // Create New Session
@@ -622,7 +644,7 @@ export default class OauthController extends BaseController {
             codeChallenge: Body.tokenPayload.codeChallenge,
             codeChallengeMethod: Body.tokenPayload.codeChallengeMethod,
             remember: Body.tokenPayload.remember,
-          })
+          }),
         ).statusCode(Status.Created);
       },
     });
@@ -645,8 +667,9 @@ export default class OauthController extends BaseController {
       codeVerifier: e
         .optional(e.string().length({ min: 1, max: 500 }))
         .custom((ctx) => {
-          if (ctx.parent?.output.codePayload.codeChallenge && !ctx.output)
+          if (ctx.parent?.output.codePayload.codeChallenge && !ctx.output) {
             throw "A code verifier is required!";
+          }
         }),
     });
 
@@ -658,7 +681,7 @@ export default class OauthController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: "oauth.body" }
+          { name: "oauth.body" },
         );
 
         // Code Verification
@@ -669,8 +692,9 @@ export default class OauthController extends BaseController {
             challenge: Body.codePayload.codeChallenge as string,
             verifier: Body.codeVerifier,
           })
-        )
+        ) {
           e.error("Invalid code verifier!");
+        }
 
         // Refresh Session
         const Session = await OauthController.refreshSession({
@@ -687,7 +711,7 @@ export default class OauthController extends BaseController {
             sessionId: Session._id.toString(),
             version: Session.version,
             refreshable: !!Body.codePayload.remember,
-          })
+          }),
         );
       },
     });
@@ -706,7 +730,7 @@ export default class OauthController extends BaseController {
               token: ctx.parent!.output.refreshToken,
               useragent: ctx.context.useragent,
             })
-          ).claims
+          ).claims,
       ),
     });
 
@@ -723,7 +747,7 @@ export default class OauthController extends BaseController {
             context: {
               useragent: ctx.router.request.headers.get("User-Agent") ?? "",
             },
-          }
+          },
         );
 
         // Refresh Session
@@ -739,7 +763,7 @@ export default class OauthController extends BaseController {
             sessionId: Session._id,
             version: Session.version,
             refreshable: true,
-          })
+          }),
         );
       },
     });
@@ -774,7 +798,7 @@ export default class OauthController extends BaseController {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: `${route.scope}.body` }
+          { name: `${route.scope}.body` },
         );
 
         const UserAgent = ctx.router.request.headers.get("User-Agent") ?? "";
@@ -784,16 +808,17 @@ export default class OauthController extends BaseController {
         const OauthApp = (await fetch(
           new URL(
             `/api/oauth/apps/${Body.oauthAppId ?? "default"}/`,
-            ctx.router.request.url.origin
-          )
+            ctx.router.request.url.origin,
+          ),
         ).then((_) => _.json())) as any;
 
         Context.oauthApp = OauthApp;
 
-        if (!OauthApp.status)
+        if (!OauthApp.status) {
           return Response.statusCode(404)
             .message("Oauth app not found!")
             .data(Context);
+        }
 
         // Authenticate with the api
         const Authentication = (await fetch(
@@ -802,30 +827,33 @@ export default class OauthController extends BaseController {
             method: "POST",
             headers: {
               "User-Agent": UserAgent,
-              Authorization: `Basic ${btoa(
-                `${Credentials.username}:${Credentials.password}`
-              )}`,
+              Authorization: `Basic ${
+                btoa(
+                  `${Credentials.username}:${Credentials.password}`,
+                )
+              }`,
             },
             body: JSON.stringify({
               oauthAppId: OauthApp.data._id,
               callbackURL: OauthApp.data.consent.allowedCallbackURLs[0],
               remember: Body.remember,
             }),
-          }
+          },
         ).then((_) => _.json())) as any;
 
         Context.authentication = Authentication;
 
-        if (!Authentication.status)
+        if (!Authentication.status) {
           return Response.statusCode(400)
             .message("Authentication failed!")
             .data(Context);
+        }
 
         // Exchange authentication token
         const ExchangeAuthentication = (await fetch(
           new URL(
             "/api/oauth/exchange/authentication/",
-            ctx.router.request.url.origin
+            ctx.router.request.url.origin,
           ),
           {
             method: "POST",
@@ -839,15 +867,16 @@ export default class OauthController extends BaseController {
                 [Authentication.data.availableScopes[0].account._id]: ["*"],
               },
             }),
-          }
+          },
         ).then((_) => _.json())) as any;
 
         Context.exchangeAuth = ExchangeAuthentication;
 
-        if (!ExchangeAuthentication.status)
+        if (!ExchangeAuthentication.status) {
           return Response.statusCode(400)
             .message("Exchange authentication failed!")
             .data(Context);
+        }
 
         // Exchange oauth code
         const ExchangeCode = (await fetch(
@@ -860,15 +889,16 @@ export default class OauthController extends BaseController {
             body: JSON.stringify({
               code: ExchangeAuthentication.data.oauthCode.token,
             }),
-          }
+          },
         ).then((_) => _.json())) as any;
 
         Context.exchangeCode = ExchangeCode;
 
-        if (!ExchangeCode.status)
+        if (!ExchangeCode.status) {
           return Response.statusCode(400)
             .message("Exchange code failed!")
             .data(Context);
+        }
 
         return Response.data(Context);
       },
@@ -882,7 +912,7 @@ export default class OauthController extends BaseController {
       {
         allDevices: e.optional(e.boolean({ cast: true })),
       },
-      { allowUnexpectedProps: true }
+      { allowUnexpectedProps: true },
     );
 
     return Versioned.add("1.0.0", {
@@ -895,15 +925,17 @@ export default class OauthController extends BaseController {
         // Query Validation
         const Query = await QuerySchema.validate(
           Object.fromEntries(ctx.router.request.url.searchParams),
-          { name: "users.query" }
+          { name: "users.query" },
         );
 
         // Delete OauthSession
-        if (Query.allDevices)
+        if (Query.allDevices) {
           await OauthSessionModel.deleteMany({
             createdBy: new ObjectId(ctx.router.state.auth.userId),
           });
-        else await OauthSessionModel.deleteOne(ctx.router.state.auth.sessionId);
+        } else {await OauthSessionModel.deleteOne(
+            ctx.router.state.auth.sessionId,
+          );}
 
         return Response.true();
       },
@@ -922,13 +954,14 @@ export default class OauthController extends BaseController {
         body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (!ctx.router.state.auth || !ctx.router.state.sessionInfo)
+        if (!ctx.router.state.auth || !ctx.router.state.sessionInfo) {
           ctx.router.throw(Status.Unauthorized);
+        }
 
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: `${route.scope}.body` }
+          { name: `${route.scope}.body` },
         );
 
         return Response.data(
@@ -936,7 +969,7 @@ export default class OauthController extends BaseController {
             version: ctx.router.state.sessionInfo.claims.version,
             sessionId: ctx.router.state.auth.sessionId,
             scopes: Body.scopes,
-          })
+          }),
         );
       },
     });
