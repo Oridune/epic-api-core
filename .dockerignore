@@ -77,4 +77,13 @@ env/
 _temp/
 .coverage/
 .temp/
-env/
+.terraform/
+terraform/
+*.tfvars
+postman_collection-*.json
+
+public/*/*
+!public/*/www/
+
+plugins/*/*/public/*/*
+!plugins/*/*/public/*/www/

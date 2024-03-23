@@ -185,28 +185,10 @@ export default class CollaboratorsController extends BaseController {
           name: `${route.scope}.params`,
         });
 
-        const CollaboratorId = new ObjectId(Params.id);
-        const AccountId = new ObjectId(ctx.router.state.auth.accountId);
-        const UserId = new ObjectId(ctx.router.state.auth.userId);
-
         // Either the account owner or the collaboration creator should be able to block
-        await CollaboratorModel.updateOneOrFail(
-          ctx.router.state.auth!.isAccountOwned
-            ? {
-              _id: CollaboratorId,
-              account: AccountId,
-              isPrimary: false,
-            }
-            : {
-              _id: CollaboratorId,
-              account: AccountId,
-              createdBy: UserId,
-              isPrimary: false,
-            },
-          {
-            isBlocked: Params.isBlocked,
-          },
-        );
+        await CollaboratorModel.updateOneOrFail(Params.id, {
+          isBlocked: Params.isBlocked,
+        });
 
         return Response.true();
       },

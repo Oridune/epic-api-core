@@ -24,8 +24,8 @@ export class Database {
 
     // Resolve Connection String
     const ConnectionString =
-      (await Env.get("DATABASE_CONNECTION_STRING", true)) ??
-        "mongodb://localhost:27017/epic-api";
+      (await Env.get("DATABASE_CONNECTION_STRING", true)) ||
+      "mongodb://localhost:27017/epic-api";
 
     // Assign the database connection object
     await this.connection.connect(ConnectionString);

@@ -11,7 +11,8 @@
     "accounts.ts",
     "accountInvites.ts",
     "collaborators.ts",
-    "oauthPolicies.ts"
+    "oauthPolicies.ts",
+    "batcher.ts"
   ],
   "excludes": [],
   "sequenceProps": {}
