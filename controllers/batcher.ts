@@ -29,14 +29,18 @@ export default class BatcherController extends BaseController {
   public request(route: IRoute) {
     // Define Body Schema
     const BodySchema = e.object({
-      requests: e.array(e.or([
-        e.string(),
-        RequestInputSchema(),
-        e.array(e.or([
+      requests: e.array(
+        e.or([
           e.string(),
           RequestInputSchema(),
-        ])).min(1),
-      ])).min(1),
+          e.array(
+            e.or([
+              e.string(),
+              RequestInputSchema(),
+            ]),
+          ).min(1),
+        ]),
+      ).min(1),
     });
 
     return new Versioned().add("1.0.0", {
@@ -48,6 +52,10 @@ export default class BatcherController extends BaseController {
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
           { name: `${route.scope}.body` },
+        );
+
+        const CurrentHeaders = Object.fromEntries(
+          ctx.router.request.headers.entries(),
         );
 
         return Response.data({
@@ -77,12 +85,15 @@ export default class BatcherController extends BaseController {
                     {
                       method: Request.method,
                       headers: {
-                        ...Object.fromEntries(
-                          ctx.router.request.headers.entries(),
-                        ),
+                        "user-agent": CurrentHeaders["user-agent"],
+                        authorization: CurrentHeaders.authorization,
+                        "x-account-id": CurrentHeaders["x-account-id"],
+                        "x-api-version": CurrentHeaders["x-api-version"],
                         ...Request.headers,
                       },
-                      body: Request.body,
+                      body: typeof Request.body === "string"
+                        ? Request.body
+                        : JSON.stringify(Request.body),
                     },
                   ).then((_) => _.json()),
                 );

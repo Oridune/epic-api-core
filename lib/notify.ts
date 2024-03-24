@@ -33,19 +33,21 @@ export class Notify {
 
     const SubscriberData = { email: options.email, phone: options.phone };
 
-    await Novu.subscribers
-      .update(SubscriberId, SubscriberData)
-      .catch(() => Novu.subscribers.identify(SubscriberId!, SubscriberData));
+    if (options.email || options.phone) {
+      await Novu.subscribers
+        .update(SubscriberId, SubscriberData)
+        .catch(() => Novu.subscribers.identify(SubscriberId!, SubscriberData));
+    }
 
     await Novu.trigger(options.template, {
       to: { subscriberId: SubscriberId, ...SubscriberData },
       payload: options.payload,
     }).catch((error) => {
-      if (error.response.data.message === "workflow_not_found")
+      if (error.response.data.message === "workflow_not_found") {
         throw new Error(`Notification workflow template not found!`, {
           cause: error,
         });
-      else throw new Error(error.response.data.message, { cause: error });
+      } else throw new Error(error.response.data.message, { cause: error });
     });
   }
 }
