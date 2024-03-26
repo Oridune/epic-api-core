@@ -188,8 +188,17 @@ export default {
       .addStage(ctx.router.state.scopePipeline.requested)
       .addStage(ctx.router.state.scopePipeline.permitted);
 
+    (await Env.get("MAINTENANCE_ROLES", true))?.split(
+      /\s*,\s*/,
+    ).map((role) => {
+      Guard.addStage({ scopes: [`role:${role}`], resolveDepth: 1 }, {
+        denial: true,
+      });
+    });
+
     await Guard.parse({
       resolveScopeRole: ResolveScopeRole,
+      cacheTimeMs: 60 * 10 * 1000, // 10 minutes cache
     });
 
     if (!Guard.isPermitted(scope, name)) {

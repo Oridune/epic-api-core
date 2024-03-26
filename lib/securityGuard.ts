@@ -3,16 +3,27 @@ import crypto from "node:crypto";
 
 export type TScopeResolverOptions = {
   resolveScopeRole?: (role: string) => Promise<Array<string> | undefined>;
+  resolveDepth?: number;
+};
+
+export type TStage = Array<string> | {
+  scopes: Array<string>;
+  resolveDepth?: number;
 };
 
 export class SecurityGuard {
   static resolveScopes(scopes: string[], options?: TScopeResolverOptions) {
+    if (typeof options?.resolveDepth === "number" && options.resolveDepth < 1) {
+      return scopes;
+    }
+
     const RoleRegExp = /^role:(.*)/;
     const ScopesCache: Record<string, Array<string>> = {};
 
     const ResolveScopeRole = async (
       role: string,
       prevScopes: Array<string>,
+      level = 0,
     ): Promise<Array<string>> =>
       (ScopesCache[role] ??= (await options?.resolveScopeRole?.(role)) ?? [])
         .reduce(
@@ -20,7 +31,11 @@ export class SecurityGuard {
             const Scopes = await scopes;
             const Match = scope.match(RoleRegExp);
 
-            if (Match) return ResolveScopeRole(Match[1], Scopes);
+            if (
+              Match &&
+              (typeof options?.resolveDepth !== "number" ||
+                (options.resolveDepth > level))
+            ) return ResolveScopeRole(Match[1], Scopes, level + 1);
 
             Scopes.push(scope);
 
@@ -41,17 +56,20 @@ export class SecurityGuard {
     }, Promise.resolve<Array<string>>([]));
   }
 
-  protected RawScopePipeline: Array<Array<string>> = [];
+  protected RawScopePipeline: Array<TStage> = [];
   protected ScopePipeline: Array<Set<string>> = [];
 
-  protected RawDenialScopePipeline: Array<Array<string>> = [];
+  protected RawDenialScopePipeline: Array<TStage> = [];
   protected DenialScopePipeline: Array<Set<string>> = [];
 
   constructor() {}
 
-  public addStage(scopes: Array<string>, denial = false) {
-    if (denial) this.RawDenialScopePipeline.push(scopes);
-    else this.RawScopePipeline.push(scopes);
+  public addStage(
+    stage: TStage,
+    options?: { denial?: boolean },
+  ) {
+    if (options?.denial) this.RawDenialScopePipeline.push(stage);
+    else this.RawScopePipeline.push(stage);
 
     return this;
   }
@@ -65,13 +83,9 @@ export class SecurityGuard {
       (["RawScopePipeline", "RawDenialScopePipeline"] as const).map(
         async (type) => {
           if (this[type].length) {
-            const CacheKey = crypto.sign(
-              "md5",
-              new TextEncoder().encode(
-                this[type].toString(),
-              ),
-              "SecurityGuard",
-            ).toString("hex");
+            const CacheKey = crypto.createHash("md5").update(
+              this[type].toString(),
+            ).digest("hex");
 
             this[
               type.replace(/^Raw/, "") as
@@ -81,14 +95,24 @@ export class SecurityGuard {
               await Store.cache(
                 CacheKey,
                 () => {
-                  const Resolvers: Array<Promise<Array<string>>> = [];
+                  const Resolvers: Array<
+                    Promise<Array<string>> | Array<string>
+                  > = [];
 
-                  this[type].forEach((pipeline) => {
-                    if (pipeline instanceof Array) {
-                      Resolvers.push(
-                        SecurityGuard.resolveScopes(pipeline, options),
-                      );
-                    }
+                  this[type].forEach((stage) => {
+                    const Stage = stage instanceof Array
+                      ? { scopes: stage }
+                      : stage;
+
+                    const Scopes = Stage.scopes;
+                    const ResolveDepth = Stage.resolveDepth ?? Infinity;
+
+                    Resolvers.push(
+                      SecurityGuard.resolveScopes(Scopes, {
+                        ...options,
+                        resolveDepth: ResolveDepth,
+                      }),
+                    );
                   });
 
                   return Promise.all(Resolvers);
@@ -141,6 +165,9 @@ export class SecurityGuard {
   public toJSON() {
     return {
       scopePipeline: this.ScopePipeline.map((stage) => Array.from(stage)),
+      denialScopePipeline: this.DenialScopePipeline.map((stage) =>
+        Array.from(stage)
+      ),
     };
   }
 }
