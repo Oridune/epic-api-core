@@ -85,17 +85,26 @@ export default class BatcherController extends BaseController {
                     {
                       method: Request.method,
                       headers: {
-                        "user-agent": CurrentHeaders["user-agent"],
-                        authorization: CurrentHeaders.authorization,
-                        "x-account-id": CurrentHeaders["x-account-id"],
-                        "x-api-version": CurrentHeaders["x-api-version"],
+                        ...(CurrentHeaders["user-agent"] &&
+                          { "user-agent": CurrentHeaders["user-agent"] }),
+                        ...(CurrentHeaders.authorization &&
+                          { authorization: CurrentHeaders.authorization }),
+                        ...(CurrentHeaders["x-account-id"] &&
+                          { "x-account-id": CurrentHeaders["x-account-id"] }),
+                        ...(CurrentHeaders["x-api-version"] &&
+                          { "x-api-version": CurrentHeaders["x-api-version"] }),
                         ...Request.headers,
                       },
-                      body: typeof Request.body === "string"
+                      body: (typeof Request.body === "string"
                         ? Request.body
-                        : JSON.stringify(Request.body),
+                        : JSON.stringify(Request.body)) ??
+                        (["get", "head"].includes(Request.method)
+                          ? undefined
+                          : "{}"),
                     },
-                  ).then((_) => _.json()),
+                  ).then((_) =>
+                    _.json()
+                  ),
                 );
               }
 
