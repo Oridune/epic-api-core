@@ -805,96 +805,104 @@ export default class OauthController extends BaseController {
         const Context: Record<string, any> = {};
 
         // Fetch oauth app for authentication
-        const OauthApp = (await fetch(
-          new URL(
-            `/api/oauth/apps/${Body.oauthAppId ?? "default"}/`,
-            ctx.router.request.url.origin,
+        const OauthApp = (await ctx.router.app.handle(
+          new Request(
+            new URL(
+              `/api/oauth/apps/${Body.oauthAppId ?? "default"}/`,
+              ctx.router.request.url.origin,
+            ),
           ),
-        ).then((_) => _.json())) as any;
+        ).then((_) => _?.json())) as any;
 
         Context.oauthApp = OauthApp;
 
-        if (!OauthApp.status) {
+        if (!OauthApp?.status) {
           return Response.statusCode(404)
             .message("Oauth app not found!")
             .data(Context);
         }
 
         // Authenticate with the api
-        const Authentication = (await fetch(
-          new URL("/api/oauth/local/", ctx.router.request.url.origin),
-          {
-            method: "POST",
-            headers: {
-              "User-Agent": UserAgent,
-              Authorization: `Basic ${
-                btoa(
-                  `${Credentials.username}:${Credentials.password}`,
-                )
-              }`,
+        const Authentication = (await ctx.router.app.handle(
+          new Request(
+            new URL("/api/oauth/local/", ctx.router.request.url.origin),
+            {
+              method: "POST",
+              headers: {
+                "User-Agent": UserAgent,
+                Authorization: `Basic ${
+                  btoa(
+                    `${Credentials.username}:${Credentials.password}`,
+                  )
+                }`,
+              },
+              body: JSON.stringify({
+                oauthAppId: OauthApp.data._id,
+                callbackURL: OauthApp.data.consent.allowedCallbackURLs[0],
+                remember: Body.remember,
+              }),
             },
-            body: JSON.stringify({
-              oauthAppId: OauthApp.data._id,
-              callbackURL: OauthApp.data.consent.allowedCallbackURLs[0],
-              remember: Body.remember,
-            }),
-          },
-        ).then((_) => _.json())) as any;
+          ),
+        ).then((_) => _?.json())) as any;
 
         Context.authentication = Authentication;
 
-        if (!Authentication.status) {
+        if (!Authentication?.status) {
           return Response.statusCode(400)
             .message("Authentication failed!")
             .data(Context);
         }
 
         // Exchange authentication token
-        const ExchangeAuthentication = (await fetch(
-          new URL(
-            "/api/oauth/exchange/authentication/",
-            ctx.router.request.url.origin,
-          ),
-          {
-            method: "POST",
-            headers: {
-              "User-Agent": UserAgent,
-            },
-            body: JSON.stringify({
-              authenticationToken:
-                Authentication.data.authenticationToken.token,
-              scopes: Body.scopes ?? {
-                [Authentication.data.availableScopes[0].account._id]: ["*"],
+        const ExchangeAuthentication = (await ctx.router.app.handle(
+          new Request(
+            new URL(
+              "/api/oauth/exchange/authentication/",
+              ctx.router.request.url.origin,
+            ),
+            {
+              method: "POST",
+              headers: {
+                "User-Agent": UserAgent,
               },
-            }),
-          },
-        ).then((_) => _.json())) as any;
+              body: JSON.stringify({
+                authenticationToken:
+                  Authentication.data.authenticationToken.token,
+                scopes: Body.scopes ?? {
+                  [Authentication.data.availableScopes[0].account._id]: ["*"],
+                },
+              }),
+            },
+          ),
+        ).then((_) => _?.json())) as any;
 
         Context.exchangeAuth = ExchangeAuthentication;
 
-        if (!ExchangeAuthentication.status) {
+        if (!ExchangeAuthentication?.status) {
           return Response.statusCode(400)
             .message("Exchange authentication failed!")
             .data(Context);
         }
 
         // Exchange oauth code
-        const ExchangeCode = (await fetch(
-          new URL("/api/oauth/exchange/code/", ctx.router.request.url.origin),
-          {
-            method: "POST",
-            headers: {
-              "User-Agent": UserAgent,
+        const ExchangeCode = (await ctx.router.app.handle(
+          new Request(
+            new URL("/api/oauth/exchange/code/", ctx.router.request.url.origin),
+            {
+              method: "POST",
+              headers: {
+                "User-Agent": UserAgent,
+              },
+              body: JSON.stringify({
+                code: ExchangeAuthentication.data.oauthCode.token,
+              }),
             },
-            body: JSON.stringify({
-              code: ExchangeAuthentication.data.oauthCode.token,
-            }),
-          },
-        ).then((_) => _.json())) as any;
+          ),
+        ).then((_) => _?.json())) as any;
 
         Context.exchangeCode = ExchangeCode;
 
-        if (!ExchangeCode.status) {
+        if (!ExchangeCode?.status) {
           return Response.statusCode(400)
             .message("Exchange code failed!")
             .data(Context);

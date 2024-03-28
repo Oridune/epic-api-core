@@ -67,45 +67,57 @@ export default class BatcherController extends BaseController {
               const Responses: Array<unknown> = [];
 
               for (const RawRequest of SubRequests) {
-                const Request = (typeof RawRequest === "string"
+                const RequestPayload = (typeof RawRequest === "string"
                   ? {
                     endpoint: RawRequest,
                     method: RequestMethod.GET,
                   }
                   : RawRequest) as TRequestInput;
 
-                Request.endpoint = new URL(
-                  Request.endpoint ? Request.endpoint.replace(/^\//g, "") : "",
+                RequestPayload.endpoint = new URL(
+                  RequestPayload.endpoint
+                    ? RequestPayload.endpoint.replace(/^\//g, "")
+                    : "",
                   new URL("/api/", ctx.router.request.url.origin),
                 ).toString();
 
-                Responses.push(
-                  await fetch(
-                    Request.endpoint!,
-                    {
-                      method: Request.method,
-                      headers: {
-                        ...(CurrentHeaders["user-agent"] &&
-                          { "user-agent": CurrentHeaders["user-agent"] }),
-                        ...(CurrentHeaders.authorization &&
-                          { authorization: CurrentHeaders.authorization }),
-                        ...(CurrentHeaders["x-account-id"] &&
-                          { "x-account-id": CurrentHeaders["x-account-id"] }),
-                        ...(CurrentHeaders["x-api-version"] &&
-                          { "x-api-version": CurrentHeaders["x-api-version"] }),
-                        ...Request.headers,
-                      },
-                      body: (typeof Request.body === "string"
-                        ? Request.body
-                        : JSON.stringify(Request.body)) ??
-                        (["get", "head"].includes(Request.method)
-                          ? undefined
-                          : "{}"),
-                    },
-                  ).then((_) =>
-                    _.json()
-                  ),
-                );
+                const FetchConfig = {
+                  method: RequestPayload.method,
+                  headers: {
+                    ...(CurrentHeaders["user-agent"] &&
+                      { "user-agent": CurrentHeaders["user-agent"] }),
+                    ...(CurrentHeaders.authorization &&
+                      { authorization: CurrentHeaders.authorization }),
+                    ...(CurrentHeaders["x-account-id"] &&
+                      { "x-account-id": CurrentHeaders["x-account-id"] }),
+                    ...(CurrentHeaders["x-api-version"] &&
+                      { "x-api-version": CurrentHeaders["x-api-version"] }),
+                    ...RequestPayload.headers,
+                  },
+                  body: (typeof RequestPayload.body === "string"
+                    ? RequestPayload.body
+                    : JSON.stringify(RequestPayload.body)) ??
+                    (["get", "head"].includes(RequestPayload.method)
+                      ? undefined
+                      : "{}"),
+                };
+
+                try {
+                  const Response = await ctx.router.app.handle(
+                    new Request(
+                      RequestPayload.endpoint!,
+                      FetchConfig,
+                    ),
+                  );
+
+                  const Data = await Response?.json();
+
+                  Responses.push(Data);
+                } catch (error) {
+                  Responses.push(
+                    Response.false().message(error.message).getBody(),
+                  );
+                }
               }
 
               return subRequests instanceof Array ? Responses : Responses[0];
