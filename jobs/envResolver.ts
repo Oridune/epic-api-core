@@ -8,7 +8,7 @@ export default () => {
       ["env", Env.getType(), key], // Env variable cache key
       async () => (await EnvModel.findOne({ key }))?.value, // Fetch Env variable
       parseFloat(
-        (await Env.get("ENV_CACHE_TTL_MS", true)) ?? "600000", // Default TTL 10 minutes
+        (Env.getSync("ENV_CACHE_TTL_MS", true)) ?? "600000", // Default TTL 10 minutes
       ),
     );
 };
