@@ -77,21 +77,25 @@ export default () => {
       >
     >;
   }>(EventChannel.REQUEST, "users.create", async (event) => {
-    if (Env.is(EnvType.TEST)) return;
+    try {
+      if (Env.is(EnvType.TEST)) return;
 
-    const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
+      const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
 
-    const Body = event.detail.res.getBody();
+      const Body = event.detail.res.getBody();
 
-    if (Body.status && Body.data) {
-      await Notifier.subscribers.identify(Body.data._id.toString(), {
-        avatar: Body.data.avatar?.url,
-        firstName: Body.data.fname,
-        lastName: Body.data.lname,
-        locale: Body.data.locale,
-        email: Body.data.email,
-        phone: Body.data.phone,
-      });
+      if (Body.status && Body.data) {
+        await Notifier.subscribers.identify(Body.data._id.toString(), {
+          avatar: Body.data.avatar?.url,
+          firstName: Body.data.fname,
+          lastName: Body.data.lname,
+          locale: Body.data.locale,
+          email: Body.data.email,
+          phone: Body.data.phone,
+        });
+      }
+    } catch {
+      // Do nothing...
     }
   });
 
@@ -99,27 +103,31 @@ export default () => {
     ctx: IRequestContext<RouterContext<string>>;
     res: Response;
   }>(EventChannel.REQUEST, "users.verify", async (event) => {
-    const { ctx, res } = event.detail;
+    try {
+      const { ctx, res } = event.detail;
 
-    const Body = res.getBody();
+      const Body = res.getBody();
 
-    if (Body.status) {
-      const VerifyTokenPayload = await e
-        .object(
-          {
-            method: e.string(),
-            userId: e.string(),
-          },
-          { allowUnexpectedProps: true },
-        )
-        .validate(ctx.router.state.verifyTokenPayload);
+      if (Body.status) {
+        const VerifyTokenPayload = await e
+          .object(
+            {
+              method: e.string(),
+              userId: e.string(),
+            },
+            { allowUnexpectedProps: true },
+          )
+          .validate(ctx.router.state.verifyTokenPayload);
 
-      await syncUserVerifiedRole(VerifyTokenPayload.userId);
+        await syncUserVerifiedRole(VerifyTokenPayload.userId);
 
-      // Invalidate Cached Session
-      await Store.del(
-        `checkPermissions:${ctx.router.state.sessionInfo?.claims.sessionId}:${ctx.router.state.auth?.accountId}`,
-      );
+        // Invalidate Cached Session
+        await Store.del(
+          `checkPermissions:${ctx.router.state.sessionInfo?.claims.sessionId}:${ctx.router.state.auth?.accountId}`,
+        );
+      }
+    } catch {
+      // Do nothing...
     }
   });
 
@@ -134,26 +142,33 @@ export default () => {
     EventChannel.REQUEST,
     ["users.updateEmail", "users.updatePhone"],
     async (event) => {
-      const Request = event.detail.ctx;
+      try {
+        const Request = event.detail.ctx;
 
-      if (typeof Request.router.state.auth?.userId === "string") {
-        await syncUserVerifiedRole(Request.router.state.auth.userId);
+        if (typeof Request.router.state.auth?.userId === "string") {
+          await syncUserVerifiedRole(Request.router.state.auth.userId);
 
-        const Body = event.detail.res.getBody();
+          const Body = event.detail.res.getBody();
 
-        if (Body.status && Body.data) {
-          const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
+          if (Body.status && Body.data) {
+            const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
 
-          await Notifier.subscribers
-            .update(Request.router.state.auth.userId, {
-              [Body.data.type]: Body.data.value,
-            })
-            .catch(() =>
-              Notifier.subscribers.identify(Request.router.state.auth!.userId, {
-                [Body.data!.type]: Body.data!.value,
+            await Notifier.subscribers
+              .update(Request.router.state.auth.userId, {
+                [Body.data.type]: Body.data.value,
               })
-            );
+              .catch(() =>
+                Notifier.subscribers.identify(
+                  Request.router.state.auth!.userId,
+                  {
+                    [Body.data!.type]: Body.data!.value,
+                  },
+                )
+              );
+          }
         }
+      } catch {
+        // Do nothing...
       }
     },
   );
@@ -176,28 +191,32 @@ export default () => {
       >
     >;
   }>(EventChannel.REQUEST, "users.update", async (event) => {
-    const Request = event.detail.ctx;
-    const Body = event.detail.res.getBody();
+    try {
+      const Request = event.detail.ctx;
+      const Body = event.detail.res.getBody();
 
-    if (typeof Request.router.state.auth?.userId === "string") {
-      if (Body.status && Body.data) {
-        const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
+      if (typeof Request.router.state.auth?.userId === "string") {
+        if (Body.status && Body.data) {
+          const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
 
-        const Payload = {
-          firstName: Body.data.fname,
-          lastName: Body.data.lname,
-          locale: Body.data.locale,
-        };
+          const Payload = {
+            firstName: Body.data.fname,
+            lastName: Body.data.lname,
+            locale: Body.data.locale,
+          };
 
-        await Notifier.subscribers
-          .update(Request.router.state.auth.userId, Payload)
-          .catch(() =>
-            Notifier.subscribers.identify(
-              Request.router.state.auth!.userId,
-              Payload,
-            )
-          );
+          await Notifier.subscribers
+            .update(Request.router.state.auth.userId, Payload)
+            .catch(() =>
+              Notifier.subscribers.identify(
+                Request.router.state.auth!.userId,
+                Payload,
+              )
+            );
+        }
       }
+    } catch {
+      // Do nothing...
     }
   });
 
@@ -205,26 +224,30 @@ export default () => {
     ctx: IRequestContext<RouterContext<string>>;
     res: Response<TFileOutput>;
   }>(EventChannel.REQUEST, "users.updateAvatar", async (event) => {
-    const Request = event.detail.ctx;
-    const Body = event.detail.res.getBody();
+    try {
+      const Request = event.detail.ctx;
+      const Body = event.detail.res.getBody();
 
-    if (typeof Request.router.state.auth?.userId === "string") {
-      if (Body.status && Body.data) {
-        const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
+      if (typeof Request.router.state.auth?.userId === "string") {
+        if (Body.status && Body.data) {
+          const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
 
-        const Payload = {
-          avatar: Body.data.url,
-        };
+          const Payload = {
+            avatar: Body.data.url,
+          };
 
-        await Notifier.subscribers
-          .update(Request.router.state.auth.userId, Payload)
-          .catch(() =>
-            Notifier.subscribers.identify(
-              Request.router.state.auth!.userId,
-              Payload,
-            )
-          );
+          await Notifier.subscribers
+            .update(Request.router.state.auth.userId, Payload)
+            .catch(() =>
+              Notifier.subscribers.identify(
+                Request.router.state.auth!.userId,
+                Payload,
+              )
+            );
+        }
       }
+    } catch {
+      // Do nothing...
     }
   });
 
@@ -232,23 +255,27 @@ export default () => {
     ctx: IRequestContext<RouterContext<string>>;
     res: Response;
   }>(EventChannel.REQUEST, "users.updatePassword", async (event) => {
-    const Request = event.detail.ctx;
-    const Body = event.detail.res.getBody();
+    try {
+      const Request = event.detail.ctx;
+      const Body = event.detail.res.getBody();
 
-    if (Body.status) {
-      const VerifyTokenPayload = await e
-        .object(
-          {
-            method: e.string(),
-            userId: e.string(),
-          },
-          { allowUnexpectedProps: true },
-        )
-        .validate(Request.router.state.verifyTokenPayload);
+      if (Body.status) {
+        const VerifyTokenPayload = await e
+          .object(
+            {
+              method: e.string(),
+              userId: e.string(),
+            },
+            { allowUnexpectedProps: true },
+          )
+          .validate(Request.router.state.verifyTokenPayload);
 
-      await OauthSessionModel.deleteMany({
-        createdBy: new ObjectId(VerifyTokenPayload.userId),
-      });
+        await OauthSessionModel.deleteMany({
+          createdBy: new ObjectId(VerifyTokenPayload.userId),
+        });
+      }
+    } catch {
+      // Do nothing...
     }
   });
 };
