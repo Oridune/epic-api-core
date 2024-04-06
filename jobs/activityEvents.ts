@@ -14,7 +14,9 @@ import { TUserOutput, UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauthSession.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 import { TFileOutput } from "@Models/file.ts";
+import { TTransactionOutput } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
+import { Notify } from "@Lib/notify.ts";
 
 export const isUserVerified = async (input: {
   isEmailVerified?: boolean;
@@ -278,4 +280,29 @@ export default () => {
       // Do nothing...
     }
   });
+
+  Events.listen<{ transaction: TTransactionOutput }>(
+    EventChannel.CUSTOM,
+    "wallet.transfer",
+    async (event) => {
+      try {
+        const Transaction = event.detail.transaction;
+
+        await Notify.sendWithNovu({
+          template: `wallet-transfer`,
+          subscriberId: Transaction.receiver.toString(),
+          payload: {
+            txnId: Transaction._id.toString(),
+            reference: Transaction.reference,
+            type: Transaction.type,
+            currency: Transaction.currency,
+            amount: Transaction.amount,
+            fromName: Transaction.fromName,
+          },
+        });
+      } catch {
+        // Do nothing...
+      }
+    },
+  );
 };

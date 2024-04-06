@@ -6,6 +6,7 @@ import { ClientSession, ObjectId } from "mongo";
 import { WalletModel } from "@Models/wallet.ts";
 import { TransactionModel, TransactionStatus } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
+import { Events } from "@Core/common/events.ts";
 
 export class Wallet {
   static getDefaultType() {
@@ -219,8 +220,10 @@ export class Wallet {
     reference?: string;
     fromName: string | string[];
     from: ObjectId | string;
+    sender: ObjectId | string;
     toName: string | string[];
     to: ObjectId | string;
+    receiver: ObjectId | string;
     user: ObjectId | string;
     type?: string;
     currency?: string;
@@ -289,54 +292,54 @@ export class Wallet {
       );
     }
 
-    return Database.transaction(async (session) => {
-      const WalletA = await this.get(From, {
-        type: Type,
-        currency: Currency,
-        databaseSession: session,
-      });
+    const WalletA = await this.get(From, {
+      type: Type,
+      currency: Currency,
+    });
 
-      // Check to allow negative balance
-      const PostTransactionBalance = WalletA.balance - options.amount;
+    // Check to allow negative balance
+    const PostTransactionBalance = WalletA.balance - options.amount;
 
-      if (
-        PostTransactionBalance < 0 &&
-        !(await this.hasOverdraftMargin(
-          From,
-          Type,
-          Currency,
-          PostTransactionBalance,
-          {
-            skipAccountCheck: options.allowOverdraft,
-            overdraftLimit: options.overdraftLimit,
-          },
-        ))
-      ) {
-        throw new Error(`Insufficient balance!`);
-      }
+    if (
+      PostTransactionBalance < 0 &&
+      !(await this.hasOverdraftMargin(
+        From,
+        Type,
+        Currency,
+        PostTransactionBalance,
+        {
+          skipAccountCheck: options.allowOverdraft,
+          overdraftLimit: options.overdraftLimit,
+        },
+      ))
+    ) {
+      throw new Error(`Insufficient balance!`);
+    }
 
-      const WalletB = await this.get(To, {
-        type: Type,
-        currency: Currency,
-        databaseSession: session,
-      });
+    const WalletB = await this.get(To, {
+      type: Type,
+      currency: Currency,
+    });
 
+    const Result = await Database.transaction(async (session) => {
       // Create a Transaction
       const Transaction = await TransactionModel.create({
         sessionId: options.sessionId,
         reference: Reference,
         fromName: FromName,
-        from: new ObjectId(From),
+        from: From,
+        sender: options.sender,
         toName: ToName,
-        to: new ObjectId(To),
+        to: To,
+        receiver: options.receiver,
         description: options.description,
         type: Type,
         currency: Currency,
-        createdBy: new ObjectId(options.user),
         methodOf3DSecurity: options.methodOf3DSecurity,
         amount: options.amount,
         status: options.status ?? TransactionStatus.COMPLETED,
         metadata: options.metadata,
+        createdBy: options.user,
       });
 
       // Debit Balance
@@ -382,6 +385,10 @@ export class Wallet {
         transaction: Transaction,
       };
     }, options.databaseSession);
+
+    Events.dispatch("wallet.transfer", { detail: Result });
+
+    return Result;
   }
 
   static async refund(options: {
@@ -408,8 +415,10 @@ export class Wallet {
       type: Transaction.type,
       fromName: Transaction.toName,
       from: Transaction.to,
+      sender: Transaction.receiver,
       toName: Transaction.fromName,
-      to: Transaction.to,
+      to: Transaction.from,
+      receiver: Transaction.sender,
       user: options.user,
       currency: Transaction.currency,
       amount: Transaction.amount,

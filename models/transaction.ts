@@ -1,5 +1,5 @@
 import e, { inferInput, inferOutput } from "validator";
-import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
+import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 
 export enum TransactionStatus {
   PENDING = "pending",
@@ -16,8 +16,10 @@ export const TransactionSchema = () =>
     reference: e.string(),
     fromName: e.string(),
     from: e.instanceOf(ObjectId, { instantiate: true }),
+    sender: e.instanceOf(ObjectId, { instantiate: true }),
     toName: e.string(),
     to: e.instanceOf(ObjectId, { instantiate: true }),
+    receiver: e.instanceOf(ObjectId, { instantiate: true }),
     type: e.string(),
     description: e.optional(e.string()),
     tags: e.optional(e.array(e.string())),
@@ -78,5 +80,5 @@ TransactionModel.createIndex(
       tags: "text",
     },
     background: true,
-  }
+  },
 );
