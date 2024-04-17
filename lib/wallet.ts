@@ -224,7 +224,7 @@ export class Wallet {
     toName: string | string[];
     to: ObjectId | string;
     receiver: ObjectId | string;
-    user: ObjectId | string;
+    user?: ObjectId | string;
     type?: string;
     currency?: string;
     amount: number;
@@ -339,7 +339,7 @@ export class Wallet {
         amount: options.amount,
         status: options.status ?? TransactionStatus.COMPLETED,
         metadata: options.metadata,
-        createdBy: options.user,
+        createdBy: options.user ?? options.sender,
       });
 
       // Debit Balance

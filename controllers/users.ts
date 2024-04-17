@@ -564,6 +564,42 @@ export default class UsersController extends BaseController {
     });
   }
 
+  @Patch("/role/:id/")
+  public updateRole(route: IRoute) {
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      id: e.optional(e.string()),
+    });
+
+    // Define Body Schema
+    const BodySchema = e.object({
+      role: e.string(),
+    });
+
+    return new Versioned().add("1.0.0", {
+      postman: {
+        params: ParamsSchema.toSample(),
+        body: BodySchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
+
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: `${route.scope}.body` },
+        );
+
+        await UserModel.updateOneOrFail(Params.id, { role: Body.role });
+
+        return Response.true();
+      },
+    });
+  }
+
   @Get("/avatar/sign/")
   @Put("/avatar/")
   public updateAvatar(route: IRoute) {
