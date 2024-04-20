@@ -5,6 +5,7 @@ export const InputEnvSchema = () =>
   e.object({
     key: e.string(),
     value: e.string(),
+    ttl: e.optional(e.number()),
   });
 
 export const EnvSchema = () =>

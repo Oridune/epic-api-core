@@ -1,6 +1,6 @@
 import { parse } from "flags";
 import { join } from "path";
-import { exists } from "fs";
+import { existsSync } from "dfs";
 import e from "validator";
 
 import { Confirm, Input, Select } from "cliffy:prompt";
@@ -13,6 +13,7 @@ import {
   snakeCase,
 } from "stringcase/mod.ts";
 import { Loader } from "@Core/common/loader.ts";
+import { ejsRender } from "@Core/scripts/lib/ejsRender.ts";
 
 export enum ModuleType {
   CONTROLLER = "controller",
@@ -39,6 +40,7 @@ export const createModule = async (options: {
     const Templates = Array.from(
       Loader.getSequence("templates")?.includes() ?? [],
     );
+
     const Options = await e
       .object(
         {
@@ -88,7 +90,7 @@ export const createModule = async (options: {
             .custom((ctx) =>
               [
                 ctx.parent!.output.name,
-                ctx.parent!.output.template.split(".").pop(),
+                ctx.parent!.output.template.split(".")[1],
               ].join(".")
             ),
           moduleDir: e
@@ -118,7 +120,7 @@ export const createModule = async (options: {
     if (Options.type && Options.name) {
       if (
         options.prompt &&
-        (await exists(Options.modulePath)) &&
+        existsSync(Options.modulePath) &&
         !(await Confirm.prompt({
           message:
             `Are you sure you want to re-create the module '${Options.name}'?`,
@@ -127,19 +129,22 @@ export const createModule = async (options: {
         return;
       }
 
-      const Content = (await Deno.readTextFile(Options.templatePath))
-        .replaceAll("$_namePascal", pascalCase(Options.name))
-        .replaceAll("$_nameCamel", camelCase(Options.name))
-        .replaceAll("$_nameSnake", snakeCase(Options.name))
-        .replaceAll("$_nameKebab", paramCase(Options.name))
-        .replaceAll("$_namePath", pathCase(Options.name))
-        .replaceAll("$_namePlural", plural(Options.name))
-        .replaceAll("$_nameSingular", singular(Options.name))
-        .replaceAll("$_name", Options.name);
+      const RawContent = await Deno.readTextFile(Options.templatePath);
 
-      if (!(await exists(Options.moduleDir))) {
-        await Deno.mkdir(Options.moduleDir, { recursive: true });
-      }
+      const Content = /\.ejs$/.test(Options.templatePath)
+        ? await ejsRender(RawContent, Options)
+        : RawContent.replaceAll("$_namePascal", pascalCase(Options.name))
+          .replaceAll("$_nameCamel", camelCase(Options.name))
+          .replaceAll("$_nameSnake", snakeCase(Options.name))
+          .replaceAll("$_nameKebab", paramCase(Options.name))
+          .replaceAll("$_namePath", pathCase(Options.name))
+          .replaceAll("$_namePlural", plural(Options.name))
+          .replaceAll("$_nameSingular", singular(Options.name))
+          .replaceAll("$_name", Options.name);
+
+      await Deno.mkdir(Options.moduleDir, { recursive: true }).catch(() => {
+        // Do nothing...
+      });
 
       await Deno.writeTextFile(Options.modulePath, Content);
       await Loader.getSequence(plural(Options.type))?.set((_) =>

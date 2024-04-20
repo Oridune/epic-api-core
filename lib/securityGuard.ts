@@ -87,39 +87,39 @@ export class SecurityGuard {
               this[type].toString(),
             ).digest("hex");
 
+            const Pipeline = await Store.cache(
+              CacheKey,
+              () => {
+                const Resolvers: Array<
+                  Promise<Array<string>> | Array<string>
+                > = [];
+
+                this[type].forEach((stage) => {
+                  const Stage = stage instanceof Array
+                    ? { scopes: stage }
+                    : stage;
+
+                  const Scopes = Stage.scopes;
+                  const ResolveDepth = Stage.resolveDepth ?? Infinity;
+
+                  Resolvers.push(
+                    SecurityGuard.resolveScopes(Scopes, {
+                      ...options,
+                      resolveDepth: ResolveDepth,
+                    }),
+                  );
+                });
+
+                return Promise.all(Resolvers);
+              },
+              CacheTime, // 10 minutes default cache
+            );
+
             this[
               type.replace(/^Raw/, "") as
                 | "ScopePipeline"
                 | "DenialScopePipeline"
-            ] = (
-              await Store.cache(
-                CacheKey,
-                () => {
-                  const Resolvers: Array<
-                    Promise<Array<string>> | Array<string>
-                  > = [];
-
-                  this[type].forEach((stage) => {
-                    const Stage = stage instanceof Array
-                      ? { scopes: stage }
-                      : stage;
-
-                    const Scopes = Stage.scopes;
-                    const ResolveDepth = Stage.resolveDepth ?? Infinity;
-
-                    Resolvers.push(
-                      SecurityGuard.resolveScopes(Scopes, {
-                        ...options,
-                        resolveDepth: ResolveDepth,
-                      }),
-                    );
-                  });
-
-                  return Promise.all(Resolvers);
-                },
-                CacheTime, // 10 minutes default cache
-              )
-            ).map((list) => new Set(list));
+            ] = Pipeline.map((list) => new Set(list));
           }
         },
       ),

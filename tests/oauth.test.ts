@@ -1,8 +1,9 @@
+// deno-lint-ignore-file no-explicit-any
 import { Loader } from "@Core/common/mod.ts";
 import { createAppServer } from "@Core/server.ts";
 import { expect } from "expect";
 import { Database } from "@Database";
-import e, { ObjectValidator, inferOutput } from "validator";
+import e, { inferOutput, ObjectValidator } from "validator";
 
 import { OauthAppSchema } from "@Models/oauthApp.ts";
 
@@ -35,7 +36,7 @@ const ResponseWrapperSchema = (dataValidator: ObjectValidator<any, any, any>) =>
       data: dataValidator,
       metrics: e.record(e.any()),
     },
-    { cast: true }
+    { cast: true },
   );
 
 const DefaultOauthAppResponseSchema = ResponseWrapperSchema(OauthAppSchema());
@@ -63,14 +64,14 @@ const UserResponseSchema = ResponseWrapperSchema(
     isBlocked: e.boolean(),
     createdAt: e.string(),
     updatedAt: e.string(),
-  })
+  }),
 );
 
 const IdentificationResponseSchema = ResponseWrapperSchema(
   e.object({
     token: e.string(),
     otp: e.number(),
-  })
+  }),
 );
 
 const OAuthTokenSchema = e.object({
@@ -103,22 +104,22 @@ const AuthenticationResponseSchema = ResponseWrapperSchema(
         updatedAt: e.string(),
         scopes: e.array(e.string()),
         isBlocked: e.boolean(),
-      })
+      }),
     ),
-  })
+  }),
 );
 
 const ExchangeAuthenticationResponseSchema = ResponseWrapperSchema(
   e.object({
     oauthCode: OAuthTokenSchema,
-  })
+  }),
 );
 
 const ExchangeCodeResponseSchema = ResponseWrapperSchema(
   e.object({
     access: OAuthTokenSchema,
     refresh: e.optional(OAuthTokenSchema),
-  })
+  }),
 );
 
 Deno.test({
@@ -151,18 +152,18 @@ Deno.test({
       "GET /api/oauth/apps/default/ Get Default Oauth App",
       async () => {
         const Response = await fetch(
-          new URL("/api/oauth/apps/default/", APIHost)
+          new URL("/api/oauth/apps/default/", APIHost),
         );
 
         expect(Response.status).toBe(200);
 
         Context.defaultOauthApp = await DefaultOauthAppResponseSchema.validate(
-          await Response.json()
+          await Response.json(),
         ).catch((e) => {
           console.error(e.issues);
           throw e;
         });
-      }
+      },
     );
 
     await t.step("POST /api/users/:appId Register user(s)", async () => {
@@ -172,7 +173,7 @@ Deno.test({
         TestUsers.map(async (user) => {
           const Response = await fetch(
             new URL(`/api/users/${Context.defaultOauthApp!.data._id}`, APIHost),
-            { method: "POST", body: JSON.stringify(user[0]) }
+            { method: "POST", body: JSON.stringify(user[0]) },
           );
 
           expect(Response.status).toBe(201);
@@ -181,9 +182,9 @@ Deno.test({
             (e) => {
               console.error(e.issues);
               throw e;
-            }
+            },
           );
-        })
+        }),
       );
     });
 
@@ -194,11 +195,11 @@ Deno.test({
         TestUsers.map(async (user) => {
           const Response = await fetch(
             new URL(`/api/users/${Context.defaultOauthApp!.data._id}`, APIHost),
-            { method: "POST", body: JSON.stringify(user[0]) }
+            { method: "POST", body: JSON.stringify(user[0]) },
           );
 
           expect(Response.status).toBe(400);
-        })
+        }),
       );
     });
 
@@ -209,19 +210,23 @@ Deno.test({
           TestUsers.map(async (user) => {
             const Response = await fetch(
               new URL(
-                `/api/users/identification/verification/${user[0].username}/email/`,
-                APIHost
-              )
+                `/api/users/identification/verification/${
+                  user[0].username
+                }/email/`,
+                APIHost,
+              ),
             );
 
             expect(Response.status).toBe(200);
 
             (Context.emailVerification ??= []).push(
-              await IdentificationResponseSchema.validate(await Response.json())
+              await IdentificationResponseSchema.validate(
+                await Response.json(),
+              ),
             );
-          })
+          }),
         );
-      }
+      },
     );
 
     await t.step(
@@ -231,19 +236,23 @@ Deno.test({
           TestUsers.map(async (user) => {
             const Response = await fetch(
               new URL(
-                `/api/users/identification/verification/${user[0].username}/phone/`,
-                APIHost
-              )
+                `/api/users/identification/verification/${
+                  user[0].username
+                }/phone/`,
+                APIHost,
+              ),
             );
 
             expect(Response.status).toBe(200);
 
             (Context.phoneVerification ??= []).push(
-              await IdentificationResponseSchema.validate(await Response.json())
+              await IdentificationResponseSchema.validate(
+                await Response.json(),
+              ),
             );
-          })
+          }),
         );
-      }
+      },
     );
 
     await t.step("GET /api/users/verify/ Verify Email", async () => {
@@ -261,7 +270,7 @@ Deno.test({
           });
 
           expect(Response.status).toBe(400);
-        })
+        }),
       );
 
       await Promise.all(
@@ -276,7 +285,7 @@ Deno.test({
           });
 
           expect(Response.status).toBe(200);
-        })
+        }),
       );
     });
 
@@ -295,7 +304,7 @@ Deno.test({
           });
 
           expect(Response.status).toBe(200);
-        })
+        }),
       );
     });
 
@@ -310,18 +319,20 @@ Deno.test({
             const Response = await fetch(
               new URL(
                 `/api/users/identification/recovery/${user[0].username}/email/`,
-                APIHost
-              )
+                APIHost,
+              ),
             );
 
             expect(Response.status).toBe(200);
 
             (Context.emailRecovery ??= []).push(
-              await IdentificationResponseSchema.validate(await Response.json())
+              await IdentificationResponseSchema.validate(
+                await Response.json(),
+              ),
             );
-          })
+          }),
         );
-      }
+      },
     );
 
     await t.step("PUT /api/users/password/ Update Password", async () => {
@@ -339,11 +350,11 @@ Deno.test({
                 code: value.data.otp + 1,
                 password: TestUsers[index][1].password,
               }),
-            }
+            },
           );
 
           expect(Response.status).toBe(400);
-        })
+        }),
       );
 
       await Promise.all(
@@ -358,11 +369,11 @@ Deno.test({
                 code: value.data.otp,
                 password: TestUsers[index][0].password,
               }),
-            }
+            },
           );
 
           expect(Response.status).toBe(400);
-        })
+        }),
       );
 
       await Promise.all(
@@ -377,11 +388,11 @@ Deno.test({
                 code: value.data.otp,
                 password: TestUsers[index][1].password,
               }),
-            }
+            },
           );
 
           expect(Response.status).toBe(200);
-        })
+        }),
       );
     });
 
@@ -391,13 +402,13 @@ Deno.test({
           const Response = await fetch(new URL("/api/oauth/local/", APIHost), {
             method: "POST",
             headers: {
-              Authorization:
-                "Basic " + btoa(`${user[0].username}:${user[0].password}`),
+              Authorization: "Basic " +
+                btoa(`${user[0].username}:${user[0].password}`),
             },
           });
 
           expect(Response.status).toBe(400);
-        })
+        }),
       );
 
       await Promise.all(
@@ -405,8 +416,8 @@ Deno.test({
           const Response = await fetch(new URL("/api/oauth/local/", APIHost), {
             method: "POST",
             headers: {
-              Authorization:
-                "Basic " + btoa(`${user[0].username}:${user[1].password}`),
+              Authorization: "Basic " +
+                btoa(`${user[0].username}:${user[1].password}`),
             },
             body: JSON.stringify({
               oauthAppId: Context.defaultOauthApp!.data._id,
@@ -418,9 +429,9 @@ Deno.test({
           expect(Response.status).toBe(200);
 
           (Context.oauthAuthentication ??= []).push(
-            await AuthenticationResponseSchema.validate(await Response.json())
+            await AuthenticationResponseSchema.validate(await Response.json()),
           );
-        })
+        }),
       ).catch((error) => {
         console.error(error);
         throw error;
@@ -440,7 +451,7 @@ Deno.test({
               authenticationToken: "",
               scopes: {},
             }),
-          }
+          },
         );
 
         expect(Response.status).toBe(400);
@@ -456,23 +467,26 @@ Deno.test({
                     Context.oauthAuthentication![index].data.authenticationToken
                       .token,
                   scopes: {
-                    [Context.oauthAuthentication![index].data.availableScopes[0]
-                      .account._id]: ["*"],
+                    [
+                      Context.oauthAuthentication![index].data
+                        .availableScopes[0]
+                        .account._id
+                    ]: ["*"],
                   },
                 }),
-              }
+              },
             );
 
             expect(Response.status).toBe(201);
 
             (Context.oauthExchangeAuthentication ??= []).push(
               await ExchangeAuthenticationResponseSchema.validate(
-                await Response.json()
-              )
+                await Response.json(),
+              ),
             );
-          })
+          }),
         );
-      }
+      },
     );
 
     await t.step("POST /api/oauth/exchange/code/ Exchange Code", async () => {
@@ -485,7 +499,7 @@ Deno.test({
           body: JSON.stringify({
             code: "",
           }),
-        }
+        },
       );
 
       expect(Response.status).toBe(400);
@@ -500,15 +514,15 @@ Deno.test({
                 code: Context.oauthExchangeAuthentication![index].data.oauthCode
                   .token,
               }),
-            }
+            },
           );
 
           expect(Response.status).toBe(200);
 
           (Context.oauthExchangeCode ??= []).push(
-            await ExchangeCodeResponseSchema.validate(await Response.json())
+            await ExchangeCodeResponseSchema.validate(await Response.json()),
           );
-        })
+        }),
       );
     });
 
@@ -527,7 +541,7 @@ Deno.test({
           });
 
           expect(Response.status).toBe(401);
-        })
+        }),
       );
     });
 
@@ -545,11 +559,11 @@ Deno.test({
                   Context.oauthExchangeCode![index].data.access.token
                 }`,
               },
-            }
+            },
           );
 
           expect(Response.status).toBe(200);
-        })
+        }),
       );
     });
 
@@ -563,8 +577,8 @@ Deno.test({
           const Response = await fetch(new URL("/api/oauth/local/", APIHost), {
             method: "POST",
             headers: {
-              Authorization:
-                "Basic " + btoa(`${user[0].username}:${user[1].password}`),
+              Authorization: "Basic " +
+                btoa(`${user[0].username}:${user[1].password}`),
             },
             body: JSON.stringify({
               oauthAppId: Context.defaultOauthApp!.data._id,
@@ -574,7 +588,7 @@ Deno.test({
           });
 
           expect(Response.status).toBe(400);
-        })
+        }),
       );
     });
 
