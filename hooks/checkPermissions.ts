@@ -202,10 +202,13 @@ export default {
 
     (await Env.get("MAINTENANCE_ROLES", true))?.split(
       /\s*,\s*/,
-    ).filter(Boolean).map((role) => {
-      Guard.addStage({ scopes: [`role:${role}`], resolveDepth: 1 }, {
-        denial: true,
-      });
+    ).filter(Boolean).map((_) => {
+      const [role, depth] = _.split(":");
+
+      Guard.addStage({
+        scopes: [`role:${role}`],
+        resolveDepth: depth ? parseInt(depth) : undefined,
+      }, { denial: true });
     });
 
     await Guard.compile({ resolveScopeRole: ResolveScopeRole });
