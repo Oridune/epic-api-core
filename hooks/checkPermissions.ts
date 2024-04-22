@@ -4,7 +4,6 @@ import {
   type IRequestContext,
   Response,
   Store,
-  StoreType,
 } from "@Core/common/mod.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
@@ -15,24 +14,25 @@ import { OauthPolicyModel } from "@Models/oauthPolicy.ts";
 import { UserModel } from "@Models/user.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { AccountModel } from "@Models/account.ts";
+import { MapStore } from "@Core/common/store/map.ts";
 
 export const ResolveScopeRole = async (role: string) => {
   if (!role) throw new Error("Role not provided!");
 
-  const OauthScopes = await Store.session(StoreType.MAP, (_) =>
-    _.cache(
-      ["roleCache", role],
-      async () => {
-        const Policy = await OauthPolicyModel.findOne({
-          role,
-        }).project({ scopes: 1, ttl: 1 });
+  const OauthScopes = await Store.cache(
+    ["roleCache", role],
+    async () => {
+      const Policy = await OauthPolicyModel.findOne({
+        role,
+      }).project({ scopes: 1, ttl: 1 });
 
-        return {
-          result: Policy?.scopes,
-          expiresInMs: ((Policy?.ttl ?? 0) * 1000) || 600000, // Default TTL 10 minutes
-        };
-      },
-    ));
+      return {
+        result: Policy?.scopes,
+        expiresInMs: ((Policy?.ttl ?? 0) * 1000) || 600000, // Default TTL 10 minutes
+      };
+    },
+    { store: MapStore },
+  );
 
   if (!(OauthScopes instanceof Array)) {
     throw e.error(
