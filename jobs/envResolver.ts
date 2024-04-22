@@ -10,7 +10,7 @@ export default () => {
   Env.onGetFailed = async (key: string) =>
     await Store.session(StoreType.MAP, (_) =>
       _.cache(
-        ["env", Env.getType(), key], // Env variable cache key
+        ["envCache", Env.getType(), key], // Env variable cache key
         async () => {
           const Variable = await EnvModel.findOne({ key }); // Fetch Env variable
 
