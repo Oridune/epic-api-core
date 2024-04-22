@@ -1,6 +1,3 @@
-import { Store } from "@Core/common/store.ts";
-import crypto from "node:crypto";
-
 export type TScopeResolverOptions = {
   resolveScopeRole?: (role: string) => Promise<Array<string> | undefined>;
   resolveDepth?: number;
@@ -75,45 +72,31 @@ export class SecurityGuard {
   }
 
   public async parse(
-    options?: TScopeResolverOptions & { cacheTimeMs?: number },
+    options?: TScopeResolverOptions,
   ) {
-    const CacheTime = options?.cacheTimeMs ?? 60 * 10 * 1000; // 10 minutes default cache
-
     await Promise.all(
       (["RawScopePipeline", "RawDenialScopePipeline"] as const).map(
         async (type) => {
           if (this[type].length) {
-            const CacheKey = crypto.createHash("md5").update(
-              this[type].toString(),
-            ).digest("hex");
+            const Resolvers: Array<
+              Promise<Array<string>> | Array<string>
+            > = [];
 
-            const Pipeline = await Store.cache(
-              CacheKey,
-              () => {
-                const Resolvers: Array<
-                  Promise<Array<string>> | Array<string>
-                > = [];
+            this[type].forEach((stage) => {
+              const Stage = stage instanceof Array ? { scopes: stage } : stage;
 
-                this[type].forEach((stage) => {
-                  const Stage = stage instanceof Array
-                    ? { scopes: stage }
-                    : stage;
+              const Scopes = Stage.scopes;
+              const ResolveDepth = Stage.resolveDepth ?? Infinity;
 
-                  const Scopes = Stage.scopes;
-                  const ResolveDepth = Stage.resolveDepth ?? Infinity;
+              Resolvers.push(
+                SecurityGuard.resolveScopes(Scopes, {
+                  ...options,
+                  resolveDepth: ResolveDepth,
+                }),
+              );
+            });
 
-                  Resolvers.push(
-                    SecurityGuard.resolveScopes(Scopes, {
-                      ...options,
-                      resolveDepth: ResolveDepth,
-                    }),
-                  );
-                });
-
-                return Promise.all(Resolvers);
-              },
-              CacheTime, // 10 minutes default cache
-            );
+            const Pipeline = await Promise.all(Resolvers);
 
             this[
               type.replace(/^Raw/, "") as

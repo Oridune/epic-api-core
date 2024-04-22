@@ -4,6 +4,7 @@ import {
   type IRequestContext,
   Response,
   Store,
+  StoreType,
 } from "@Core/common/mod.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
@@ -18,17 +19,28 @@ import { AccountModel } from "@Models/account.ts";
 export const ResolveScopeRole = async (role: string) => {
   if (!role) throw new Error("Role not provided!");
 
-  const OauthScopes = await OauthPolicyModel.findOne({
-    role,
-  }).project({ scopes: 1 });
+  const OauthScopes = await Store.session(StoreType.MAP, (_) =>
+    _.cache(
+      ["roleCache", role],
+      async () => {
+        const Policy = await OauthPolicyModel.findOne({
+          role,
+        }).project({ scopes: 1, ttl: 1 });
 
-  if (!OauthScopes) {
+        return {
+          result: Policy?.scopes,
+          expiresInMs: ((Policy?.ttl ?? 0) * 1000) || 600000, // Default TTL 10 minutes
+        };
+      },
+    ));
+
+  if (!(OauthScopes instanceof Array)) {
     throw e.error(
       `Unable to fetch the available scopes for the role '${role}'!`,
     );
   }
 
-  return OauthScopes.scopes;
+  return OauthScopes;
 };
 
 export const SessionValidator = e.optional(
@@ -198,7 +210,6 @@ export default {
 
     await Guard.parse({
       resolveScopeRole: ResolveScopeRole,
-      cacheTimeMs: 60 * 10 * 1000, // 10 minutes cache
     });
 
     if (!Guard.isPermitted(scope, name)) {
