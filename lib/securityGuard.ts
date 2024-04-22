@@ -10,10 +10,6 @@ export type TStage = Array<string> | {
 
 export class SecurityGuard {
   static resolveScopes(scopes: string[], options?: TScopeResolverOptions) {
-    if (typeof options?.resolveDepth === "number" && options.resolveDepth < 1) {
-      return scopes;
-    }
-
     const RoleRegExp = /^role:(.*)/;
     const ScopesCache: Record<string, Array<string>> = {};
 
