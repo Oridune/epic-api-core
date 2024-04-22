@@ -190,7 +190,7 @@ export default {
 
     (await Env.get("MAINTENANCE_ROLES", true))?.split(
       /\s*,\s*/,
-    ).map((role) => {
+    ).filter(Boolean).map((role) => {
       Guard.addStage({ scopes: [`role:${role}`], resolveDepth: 1 }, {
         denial: true,
       });
