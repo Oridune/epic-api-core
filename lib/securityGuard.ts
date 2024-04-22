@@ -71,7 +71,7 @@ export class SecurityGuard {
     return this;
   }
 
-  public async parse(
+  public async compile(
     options?: TScopeResolverOptions,
   ) {
     await Promise.all(
@@ -109,7 +109,7 @@ export class SecurityGuard {
     );
   }
 
-  public isPermitted(scope: string, permission?: string) {
+  public isAllowed(scope: string, permission?: string) {
     let Permitted = true;
 
     for (let i = 0; i < this.ScopePipeline.length; i++) {
@@ -125,24 +125,33 @@ export class SecurityGuard {
         : false;
     }
 
-    if (Permitted) {
-      for (let i = 0; i < this.DenialScopePipeline.length; i++) {
-        if (!Permitted) break;
+    return Permitted;
+  }
 
-        const Stage = this.DenialScopePipeline[i];
+  public isDenied(scope: string, permission?: string) {
+    let Permitted = true;
 
-        if (Stage.has("*")) Permitted = false;
-        if (Stage.has(scope)) Permitted = false;
+    for (let i = 0; i < this.DenialScopePipeline.length; i++) {
+      if (!Permitted) break;
 
-        if (Permitted) {
-          Permitted = typeof permission === "string"
-            ? !Stage.has(`${scope}.${permission}`)
-            : true;
-        }
+      const Stage = this.DenialScopePipeline[i];
+
+      if (Stage.has("*")) Permitted = false;
+      if (Stage.has(scope)) Permitted = false;
+
+      if (Permitted) {
+        Permitted = typeof permission === "string"
+          ? !Stage.has(`${scope}.${permission}`)
+          : true;
       }
     }
 
-    return Permitted;
+    return !Permitted;
+  }
+
+  public isPermitted(scope: string, permission?: string) {
+    return this.isAllowed(scope, permission) &&
+      !this.isDenied(scope, permission);
   }
 
   public toJSON() {

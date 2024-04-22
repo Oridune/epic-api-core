@@ -208,19 +208,26 @@ export default {
       });
     });
 
-    await Guard.parse({
-      resolveScopeRole: ResolveScopeRole,
-    });
+    await Guard.compile({ resolveScopeRole: ResolveScopeRole });
 
-    if (!Guard.isPermitted(scope, name)) {
+    if (!Guard.isAllowed(scope, name)) {
       const ErrorResponse = Response.statusCode(Status.Unauthorized)
         .message(
           `You are not permitted! Missing permission '${`${scope}.${name}`}'.`,
         );
 
-      if (!Env.is(EnvType.PRODUCTION)) {
-        ErrorResponse.data(Guard);
-      }
+      if (!Env.is(EnvType.PRODUCTION)) ErrorResponse.data(Guard);
+
+      throw ErrorResponse;
+    }
+
+    if (Guard.isDenied(scope, name)) {
+      const ErrorResponse = Response.statusCode(Status.Forbidden)
+        .message(
+          `You are not limited! Permission '${`${scope}.${name}`}' is denied.`,
+        );
+
+      if (!Env.is(EnvType.PRODUCTION)) ErrorResponse.data(Guard);
 
       throw ErrorResponse;
     }
