@@ -26,6 +26,7 @@ import {
   UpdateUserSchema,
   UserModel,
   UsernameValidator,
+  UserReferenceValidator,
 } from "@Models/user.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { AccountModel } from "@Models/account.ts";
@@ -41,9 +42,13 @@ import UploadsController from "@Controllers/uploads.ts";
 
 @Controller("/users/", { group: "Users", name: "users" })
 export default class UsersController extends BaseController {
-  static create(
+  static async create(
     user: Omit<TUserInput, "role" | "passwordHistory" | "collaborates">,
   ) {
+    if (
+      user.reference && await UserModel.exists({ reference: user.reference })
+    ) throw new Error(`Reference already registered!`);
+
     return Mongo.transaction(async (session) => {
       const UserId = new ObjectId();
       const AccountId = new ObjectId();
@@ -126,6 +131,18 @@ export default class UsersController extends BaseController {
 
   @Post("/:oauthAppId/")
   public create(route: IRoute) {
+    // Define Query Schema
+    const QuerySchema = e.object(
+      {
+        reference: e.optional(e.string()).custom(async (ctx) => {
+          if (
+            ctx.output && !(await UserReferenceValidator().test(ctx.output))
+          ) ctx.output = undefined;
+        }),
+      },
+      { allowUnexpectedProps: true },
+    );
+
     // Define Params Schema
     const ParamsSchema = e.object({
       oauthAppId: e.string().custom(async (ctx) => {
@@ -153,10 +170,17 @@ export default class UsersController extends BaseController {
 
     return {
       postman: {
+        query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
         body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Query Validation
+        const Query = await QuerySchema.validate(
+          Object.fromEntries(ctx.router.request.url.searchParams),
+          { name: `${route.scope}.query` },
+        );
+
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {
           name: `${route.scope}.params`,
@@ -172,6 +196,7 @@ export default class UsersController extends BaseController {
         const { password, passwordHistory, oauthApp, collaborates, ...User } = (
           await UsersController.create({
             oauthApp: new ObjectId(Params.oauthAppId),
+            reference: Query.reference,
             ...Body,
           })
         ).user;

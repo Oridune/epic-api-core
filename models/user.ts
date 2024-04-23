@@ -10,7 +10,7 @@ const UserReferenceStart = Env.getSync("USER_REFERENCE_START", true) ?? "10000";
 export const UserReferenceValidator = () =>
   e.string().matches({
     regex: new RegExp(
-      `^${UserReferencePrefix}[0-9]{${UserReferenceStart.length},}$`,
+      `^[A-Z]{2,3}[0-9]{${UserReferenceStart.length},}$`,
     ),
   });
 

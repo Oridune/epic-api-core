@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Box,
   Button,
@@ -38,8 +38,19 @@ import { PhoneField } from "../misc/PhoneField";
 
 import Logo from "../../assets/logo.png";
 
+export const tryAtob = (text: string) => {
+  try {
+    return btoa(text);
+  } catch {
+    return "";
+  }
+};
+
 export const SignupPage = () => {
   const Navigate = useNavigate();
+  const [Query] = useSearchParams();
+
+  const CustomReference = Query.get("ref");
 
   const { app } = useOauthApp();
 
@@ -101,6 +112,9 @@ export const SignupPage = () => {
           baseURL: import.meta.env.VITE_API_HOST,
           headers: {
             "X-Api-Version": import.meta.env.VITE_API_VERSION,
+          },
+          params: {
+            reference: tryAtob(CustomReference ?? ""),
           },
         }
       );
