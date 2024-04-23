@@ -114,7 +114,7 @@ export const SignupPage = () => {
             "X-Api-Version": import.meta.env.VITE_API_VERSION,
           },
           params: {
-            reference: tryAtob(CustomReference ?? ""),
+            reference: tryAtob(CustomReference ?? "") || undefined,
           },
         }
       );

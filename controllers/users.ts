@@ -136,7 +136,8 @@ export default class UsersController extends BaseController {
       {
         reference: e.optional(e.string()).custom(async (ctx) => {
           if (
-            ctx.output && !(await UserReferenceValidator().test(ctx.output))
+            typeof ctx.output === "string" &&
+            !(await UserReferenceValidator().test(ctx.output))
           ) ctx.output = undefined;
         }),
       },
