@@ -99,7 +99,7 @@ export default class BatcherController extends BaseController {
                       },
                       body: (typeof RequestPayload.body === "string"
                         ? RequestPayload.body
-                        : JSON.stringify(RequestPayload.body)),
+                        : JSON.stringify(RequestPayload.body ?? {})),
                     },
                   );
 
