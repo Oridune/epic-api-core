@@ -214,7 +214,7 @@ export default {
     await Guard.compile({ resolveScopeRole: ResolveScopeRole });
 
     if (!Guard.isAllowed(scope, name)) {
-      const ErrorResponse = Response.statusCode(Status.Unauthorized)
+      const ErrorResponse = Response.statusCode(Status.PaymentRequired)
         .message(
           `You are not permitted! Missing permission '${`${scope}.${name}`}'.`,
         );
