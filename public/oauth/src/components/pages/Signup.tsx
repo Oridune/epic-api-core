@@ -40,7 +40,7 @@ import Logo from "../../assets/logo.png";
 
 export const tryAtob = (text: string) => {
   try {
-    return btoa(text);
+    return atob(text);
   } catch {
     return "";
   }
