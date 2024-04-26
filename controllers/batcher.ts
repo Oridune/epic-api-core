@@ -1,6 +1,7 @@
 import {
   BaseController,
   Controller,
+  fetch,
   type IRequestContext,
   type IRoute,
   Post,
@@ -74,40 +75,32 @@ export default class BatcherController extends BaseController {
                   }
                   : RawRequest) as TRequestInput;
 
-                RequestPayload.endpoint = new URL(
-                  RequestPayload.endpoint
-                    ? RequestPayload.endpoint.replace(/^\//g, "")
-                    : "",
-                  new URL("/api/", ctx.router.request.url.origin),
-                ).toString();
-
-                const FetchConfig = {
-                  method: RequestPayload.method,
-                  headers: {
-                    ...(CurrentHeaders["user-agent"] &&
-                      { "user-agent": CurrentHeaders["user-agent"] }),
-                    ...(CurrentHeaders.authorization &&
-                      { authorization: CurrentHeaders.authorization }),
-                    ...(CurrentHeaders["x-account-id"] &&
-                      { "x-account-id": CurrentHeaders["x-account-id"] }),
-                    ...(CurrentHeaders["x-api-version"] &&
-                      { "x-api-version": CurrentHeaders["x-api-version"] }),
-                    ...RequestPayload.headers,
-                  },
-                  body: (typeof RequestPayload.body === "string"
-                    ? RequestPayload.body
-                    : JSON.stringify(RequestPayload.body)) ??
-                    (["get", "head"].includes(RequestPayload.method)
-                      ? undefined
-                      : "{}"),
-                };
-
                 try {
-                  const Response = await ctx.router.app.handle(
-                    new Request(
-                      RequestPayload.endpoint!,
-                      FetchConfig,
-                    ),
+                  const Response = await fetch(
+                    ctx.router.app,
+                    new URL(
+                      RequestPayload.endpoint
+                        ? RequestPayload.endpoint.replace(/^\//g, "")
+                        : "",
+                      new URL("/api/", ctx.router.request.url.origin),
+                    ).toString(),
+                    {
+                      method: RequestPayload.method,
+                      headers: {
+                        ...(CurrentHeaders["user-agent"] &&
+                          { "user-agent": CurrentHeaders["user-agent"] }),
+                        ...(CurrentHeaders.authorization &&
+                          { authorization: CurrentHeaders.authorization }),
+                        ...(CurrentHeaders["x-account-id"] &&
+                          { "x-account-id": CurrentHeaders["x-account-id"] }),
+                        ...(CurrentHeaders["x-api-version"] &&
+                          { "x-api-version": CurrentHeaders["x-api-version"] }),
+                        ...RequestPayload.headers,
+                      },
+                      body: (typeof RequestPayload.body === "string"
+                        ? RequestPayload.body
+                        : JSON.stringify(RequestPayload.body)),
+                    },
                   );
 
                   const Data = await Response?.json();

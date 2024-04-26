@@ -127,7 +127,7 @@ Deno.test({
   async fn(t) {
     await Loader.load({ excludeTypes: ["templates"] });
 
-    const { start, end, restart } = await createAppServer();
+    const { fetch, start, end, restart } = await createAppServer();
 
     // Database Cleanup
     Database.connection.post("connect", () => Database.connection.drop());
@@ -155,10 +155,10 @@ Deno.test({
           new URL("/api/oauth/apps/default/", APIHost),
         );
 
-        expect(Response.status).toBe(200);
+        expect(Response?.status).toBe(200);
 
         Context.defaultOauthApp = await DefaultOauthAppResponseSchema.validate(
-          await Response.json(),
+          await Response?.json(),
         ).catch((e) => {
           console.error(e.issues);
           throw e;
@@ -176,9 +176,9 @@ Deno.test({
             { method: "POST", body: JSON.stringify(user[0]) },
           );
 
-          expect(Response.status).toBe(201);
+          expect(Response?.status).toBe(201);
 
-          await UserResponseSchema.validate(await Response.json()).catch(
+          await UserResponseSchema.validate(await Response?.json()).catch(
             (e) => {
               console.error(e.issues);
               throw e;
@@ -198,7 +198,7 @@ Deno.test({
             { method: "POST", body: JSON.stringify(user[0]) },
           );
 
-          expect(Response.status).toBe(400);
+          expect(Response?.status).toBe(400);
         }),
       );
     });
@@ -217,11 +217,11 @@ Deno.test({
               ),
             );
 
-            expect(Response.status).toBe(200);
+            expect(Response?.status).toBe(200);
 
             (Context.emailVerification ??= []).push(
               await IdentificationResponseSchema.validate(
-                await Response.json(),
+                await Response?.json(),
               ),
             );
           }),
@@ -243,11 +243,11 @@ Deno.test({
               ),
             );
 
-            expect(Response.status).toBe(200);
+            expect(Response?.status).toBe(200);
 
             (Context.phoneVerification ??= []).push(
               await IdentificationResponseSchema.validate(
-                await Response.json(),
+                await Response?.json(),
               ),
             );
           }),
@@ -269,7 +269,7 @@ Deno.test({
             }),
           });
 
-          expect(Response.status).toBe(400);
+          expect(Response?.status).toBe(400);
         }),
       );
 
@@ -284,7 +284,7 @@ Deno.test({
             }),
           });
 
-          expect(Response.status).toBe(200);
+          expect(Response?.status).toBe(200);
         }),
       );
     });
@@ -303,7 +303,7 @@ Deno.test({
             }),
           });
 
-          expect(Response.status).toBe(200);
+          expect(Response?.status).toBe(200);
         }),
       );
     });
@@ -323,11 +323,11 @@ Deno.test({
               ),
             );
 
-            expect(Response.status).toBe(200);
+            expect(Response?.status).toBe(200);
 
             (Context.emailRecovery ??= []).push(
               await IdentificationResponseSchema.validate(
-                await Response.json(),
+                await Response?.json(),
               ),
             );
           }),
@@ -353,7 +353,7 @@ Deno.test({
             },
           );
 
-          expect(Response.status).toBe(400);
+          expect(Response?.status).toBe(400);
         }),
       );
 
@@ -372,7 +372,7 @@ Deno.test({
             },
           );
 
-          expect(Response.status).toBe(400);
+          expect(Response?.status).toBe(400);
         }),
       );
 
@@ -391,7 +391,7 @@ Deno.test({
             },
           );
 
-          expect(Response.status).toBe(200);
+          expect(Response?.status).toBe(200);
         }),
       );
     });
@@ -407,7 +407,7 @@ Deno.test({
             },
           });
 
-          expect(Response.status).toBe(400);
+          expect(Response?.status).toBe(400);
         }),
       );
 
@@ -426,10 +426,10 @@ Deno.test({
             }),
           });
 
-          expect(Response.status).toBe(200);
+          expect(Response?.status).toBe(200);
 
           (Context.oauthAuthentication ??= []).push(
-            await AuthenticationResponseSchema.validate(await Response.json()),
+            await AuthenticationResponseSchema.validate(await Response?.json()),
           );
         }),
       ).catch((error) => {
@@ -454,7 +454,7 @@ Deno.test({
           },
         );
 
-        expect(Response.status).toBe(400);
+        expect(Response?.status).toBe(400);
 
         await Promise.all(
           TestUsers.map(async (_, index) => {
@@ -477,11 +477,11 @@ Deno.test({
               },
             );
 
-            expect(Response.status).toBe(201);
+            expect(Response?.status).toBe(201);
 
             (Context.oauthExchangeAuthentication ??= []).push(
               await ExchangeAuthenticationResponseSchema.validate(
-                await Response.json(),
+                await Response?.json(),
               ),
             );
           }),
@@ -502,7 +502,7 @@ Deno.test({
         },
       );
 
-      expect(Response.status).toBe(400);
+      expect(Response?.status).toBe(400);
 
       await Promise.all(
         TestUsers.map(async (_, index) => {
@@ -517,10 +517,10 @@ Deno.test({
             },
           );
 
-          expect(Response.status).toBe(200);
+          expect(Response?.status).toBe(200);
 
           (Context.oauthExchangeCode ??= []).push(
-            await ExchangeCodeResponseSchema.validate(await Response.json()),
+            await ExchangeCodeResponseSchema.validate(await Response?.json()),
           );
         }),
       );
@@ -540,7 +540,7 @@ Deno.test({
             },
           });
 
-          expect(Response.status).toBe(401);
+          expect(Response?.status).toBe(401);
         }),
       );
     });
@@ -562,7 +562,7 @@ Deno.test({
             },
           );
 
-          expect(Response.status).toBe(200);
+          expect(Response?.status).toBe(200);
         }),
       );
     });
@@ -587,7 +587,7 @@ Deno.test({
             }),
           });
 
-          expect(Response.status).toBe(400);
+          expect(Response?.status).toBe(400);
         }),
       );
     });

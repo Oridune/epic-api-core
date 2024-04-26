@@ -4,13 +4,18 @@ import { Env } from "@Core/common/env.ts";
 import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 import { FileSchema } from "@Models/file.ts";
 
-const UserReferencePrefix = Env.getSync("USER_REFERENCE_PREFIX", true) ?? "UID";
+const AllowedUserReferencePrefix =
+  Env.getSync("ALLOWED_USER_REFERENCE_PREFIX", true) ?? "UID";
+const DefaultUserReferencePrefix =
+  Env.getSync("DEFAULT_USER_REFERENCE_PREFIX", true) ?? "UID";
 const UserReferenceStart = Env.getSync("USER_REFERENCE_START", true) ?? "10000";
 
 export const UserReferenceValidator = () =>
   e.string().matches({
     regex: new RegExp(
-      `^[A-Z]{2,3}[0-9]{${UserReferenceStart.length},}$`,
+      `^(${
+        AllowedUserReferencePrefix.split(/\s*,\s*/).join("|")
+      })[0-9]{${UserReferenceStart.length},}$`,
     ),
   });
 
@@ -81,9 +86,9 @@ export const UserSchema = () =>
         .optional(UserReferenceValidator())
         .default(
           async () =>
-            `${UserReferencePrefix}${
+            `${DefaultUserReferencePrefix}${
               parseInt(UserReferenceStart) +
-              (await Store.incr(`user-reference-${UserReferencePrefix}`))
+              (await Store.incr(`user-reference-${DefaultUserReferencePrefix}`))
             }`,
         ),
       passwordHistory: e.array(e.string()),
