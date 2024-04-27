@@ -8,6 +8,9 @@ const AllowedUserReferencePrefix =
   Env.getSync("ALLOWED_USER_REFERENCE_PREFIX", true) ?? "UID";
 const DefaultUserReferencePrefix =
   Env.getSync("DEFAULT_USER_REFERENCE_PREFIX", true) ?? "UID";
+const UserReferenceMinLength = parseInt(
+  Env.getSync("USER_REFERENCE_MIN_LENGTH", true) ?? "5",
+);
 const UserReferenceStart = Env.getSync("USER_REFERENCE_START", true) ?? "10000";
 
 export const UserReferenceValidator = () =>
@@ -15,7 +18,7 @@ export const UserReferenceValidator = () =>
     regex: new RegExp(
       `^(${
         AllowedUserReferencePrefix.split(/\s*,\s*/).join("|")
-      })[0-9]{${UserReferenceStart.length},}$`,
+      })[0-9]{${UserReferenceMinLength},}$`,
     ),
   });
 
