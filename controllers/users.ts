@@ -135,10 +135,10 @@ export default class UsersController extends BaseController {
     const QuerySchema = e.object(
       {
         reference: e.any().custom(async (ctx) => {
-          if (
-            typeof ctx.output === "string" &&
-            await UserReferenceValidator().test(ctx.output)
-          ) ctx.output = undefined;
+          if (typeof ctx.output === "string") {
+            const { error } = await UserReferenceValidator().try(ctx.output);
+            if (error) ctx.output = undefined;
+          }
         }),
       },
       { allowUnexpectedProps: true },
