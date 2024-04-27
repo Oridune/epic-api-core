@@ -28,7 +28,9 @@ const TestUsers = [
   ],
 ];
 
-const ResponseWrapperSchema = (dataValidator: ObjectValidator<any, any, any>) =>
+const ResponseWrapperSchema = <T extends ObjectValidator<any, any, any>>(
+  dataValidator: T,
+) =>
   e.object(
     {
       status: e.boolean(),
@@ -171,19 +173,30 @@ Deno.test({
 
       await Promise.all(
         TestUsers.map(async (user) => {
+          const CustomReference = "UID99999";
+
           const Response = await fetch(
-            new URL(`/api/users/${Context.defaultOauthApp!.data._id}`, APIHost),
+            new URL(
+              `/api/users/${
+                Context.defaultOauthApp!.data._id
+              }?reference=${CustomReference}`,
+              APIHost,
+            ),
             { method: "POST", body: JSON.stringify(user[0]) },
           );
 
           expect(Response?.status).toBe(201);
 
-          await UserResponseSchema.validate(await Response?.json()).catch(
+          const Data = await Response?.json();
+
+          const Results = await UserResponseSchema.validate(Data).catch(
             (e) => {
               console.error(e.issues);
               throw e;
             },
           );
+
+          expect(Results.data.reference).toBe(CustomReference);
         }),
       );
     });
@@ -540,7 +553,7 @@ Deno.test({
             },
           });
 
-          expect(Response?.status).toBe(401);
+          expect(Response?.status).toBe(402);
         }),
       );
     });
