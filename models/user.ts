@@ -11,7 +11,8 @@ const DefaultUserReferencePrefix =
 const UserReferenceMinLength = parseInt(
   Env.getSync("USER_REFERENCE_MIN_LENGTH", true) ?? "5",
 );
-const UserReferenceStart = Env.getSync("USER_REFERENCE_START", true) ?? "10000";
+const UserReferenceStart = Env.getSync("USER_REFERENCE_START", true) ??
+  "10000";
 
 export const UserReferenceValidator = () =>
   e.string().matches({

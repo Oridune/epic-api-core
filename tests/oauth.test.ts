@@ -607,7 +607,4 @@ Deno.test({
 
     await end();
   },
-  sanitizeResources: false,
-  sanitizeOps: false,
-  sanitizeExit: false,
 });
