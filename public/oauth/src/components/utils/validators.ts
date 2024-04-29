@@ -40,7 +40,7 @@ export const PhoneValidator = (t: TFunction) =>
       messages: { matchFailed: t("Please provide a valid phone!") },
     })
     .matches({
-      regex: /^0[0-9]{9,12}$/,
+      regex: /^0[0-9]{8,12}$/,
     });
 
 export const EmailValidator = (t: TFunction) =>
