@@ -13,6 +13,11 @@ import {
 import { DialingRules } from "../../data/dialingRules";
 import { Flag } from "./Flag";
 
+export type TPhoneNumberValue = {
+  dialingCode: string;
+  phoneNumber: string;
+};
+
 export interface PhoneFieldProps extends OutlinedInputProps {
   id: string;
   label: string;
@@ -21,6 +26,7 @@ export interface PhoneFieldProps extends OutlinedInputProps {
   allowedCountryCodes?: string[];
   helperText?: string;
   errorMessage?: string;
+  onPhoneNumberChange?: (value: TPhoneNumberValue) => void;
 }
 
 export const PhoneField = React.forwardRef<any, PhoneFieldProps>(
@@ -30,10 +36,10 @@ export const PhoneField = React.forwardRef<any, PhoneFieldProps>(
       label,
       defaultCountryCode,
       allowedCountryCodes,
-      value,
       onChange,
       helperText,
       errorMessage,
+      onPhoneNumberChange,
       ...restProps
     },
     ref
@@ -61,9 +67,11 @@ export const PhoneField = React.forwardRef<any, PhoneFieldProps>(
 
     const TargetDialingRule = DialingRules[CountryCode];
 
-    const [PhoneNumber, setPhoneNumber] = React.useState(
+    const [DialingCode, setDialingCode] = React.useState(
       `+${TargetDialingRule?.dialingCode ?? "92"}`
     );
+
+    const [PhoneNumber, setPhoneNumber] = React.useState("");
 
     return (
       <FormControl fullWidth variant="outlined">
@@ -73,15 +81,13 @@ export const PhoneField = React.forwardRef<any, PhoneFieldProps>(
           id={id}
           label={label}
           type="tel"
-          value={(value ?? PhoneNumber).substring(
-            0,
-            1 +
-              TargetDialingRule?.dialingCode.toString().length +
-              ((TargetDialingRule?.mask?.split(".")?.length ?? 13) - 1 ?? 12)
-          )}
           onChange={(e) => {
             setPhoneNumber(e.target.value);
             onChange?.(e);
+            onPhoneNumberChange?.({
+              dialingCode: DialingCode,
+              phoneNumber: e.target.value,
+            });
           }}
           error={!!errorMessage}
           startAdornment={
@@ -117,9 +123,16 @@ export const PhoneField = React.forwardRef<any, PhoneFieldProps>(
                 value={CountryCode}
                 onChange={(e) => {
                   setCountryCode(e.target.value);
-                  setPhoneNumber(
-                    `+${DialingRules[e.target.value]?.dialingCode}`
-                  );
+
+                  const DialingCode = `+${
+                    DialingRules[e.target.value]?.dialingCode
+                  }`;
+
+                  setDialingCode(DialingCode);
+                  onPhoneNumberChange?.({
+                    dialingCode: DialingCode,
+                    phoneNumber: PhoneNumber,
+                  });
                 }}
                 renderValue={(value) => (
                   <Flag

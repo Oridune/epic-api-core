@@ -49,6 +49,7 @@ export const ContactsPage = () => {
 
   const { t, i18n } = useTranslation();
 
+  const [DialingCode, setDialingCode] = React.useState<string | null>(null);
   const [AvailableMethods, setAvailableMethods] = React.useState<null | Array<{
     type: string;
     maskedValue: string;
@@ -106,7 +107,9 @@ export const ContactsPage = () => {
         const Response = await axios.put(
           `/api/users/${VerificationMethod}`,
           {
-            [VerificationMethod]: data[VerificationMethod as "email" | "phone"],
+            [VerificationMethod]: `${DialingCode}${parseInt(
+              data[VerificationMethod as "email" | "phone"] ?? "0"
+            )}`,
           },
           {
             baseURL: import.meta.env.VITE_API_HOST,
@@ -330,11 +333,15 @@ export const ContactsPage = () => {
                         id="phone"
                         label={t("Phone")}
                         autoComplete="phone"
+                        placeholder="0XXXXXXXXXX"
                         errorMessage={errorsChangeContact.phone?.message}
                         defaultCountryCode={
                           app?.consent.availableCountryCodes?.[0]
                         }
                         allowedCountryCodes={app?.consent.availableCountryCodes}
+                        onPhoneNumberChange={({ dialingCode }) => {
+                          setDialingCode(dialingCode);
+                        }}
                         {...registerChangeContact("phone")}
                       />
                     ) : null}

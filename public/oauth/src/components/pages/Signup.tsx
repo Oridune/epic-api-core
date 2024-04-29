@@ -54,6 +54,7 @@ export const SignupPage = () => {
 
   const { app } = useOauthApp();
 
+  const [DialingCode, setDialingCode] = React.useState<string | null>(null);
   const [ShowPassword, setShowPassword] = React.useState(false);
   const [ShowConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [Loading, setLoading] = React.useState(false);
@@ -104,7 +105,7 @@ export const SignupPage = () => {
           fname: data.fname,
           lname: data.lname,
           email: data.email,
-          phone: data.phone,
+          phone: `${DialingCode}${parseInt(data.phone)}`,
           username: data.username,
           password: data.password,
         },
@@ -248,9 +249,13 @@ export const SignupPage = () => {
                     id="phone"
                     label={t("Phone")}
                     autoComplete="phone"
+                    placeholder="0XXXXXXXXXX"
                     errorMessage={errors.phone?.message}
                     defaultCountryCode={app?.consent.availableCountryCodes?.[0]}
                     allowedCountryCodes={app?.consent.availableCountryCodes}
+                    onPhoneNumberChange={({ dialingCode }) => {
+                      setDialingCode(dialingCode);
+                    }}
                     {...register("phone")}
                   />
                 </Grid>
