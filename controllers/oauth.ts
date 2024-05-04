@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import {
   BaseController,
   Controller,
@@ -70,19 +71,47 @@ export type TokenPayload = {
     | TokenPayload;
 };
 
-export const DefaultOauthIssuer = await Env.get("DISPLAY_NAME");
-export const DefaultOauthAudience = await Env.get("DISPLAY_NAME");
+export const DefaultOauthIssuer = Env.getSync("DISPLAY_NAME");
+export const DefaultOauthAudience = DefaultOauthIssuer;
+export const OauthTokenExpirySecond = parseInt(
+  Env.getSync("OAUTH_TOKEN_EXPIRY_SECOND", true) ?? "300", // 5m
+);
+export const OauthAuthenticationExpirySecond = parseInt(
+  Env.getSync(
+    "OAUTH_AUTHENTICATION_EXPIRY_SECOND",
+    true,
+  ) ?? "180", // 3m
+);
+export const OauthCodeExpirySecond = parseInt(
+  Env.getSync(
+    "OAUTH_CODE_EXPIRY_SECOND",
+    true,
+  ) ?? "300", // 5m
+);
+export const OauthRefreshExpirySecond = parseInt(
+  Env.getSync(
+    "OAUTH_REFRESH_EXPIRY_SECOND",
+    true,
+  ) ?? "604800", // 1w
+);
+export const OauthAccessExpirySecond = parseInt(
+  Env.getSync(
+    "OAUTH_ACCESS_EXPIRY_SECOND",
+    true,
+  ) ?? "86400", // 1d
+);
 
 @Controller("/oauth/", { group: "Oauth", name: "oauth" })
 export default class OauthController extends BaseController {
   static DefaultOauthIssuer = DefaultOauthIssuer;
   static DefaultOauthAudience = DefaultOauthAudience;
 
-  static DefaultOauthTokenExpirySeconds = 300; // 5m
-  static DefaultOauthAuthenticationExpirySeconds = 180; // 3m
-  static DefaultOauthCodeExpirySeconds = 300; // 5m
-  static DefaultRefreshTokenExpirySeconds = 86400; // 1d
-  static DefaultAccessTokenExpirySeconds = 300; // 5m
+  static DefaultOauthTokenExpirySeconds = OauthTokenExpirySecond;
+  static DefaultOauthAuthenticationExpirySeconds =
+    OauthAuthenticationExpirySecond;
+  static DefaultOauthCodeExpirySeconds = OauthCodeExpirySecond;
+  static DefaultOauthRefreshExpirySeconds = OauthRefreshExpirySecond;
+  static DefaultOauthAccessExpirySeconds = OauthAccessExpirySecond;
 
   static async createToken<T extends string>(opts: {
     type: T;
@@ -162,7 +191,7 @@ export default class OauthController extends BaseController {
           issuer: opts.issuer,
           audience: opts.audience,
           expiresInSeconds: opts.refreshTokenExpiresInSeconds ??
-            OauthController.DefaultRefreshTokenExpirySeconds,
+            OauthController.DefaultOauthRefreshExpirySeconds,
         })
         : undefined,
       access: await OauthController.createOauthToken({
@@ -171,7 +200,7 @@ export default class OauthController extends BaseController {
         issuer: opts.issuer,
         audience: opts.audience,
         expiresInSeconds: opts.accessTokenExpiresInSeconds ??
-          OauthController.DefaultAccessTokenExpirySeconds *
+          OauthController.DefaultOauthAccessExpirySeconds *
             (opts.refreshable ? 1 : 12),
       }),
     };
@@ -202,7 +231,7 @@ export default class OauthController extends BaseController {
         issuer: opts.issuer,
         audience: opts.audience,
         expiresInSeconds: opts.expiresInSeconds ??
-          OauthController.DefaultAccessTokenExpirySeconds * 2,
+          OauthController.DefaultOauthAccessExpirySeconds * 2,
       }),
     };
   }
@@ -260,7 +289,7 @@ export default class OauthController extends BaseController {
       expiresAt: new Date(
         Date.now() +
           (opts.expiresInSeconds ??
-              OauthController.DefaultRefreshTokenExpirySeconds) *
+              OauthController.DefaultOauthRefreshExpirySeconds) *
             1000,
       ),
     });
@@ -288,7 +317,7 @@ export default class OauthController extends BaseController {
       expiresAt: new Date(
         Date.now() +
           (opts.expiresInSeconds ??
-              OauthController.DefaultRefreshTokenExpirySeconds) *
+              OauthController.DefaultOauthRefreshExpirySeconds) *
             1000,
       ),
     });
@@ -311,7 +340,10 @@ export default class OauthController extends BaseController {
 
     if (!Session) throw new Error(`An active session was not found!`);
 
-    if (opts.useragentCheck !== false) {
+    if (
+      opts.useragentCheck !== false ||
+      await Env.get("ENABLE_USERAGENT_CHECK", true) !== "0"
+    ) {
       const UserAgent = OauthController.resolveUserAgent(opts.useragent);
 
       if (Session.useragent !== UserAgent) {
