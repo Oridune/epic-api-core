@@ -127,7 +127,7 @@ const ExchangeCodeResponseSchema = ResponseWrapperSchema(
 Deno.test({
   name: "Oauth Flow Test",
   async fn(t) {
-    await Loader.load({ excludeTypes: ["templates"] });
+    await Loader.load({ excludeTypes: ["templates", "models"] });
 
     const { fetch, start, end, restart } = await createAppServer();
 
