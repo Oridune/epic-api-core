@@ -1,8 +1,7 @@
-// deno-lint-ignore-file no-explicit-any
-import "ts-reset";
+/// <reference path="./base.d.ts" />
+
 import "@Core/common/controller/base.ts";
-import { IValidatorJSONSchema } from "validator";
-import { SecurityGuard } from "./lib/securityGuard.ts";
+import { SecurityGuard } from "@Lib/securityGuard.ts";
 import { TUserOutput } from "@Models/user.ts";
 import { TAccountOutput } from "@Models/account.ts";
 
@@ -39,16 +38,5 @@ declare module "@Core/common/controller/base.ts" {
       auth?: Authorization;
       guard: SecurityGuard;
     };
-  }
-
-  interface IRequestHandlerObjectExtendor {
-    postman?: {
-      headers?: { data: Record<string, any>; schema?: IValidatorJSONSchema };
-      query?: { data: Record<string, any>; schema?: IValidatorJSONSchema };
-      params?: { data: Record<string, any>; schema?: IValidatorJSONSchema };
-      body?: { data: Record<string, any>; schema?: IValidatorJSONSchema };
-    };
-
-    // Override properties here
   }
 }
