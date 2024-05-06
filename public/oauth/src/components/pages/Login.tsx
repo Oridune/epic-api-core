@@ -65,7 +65,7 @@ export const LoginPage = () => {
         password: PasswordValidator(t),
         remember: e
           .optional(
-            e.or([e.string(), e.boolean()]).custom((ctx) => !!ctx.output)
+            e.or([e.boolean(), e.string()]).custom((ctx) => !!ctx.output)
           )
           .default(false),
       }),

@@ -1,5 +1,5 @@
 import e, { inferInput, inferOutput } from "validator";
-import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
+import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 import {
   EmailValidator,
   PhoneValidator,
@@ -12,7 +12,7 @@ export const AccountInviteSchema = () =>
     createdAt: e.optional(e.date()).default(() => new Date()),
     updatedAt: e.optional(e.date()).default(() => new Date()),
     createdBy: e.instanceOf(ObjectId, { instantiate: true }),
-    recipient: e.or([EmailValidator, UsernameValidator, PhoneValidator]),
+    recipient: e.or([PhoneValidator, EmailValidator, UsernameValidator]),
     role: e.string(),
     account: e.instanceOf(ObjectId, { instantiate: true }),
     token: e.optional(e.string()).default(() => crypto.randomUUID()),
@@ -27,7 +27,7 @@ export type TAccountInviteOutput = OutputDocument<
 
 export const AccountInviteModel = Mongo.model(
   "accountInvite",
-  AccountInviteSchema
+  AccountInviteSchema,
 );
 
 AccountInviteModel.pre("update", (details) => {

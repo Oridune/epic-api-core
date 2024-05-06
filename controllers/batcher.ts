@@ -32,14 +32,14 @@ export default class BatcherController extends BaseController {
     const BodySchema = e.object({
       requests: e.array(
         e.or([
-          e.string(),
-          RequestInputSchema(),
           e.array(
             e.or([
-              e.string(),
               RequestInputSchema(),
+              e.string(),
             ]),
           ).min(1),
+          RequestInputSchema(),
+          e.string(),
         ]),
       ).min(1),
     });
