@@ -228,7 +228,7 @@ export class Wallet {
     type?: string;
     currency?: string;
     amount: number;
-    description?: string;
+    description?: string | Record<string, string>;
     status?: TransactionStatus;
     methodOf3DSecurity?: string;
     allowOverdraft?: boolean;
@@ -396,7 +396,7 @@ export class Wallet {
     reference?: string;
     transactionId: ObjectId | string;
     user: ObjectId | string;
-    description?: string;
+    description?: string | Record<string, string>;
     allowOverdraft?: boolean;
     overdraftLimit?: number;
     metadata?: Record<string, any>;
@@ -423,7 +423,14 @@ export class Wallet {
       currency: Transaction.currency,
       amount: Transaction.amount,
       description: options.description ??
-        ["(Refund)", Transaction.description].join(" "),
+        (typeof Transaction.description === "object"
+          ? Object.fromEntries(
+            Object.entries(Transaction.description).map((trns) => {
+              trns[1] = ["(Refund)", trns[1]].join(" ");
+              return trns;
+            }),
+          )
+          : ["(Refund)", Transaction.description].join(" ")),
       metadata: options.metadata,
       allowOverdraft: options.allowOverdraft,
       overdraftLimit: options.overdraftLimit,
