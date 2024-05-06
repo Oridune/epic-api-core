@@ -1,4 +1,6 @@
 import "./base.d.ts";
+import "./plugins.d.ts";
+
 import "@Core/common/controller/base.ts";
 import { SecurityGuard } from "@Lib/securityGuard.ts";
 import { TUserOutput } from "@Models/user.ts";
