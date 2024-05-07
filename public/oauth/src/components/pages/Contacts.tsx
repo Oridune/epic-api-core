@@ -443,14 +443,7 @@ export const ContactsPage = () => {
                                 <ListItem
                                   secondaryAction={
                                     EnabledOptions.length < 2 ? (
-                                      <Button
-                                        type="button"
-                                        variant="contained"
-                                        disabled={Loading}
-                                        onClick={EnabledOptions[0].onClick}
-                                      >
-                                        {EnabledOptions[0].label}
-                                      </Button>
+                                      null
                                     ) : (
                                       <DotMenu
                                         id={`options-${index}`}
@@ -491,6 +484,15 @@ export const ContactsPage = () => {
                                       size="small"
                                     />
                                   )}
+
+                                  <Button
+                                    type="button"
+                                    variant="contained"
+                                    disabled={Loading}
+                                    onClick={EnabledOptions[0].onClick}
+                                  >
+                                    {EnabledOptions[0].label}
+                                  </Button>
                                 </ListItem>
                                 {AvailableMethods.length > index + 1 && (
                                   <Divider component="li" />
