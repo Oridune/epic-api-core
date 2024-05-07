@@ -34,6 +34,10 @@ type Authorization = {
 declare module "@Core/common/controller/base.ts" {
   interface IRouterContextExtendor {
     state: {
+      credentials?: {
+        username: string;
+        password: string;
+      };
       sessionInfo?: SessionInfo;
       auth?: Authorization;
       guard: SecurityGuard;

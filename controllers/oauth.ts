@@ -5,6 +5,7 @@ import {
   Delete,
   Env,
   EnvType,
+  fetch,
   type IRequestContext,
   type IRoute,
   Post,
@@ -818,11 +819,12 @@ export default class OauthController extends BaseController {
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Authorization Validation
-        const Credentials = await e
-          .object({
+        let Credentials = await e.optional(
+          e.object({
             username: UsernameValidator(),
             password: e.string(),
-          })
+          }),
+        )
           .validate(ctx.router.state.credentials, {
             name: "oauth.credentials",
           });
@@ -837,12 +839,11 @@ export default class OauthController extends BaseController {
         const Context: Record<string, any> = {};
 
         // Fetch oauth app for authentication
-        const OauthApp = (await ctx.router.app.handle(
-          new Request(
-            new URL(
-              `/api/oauth/apps/${Body.oauthAppId ?? "default"}/`,
-              ctx.router.request.url.origin,
-            ),
+        const OauthApp = (await fetch(
+          ctx.router.app,
+          new URL(
+            `/api/oauth/apps/${Body.oauthAppId ?? "default"}/`,
+            ctx.router.request.url.origin,
           ),
         ).then((_) => _?.json())) as any;
 
@@ -854,27 +855,64 @@ export default class OauthController extends BaseController {
             .data(Context);
         }
 
-        // Authenticate with the api
-        const Authentication = (await ctx.router.app.handle(
-          new Request(
-            new URL("/api/oauth/local/", ctx.router.request.url.origin),
-            {
-              method: "POST",
-              headers: {
-                "User-Agent": UserAgent,
-                Authorization: `Basic ${
-                  btoa(
-                    `${Credentials.username}:${Credentials.password}`,
-                  )
-                }`,
+        if (!Credentials) {
+          Credentials = {
+            username: "tester",
+            password: "Test123!",
+          };
+
+          if (!(await UserModel.exists({ username: Credentials.username }))) {
+            const Register = (await fetch(
+              ctx.router.app,
+              new URL(
+                `/api/users/${OauthApp.data._id}/`,
+                ctx.router.request.url.origin,
+              ),
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  fname: "Tester",
+                  phone: "+920000000000",
+                  username: Credentials.username,
+                  password: Credentials.password,
+                }),
               },
-              body: JSON.stringify({
-                oauthAppId: OauthApp.data._id,
-                callbackURL: OauthApp.data.consent.allowedCallbackURLs[0],
-                remember: Body.remember,
-              }),
+            ).then((_) => _?.json())) as any;
+
+            Context.user = Register;
+
+            if (!Register?.status) {
+              return Response.statusCode(500)
+                .message("Tester registration failed!")
+                .data(Context);
+            }
+
+            await UserModel.updateOneOrFail(Register.data._id, {
+              role: "user",
+            });
+          }
+        }
+
+        // Authenticate with the api
+        const Authentication = (await fetch(
+          ctx.router.app,
+          new URL("/api/oauth/local/", ctx.router.request.url.origin),
+          {
+            method: "POST",
+            headers: {
+              "User-Agent": UserAgent,
+              Authorization: `Basic ${
+                btoa(
+                  `${Credentials.username}:${Credentials.password}`,
+                )
+              }`,
             },
-          ),
+            body: JSON.stringify({
+              oauthAppId: OauthApp.data._id,
+              callbackURL: OauthApp.data.consent.allowedCallbackURLs[0],
+              remember: Body.remember,
+            }),
+          },
         ).then((_) => _?.json())) as any;
 
         Context.authentication = Authentication;
@@ -886,26 +924,25 @@ export default class OauthController extends BaseController {
         }
 
         // Exchange authentication token
-        const ExchangeAuthentication = (await ctx.router.app.handle(
-          new Request(
-            new URL(
-              "/api/oauth/exchange/authentication/",
-              ctx.router.request.url.origin,
-            ),
-            {
-              method: "POST",
-              headers: {
-                "User-Agent": UserAgent,
-              },
-              body: JSON.stringify({
-                authenticationToken:
-                  Authentication.data.authenticationToken.token,
-                scopes: Body.scopes ?? {
-                  [Authentication.data.availableScopes[0].account._id]: ["*"],
-                },
-              }),
-            },
+        const ExchangeAuthentication = (await fetch(
+          ctx.router.app,
+          new URL(
+            "/api/oauth/exchange/authentication/",
+            ctx.router.request.url.origin,
           ),
+          {
+            method: "POST",
+            headers: {
+              "User-Agent": UserAgent,
+            },
+            body: JSON.stringify({
+              authenticationToken:
+                Authentication.data.authenticationToken.token,
+              scopes: Body.scopes ?? {
+                [Authentication.data.availableScopes[0].account._id]: ["*"],
+              },
+            }),
+          },
         ).then((_) => _?.json())) as any;
 
         Context.exchangeAuth = ExchangeAuthentication;
@@ -917,19 +954,18 @@ export default class OauthController extends BaseController {
         }
 
         // Exchange oauth code
-        const ExchangeCode = (await ctx.router.app.handle(
-          new Request(
-            new URL("/api/oauth/exchange/code/", ctx.router.request.url.origin),
-            {
-              method: "POST",
-              headers: {
-                "User-Agent": UserAgent,
-              },
-              body: JSON.stringify({
-                code: ExchangeAuthentication.data.oauthCode.token,
-              }),
+        const ExchangeCode = (await fetch(
+          ctx.router.app,
+          new URL("/api/oauth/exchange/code/", ctx.router.request.url.origin),
+          {
+            method: "POST",
+            headers: {
+              "User-Agent": UserAgent,
             },
-          ),
+            body: JSON.stringify({
+              code: ExchangeAuthentication.data.oauthCode.token,
+            }),
+          },
         ).then((_) => _?.json())) as any;
 
         Context.exchangeCode = ExchangeCode;

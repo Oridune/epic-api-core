@@ -83,7 +83,7 @@ export default class BatcherController extends BaseController {
                         ? RequestPayload.endpoint.replace(/^\//g, "")
                         : "",
                       new URL("/api/", ctx.router.request.url.origin),
-                    ).toString(),
+                    ),
                     {
                       method: RequestPayload.method,
                       headers: {
