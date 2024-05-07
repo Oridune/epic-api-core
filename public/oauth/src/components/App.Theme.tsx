@@ -1,7 +1,9 @@
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { Helmet } from "react-helmet";
 import { useTranslation } from "react-i18next";
+import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
 
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
@@ -26,12 +28,13 @@ export const AppTheme = () => {
   const ThemeMode = useThemeMode();
   const { i18n } = useTranslation();
 
+  // Theme
   const DefaultPrimaryColor = "#9e9e9e";
   const DefaultSecondaryColor = "#607d8b";
   const DefaultRoundness = 10;
-  const DefaultFontFamily = "'Noto Sans Arabic', sans-serif";
+  const ArabicFontFamily = "'Noto Sans Arabic', sans-serif";
 
-  const FontFamily = i18n.language === "ar" ? DefaultFontFamily : undefined;
+  const FontFamily = i18n.language === "ar" ? ArabicFontFamily : undefined;
   const PrimaryColor =
     (ThemeMode === "dark"
       ? app?.consent.primaryColorDark
@@ -45,6 +48,28 @@ export const AppTheme = () => {
     app?.consent.secondaryColor ??
     DefaultSecondaryColor;
   const Roundness = app?.consent.styling?.roundness ?? DefaultRoundness;
+
+  // Integrations
+  const reCaptchaV3 = app?.integrations?.find(
+    (i) => i.enabled && i.id === "re-captcha-v3"
+  );
+
+  const MainContent = loading ? (
+    <LoadingFormPage />
+  ) : !app ? (
+    <NoAppPage />
+  ) : (
+    <>
+      <Helmet>
+        <link
+          rel="shortcut icon"
+          href={app.consent.logo?.url ?? Logo}
+          type="image/x-icon"
+        />
+      </Helmet>
+      <AppRoutes />
+    </>
+  );
 
   return (
     <ThemeProvider
@@ -114,21 +139,22 @@ export const AppTheme = () => {
       })}
     >
       <CssBaseline />
-      {loading ? (
-        <LoadingFormPage />
-      ) : !app ? (
-        <NoAppPage />
+      {reCaptchaV3 && reCaptchaV3.publicKey ? (
+        <GoogleReCaptchaProvider
+          reCaptchaKey={reCaptchaV3.publicKey}
+          language={i18n.language}
+          useRecaptchaNet={[undefined, "true", "1"].includes(
+            reCaptchaV3.props?.useRecaptchaNet
+          )}
+          useEnterprise={[undefined, "true", "1"].includes(
+            reCaptchaV3.props?.useEnterprise
+          )}
+          container={{ parameters: { theme: ThemeMode } }}
+        >
+          {MainContent}
+        </GoogleReCaptchaProvider>
       ) : (
-        <>
-          <Helmet>
-            <link
-              rel="shortcut icon"
-              href={app.consent.logo?.url ?? Logo}
-              type="image/x-icon"
-            />
-          </Helmet>
-          <AppRoutes />
-        </>
+        MainContent
       )}
     </ThemeProvider>
   );

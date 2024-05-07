@@ -17,6 +17,7 @@ import e from "validator";
 import * as bcrypt from "bcrypt";
 import { Mongo, ObjectId } from "mongo";
 
+import verifyHuman from "@Middlewares/verifyHuman.ts";
 import {
   CreateUserSchema,
   EmailValidator,
@@ -129,7 +130,9 @@ export default class UsersController extends BaseController {
     });
   }
 
-  @Post("/:oauthAppId/")
+  @Post("/:oauthAppId/", {
+    middlewares: [verifyHuman()],
+  })
   public create(route: IRoute) {
     // Define Query Schema
     const QuerySchema = e.object(

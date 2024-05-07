@@ -24,6 +24,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
 import axios, { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
 import { PasswordValidator, UsernameValidator } from "../utils/validators";
@@ -41,6 +42,7 @@ import Logo from "../../assets/logo.png";
 export const LoginPage = () => {
   const Navigate = useNavigate();
   const [Query] = useSearchParams();
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const CodeChallenge = Query.get("codeChallenge");
   const CodeChallengeMethod = Query.get("codeChallengeMethod");

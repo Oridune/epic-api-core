@@ -22,11 +22,19 @@ export interface IOauthConsent {
   supportURL?: string;
 }
 
+export interface IOauthIntegration {
+  id: "re-captcha-v3";
+  enabled: boolean;
+  publicKey?: string;
+  props?: Record<string, string>;
+}
+
 export interface IOauthApp {
   _id: string;
   name: string;
   description: string;
   consent: IOauthConsent;
+  integrations?: Array<IOauthIntegration>;
   metadata: Record<string, string>;
   createdAt: string;
   updatedAt: string;

@@ -1,5 +1,7 @@
 {
   "sequence": [
     "parseAuthorization.ts"
-  ]
+  ],
+  "excludes": [],
+  "sequenceProps": {}
 }

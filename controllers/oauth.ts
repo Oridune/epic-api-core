@@ -21,6 +21,7 @@ import { ObjectId } from "mongo";
 // @deno-types="npm:@types/ua-parser-js"
 import { UAParser } from "useragent";
 
+import verifyHuman from "@Middlewares/verifyHuman.ts";
 import { UserModel, UsernameValidator } from "@Models/user.ts";
 import { OauthProvider, OauthSessionModel } from "@Models/oauthSession.ts";
 import { OauthAppModel } from "@Models/oauthApp.ts";
@@ -488,7 +489,9 @@ export default class OauthController extends BaseController {
     );
   }
 
-  @Post("/local/")
+  @Post("/local/", {
+    middlewares: [verifyHuman()],
+  })
   public authenticate() {
     // Define Body Schema
     const BodySchema = e.object({
