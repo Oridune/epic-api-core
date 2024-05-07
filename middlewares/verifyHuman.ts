@@ -1,6 +1,5 @@
 import e from "validator";
 import { type RouterContext } from "oak";
-import { Env, EnvType } from "@Core/common/env.ts";
 import { OauthAppModel, SupportedIntegrationId } from "@Models/oauthApp.ts";
 
 export const verifyRecaptchaV3 = async (
@@ -34,65 +33,73 @@ export const verifyRecaptchaV3 = async (
 };
 
 // If this is a global middleware, do not add arguments to the factory function.
-export default () =>
-async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
-  // Query Validation
-  const Query = await e
-    .object({
-      oauthAppId: e.optional(e.string()),
-      reCaptchaV3Token: e.optional(e.string()),
+export default (options?: {
+  oauthAppIdKey?: string;
+}) => {
+  const OauthAppIdKey = options?.oauthAppIdKey ?? "oauthAppId";
+
+  return async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
+    // Query Validation
+    const Query = await e
+      .object({
+        [OauthAppIdKey]: e.optional(e.string()),
+        reCaptchaV3Token: e.optional(e.string()),
+      }, { allowUnexpectedProps: true })
+      .validate(Object.fromEntries(ctx.request.url.searchParams), {
+        name: "query",
+      });
+
+    // Params Validation
+    const Params = await e.object({
+      [OauthAppIdKey]: e.optional(e.string()),
     }, { allowUnexpectedProps: true })
-    .validate(Object.fromEntries(ctx.request.url.searchParams), {
-      name: "query",
-    });
+      .validate(ctx.params, { name: "params" });
 
-  // Params Validation
-  const Params = await e.object({
-    oauthAppId: e.optional(e.string()),
-  }, { allowUnexpectedProps: true })
-    .validate(ctx.params, { name: "params" });
+    // Body Validation
+    const Body = await e.object({
+      [OauthAppIdKey]: e.optional(e.string()),
+    }, { allowUnexpectedProps: true })
+      .validate(await ctx.request.body({ type: "json" }).value, {
+        name: "body",
+      });
 
-  // Body Validation
-  const Body = await e.object({
-    oauthAppId: e.optional(e.string()),
-  }, { allowUnexpectedProps: true })
-    .validate(await ctx.request.body({ type: "json" }).value, { name: "body" });
+    const OauthAppId = Body[OauthAppIdKey] ?? Params[OauthAppIdKey] ??
+      Query[OauthAppIdKey];
 
-  const OauthAppId = Body.oauthAppId ?? Params.oauthAppId ?? Query.oauthAppId;
+    if (OauthAppId) {
+      const OauthApp = await OauthAppModel.findOne(OauthAppId, {
+        cache: { key: `oauth-app-integrations:${OauthAppId}`, ttl: 60 * 10 }, // Cache for 10 minutes
+      }).project({ integrations: 1 });
 
-  if (OauthAppId && Env.is(EnvType.PRODUCTION)) {
-    const OauthApp = await OauthAppModel.findOne(OauthAppId, {
-      cache: { key: `oauth-app-integrations:${OauthAppId}`, ttl: 60 * 10 }, // Cache for 10 minutes
-    }).project({ integrations: 1 });
+      const ReCaptchaV3 = OauthApp?.integrations?.find((i) =>
+        i.enabled && i.id === SupportedIntegrationId.RECAPTCHA_V3
+      );
 
-    const ReCaptchaV3 = OauthApp?.integrations?.find((i) =>
-      i.enabled && i.id === SupportedIntegrationId.RECAPTCHA_V3
-    );
+      if (ReCaptchaV3) {
+        if (!ReCaptchaV3.secretKey) {
+          throw new Error("A reCaptchaV3 secret key not found on the app!");
+        }
 
-    if (ReCaptchaV3) {
-      if (!ReCaptchaV3.secretKey) {
-        throw new Error("A reCaptchaV3 secret key not found on the app!");
-      }
+        if (!Query.reCaptchaV3Token) {
+          throw e.error(
+            "A reCaptchaV3 integration is enabled on this app! Please provide a valid reCaptchaV3 verification token.",
+          );
+        }
 
-      if (!Query.reCaptchaV3Token) {
-        throw e.error(
-          "A reCaptchaV3 integration is enabled on this app! Please provide a valid reCaptchaV3 verification token.",
-        );
-      }
-
-      if (
-        !(await verifyRecaptchaV3(
-          Query.reCaptchaV3Token,
-          ReCaptchaV3.secretKey,
-        ))
-      ) {
-        throw e.error(
-          "Human verification has been failed!",
-        );
+        if (
+          !(await verifyRecaptchaV3(
+            Query.reCaptchaV3Token,
+            ReCaptchaV3.secretKey,
+          ))
+        ) {
+          throw e.error(
+            "Human verification has been failed!",
+          );
+        }
       }
     }
-  }
 
-  // Continue to next middleware
-  await next();
+    // Continue to next middleware
+    await next();
+  };
 };
