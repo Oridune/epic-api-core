@@ -411,19 +411,21 @@ export const ContactsPage = () => {
                           }
                         >
                           {AvailableMethods.map((method, index) => {
+                            const verify = async () => {
+                              if (Params.username) {
+                                await requestVerification(
+                                  Params.username,
+                                  method.type
+                                );
+
+                                setVerificationMethod(method.type);
+                              }
+                            };
+
                             const MenuOptions = [
                               {
                                 label: t("Verify"),
-                                onClick: async () => {
-                                  if (Params.username) {
-                                    await requestVerification(
-                                      Params.username,
-                                      method.type
-                                    );
-
-                                    setVerificationMethod(method.type);
-                                  }
-                                },
+                                onClick: verify,
                                 disabled: method.verified,
                               },
                               {
@@ -442,9 +444,7 @@ export const ContactsPage = () => {
                               <React.Fragment key={index}>
                                 <ListItem
                                   secondaryAction={
-                                    EnabledOptions.length < 2 ? (
-                                      null
-                                    ) : (
+                                    EnabledOptions.length > 1 && (
                                       <DotMenu
                                         id={`options-${index}`}
                                         options={MenuOptions}
@@ -482,17 +482,21 @@ export const ContactsPage = () => {
                                       color="error"
                                       variant="outlined"
                                       size="small"
+                                      onClick={verify}
                                     />
                                   )}
 
-                                  <Button
-                                    type="button"
-                                    variant="contained"
-                                    disabled={Loading}
-                                    onClick={EnabledOptions[0].onClick}
-                                  >
-                                    {EnabledOptions[0].label}
-                                  </Button>
+                                  {EnabledOptions.length < 2 && (
+                                    <Button
+                                      type="button"
+                                      variant="contained"
+                                      style={{ marginLeft: "10px" }}
+                                      disabled={Loading}
+                                      onClick={EnabledOptions[0].onClick}
+                                    >
+                                      {EnabledOptions[0].label}
+                                    </Button>
+                                  )}
                                 </ListItem>
                                 {AvailableMethods.length > index + 1 && (
                                   <Divider component="li" />
