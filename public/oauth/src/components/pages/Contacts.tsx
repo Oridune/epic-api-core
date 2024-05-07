@@ -410,75 +410,94 @@ export const ContactsPage = () => {
                             </ListSubheader>
                           }
                         >
-                          {AvailableMethods.map((method, index) => (
-                            <React.Fragment key={index}>
-                              <ListItem
-                                secondaryAction={
-                                  <DotMenu
-                                    id={`options-${index}`}
-                                    options={[
-                                      {
-                                        label: t("Verify"),
-                                        onClick: async () => {
-                                          if (Params.username) {
-                                            await requestVerification(
-                                              Params.username,
-                                              method.type
-                                            );
+                          {AvailableMethods.map((method, index) => {
+                            const MenuOptions = [
+                              {
+                                label: t("Verify"),
+                                onClick: async () => {
+                                  if (Params.username) {
+                                    await requestVerification(
+                                      Params.username,
+                                      method.type
+                                    );
 
-                                            setVerificationMethod(method.type);
-                                          }
-                                        },
-                                        disabled: method.verified,
-                                      },
-                                      {
-                                        label: t("Change"),
-                                        onClick: () =>
-                                          setVerificationMethod(method.type),
-                                        disabled: !Query.get("permit"),
-                                      },
-                                    ]}
-                                    edge="end"
-                                    anchorOrigin={{
-                                      vertical: "bottom",
-                                      horizontal: "right",
-                                    }}
-                                    transformOrigin={{
-                                      vertical: "top",
-                                      horizontal: "right",
-                                    }}
-                                  />
-                                }
-                              >
-                                <ListItemText
-                                  primary={
-                                    method.type.charAt(0).toUpperCase() +
-                                    method.type.slice(1)
+                                    setVerificationMethod(method.type);
                                   }
-                                  secondary={method.maskedValue}
-                                />
+                                },
+                                disabled: method.verified,
+                              },
+                              {
+                                label: t("Change"),
+                                onClick: () =>
+                                  setVerificationMethod(method.type),
+                                disabled: !Query.get("permit"),
+                              },
+                            ];
 
-                                {method.verified ? (
-                                  <Chip
-                                    label={t("Verified")}
-                                    color="success"
-                                    variant="outlined"
-                                    size="small"
+                            const EnabledOptions = MenuOptions.filter(
+                              (_) => !_.disabled
+                            );
+
+                            return (
+                              <React.Fragment key={index}>
+                                <ListItem
+                                  secondaryAction={
+                                    EnabledOptions.length < 2 ? (
+                                      <Button
+                                        type="button"
+                                        variant="contained"
+                                        disabled={Loading}
+                                        onClick={EnabledOptions[0].onClick}
+                                      >
+                                        {EnabledOptions[0].label}
+                                      </Button>
+                                    ) : (
+                                      <DotMenu
+                                        id={`options-${index}`}
+                                        options={MenuOptions}
+                                        edge="end"
+                                        anchorOrigin={{
+                                          vertical: "bottom",
+                                          horizontal: "right",
+                                        }}
+                                        transformOrigin={{
+                                          vertical: "top",
+                                          horizontal: "right",
+                                        }}
+                                      />
+                                    )
+                                  }
+                                >
+                                  <ListItemText
+                                    primary={
+                                      method.type.charAt(0).toUpperCase() +
+                                      method.type.slice(1)
+                                    }
+                                    secondary={method.maskedValue}
                                   />
-                                ) : (
-                                  <Chip
-                                    label={t("Unverified")}
-                                    color="error"
-                                    variant="outlined"
-                                    size="small"
-                                  />
+
+                                  {method.verified ? (
+                                    <Chip
+                                      label={t("Verified")}
+                                      color="success"
+                                      variant="outlined"
+                                      size="small"
+                                    />
+                                  ) : (
+                                    <Chip
+                                      label={t("Unverified")}
+                                      color="error"
+                                      variant="outlined"
+                                      size="small"
+                                    />
+                                  )}
+                                </ListItem>
+                                {AvailableMethods.length > index + 1 && (
+                                  <Divider component="li" />
                                 )}
-                              </ListItem>
-                              {AvailableMethods.length > index + 1 && (
-                                <Divider component="li" />
-                              )}
-                            </React.Fragment>
-                          ))}
+                              </React.Fragment>
+                            );
+                          })}
                         </List>
                       ) : (
                         <>
