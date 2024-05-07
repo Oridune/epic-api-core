@@ -490,6 +490,7 @@ export const ContactsPage = () => {
                                     <Button
                                       type="button"
                                       variant="contained"
+                                      size="small"
                                       style={{ marginLeft: "10px" }}
                                       disabled={Loading}
                                       onClick={EnabledOptions[0].onClick}
