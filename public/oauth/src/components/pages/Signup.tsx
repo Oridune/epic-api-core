@@ -22,6 +22,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
 import axios, { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
 import {
@@ -49,6 +50,7 @@ export const tryAtob = (text: string) => {
 export const SignupPage = () => {
   const Navigate = useNavigate();
   const [Query] = useSearchParams();
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const CustomReference = Query.get("ref");
 
@@ -116,6 +118,7 @@ export const SignupPage = () => {
           },
           params: {
             reference: tryAtob(CustomReference ?? "") || undefined,
+            reCaptchaV3Token: await executeRecaptcha?.("login"),
           },
         }
       );

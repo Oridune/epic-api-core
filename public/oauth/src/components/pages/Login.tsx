@@ -112,6 +112,9 @@ export const LoginPage = () => {
           headers: {
             "X-Api-Version": import.meta.env.VITE_API_VERSION,
           },
+          params: {
+            reCaptchaV3Token: await executeRecaptcha?.("login"),
+          },
         }
       );
 
@@ -174,11 +177,12 @@ export const LoginPage = () => {
           } else setErrorMessage(ExchangeResponse.data.messages?.[0]?.message);
         }
       } else setErrorMessage(LoginResponse.data.messages?.[0]?.message);
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof AxiosError)
         setErrorMessage(
           error.response?.data.messages[0].message ?? error.message
         );
+      else setErrorMessage(error?.message ?? "Something went wrong!!!");
     }
 
     setLoading(false);
