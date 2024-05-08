@@ -76,7 +76,12 @@ export const SignupPage = () => {
           ? PhoneValidator(t)
           : undefined,
         username: UsernameValidator(t),
-        password: PasswordFormatValidator(t),
+        password: PasswordFormatValidator(
+          t,
+          app?.consent.passwordPolicy?.strength,
+          app?.consent.passwordPolicy?.minLength,
+          app?.consent.passwordPolicy?.maxLength
+        ),
         confirmPassword: e.string().custom((ctx) => {
           if (ctx.parent!.output.password !== ctx.output)
             throw t("Password doesn't match!");
@@ -118,7 +123,7 @@ export const SignupPage = () => {
           },
           params: {
             reference: tryAtob(CustomReference ?? "") || undefined,
-            reCaptchaV3Token: await executeRecaptcha?.("login"),
+            reCaptchaV3Token: await executeRecaptcha?.("signup"),
           },
         }
       );

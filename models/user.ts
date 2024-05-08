@@ -30,8 +30,7 @@ export const UsernameValidator = () =>
 
 export const PasswordValidator = () =>
   e.string().matches({
-    regex:
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=?|\s])[A-Za-z\d!@#$%^&*()_\-+=?|\s]{8,}$/,
+    regex: /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d\S]{6,}$/,
   });
 
 export const EmailValidator = () =>

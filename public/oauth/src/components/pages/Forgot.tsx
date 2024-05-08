@@ -76,7 +76,12 @@ export const ForgotPage = () => {
     () =>
       e.object({
         code: e.number({ cast: true }).length(6),
-        password: PasswordFormatValidator(t),
+        password: PasswordFormatValidator(
+          t,
+          app?.consent.passwordPolicy?.strength,
+          app?.consent.passwordPolicy?.minLength,
+          app?.consent.passwordPolicy?.maxLength
+        ),
         confirmPassword: e.string().custom((ctx) => {
           if (ctx.parent!.output.password !== ctx.output)
             throw t("Password doesn't match!");

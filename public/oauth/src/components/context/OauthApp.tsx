@@ -20,6 +20,11 @@ export interface IOauthConsent {
   privacyPolicyURL?: string;
   termsAndConditionsURL?: string;
   supportURL?: string;
+  passwordPolicy?: {
+    strength?: 0 | 1 | 2;
+    minLength?: number;
+    maxLength?: number;
+  };
 }
 
 export interface IOauthIntegration {

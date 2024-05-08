@@ -13,19 +13,11 @@ export const OauthConsentStylingSchema = () =>
 export const OauthConsentSchema = () =>
   e.object({
     availableCountryCodes: e.optional(
-      e
-        .array(e.string().length({ min: 2, max: 2 }), {
-          cast: true,
-        })
-        .min(1),
+      e.array(e.string().length({ min: 2, max: 2 }), { cast: true }).min(1),
     ),
-    requiredIdentificationMethods: e
-      .optional(
-        e
-          .array(e.in(Object.values(IdentificationMethod)), { cast: true })
-          .min(1),
-      )
-      .default([IdentificationMethod.EMAIL]),
+    requiredIdentificationMethods: e.optional(
+      e.array(e.in(Object.values(IdentificationMethod)), { cast: true }).min(1),
+    ).default([IdentificationMethod.EMAIL]),
     logo: e.optional(FileSchema),
     primaryColor: e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
     primaryColorDark: e.optional(
@@ -36,6 +28,11 @@ export const OauthConsentSchema = () =>
       e.string().matches(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
     ),
     styling: e.optional(OauthConsentStylingSchema()),
+    passwordPolicy: e.optional(e.object({
+      strength: e.optional(e.number().min(0).max(2)),
+      minLength: e.optional(e.number().min(6)),
+      maxLength: e.optional(e.number().min(6)),
+    })),
     allowedCallbackURLs: e
       .array(
         e.string().custom((ctx) => new URL(ctx.output).toString()),
