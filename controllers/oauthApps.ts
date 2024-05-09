@@ -18,6 +18,7 @@ import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 @Controller("/oauth/apps/", { group: "Oauth", name: "oauthApps" })
 export default class OauthAppsController extends BaseController {
   static DefaultOauthAppID = new ObjectId("63b6a997e1275524350649f4");
+  static PublicOauthAppCacheTTL = 60 * 10; // Cache for 10 minutes
   static SensetiveFieldsRemovalProjection = {
     "integrations.secretKey": 0,
   };
@@ -106,6 +107,12 @@ export default class OauthAppsController extends BaseController {
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         const App = (await OauthAppModel.findOne(
           OauthAppsController.DefaultOauthAppID,
+          {
+            cache: {
+              key: `oauth-app-public:${OauthAppsController.DefaultOauthAppID}`,
+              ttl: OauthAppsController.PublicOauthAppCacheTTL,
+            },
+          },
         ).project(OauthAppsController.SensetiveFieldsRemovalProjection)) ??
           (await OauthAppModel.create({
             _id: OauthAppsController.DefaultOauthAppID,
@@ -148,7 +155,10 @@ export default class OauthAppsController extends BaseController {
         });
 
         const App = await OauthAppModel.findOne(Params.appId, {
-          cache: { key: `oauth-app-public:${Params.appId}`, ttl: 60 * 10 }, // Cache for 10 minutes
+          cache: {
+            key: `oauth-app-public:${Params.appId}`,
+            ttl: OauthAppsController.PublicOauthAppCacheTTL,
+          },
         }).project(OauthAppsController.SensetiveFieldsRemovalProjection);
 
         if (!App) e.error("Oauth app not found!");

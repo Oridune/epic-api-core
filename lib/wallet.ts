@@ -1,4 +1,3 @@
-// deno-lint-ignore-file no-explicit-any
 import { Env } from "@Core/common/env.ts";
 import { Database } from "@Database";
 import * as bcrypt from "bcrypt";
@@ -216,24 +215,114 @@ export class Wallet {
   }
 
   static async transfer(options: {
+    /**
+     * A sessionId can be used to identify a unique payment session.
+     */
     sessionId?: string;
+
+    /**
+     * Reference is calculated automatically by default (TX10001). But you can pass a custom reference also.
+     */
     reference?: string;
+
+    /**
+     * You can optionally pass a foreignRefType and a foreignRef to reference an external object that is linked to this transaction.
+     */
+    foreignRefType?: string;
+
+    /**
+     * You can optionally pass a foreignRefType and a foreignRef to reference an external object that is linked to this transaction.
+     */
+    foreignRef?: string;
+
+    /**
+     * Full name of the payment sender
+     */
     fromName: string | string[];
+
+    /**
+     * Sender's accountId
+     */
     from: ObjectId | string;
+
+    /**
+     * Sender's userId
+     */
     sender: ObjectId | string;
+
+    /**
+     * Full name of the payment receiver
+     */
     toName: string | string[];
+
+    /**
+     * Receiver's accountId
+     */
     to: ObjectId | string;
+
+    /**
+     * Receiver's userId
+     */
     receiver: ObjectId | string;
+
+    /**
+     * Executer's userId
+     */
     user?: ObjectId | string;
+
+    /**
+     * Wallet type
+     */
     type?: string;
+
+    /**
+     * Wallet currency
+     */
     currency?: string;
+
+    /**
+     * Amount to be transfered
+     */
     amount: number;
+
+    /**
+     * Description of the transfer
+     */
     description?: string | Record<string, string>;
+
+    /**
+     * Initial status of the transfer
+     */
     status?: TransactionStatus;
+
+    /**
+     * Which method was used for 3D verification (Also indicates if a 3D verification has been taken or not)
+     */
     methodOf3DSecurity?: string;
+
+    /**
+     * A negative transaction will be performed in case of insufficient balance
+     */
     allowOverdraft?: boolean;
+
+    /**
+     * How much negative transaction is allowed?
+     */
     overdraftLimit?: number;
-    metadata?: Record<string, any>;
+
+    /**
+     * Is this transfer a refund?
+     */
+    isRefund?: boolean;
+
+    /**
+     * Pass any metadata to the transaction
+     */
+    metadata?: Record<string, string | number | boolean>;
+
+    /**
+     * Pass a database transaction session
+     */
     databaseSession?: ClientSession;
   }) {
     if (typeof options.amount !== "number" || options.amount <= 0) {
@@ -326,6 +415,8 @@ export class Wallet {
       const Transaction = await TransactionModel.create({
         sessionId: options.sessionId,
         reference: Reference,
+        foreignRefType: options.foreignRefType,
+        foreignRef: options.foreignRef,
         fromName: FromName,
         from: From,
         sender: options.sender,
@@ -338,6 +429,7 @@ export class Wallet {
         methodOf3DSecurity: options.methodOf3DSecurity,
         amount: options.amount,
         status: options.status ?? TransactionStatus.COMPLETED,
+        isRefund: options.isRefund,
         metadata: options.metadata,
         createdBy: options.user ?? options.sender,
       });
@@ -392,14 +484,59 @@ export class Wallet {
   }
 
   static async refund(options: {
+    /**
+     * A sessionId can be used to identify a unique payment session.
+     */
     sessionId?: string;
+
+    /**
+     * Reference is calculated automatically by default (TX10001). But you can pass a custom reference also.
+     */
     reference?: string;
+
+    /**
+     * You can optionally pass a foreignRefType and a foreignRef to reference an external object that is linked to this transaction.
+     */
+    foreignRefType?: string;
+
+    /**
+     * You can optionally pass a foreignRefType and a foreignRef to reference an external object that is linked to this transaction.
+     */
+    foreignRef?: string;
+
+    /**
+     * Transaction ID to be refunded
+     */
     transactionId: ObjectId | string;
+
+    /**
+     * Executer's userId
+     */
     user: ObjectId | string;
+
+    /**
+     * Description of the transfer
+     */
     description?: string | Record<string, string>;
+
+    /**
+     * A negative transaction will be performed in case of insufficient balance
+     */
     allowOverdraft?: boolean;
+
+    /**
+     * How much negative transaction is allowed?
+     */
     overdraftLimit?: number;
-    metadata?: Record<string, any>;
+
+    /**
+     * Pass any metadata to the transaction
+     */
+    metadata?: Record<string, string | number | boolean>;
+
+    /**
+     * Pass a database transaction session
+     */
     databaseSession?: ClientSession;
   }) {
     const Transaction = await TransactionModel.findOne({
@@ -412,6 +549,8 @@ export class Wallet {
     return await Wallet.transfer({
       sessionId: options.sessionId,
       reference: options.reference,
+      foreignRefType: options.foreignRefType,
+      foreignRef: options.foreignRef,
       type: Transaction.type,
       fromName: Transaction.toName,
       from: Transaction.to,
@@ -434,6 +573,7 @@ export class Wallet {
       metadata: options.metadata,
       allowOverdraft: options.allowOverdraft,
       overdraftLimit: options.overdraftLimit,
+      isRefund: true,
       databaseSession: options.databaseSession,
     });
   }

@@ -62,6 +62,9 @@ export default class WalletController extends BaseController {
         receiver: e.string(),
         amount: e.number({ cast: true }),
         description: e.optional(e.string().max(300)),
+        metadata: e.optional(
+          e.record(e.or([e.number(), e.boolean(), e.string()]), { cast: true }),
+        ),
       },
       { allowUnexpectedProps: true },
     );
@@ -158,6 +161,7 @@ export default class WalletController extends BaseController {
             amount: Query.amount,
             fee: 0,
             description: Query.description,
+            metadata: Query.metadata,
           },
         };
 
@@ -234,6 +238,7 @@ export default class WalletController extends BaseController {
             amount: number;
             fee: number;
             description: string;
+            metadata?: Record<string, string | number | boolean>;
           };
         }>(Body.token, Body.code, IdentificationPurpose.VERIFICATION).catch(
           e.error,
@@ -261,6 +266,7 @@ export default class WalletController extends BaseController {
           amount: Payload.transactionDetails.amount,
           description: Payload.transactionDetails.description,
           methodOf3DSecurity: Body.method,
+          metadata: Payload.transactionDetails.metadata,
         });
 
         return Response.statusCode(Status.Created).data({
