@@ -119,14 +119,6 @@ UserModel.pre("update", (details) => {
     updatedAt: new Date(),
   };
 })
-  .post("read", (details) => {
-    if (details.data.deletionAt instanceof Date) {
-      // Throw an error if the user is deleted
-      throw new Error("Deleted user cannot be fetched!");
-    }
-
-    return details.data;
-  })
   .createIndex(
     {
       key: {
