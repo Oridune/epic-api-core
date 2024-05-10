@@ -1,5 +1,6 @@
 import React from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import ReactGA4 from "react-ga4";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
   Box,
   Button,
@@ -49,12 +50,21 @@ export const tryAtob = (text: string) => {
 
 export const SignupPage = () => {
   const Navigate = useNavigate();
+  const Location = useLocation();
   const [Query] = useSearchParams();
   const { executeRecaptcha } = useGoogleReCaptcha();
 
   const CustomReference = Query.get("ref");
 
   const { app } = useOauthApp();
+
+  React.useEffect(() => {
+    ReactGA4.send({
+      hitType: "pageview",
+      page: Location.pathname,
+      title: "Signup",
+    });
+  }, []);
 
   const [DialingCode, setDialingCode] = React.useState<string | null>(null);
   const [ShowPassword, setShowPassword] = React.useState(false);
@@ -129,6 +139,12 @@ export const SignupPage = () => {
       );
 
       if (Response.data.status) {
+        ReactGA4.event({
+          category: "Oauth2",
+          action: "Click",
+          label: "Signup",
+        });
+
         reset();
         Navigate(`/login/${window.location.search}`);
       } else setErrorMessage(Response.data.messages[0].message);
@@ -366,6 +382,12 @@ export const SignupPage = () => {
                     e.preventDefault();
                     const Path = e.currentTarget.getAttribute("href")!;
                     if (Path) Navigate(Path);
+
+                    ReactGA4.event({
+                      category: "Oauth2",
+                      action: "Click",
+                      label: "Login instead of Signup",
+                    });
                   }}
                   variant="body2"
                 >

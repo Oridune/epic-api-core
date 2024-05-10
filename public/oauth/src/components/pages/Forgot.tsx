@@ -1,5 +1,6 @@
 import React from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import ReactGA4 from "react-ga4";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
   Box,
   Button,
@@ -42,9 +43,18 @@ import Logo from "../../assets/logo.png";
 
 export const ForgotPage = () => {
   const Navigate = useNavigate();
+  const Location = useLocation();
   const [Query, setQuery] = useSearchParams();
 
   const { app } = useOauthApp();
+
+  React.useEffect(() => {
+    ReactGA4.send({
+      hitType: "pageview",
+      page: Location.pathname,
+      title: "Forgot/Update Password",
+    });
+  }, []);
 
   const [Loading, setLoading] = React.useState(false);
   const [ErrorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -126,6 +136,12 @@ export const ForgotPage = () => {
       );
 
       if (Response.data.status) {
+        ReactGA4.event({
+          category: "Oauth2",
+          action: "Click",
+          label: "Fetch available password recovery methods",
+        });
+
         if (Response.data.data.availableMethods instanceof Array) {
           resetForgot();
           setUsername(data.username);
@@ -161,6 +177,12 @@ export const ForgotPage = () => {
       );
 
       if (Response.data.status) {
+        ReactGA4.event({
+          category: "Oauth2",
+          action: "Click",
+          label: "Request password recovery",
+        });
+
         if (typeof Response.data.data.token === "string") {
           setToken(Response.data.data.token);
           setResendCounter(0);
@@ -201,6 +223,12 @@ export const ForgotPage = () => {
       );
 
       if (Response.data.status) {
+        ReactGA4.event({
+          category: "Oauth2",
+          action: "Click",
+          label: "Password updated",
+        });
+
         resetRecovery();
         if (QueryReturnURL) window.location.replace(QueryReturnURL);
         else Navigate(`/login/${window.location.search}`);
@@ -331,6 +359,12 @@ export const ForgotPage = () => {
                         e.preventDefault();
                         const Path = e.currentTarget.getAttribute("href")!;
                         if (Path) Navigate(Path);
+
+                        ReactGA4.event({
+                          category: "Oauth2",
+                          action: "Click",
+                          label: "Login instead of Password recovery",
+                        });
                       }}
                       variant="body2"
                     >
@@ -348,6 +382,12 @@ export const ForgotPage = () => {
                         e.preventDefault();
                         const Path = e.currentTarget.getAttribute("href")!;
                         if (Path) Navigate(Path);
+
+                        ReactGA4.event({
+                          category: "Oauth2",
+                          action: "Click",
+                          label: "Create an account",
+                        });
                       }}
                       variant="body2"
                     >

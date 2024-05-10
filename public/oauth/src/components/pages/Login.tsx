@@ -1,5 +1,6 @@
 import React from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import ReactGA4 from "react-ga4";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
   Box,
   Button,
@@ -41,6 +42,7 @@ import Logo from "../../assets/logo.png";
 
 export const LoginPage = () => {
   const Navigate = useNavigate();
+  const Location = useLocation();
   const [Query] = useSearchParams();
   const { executeRecaptcha } = useGoogleReCaptcha();
 
@@ -53,6 +55,14 @@ export const LoginPage = () => {
     : undefined;
 
   const { app } = useOauthApp();
+
+  React.useEffect(() => {
+    ReactGA4.send({
+      hitType: "pageview",
+      page: Location.pathname,
+      title: "Login",
+    });
+  }, []);
 
   const [ShowPassword, setShowPassword] = React.useState(false);
   const [Loading, setLoading] = React.useState(false);
@@ -119,6 +129,12 @@ export const LoginPage = () => {
       );
 
       if (LoginResponse.data.status) {
+        ReactGA4.event({
+          category: "Oauth2",
+          action: "Click",
+          label: "Login",
+        });
+
         if (false)
           Navigate("/scopes/", {
             state: {
@@ -335,6 +351,12 @@ export const LoginPage = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     Navigate(e.currentTarget.getAttribute("href")!);
+
+                    ReactGA4.event({
+                      category: "Oauth2",
+                      action: "Click",
+                      label: "Forgot password",
+                    });
                   }}
                   variant="body2"
                 >
@@ -403,6 +425,12 @@ export const LoginPage = () => {
                     e.preventDefault();
                     const Path = e.currentTarget.getAttribute("href")!;
                     if (Path) Navigate(Path);
+
+                    ReactGA4.event({
+                      category: "Oauth2",
+                      action: "Click",
+                      label: "Create an account",
+                    });
                   }}
                   variant="body2"
                 >

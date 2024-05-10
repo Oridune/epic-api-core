@@ -1,5 +1,6 @@
 import React from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import ReactGA4 from "react-ga4";
+import { useParams, useSearchParams, useLocation } from "react-router-dom";
 import {
   Box,
   Button,
@@ -40,9 +41,18 @@ import Logo from "../../assets/logo.png";
 
 export const ContactsPage = () => {
   const Params = useParams();
+  const Location = useLocation();
   const [Query] = useSearchParams();
 
   const { app } = useOauthApp();
+
+  React.useEffect(() => {
+    ReactGA4.send({
+      hitType: "pageview",
+      page: Location.pathname,
+      title: "Verify/Update Contact",
+    });
+  }, []);
 
   const [Loading, setLoading] = React.useState(false);
   const [ErrorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -121,6 +131,12 @@ export const ContactsPage = () => {
         );
 
         if (Response.data.status) {
+          ReactGA4.event({
+            category: "Oauth2",
+            action: "Click",
+            label: "Change contact",
+          });
+
           resetChangeContact();
           setVerificationMethod(null);
           if (Params.username) await fetchContacts(Params.username);
@@ -159,6 +175,12 @@ export const ContactsPage = () => {
       );
 
       if (Response.data.status) {
+        ReactGA4.event({
+          category: "Oauth2",
+          action: "Click",
+          label: "Verify contact",
+        });
+
         resetVerification();
         setVerificationMethod(null);
         setToken(null);
@@ -231,6 +253,12 @@ export const ContactsPage = () => {
       );
 
       if (Response.data.status) {
+        ReactGA4.event({
+          category: "Oauth2",
+          action: "Click",
+          label: "Request contact verification",
+        });
+
         if (typeof Response.data.data.token === "string") {
           setToken(Response.data.data.token);
           setResendCounter(0);

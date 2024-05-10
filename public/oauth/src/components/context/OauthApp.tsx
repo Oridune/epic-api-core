@@ -28,7 +28,7 @@ export interface IOauthConsent {
 }
 
 export interface IOauthIntegration {
-  id: "re-captcha-v3";
+  id: "re-captcha-v3" | "google-analytics-4";
   enabled: boolean;
   publicKey?: string;
   props?: Record<string, string>;

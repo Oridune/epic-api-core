@@ -1,4 +1,6 @@
+import React from "react";
 import CssBaseline from "@mui/material/CssBaseline";
+import ReactGA4 from "react-ga4";
 
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { Helmet } from "react-helmet";
@@ -50,9 +52,19 @@ export const AppTheme = () => {
   const Roundness = app?.consent.styling?.roundness ?? DefaultRoundness;
 
   // Integrations
+  const googleAnalytics4 = app?.integrations?.find(
+    (i) => i.enabled && i.id === "google-analytics-4"
+  );
+
   const reCaptchaV3 = app?.integrations?.find(
     (i) => i.enabled && i.id === "re-captcha-v3"
   );
+
+  React.useEffect(() => {
+    if (googleAnalytics4 && googleAnalytics4.publicKey) {
+      ReactGA4.initialize(googleAnalytics4.publicKey);
+    }
+  }, [googleAnalytics4]);
 
   const MainContent = loading ? (
     <LoadingFormPage />
