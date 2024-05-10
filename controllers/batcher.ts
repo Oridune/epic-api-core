@@ -20,6 +20,7 @@ const RequestInputSchema = () =>
     ),
     headers: e.optional(e.record(e.string())),
     body: e.optional(e.any()),
+    disabled: e.optional(e.boolean()),
   });
 
 export type TRequestInput = inferOutput<typeof RequestInputSchema>;
@@ -65,6 +66,7 @@ export default class BatcherController extends BaseController {
               const SubRequests = subRequests instanceof Array
                 ? subRequests
                 : [subRequests];
+
               const Responses: Array<unknown> = [];
 
               for (const RawRequest of SubRequests) {
@@ -76,7 +78,13 @@ export default class BatcherController extends BaseController {
                   : RawRequest) as TRequestInput;
 
                 try {
-                  const Response = await fetch(
+                  if (RequestPayload.disabled) {
+                    Responses.push(null);
+
+                    continue;
+                  }
+
+                  const FetchResponse = await fetch(
                     ctx.router.app,
                     new URL(
                       RequestPayload.endpoint
@@ -103,7 +111,7 @@ export default class BatcherController extends BaseController {
                     },
                   );
 
-                  const Data = await Response?.json();
+                  const Data = await FetchResponse?.json();
 
                   Responses.push(Data);
                 } catch (error) {
