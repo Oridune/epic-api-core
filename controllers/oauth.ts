@@ -707,6 +707,7 @@ export default class OauthController extends BaseController {
             throw "A code verifier is required!";
           }
         }),
+      fcmDeviceToken: e.optional(e.string()),
     });
 
     return Versioned.add("1.0.0", {
@@ -728,9 +729,7 @@ export default class OauthController extends BaseController {
             challenge: Body.codePayload.codeChallenge as string,
             verifier: Body.codeVerifier,
           })
-        ) {
-          e.error("Invalid code verifier!");
-        }
+        ) e.error("Invalid code verifier!");
 
         // Refresh Session
         const Session = await OauthController.refreshSession({
@@ -741,6 +740,18 @@ export default class OauthController extends BaseController {
         if (!Session) throw e.error("Invalid oauth code! Session not found.");
 
         if (Session.version > 1) throw e.error("Oauth code has been expired!");
+
+        // Push Device Token
+        if (Body.fcmDeviceToken) {
+          // Background event may fetch the data based on this boolean
+          ctx.router.state.setFcmDeviceToken = Session.createdBy;
+
+          await UserModel.updateOne(Session.createdBy, {
+            $addToSet: {
+              fcmDeviceTokens: Body.fcmDeviceToken,
+            },
+          });
+        }
 
         return Response.data(
           await OauthController.createOauthAccessTokens({

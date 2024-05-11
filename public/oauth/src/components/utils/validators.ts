@@ -20,26 +20,37 @@ export const PasswordFormatValidator = (
   const PasswordLevels = [
     [
       "A password should be {{length}} characters long, must contain a character and a number!",
-      `^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z\\d\\S]{${minLength},${maxLength}}$`,
+      [/[A-Za-z]/, /\d/],
     ],
     [
       "A password should be {{length}} characters long, must contain an uppercase, a lowercase and a number!",
-      `^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{${minLength},${maxLength}}$`,
+      [/[A-Z]/, /[a-z]/, /[0-9]/],
     ],
     [
       "A password should be {{length}} characters long, must contain an uppercase, a lowercase, a number and a special character!",
-      `^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{${minLength},${maxLength}}$`,
+      [/[A-Z]/, /[a-z]/, /[0-9]/, /[^a-zA-Z0-9]/],
     ],
-  ];
+  ] as const;
+
+  const PasswordRule = PasswordLevels[strength];
+  const ErrorMessage = t(
+    PasswordRule[0],
+    { length: minLength },
+  );
 
   return e.string({
     messages: {
-      matchFailed: t(
-        PasswordLevels[strength][0],
-        { length },
-      ),
+      greaterLength: ErrorMessage,
+      smallerLength: ErrorMessage,
     },
-  }).matches({ regex: new RegExp(PasswordLevels[strength][1]) });
+  }).length({ min: minLength, max: maxLength }).custom((ctx) => {
+    if (
+      !PasswordRule[1].reduce<boolean>(
+        (matches, regex) => matches && regex.test(ctx.output),
+        true,
+      )
+    ) throw new Error(ErrorMessage);
+  });
 };
 
 export const PasswordValidator = (t: TFunction) =>

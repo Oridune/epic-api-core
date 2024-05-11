@@ -9,7 +9,7 @@ import {
 } from "@Core/common/mod.ts";
 import e from "validator";
 import { ObjectId } from "mongo";
-import { Novu } from "novu";
+import { Novu, PushProviderIdEnum } from "novu";
 import { TUserOutput, UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauthSession.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
@@ -17,6 +17,7 @@ import { TFileOutput } from "@Models/file.ts";
 import { TTransactionOutput } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
 import { Notify } from "@Lib/notify.ts";
+import OauthController from "@Controllers/oauth.ts";
 
 export const isUserVerified = async (input: {
   isEmailVerified?: boolean;
@@ -103,35 +104,30 @@ export default () => {
 
   Events.listen<{
     ctx: IRequestContext<RouterContext<string>>;
-    res: Response;
-  }>(EventChannel.REQUEST, "users.verify", async (event) => {
-    try {
-      const { ctx, res } = event.detail;
+    res: Response<ReturnType<typeof OauthController.createOauthAccessTokens>>;
+  }>(
+    EventChannel.REQUEST,
+    "oauth.exchangeCode",
+    async (event) => {
+      const Request = event.detail.ctx;
 
-      const Body = res.getBody();
+      if (Request.router.state.setFcmDeviceToken) {
+        const User = await UserModel.findOne(
+          Request.router.state.setFcmDeviceToken,
+        ).project({ _id: 1, fcmDeviceTokens: 1 });
 
-      if (Body.status) {
-        const VerifyTokenPayload = await e
-          .object(
-            {
-              method: e.string(),
-              userId: e.string(),
-            },
-            { allowUnexpectedProps: true },
-          )
-          .validate(ctx.router.state.verifyTokenPayload);
+        if (User) {
+          const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
 
-        await syncUserVerifiedRole(VerifyTokenPayload.userId);
-
-        // Invalidate Cached Session
-        await Store.del(
-          `checkPermissions:${ctx.router.state.sessionInfo?.claims.sessionId}:${ctx.router.state.auth?.accountId}`,
-        );
+          await Notifier.subscribers.setCredentials(
+            User._id.toString(),
+            PushProviderIdEnum.FCM,
+            { deviceTokens: User.fcmDeviceTokens },
+          );
+        }
       }
-    } catch {
-      // Do nothing...
-    }
-  });
+    },
+  );
 
   Events.listen<{
     ctx: IRequestContext<RouterContext<string>>;
@@ -174,6 +170,38 @@ export default () => {
       }
     },
   );
+
+  Events.listen<{
+    ctx: IRequestContext<RouterContext<string>>;
+    res: Response;
+  }>(EventChannel.REQUEST, "users.verify", async (event) => {
+    try {
+      const { ctx, res } = event.detail;
+
+      const Body = res.getBody();
+
+      if (Body.status) {
+        const VerifyTokenPayload = await e
+          .object(
+            {
+              method: e.string(),
+              userId: e.string(),
+            },
+            { allowUnexpectedProps: true },
+          )
+          .validate(ctx.router.state.verifyTokenPayload);
+
+        await syncUserVerifiedRole(VerifyTokenPayload.userId);
+
+        // Invalidate Cached Session
+        await Store.del(
+          `checkPermissions:${ctx.router.state.sessionInfo?.claims.sessionId}:${ctx.router.state.auth?.accountId}`,
+        );
+      }
+    } catch {
+      // Do nothing...
+    }
+  });
 
   Events.listen<{
     ctx: IRequestContext<RouterContext<string>>;

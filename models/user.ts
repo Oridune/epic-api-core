@@ -28,10 +28,7 @@ export const UsernameValidator = () =>
     regex: /^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/,
   }).custom((ctx) => ctx.output.toLowerCase());
 
-export const PasswordValidator = () =>
-  e.string().matches({
-    regex: /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d\S]{6,}$/,
-  });
+export const PasswordValidator = () => e.string().min(6);
 
 export const EmailValidator = () =>
   e.string().matches({
@@ -101,6 +98,7 @@ export const UserSchema = () =>
       lastLogin: e.optional(e.date()),
       loginCount: e.optional(e.number({ cast: true })).default(0),
       failedLoginAttempts: e.optional(e.number({ cast: true })).default(0),
+      fcmDeviceTokens: e.optional(e.array(e.string())),
       requiresMfa: e.optional(e.boolean({ cast: true })).default(false),
       isBlocked: e.optional(e.boolean({ cast: true })).default(false),
       collaborates: e.array(e.instanceOf(ObjectId, { instantiate: true })),
