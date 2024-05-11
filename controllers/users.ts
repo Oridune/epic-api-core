@@ -47,19 +47,19 @@ export default class UsersController extends BaseController {
   ) {
     if (
       user.reference && await UserModel.exists({ reference: user.reference })
-    ) throw new Error(`Reference already registered!`);
+    ) throw e.error(`Reference already registered!`);
 
     if (
       user.username && await UserModel.exists({ username: user.username })
-    ) throw new Error(`Username is already taken!`);
+    ) throw e.error(`Username is already taken!`);
 
     if (
       user.phone && await UserModel.exists({ phone: user.phone })
-    ) throw new Error(`Phone number already registered!`);
+    ) throw e.error(`Phone number already registered!`);
 
     if (
       user.email && await UserModel.exists({ email: user.email })
-    ) throw new Error(`Email already registered!`);
+    ) throw e.error(`Email already registered!`);
 
     return Mongo.transaction(async (session) => {
       const UserId = new ObjectId();
