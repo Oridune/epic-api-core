@@ -490,7 +490,7 @@ export default class OauthController extends BaseController {
   }
 
   @Post("/local/", {
-    middlewares: [verifyHuman()],
+    middlewares: () => [verifyHuman()],
   })
   public authenticate() {
     // Define Body Schema

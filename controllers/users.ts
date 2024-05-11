@@ -142,7 +142,7 @@ export default class UsersController extends BaseController {
   }
 
   @Post("/:oauthAppId/", {
-    middlewares: [verifyHuman()],
+    middlewares: () => [verifyHuman()],
   })
   public create(route: IRoute) {
     // Define Query Schema
