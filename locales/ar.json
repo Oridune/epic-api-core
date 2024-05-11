@@ -1,5 +1,15 @@
 {
   "translation": {
-    "Hurry! The API is online!": "أسرع! واجهة برمجة التطبيقات متاحة على الإنترنت!"
+    "Hurry! The API is online!": "أسرع! واجهة برمجة التطبيقات متاحة على الإنترنت!",
+    "Reference already registered!": "المرجع مسجل بالفعل!",
+    "Username is already taken!": "اسم المستخدم مستخدم بالفعل!",
+    "Phone number already registered!": "رقم الهاتف مسجل بالفعل!",
+    "Email already registered!": "البريد الإلكتروني مسجل بالفعل!",
+    "Invalid identification method for verification!": "طريقة التحقق غير صالحة!",
+    "Invalid oauth app id!": "معرف تطبيق oauth غير صالح!",
+    "User not found!": "المستخدم غير موجود!",
+    "Cannot use an old password!": "لا يمكن استخدام كلمة مرور قديمة!",
+    "Please provide a different email!": "يرجى تقديم بريد إلكتروني مختلف!",
+    "Please provide a different phone!": "يرجى تقديم رقم هاتف مختلف!"
   }
 }

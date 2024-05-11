@@ -68,7 +68,7 @@ export const CreateUserSchema = () =>
     .object({
       oauthApp: e.instanceOf(ObjectId, { instantiate: true }),
       username: UsernameValidator(),
-      password: e.string(),
+      password: PasswordValidator(),
       avatar: e.optional(FileSchema),
       tags: e.optional(e.array(e.string(), { cast: true })).default([]),
       email: e.optional(EmailValidator()),
@@ -133,9 +133,7 @@ UserModel.pre("update", (details) => {
       background: true,
     },
     {
-      key: {
-        username: 1,
-      },
+      key: { username: 1 },
       unique: true,
       background: true,
     },

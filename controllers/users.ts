@@ -26,7 +26,6 @@ import {
   TUserInput,
   UpdateUserSchema,
   UserModel,
-  UsernameValidator,
   UserReferenceValidator,
 } from "@Models/user.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
@@ -49,6 +48,18 @@ export default class UsersController extends BaseController {
     if (
       user.reference && await UserModel.exists({ reference: user.reference })
     ) throw new Error(`Reference already registered!`);
+
+    if (
+      user.username && await UserModel.exists({ username: user.username })
+    ) throw new Error(`Username is already taken!`);
+
+    if (
+      user.phone && await UserModel.exists({ phone: user.phone })
+    ) throw new Error(`Phone number already registered!`);
+
+    if (
+      user.email && await UserModel.exists({ email: user.email })
+    ) throw new Error(`Email already registered!`);
 
     return Mongo.transaction(async (session) => {
       const UserId = new ObjectId();
@@ -158,19 +169,7 @@ export default class UsersController extends BaseController {
 
     // Define Body Schema
     const BodySchema = e
-      .omit(CreateUserSchema, {
-        keys: ["oauthApp", "username", "password"],
-      })
-      .extends(
-        e.object({
-          username: UsernameValidator().custom(async (ctx) => {
-            if (await UserModel.count({ username: ctx.output })) {
-              throw "Username is already taken!";
-            }
-          }),
-          password: PasswordValidator(),
-        }),
-      );
+      .omit(CreateUserSchema, { keys: ["oauthApp"] });
 
     return {
       postman: {
