@@ -1,5 +1,5 @@
 import React from "react";
-import axios from "axios";
+import axios from "../utils/axios";
 
 export interface IOauthConsent {
   availableCountryCodes?: string[];
@@ -60,12 +60,7 @@ export interface IOauthAppProviderProps {
 
 export const FetchOauthApp = async (appId: string) => {
   try {
-    const Response = await axios.get(`/api/oauth/apps/${appId}`, {
-      baseURL: import.meta.env.VITE_API_HOST,
-      headers: {
-        "X-Api-Version": import.meta.env.VITE_API_VERSION,
-      },
-    });
+    const Response = await axios.get(`/api/oauth/apps/${appId}`);
 
     if (Response.data.status) return Response.data.data as IOauthApp;
   } catch (error) {

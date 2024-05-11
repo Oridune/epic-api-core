@@ -26,7 +26,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError } from "../utils/axios";
 import { useTranslation } from "react-i18next";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
@@ -126,13 +126,7 @@ export const ForgotPage = () => {
 
     try {
       const Response = await axios.get(
-        `/api/users/identification/methods/${data.username}`,
-        {
-          baseURL: import.meta.env.VITE_API_HOST,
-          headers: {
-            "X-Api-Version": import.meta.env.VITE_API_VERSION,
-          },
-        }
+        `/api/users/identification/methods/${data.username}`
       );
 
       if (Response.data.status) {
@@ -167,13 +161,7 @@ export const ForgotPage = () => {
 
     try {
       const Response = await axios.get(
-        `/api/users/identification/recovery/${Username}/${RecoveryMethod}`,
-        {
-          baseURL: import.meta.env.VITE_API_HOST,
-          headers: {
-            "X-Api-Version": import.meta.env.VITE_API_VERSION,
-          },
-        }
+        `/api/users/identification/recovery/${Username}/${RecoveryMethod}`
       );
 
       if (Response.data.status) {
@@ -206,21 +194,12 @@ export const ForgotPage = () => {
     setLoading(true);
 
     try {
-      const Response = await axios.put(
-        `/api/users/password/`,
-        {
-          method: RecoveryMethod,
-          token: Token,
-          code: data.code,
-          password: data.password,
-        },
-        {
-          baseURL: import.meta.env.VITE_API_HOST,
-          headers: {
-            "X-Api-Version": import.meta.env.VITE_API_VERSION,
-          },
-        }
-      );
+      const Response = await axios.put(`/api/users/password/`, {
+        method: RecoveryMethod,
+        token: Token,
+        code: data.code,
+        password: data.password,
+      });
 
       if (Response.data.status) {
         ReactGA4.event({

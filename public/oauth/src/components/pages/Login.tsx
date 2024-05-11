@@ -23,7 +23,7 @@ import { motion } from "framer-motion";
 import { VisibilityOff, Visibility } from "@mui/icons-material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError } from "../utils/axios";
 import { useTranslation } from "react-i18next";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
@@ -114,13 +114,9 @@ export const LoginPage = () => {
           remember: Remember ?? data.remember,
         },
         {
-          baseURL: import.meta.env.VITE_API_HOST,
           auth: {
             username: data.username,
             password: data.password,
-          },
-          headers: {
-            "X-Api-Version": import.meta.env.VITE_API_VERSION,
           },
           params: {
             reCaptchaV3Token: await executeRecaptcha?.("login"),
@@ -162,12 +158,6 @@ export const LoginPage = () => {
                 }),
                 {}
               ),
-            },
-            {
-              baseURL: import.meta.env.VITE_API_HOST,
-              headers: {
-                "X-Api-Version": import.meta.env.VITE_API_VERSION,
-              },
             }
           );
 

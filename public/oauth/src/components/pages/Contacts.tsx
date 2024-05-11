@@ -25,7 +25,7 @@ import {
 import { motion } from "framer-motion";
 import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError } from "../utils/axios";
 import { useTranslation } from "react-i18next";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
@@ -122,9 +122,7 @@ export const ContactsPage = () => {
             )}`,
           },
           {
-            baseURL: import.meta.env.VITE_API_HOST,
             headers: {
-              "X-Api-Version": import.meta.env.VITE_API_VERSION,
               Authorization: `Permit ${Query.get("permit")}`,
             },
           }
@@ -159,20 +157,11 @@ export const ContactsPage = () => {
     setLoading(true);
 
     try {
-      const Response = await axios.post(
-        `/api/users/verify/`,
-        {
-          method: VerificationMethod,
-          token: Token,
-          code: data.code,
-        },
-        {
-          baseURL: import.meta.env.VITE_API_HOST,
-          headers: {
-            "X-Api-Version": import.meta.env.VITE_API_VERSION,
-          },
-        }
-      );
+      const Response = await axios.post(`/api/users/verify/`, {
+        method: VerificationMethod,
+        token: Token,
+        code: data.code,
+      });
 
       if (Response.data.status) {
         ReactGA4.event({
@@ -212,13 +201,7 @@ export const ContactsPage = () => {
 
     try {
       const Response = await axios.get(
-        `/api/users/identification/methods/${username}`,
-        {
-          baseURL: import.meta.env.VITE_API_HOST,
-          headers: {
-            "X-Api-Version": import.meta.env.VITE_API_VERSION,
-          },
-        }
+        `/api/users/identification/methods/${username}`
       );
 
       if (Response.data.status) {
@@ -243,13 +226,7 @@ export const ContactsPage = () => {
 
     try {
       const Response = await axios.get(
-        `/api/users/identification/verification/${username}/${method}`,
-        {
-          baseURL: import.meta.env.VITE_API_HOST,
-          headers: {
-            "X-Api-Version": import.meta.env.VITE_API_VERSION,
-          },
-        }
+        `/api/users/identification/verification/${username}/${method}`
       );
 
       if (Response.data.status) {

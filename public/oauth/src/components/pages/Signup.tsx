@@ -21,7 +21,7 @@ import { motion } from "framer-motion";
 import { VisibilityOff, Visibility } from "@mui/icons-material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError } from "../utils/axios";
 import { useTranslation } from "react-i18next";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
