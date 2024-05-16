@@ -50,7 +50,11 @@ export type TSetOauthApp = (appId?: string) => void;
 export const OauthAppContext = React.createContext<{
   app: IOauthApp | null;
   loading: boolean;
-}>({ app: null, loading: false });
+  integrations: {
+    googleAnalytics4?: IOauthIntegration;
+    reCaptchaV3?: IOauthIntegration;
+  };
+}>({ app: null, loading: false, integrations: {} });
 
 export const useOauthApp = () => React.useContext(OauthAppContext);
 
@@ -96,6 +100,14 @@ export const OauthAppProvider: React.FC<IOauthAppProviderProps> = ({
       value={{
         app: App,
         loading: Loading,
+        integrations: {
+          googleAnalytics4: App?.integrations?.find(
+            (i) => i.enabled && i.id === "google-analytics-4"
+          ),
+          reCaptchaV3: App?.integrations?.find(
+            (i) => i.enabled && i.id === "re-captcha-v3"
+          ),
+        },
       }}
     >
       {children}

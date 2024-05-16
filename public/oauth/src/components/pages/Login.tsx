@@ -44,7 +44,6 @@ export const LoginPage = () => {
   const Navigate = useNavigate();
   const Location = useLocation();
   const [Query] = useSearchParams();
-  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const CodeChallenge = Query.get("codeChallenge");
   const CodeChallengeMethod = Query.get("codeChallengeMethod");
@@ -54,7 +53,10 @@ export const LoginPage = () => {
     ? Query.get("remember") === "true"
     : undefined;
 
-  const { app } = useOauthApp();
+  const { app, integrations } = useOauthApp();
+  const { executeRecaptcha } = integrations.reCaptchaV3
+    ? useGoogleReCaptcha()
+    : { executeRecaptcha: () => {} };
 
   React.useEffect(() => {
     ReactGA4.send({

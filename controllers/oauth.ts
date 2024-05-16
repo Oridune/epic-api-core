@@ -825,6 +825,7 @@ export default class OauthController extends BaseController {
       oauthAppId: e.optional(e.string()),
       scopes: e.optional(e.record(e.array(e.string()))),
       remember: e.optional(e.boolean({ cast: true })).default(false),
+      asRole: e.optional(e.string()),
     });
 
     return new Versioned().add("1.0.0", {
@@ -902,7 +903,7 @@ export default class OauthController extends BaseController {
             }
 
             await UserModel.updateOneOrFail(Register.data._id, {
-              role: "user",
+              role: Body.asRole ?? "user",
             });
           }
         }

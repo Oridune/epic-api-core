@@ -25,7 +25,7 @@ import { LoadingFormPage } from "./pages/LoadingForm";
 import Logo from "../assets/logo.png";
 
 export const AppTheme = () => {
-  const { app, loading } = useOauthApp();
+  const { app, loading, integrations } = useOauthApp();
 
   const ThemeMode = useThemeMode();
   const { i18n } = useTranslation();
@@ -51,20 +51,11 @@ export const AppTheme = () => {
     DefaultSecondaryColor;
   const Roundness = app?.consent.styling?.roundness ?? DefaultRoundness;
 
-  // Integrations
-  const googleAnalytics4 = app?.integrations?.find(
-    (i) => i.enabled && i.id === "google-analytics-4"
-  );
-
-  const reCaptchaV3 = app?.integrations?.find(
-    (i) => i.enabled && i.id === "re-captcha-v3"
-  );
-
   React.useEffect(() => {
-    if (googleAnalytics4 && googleAnalytics4.publicKey) {
-      ReactGA4.initialize(googleAnalytics4.publicKey);
+    if (integrations.googleAnalytics4?.publicKey) {
+      ReactGA4.initialize(integrations.googleAnalytics4?.publicKey);
     }
-  }, [googleAnalytics4]);
+  }, [integrations.googleAnalytics4]);
 
   const MainContent = loading ? (
     <LoadingFormPage />
@@ -151,15 +142,15 @@ export const AppTheme = () => {
       })}
     >
       <CssBaseline />
-      {reCaptchaV3 && reCaptchaV3.publicKey ? (
+      {integrations.reCaptchaV3?.publicKey ? (
         <GoogleReCaptchaProvider
-          reCaptchaKey={reCaptchaV3.publicKey}
+          reCaptchaKey={integrations.reCaptchaV3.publicKey}
           language={i18n.language}
           useRecaptchaNet={[undefined, "true", "1"].includes(
-            reCaptchaV3.props?.useRecaptchaNet
+            integrations.reCaptchaV3.props?.useRecaptchaNet
           )}
           useEnterprise={[undefined, "true", "1"].includes(
-            reCaptchaV3.props?.useEnterprise
+            integrations.reCaptchaV3.props?.useEnterprise
           )}
           container={{ parameters: { theme: ThemeMode } }}
         >

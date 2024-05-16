@@ -52,11 +52,13 @@ export const SignupPage = () => {
   const Navigate = useNavigate();
   const Location = useLocation();
   const [Query] = useSearchParams();
-  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const CustomReference = Query.get("ref");
 
-  const { app } = useOauthApp();
+  const { app, integrations } = useOauthApp();
+  const { executeRecaptcha } = integrations.reCaptchaV3
+    ? useGoogleReCaptcha()
+    : { executeRecaptcha: () => {} };
 
   React.useEffect(() => {
     ReactGA4.send({
