@@ -91,6 +91,8 @@ export default class UsersController extends BaseController {
             _id: AccountId,
             createdBy: UserId,
             createdFor: UserId,
+            email: user.email,
+            phone: user.phone,
           },
           { session },
         ),
