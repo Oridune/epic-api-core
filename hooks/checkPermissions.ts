@@ -137,6 +137,22 @@ export default {
                 "Account not found or is blocked!",
               );
           }
+          if (Collaborator.isOwned) {
+            // deno-lint-ignore no-explicit-any
+            let Updates: Record<string, any> | undefined;
+
+            if (!Account.phone && User.phone) {
+              (Updates ??= {}).phone = User.phone;
+            }
+
+            if (!Account.email && User.email) {
+              (Updates ??= {}).email = User.email;
+            }
+
+            if (Updates) {
+              await AccountModel.updateOne(AccountId, Updates);
+            }
+          }
 
           let GlobalRole = User.role;
 
