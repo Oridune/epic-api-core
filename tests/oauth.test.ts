@@ -1,4 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
+import "../index.d.ts";
+
 import { Loader } from "@Core/common/mod.ts";
 import { createAppServer } from "@Core/server.ts";
 import { expect } from "expect";
@@ -96,6 +98,8 @@ const AuthenticationResponseSchema = ResponseWrapperSchema(
           _id: e.string(),
           isBlocked: e.boolean(),
           createdFor: e.string(),
+          email: e.string(),
+          phone: e.string(),
           createdBy: e.string(),
           createdAt: e.string(),
           updatedAt: e.string(),
@@ -442,7 +446,11 @@ Deno.test({
           expect(Response?.status).toBe(200);
 
           (Context.oauthAuthentication ??= []).push(
-            await AuthenticationResponseSchema.validate(await Response?.json()),
+            await AuthenticationResponseSchema.validate(await Response?.json())
+              .catch((error) => {
+                console.error(error);
+                throw error;
+              }),
           );
         }),
       ).catch((error) => {

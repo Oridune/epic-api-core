@@ -23,6 +23,7 @@ import { CollaboratorModel } from "@Models/collaborator.ts";
 import { UserModel } from "@Models/user.ts";
 import { PermanentlyDeleteAccount } from "@Jobs/deleteUsers.ts";
 import { OauthSessionModel } from "@Models/oauthSession.ts";
+import { OauthSecretModel } from "@Models/oauthSecret.ts";
 
 @Controller("/accounts/", { name: "accounts" })
 export default class AccountsController extends BaseController {
@@ -89,13 +90,27 @@ export default class AccountsController extends BaseController {
               $push: { collaborates: Collaborator._id },
             });
 
-            await OauthSessionModel.updateOneOrFail(
-              ctx.router.state.auth!.sessionId,
-              {
-                [`scopes.${Account._id.toString()}`]: ["*"],
-              },
-              { session },
-            );
+            if (ctx.router.state.auth?.sessionId) {
+              await OauthSessionModel.updateOneOrFail(
+                ctx.router.state.auth.sessionId,
+                {
+                  [`scopes.${Account._id.toString()}`]:
+                    ctx.router.state.scopePipeline.requested,
+                },
+                { session },
+              );
+            }
+
+            if (ctx.router.state.auth?.secretId) {
+              await OauthSecretModel.updateOneOrFail(
+                ctx.router.state.auth.secretId,
+                {
+                  [`scopes.${Account._id.toString()}`]:
+                    ctx.router.state.scopePipeline.requested,
+                },
+                { session },
+              );
+            }
 
             return {
               account: Account,

@@ -7,19 +7,25 @@ import { TAccountOutput } from "@Models/account.ts";
 
 type SessionInfo = {
   claims: {
-    sessionId: string;
-    version: number;
+    secretId?: string;
+    sessionId?: string;
+    version?: number;
     refreshable?: boolean;
     scopes?: string[];
   };
-  session: {
+  session?: {
+    scopes: Record<string, Array<string>>;
+    createdBy: string;
+  };
+  secret?: {
     scopes: Record<string, Array<string>>;
     createdBy: string;
   };
 };
 
 type Authorization = {
-  sessionId: string;
+  secretId?: string;
+  sessionId?: string;
   userId: string;
   accountId: string;
   isAccountOwned: boolean;
@@ -31,6 +37,13 @@ type Authorization = {
   account: TAccountOutput;
 };
 
+type ScopePipeline = {
+  all: string[];
+  available: string[];
+  requested: string[];
+  permitted: string[];
+};
+
 declare module "@Core/common/controller/base.ts" {
   interface IRouterContextExtendor {
     state: {
@@ -40,6 +53,7 @@ declare module "@Core/common/controller/base.ts" {
       };
       sessionInfo?: SessionInfo;
       auth?: Authorization;
+      scopePipeline: ScopePipeline;
       guard: SecurityGuard;
     };
   }

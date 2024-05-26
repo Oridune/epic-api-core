@@ -1,4 +1,4 @@
-import { type RouterContext, createHttpError, Status } from "oak";
+import { createHttpError, type RouterContext, Status } from "oak";
 import e from "validator";
 import { decode } from "encoding/base64.ts";
 import OauthController, { OauthTokenType } from "@Controllers/oauth.ts";
@@ -14,14 +14,21 @@ export const CredentialsValidator = () =>
     }));
 
 export default () =>
-  async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
-    const Authorization = ctx.request.headers.get("authorization")?.split(" ");
+async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
+  const Authorization = ctx.request.headers.get("authorization")?.split(" ");
 
-    if (Authorization) {
-      const AuthType = Authorization[0].toLowerCase();
-      const Token = Authorization[1];
+  if (Authorization) {
+    const AuthType = Authorization[0].toLowerCase();
+    const Token = Authorization[1];
 
-      if (AuthType === "bearer")
+    switch (AuthType) {
+      case "basic":
+        ctx.state.credentials = await CredentialsValidator().validate(Token, {
+          name: "oauth.header.authorization",
+        });
+        break;
+
+      case "bearer":
         ctx.state.sessionInfo = await OauthController.verifySession({
           type: OauthTokenType.ACCESS,
           token: Token,
@@ -29,7 +36,9 @@ export default () =>
         }).catch((error) => {
           throw createHttpError(Status.Unauthorized, error);
         });
-      else if (AuthType === "permit")
+        break;
+
+      case "permit":
         ctx.state.sessionInfo = await OauthController.verifySession({
           type: OauthTokenType.PERMIT,
           token: Token,
@@ -38,12 +47,18 @@ export default () =>
         }).catch((error) => {
           throw createHttpError(Status.Unauthorized, error);
         });
-      else if (AuthType === "basic")
-        ctx.state.credentials = await CredentialsValidator().validate(Token, {
-          name: "oauth.header.authorization",
-        });
-    }
+        break;
 
-    // Continue to next middleware
-    await next();
-  };
+      case "apikey":
+        ctx.state.sessionInfo = await OauthController.verifySecret({
+          token: Token,
+        }).catch((error) => {
+          throw createHttpError(Status.Unauthorized, error);
+        });
+        break;
+    }
+  }
+
+  // Continue to next middleware
+  await next();
+};

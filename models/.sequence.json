@@ -10,9 +10,10 @@
     "wallet.ts",
     "accountInvite.ts",
     "oauthSession.ts",
-    "apiKey.ts",
     "oauthApp.ts",
-    "oauthPolicy.ts"
+    "oauthPolicy.ts",
+    "oauthSecret.ts",
+    "requestLog.ts"
   ],
   "excludes": [],
   "sequenceProps": {}

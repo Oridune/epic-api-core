@@ -19,6 +19,7 @@ import { AccountInviteModel } from "@Models/accountInvite.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import { UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauthSession.ts";
+import { OauthSecretModel } from "@Models/oauthSecret.ts";
 
 @Controller("/collaborators/", { name: "collaborators" })
 export default class CollaboratorsController extends BaseController {
@@ -95,13 +96,27 @@ export default class CollaboratorsController extends BaseController {
               { session },
             );
 
-            await OauthSessionModel.updateOneOrFail(
-              ctx.router.state.auth!.sessionId,
-              {
-                [`scopes.${Invite.account.toString()}`]: ["*"],
-              },
-              { session },
-            );
+            if (ctx.router.state.auth?.sessionId) {
+              await OauthSessionModel.updateOneOrFail(
+                ctx.router.state.auth.sessionId,
+                {
+                  [`scopes.${Invite.account.toString()}`]:
+                    ctx.router.state.scopePipeline.requested,
+                },
+                { session },
+              );
+            }
+
+            if (ctx.router.state.auth?.secretId) {
+              await OauthSecretModel.updateOneOrFail(
+                ctx.router.state.auth.secretId,
+                {
+                  [`scopes.${Invite.account.toString()}`]:
+                    ctx.router.state.scopePipeline.requested,
+                },
+                { session },
+              );
+            }
 
             return Collaborator;
           }),

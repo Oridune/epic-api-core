@@ -47,24 +47,28 @@ export const SessionValidator = e.optional(
   e.object({
     claims: e.object(
       {
-        sessionId: e.string(),
-        version: e.number(),
+        secretId: e.optional(e.string()),
+        sessionId: e.optional(e.string()),
+        version: e.optional(e.number()),
         refreshable: e.optional(e.boolean()),
         scopes: e.optional(e.array(e.string())),
       },
       { allowUnexpectedProps: true },
     ),
-    session: e.any().custom((ctx) =>
-      e
-        .object(
-          {
-            scopes: e.record(e.array(e.string())),
-            createdBy: e.string({ cast: true }),
-          },
-          { allowUnexpectedProps: true },
-        )
-        .validate(ctx.output)
-    ),
+    session: e.optional(e.object(
+      {
+        scopes: e.record(e.array(e.string())),
+        createdBy: e.string({ cast: true }),
+      },
+      { allowUnexpectedProps: true },
+    )),
+    secret: e.optional(e.object(
+      {
+        scopes: e.record(e.array(e.string())),
+        createdBy: e.string({ cast: true }),
+      },
+      { allowUnexpectedProps: true },
+    )),
   }),
 );
 
@@ -82,18 +86,23 @@ export default {
     );
 
     if (SessionInfo) {
+      const Session = SessionInfo.session ?? SessionInfo.secret;
+      const Scopes = Session?.scopes ?? {};
+
       const AccountId = await e
         .instanceOf(ObjectId, { instantiate: true })
         .validate(
           ctx.router.request.headers.get("X-Account-ID") ??
-            Object.keys(SessionInfo.session.scopes)[0],
+            Object.keys(Scopes)[0],
           { name: `${scope}.headers.x-account-id` },
         );
 
       const { auth, scopePipeline } = await Store.cache(
-        `checkPermissions:${SessionInfo.claims.sessionId}:${AccountId}`,
+        `checkPermissions:${
+          SessionInfo.claims.sessionId ?? SessionInfo.claims.secretId
+        }:${AccountId}`,
         async () => {
-          const UserId = new ObjectId(SessionInfo.session.createdBy);
+          const UserId = new ObjectId(Session?.createdBy);
 
           const User = await UserModel.findOne(
             UserId,
@@ -174,8 +183,9 @@ export default {
 
           return {
             auth: {
+              secretId: SessionInfo.claims.secretId,
               sessionId: SessionInfo.claims.sessionId,
-              userId: SessionInfo.session.createdBy,
+              userId: UserId.toString(),
               accountId: AccountId.toString(),
               isAccountOwned: Collaborator.isOwned,
               isAccountPrimary: Collaborator.isPrimary,
@@ -190,8 +200,7 @@ export default {
             scopePipeline: {
               all: [`role:${GlobalRole}`],
               available: [`role:${Collaborator.role}`],
-              requested: SessionInfo.session.scopes[AccountId.toString()] ??
-                [],
+              requested: Scopes[AccountId.toString()] ?? [],
               permitted: SessionInfo.claims.scopes ?? ["*"],
             },
           };
@@ -203,12 +212,14 @@ export default {
       ctx.router.state.scopePipeline = scopePipeline;
     }
 
-    ctx.router.state.scopePipeline ??= {
+    const DefaultScopePipeline = {
       all: ["role:unauthenticated"],
       available: ["*"],
       requested: ["*"],
       permitted: ["*"],
     };
+
+    ctx.router.state.scopePipeline ??= DefaultScopePipeline;
 
     const Guard = (ctx.router.state.guard = new SecurityGuard())
       .addStage(ctx.router.state.scopePipeline.all)

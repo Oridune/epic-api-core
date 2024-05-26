@@ -3,9 +3,9 @@ import {
   Env,
   EnvType,
   Events,
-  fetch as customFetch,
+  IRequestContext,
   Loader,
-  RawResponse,
+  prepareFetch,
   respondWith,
   Response,
   Server,
@@ -13,7 +13,12 @@ import {
 } from "@Core/common/mod.ts";
 import { APIController } from "@Core/controller.ts";
 import { Database } from "@Database";
-import { Application as AppServer, Router as AppRouter, Status } from "oak";
+import {
+  Application as AppServer,
+  Router as AppRouter,
+  RouterContext,
+  Status,
+} from "oak";
 import { join } from "path";
 import { ApplicationListenEvent } from "oak/application.ts";
 import Logger from "oak:logger";
@@ -155,8 +160,8 @@ export const prepareAppServer = async (app: AppServer, router: AppRouter) => {
       router[Route.options.method as "get"](
         Route.endpoint,
         async (ctx, next) => {
-          ctx.state.requestId = ctx.state["X-Request-ID"];
-          ctx.state.requestName = Route.options.name;
+          ctx.state._requestScope = Route.scope;
+          ctx.state._requestName = Route.options.name;
 
           await next();
         },
@@ -164,11 +169,12 @@ export const prepareAppServer = async (app: AppServer, router: AppRouter) => {
         async (ctx) => {
           const TargetVersion = ctx.request.headers.get("x-app-version") ??
             "latest";
-          const RequestContext = {
+
+          const RequestContext: IRequestContext<RouterContext<string>> = {
             requestedVersion: TargetVersion,
             version: TargetVersion,
-            id: ctx.state.requestId,
-            router: ctx,
+            id: ctx.state._requestId,
+            router: ctx as any,
             options: Route.options,
           };
 
@@ -207,12 +213,7 @@ export const prepareAppServer = async (app: AppServer, router: AppRouter) => {
             res: ReturnedResponse,
           });
 
-          if (
-            ReturnedResponse instanceof RawResponse ||
-            ReturnedResponse instanceof Response
-          ) {
-            respondWith(ctx, ReturnedResponse);
-          }
+          if (ReturnedResponse) await respondWith(ctx, ReturnedResponse);
         },
       );
     }
@@ -351,14 +352,7 @@ export const createAppServer = () => {
 
   return {
     getApp: () => Context.app,
-    fetch: (
-      ...params: Parameters<typeof customFetch> extends [infer _, ...infer R]
-        ? R
-        : never
-    ) => {
-      if (!Context.app) throw new Error(`App server not started yet!`);
-      return customFetch(Context.app, params[0], params[1]);
-    },
+    fetch: prepareFetch(Context as any),
     start: StartServer,
     end: EndServer,
     restart: RestartServer,

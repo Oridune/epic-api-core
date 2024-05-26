@@ -30,6 +30,7 @@ import { OauthPolicyModel } from "@Models/oauthPolicy.ts";
 import { AccountModel } from "@Models/account.ts";
 import { SecurityGuard } from "@Lib/securityGuard.ts";
 import { ResolveScopeRole } from "../hooks/checkPermissions.ts";
+import { OauthSecretModel } from "@Models/oauthSecret.ts";
 
 export enum OauthTokenType {
   AUTHENTICATION = "oauth_authentication",
@@ -37,6 +38,7 @@ export enum OauthTokenType {
   REFRESH = "oauth_refresh_token",
   ACCESS = "oauth_access_token",
   PERMIT = "oauth_permit",
+  SECRET = "oauth_secret",
 }
 
 export enum OauthPKCEMethod {
@@ -108,7 +110,6 @@ export default class OauthController extends BaseController {
   static DefaultOauthIssuer = DefaultOauthIssuer;
   static DefaultOauthAudience = DefaultOauthAudience;
 
-  static DefaultOauthTokenExpirySeconds = OauthTokenExpirySecond;
   static DefaultOauthAuthenticationExpirySeconds =
     OauthAuthenticationExpirySecond;
   static DefaultOauthCodeExpirySeconds = OauthCodeExpirySecond;
@@ -130,25 +131,24 @@ export default class OauthController extends BaseController {
     const Audience = opts.audience ?? OauthController.DefaultOauthAudience;
 
     const CurrentDate = Date.now();
-    const ExpiresAtSeconds = parseInt(
-      (
-        CurrentDate / 1000 +
-        (opts.expiresInSeconds ??
-          OauthController.DefaultOauthTokenExpirySeconds)
-      ).toString(),
-    );
+    const ExpiresAtSeconds = CurrentDate / 1000 +
+      (opts.expiresInSeconds ?? Infinity);
+
+    const Signer = new SignJWT(opts.payload)
+      .setProtectedHeader({ alg: "HS256" })
+      .setSubject(opts.type)
+      .setIssuer(Issuer)
+      .setAudience(Audience)
+      .setIssuedAt();
+
+    if (ExpiresAtSeconds !== Infinity) {
+      Signer.setExpirationTime(ExpiresAtSeconds);
+    }
 
     return {
       issuer: Issuer,
       type: opts.type,
-      token: await new SignJWT(opts.payload)
-        .setProtectedHeader({ alg: "HS256" })
-        .setSubject(opts.type)
-        .setIssuer(Issuer)
-        .setAudience(Audience)
-        .setIssuedAt()
-        .setExpirationTime(ExpiresAtSeconds)
-        .sign(JWTSecret),
+      token: await Signer.sign(JWTSecret),
       expiresAtSeconds: ExpiresAtSeconds,
     };
   }
@@ -238,6 +238,42 @@ export default class OauthController extends BaseController {
     };
   }
 
+  static async createOauthSecret(opts: {
+    userId: ObjectId | string;
+    oauthAppId: ObjectId | string;
+    name: string;
+    scopes: Record<string, string[]>;
+    payload?: Record<
+      string,
+      string | string[] | number | boolean | null | undefined
+    >;
+    expiresInSeconds?: number;
+  }) {
+    const Secret = await OauthSecretModel.create({
+      createdBy: new ObjectId(opts.userId),
+      oauthApp: new ObjectId(opts.oauthAppId),
+      name: opts.name,
+      scopes: opts.scopes,
+      expiresAt: opts.expiresInSeconds
+        ? new Date(
+          Date.now() + opts.expiresInSeconds * 1000,
+        )
+        : undefined,
+    });
+
+    const Payload = {
+      secretId: Secret._id.toString(),
+    };
+
+    return {
+      secret: await OauthController.createOauthToken({
+        type: OauthTokenType.SECRET,
+        payload: { ...opts.payload, ...Payload },
+        expiresInSeconds: opts.expiresInSeconds,
+      }),
+    };
+  }
+
   static async verifyToken<P>(opts: IOauthVerifyOptions) {
     const JWTSecret = new TextEncoder().encode(
       (opts.secret ?? "") + (await Env.get("ENCRYPTION_KEY")),
@@ -273,14 +309,14 @@ export default class OauthController extends BaseController {
 
   static async createSession(opts: {
     provider: OauthProvider;
-    sessionId: ObjectId | string;
+    sessionId?: ObjectId | string;
     userId: ObjectId | string;
     oauthAppId: ObjectId | string;
     useragent: string;
     scopes: Record<string, string[]>;
     expiresInSeconds?: number;
   }) {
-    const Session = await OauthSessionModel.create({
+    return await OauthSessionModel.create({
       _id: new ObjectId(opts.sessionId),
       createdBy: new ObjectId(opts.userId),
       provider: opts.provider,
@@ -288,15 +324,12 @@ export default class OauthController extends BaseController {
       oauthApp: new ObjectId(opts.oauthAppId),
       version: 0,
       scopes: opts.scopes,
-      expiresAt: new Date(
-        Date.now() +
-          (opts.expiresInSeconds ??
-              OauthController.DefaultOauthRefreshExpirySeconds) *
-            1000,
-      ),
+      expiresAt: opts.expiresInSeconds
+        ? new Date(
+          Date.now() + opts.expiresInSeconds * 1000,
+        )
+        : undefined,
     });
-
-    return Session;
   }
 
   static async refreshSession(opts: {
@@ -304,25 +337,23 @@ export default class OauthController extends BaseController {
     useragent: string;
     expiresInSeconds?: number;
   }) {
-    const Session = await OauthSessionModel.findOne(opts.sessionId).project({
-      _id: 1,
-      version: 1,
-      useragent: 1,
-      expiresAt: 1,
-    });
+    try {
+      await OauthSessionModel.updateOneOrFail(opts.sessionId, {
+        $inc: { version: 1 },
+        useragent: OauthController.resolveUserAgent(opts.useragent),
+        ...(opts.expiresInSeconds
+          ? {
+            expiresAt: new Date(
+              Date.now() + opts.expiresInSeconds * 1000,
+            ),
+          }
+          : {}),
+      });
 
-    if (!Session) throw new Error("An active session was not found!");
-
-    return await OauthSessionModel.updateAndFindOne(Session._id, {
-      version: Session.version + 1,
-      useragent: OauthController.resolveUserAgent(opts.useragent),
-      expiresAt: new Date(
-        Date.now() +
-          (opts.expiresInSeconds ??
-              OauthController.DefaultOauthRefreshExpirySeconds) *
-            1000,
-      ),
-    });
+      return await OauthSessionModel.findOneOrFail(opts.sessionId);
+    } catch (error) {
+      throw new Error("An active session was not found!", { cause: error });
+    }
   }
 
   static async verifySession(opts: {
@@ -338,9 +369,13 @@ export default class OauthController extends BaseController {
       verifyOpts: opts.verifyOpts,
     });
 
-    const Session = await OauthSessionModel.findOne(Claims.sessionId as string);
+    if (typeof Claims.sessionId !== "string") {
+      throw new Error(`No session id claim!`);
+    }
 
-    if (!Session) throw new Error(`An active session was not found!`);
+    const Session = await OauthSessionModel.findOne(Claims.sessionId);
+
+    if (!Session) throw new Error(`We didn't found an active session!`);
 
     if (
       opts.useragentCheck !== false ||
@@ -367,6 +402,30 @@ export default class OauthController extends BaseController {
     return {
       claims: Claims,
       session: Session,
+    };
+  }
+
+  static async verifySecret(opts: {
+    token: string;
+    verifyOpts?: JWTVerifyOptions;
+  }) {
+    const Claims = await OauthController.verifyToken({
+      type: OauthTokenType.SECRET,
+      token: opts.token,
+      verifyOpts: opts.verifyOpts,
+    });
+
+    if (typeof Claims.secretId !== "string") {
+      throw new Error(`No secret id claim!`);
+    }
+
+    const Secret = await OauthSecretModel.findOne(Claims.secretId);
+
+    if (!Secret) throw new Error(`We didn't found that secret!`);
+
+    return {
+      claims: Claims,
+      secret: Secret,
     };
   }
 
@@ -630,7 +689,7 @@ export default class OauthController extends BaseController {
         )
         .throwsFatal(),
       scopes: e
-        .record(e.array(e.string().matches(/\w+(\.\w+)*|^\*$/), { cast: true }))
+        .record(e.array(e.string(), { cast: true }))
         .custom(async (ctx) => {
           const AccountIds = Object.keys(ctx.output);
 
@@ -672,6 +731,7 @@ export default class OauthController extends BaseController {
           oauthAppId: Body.tokenPayload.oauthAppId,
           useragent: ctx.router.request.headers.get("User-Agent") ?? "",
           scopes: Body.scopes,
+          expiresInSeconds: OauthController.DefaultOauthRefreshExpirySeconds,
         });
 
         return Response.data(
@@ -801,6 +861,7 @@ export default class OauthController extends BaseController {
         const Session = await OauthController.refreshSession({
           sessionId: Body.refreshTokenPayload.sessionId as string,
           useragent: ctx.router.request.headers.get("User-Agent") ?? "",
+          expiresInSeconds: OauthController.DefaultOauthRefreshExpirySeconds,
         });
 
         if (!Session) throw e.error("Session refreshing failed!");
@@ -1011,7 +1072,9 @@ export default class OauthController extends BaseController {
         query: QuerySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+        if (!ctx.router.state.auth?.sessionId) {
+          ctx.router.throw(Status.Unauthorized);
+        }
 
         // Query Validation
         const Query = await QuerySchema.validate(
@@ -1045,7 +1108,10 @@ export default class OauthController extends BaseController {
         body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (!ctx.router.state.auth || !ctx.router.state.sessionInfo) {
+        if (
+          !ctx.router.state.auth?.sessionId ||
+          !ctx.router.state.sessionInfo?.claims.version
+        ) {
           ctx.router.throw(Status.Unauthorized);
         }
 
@@ -1060,6 +1126,44 @@ export default class OauthController extends BaseController {
             version: ctx.router.state.sessionInfo.claims.version,
             sessionId: ctx.router.state.auth.sessionId,
             scopes: Body.scopes,
+          }),
+        );
+      },
+    });
+  }
+
+  @Post("/secret/")
+  public createSecret(route: IRoute) {
+    // Define Body Schema
+    const BodySchema = e.object({
+      name: e.string(),
+      scopes: e.optional(e.record(e.array(e.string(), { cast: true }))),
+      ttl: e.optional(e.number()),
+    });
+
+    return Versioned.add("1.0.0", {
+      postman: {
+        body: BodySchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: `${route.scope}.body` },
+        );
+
+        return Response.data(
+          await OauthController.createOauthSecret({
+            name: Body.name,
+            oauthAppId: ctx.router.state.auth.user.oauthApp,
+            userId: ctx.router.state.auth.userId,
+            scopes: Body.scopes ?? {
+              [ctx.router.state.auth.accountId]:
+                ctx.router.state.scopePipeline.requested,
+            },
+            expiresInSeconds: Body.ttl,
           }),
         );
       },

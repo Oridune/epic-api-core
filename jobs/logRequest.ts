@@ -1,0 +1,51 @@
+import { Application } from "oak/application.ts";
+import { EventChannel, Events } from "@Core/common/events.ts";
+import { Env, prepareFetch } from "@Core/common/mod.ts";
+
+export default (app: Application) => {
+  const Fetch = prepareFetch({ app }) ?? fetch;
+
+  Events.listen(
+    EventChannel.CUSTOM,
+    "response",
+    async ({ detail: { ctx, res } }) => {
+      // Log error cases
+      const LogEndpoint = "/api/request/logs/";
+
+      if (
+        await Env.enabled("REQUEST_LOG_ENABLED") &&
+        res.getStatusCode() >= 400 &&
+        !(ctx.request.method.toLowerCase() === "post" &&
+          LogEndpoint.replace(/^\/|\/$/g, "") ===
+            ctx.request.url.pathname.replace(/^\/|\/$/g, ""))
+      ) {
+        const Url = new URL(
+          LogEndpoint,
+          await Env.get("REQUEST_LOG_HOST") || ctx.request.url.origin,
+        );
+        const ApiKey = await Env.get("REQUEST_LOG_API_KEY");
+
+        const { user: _, account: __, ...auth } = ctx.state.auth ?? {};
+
+        await Fetch(Url, {
+          method: "POST",
+          headers: {
+            Authorization: `ApiKey ${ApiKey}`,
+          },
+          body: JSON.stringify({
+            requestId: ctx.state._requestId,
+            method: ctx.request.method.toLowerCase(),
+            url: ctx.request.url.toString(),
+            headers: Object.fromEntries(
+              ctx.request.headers.entries(),
+            ),
+            body: ctx.state._body,
+            auth,
+            responseStatus: res.getStatusCode(),
+            response: res.getBody(),
+          }),
+        }).catch(console.error);
+      }
+    },
+  );
+};

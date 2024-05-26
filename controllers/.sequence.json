@@ -13,7 +13,8 @@
     "collaborators.ts",
     "oauthPolicies.ts",
     "batcher.ts",
-    "envs.ts"
+    "envs.ts",
+    "requestLogs.ts"
   ],
   "excludes": [],
   "sequenceProps": {}

@@ -195,7 +195,10 @@ export default () => {
 
         // Invalidate Cached Session
         await Store.del(
-          `checkPermissions:${ctx.router.state.sessionInfo?.claims.sessionId}:${ctx.router.state.auth?.accountId}`,
+          `checkPermissions:${
+            ctx.router.state.sessionInfo?.claims.sessionId ??
+              ctx.router.state.sessionInfo?.claims.secretId
+          }:${ctx.router.state.auth?.accountId}`,
         );
       }
     } catch {
