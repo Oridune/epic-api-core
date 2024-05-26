@@ -27,6 +27,8 @@ export default class RequestLogsController extends BaseController {
         body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
@@ -34,7 +36,11 @@ export default class RequestLogsController extends BaseController {
         );
 
         return Response.statusCode(Status.Created).data(
-          await RequestLogModel.create(Body),
+          await RequestLogModel.create({
+            ...Body,
+            createdBy: ctx.router.state.auth.userId,
+            account: ctx.router.state.auth.accountId,
+          }),
         );
       },
     });
@@ -47,6 +53,7 @@ export default class RequestLogsController extends BaseController {
     // Define Query Schema
     const QuerySchema = e.object(
       {
+        namespace: e.optional(e.string()),
         search: e.optional(e.string()),
         range: e.optional(
           e.tuple([e.date().end(CurrentTimestamp), e.date()], { cast: true }),
@@ -83,6 +90,8 @@ export default class RequestLogsController extends BaseController {
         params: ParamsSchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
         // Query Validation
         const Query = await QuerySchema.validate(
           Object.fromEntries(ctx.router.request.url.searchParams),
@@ -99,18 +108,26 @@ export default class RequestLogsController extends BaseController {
           name: `${route.scope}.params`,
         });
 
+        const AccountId = new ObjectId(ctx.router.state.auth.accountId);
+
+        const RequestLogsBaseFilters = {
+          account: AccountId,
+          ...(Query.range instanceof Array
+            ? {
+              createdAt: {
+                $gt: new Date(Query.range[0]),
+                $lt: new Date(Query.range[1]),
+              },
+            }
+            : {}),
+        };
+
         const RequestLogsListQuery = RequestLogModel
           .search(Query.search)
           .filter({
             ...(Params.id ? { _id: new ObjectId(Params.id) } : {}),
-            ...(Query.range instanceof Array
-              ? {
-                createdAt: {
-                  $gt: new Date(Query.range[0]),
-                  $lt: new Date(Query.range[1]),
-                },
-              }
-              : {}),
+            ...(Query.namespace ? { namespace: Query.namespace } : {}),
+            ...RequestLogsBaseFilters,
           })
           .skip(Query.offset)
           .limit(Query.limit)
@@ -121,7 +138,7 @@ export default class RequestLogsController extends BaseController {
         return Response.data({
           totalCount: Query.includeTotalCount
             //? Make sure to pass any limiting conditions for count if needed.
-            ? await RequestLogModel.count()
+            ? await RequestLogModel.count(RequestLogsBaseFilters)
             : undefined,
           results: await RequestLogsListQuery,
         });
@@ -141,12 +158,17 @@ export default class RequestLogsController extends BaseController {
         params: ParamsSchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {
           name: `${route.scope}.params`,
         });
 
-        await RequestLogModel.deleteOne(Params.id);
+        await RequestLogModel.deleteOneOrFail({
+          _id: new ObjectId(Params.id),
+          account: new ObjectId(ctx.router.state.auth.accountId),
+        });
 
         return Response.true();
       },

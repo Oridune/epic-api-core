@@ -6,6 +6,9 @@ export const RequestLogSchema = () =>
   e.object({
     _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
     createdAt: e.optional(e.date()).default(() => new Date()),
+    createdBy: e.instanceOf(ObjectId, { instantiate: true }),
+    account: e.instanceOf(ObjectId, { instantiate: true }),
+    namespace: e.string(),
     requestId: e.string(),
     method: e.in(Object.values(RequestMethod)),
     url: e.string(),

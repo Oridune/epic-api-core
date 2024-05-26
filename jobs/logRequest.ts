@@ -33,6 +33,7 @@ export default (app: Application) => {
             Authorization: `ApiKey ${ApiKey}`,
           },
           body: JSON.stringify({
+            namespace: await Env.get("APP_NAME"),
             requestId: ctx.state._requestId,
             method: ctx.request.method.toLowerCase(),
             url: ctx.request.url.toString(),

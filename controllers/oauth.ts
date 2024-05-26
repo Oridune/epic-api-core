@@ -1137,7 +1137,12 @@ export default class OauthController extends BaseController {
     // Define Body Schema
     const BodySchema = e.object({
       name: e.string(),
-      scopes: e.optional(e.record(e.array(e.string(), { cast: true }))),
+      scopes: e.optional(
+        e.or([
+          e.record(e.array(e.string(), { cast: true })),
+          e.array(e.string(), { cast: true }),
+        ]),
+      ),
       ttl: e.optional(e.number()),
     });
 
@@ -1159,10 +1164,12 @@ export default class OauthController extends BaseController {
             name: Body.name,
             oauthAppId: ctx.router.state.auth.user.oauthApp,
             userId: ctx.router.state.auth.userId,
-            scopes: Body.scopes ?? {
-              [ctx.router.state.auth.accountId]:
-                ctx.router.state.scopePipeline.requested,
-            },
+            scopes: (Body.scopes instanceof Array || Body.scopes === undefined)
+              ? {
+                [ctx.router.state.auth.accountId]: Body.scopes ??
+                  ctx.router.state.scopePipeline.requested,
+              }
+              : Body.scopes,
             expiresInSeconds: Body.ttl,
           }),
         );
