@@ -35,4 +35,6 @@ AccountInviteModel.pre("update", (details) => {
     ...details.updates.$set,
     updatedAt: new Date(),
   };
-}).createIndex({ key: { token: 1 }, background: true });
+});
+
+AccountInviteModel.createIndex({ key: { token: 1 }, background: true });

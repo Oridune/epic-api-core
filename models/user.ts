@@ -116,35 +116,36 @@ UserModel.pre("update", (details) => {
     ...details.updates.$set,
     updatedAt: new Date(),
   };
-})
-  .createIndex(
-    {
-      key: {
-        reference: "text",
-        username: "text",
-        fname: "text",
-        mname: "text",
-        lname: "text",
-        tags: "text",
-        email: "text",
-        phone: "text",
-        role: "text",
-      },
-      background: true,
+});
+
+UserModel.createIndex(
+  {
+    key: {
+      reference: "text",
+      username: "text",
+      fname: "text",
+      mname: "text",
+      lname: "text",
+      tags: "text",
+      email: "text",
+      phone: "text",
+      role: "text",
     },
-    {
-      key: { username: 1 },
-      unique: true,
-      background: true,
-    },
-    {
-      key: { email: 1 },
-      unique: true,
-      partialFilterExpression: { email: { $exists: true } },
-    },
-    {
-      key: { phone: 1 },
-      unique: true,
-      partialFilterExpression: { phone: { $exists: true } },
-    },
-  );
+    background: true,
+  },
+  {
+    key: { username: 1 },
+    unique: true,
+    background: true,
+  },
+  {
+    key: { email: 1 },
+    unique: true,
+    partialFilterExpression: { email: { $exists: true } },
+  },
+  {
+    key: { phone: 1 },
+    unique: true,
+    partialFilterExpression: { phone: { $exists: true } },
+  },
+);
