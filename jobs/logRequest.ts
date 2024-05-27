@@ -3,7 +3,7 @@ import { EventChannel, Events } from "@Core/common/events.ts";
 import { Env, prepareFetch } from "@Core/common/mod.ts";
 
 export default (app: Application) => {
-  const Fetch = prepareFetch({ app }) ?? fetch;
+  const handle = prepareFetch({ app });
 
   Events.listen(
     EventChannel.CUSTOM,
@@ -19,15 +19,17 @@ export default (app: Application) => {
           LogEndpoint.replace(/^\/|\/$/g, "") ===
             ctx.request.url.pathname.replace(/^\/|\/$/g, ""))
       ) {
+        const HostUrl = await Env.get("REQUEST_LOG_HOST");
         const Url = new URL(
           LogEndpoint,
-          await Env.get("REQUEST_LOG_HOST") || ctx.request.url.origin,
+          HostUrl || ctx.request.url.origin,
         );
+
         const ApiKey = await Env.get("REQUEST_LOG_API_KEY");
 
         const { user: _, account: __, ...auth } = ctx.state.auth ?? {};
 
-        await Fetch(Url, {
+        await (HostUrl ? fetch : handle)(Url, {
           method: "POST",
           headers: {
             Authorization: `ApiKey ${ApiKey}`,
