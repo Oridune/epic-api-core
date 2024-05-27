@@ -13,14 +13,14 @@ import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
 
-import { RequestLogModel, RequestLogSchema } from "@Models/requestLog.ts";
+import { InputRequestLogsSchema, RequestLogModel } from "@Models/requestLog.ts";
 
 @Controller("/request/logs/", { name: "requestLogs" })
 export default class RequestLogsController extends BaseController {
   @Post("/")
   public create(route: IRoute) {
     // Define Body Schema
-    const BodySchema = RequestLogSchema();
+    const BodySchema = InputRequestLogsSchema();
 
     return new Versioned().add("1.0.0", {
       shape: {

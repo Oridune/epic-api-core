@@ -2,12 +2,8 @@ import e, { inferInput, inferOutput } from "validator";
 import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 import { RequestMethod } from "@Core/common/mod.ts";
 
-export const RequestLogSchema = () =>
+export const InputRequestLogsSchema = () =>
   e.object({
-    _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
-    createdAt: e.optional(e.date()).default(() => new Date()),
-    createdBy: e.instanceOf(ObjectId, { instantiate: true }),
-    account: e.instanceOf(ObjectId, { instantiate: true }),
     namespace: e.string(),
     requestId: e.string(),
     method: e.in(Object.values(RequestMethod)),
@@ -37,6 +33,14 @@ export const RequestLogSchema = () =>
       metrics: e.record(e.any()),
     }),
   });
+
+export const RequestLogSchema = () =>
+  e.object({
+    _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+    createdAt: e.optional(e.date()).default(() => new Date()),
+    createdBy: e.instanceOf(ObjectId, { instantiate: true }),
+    account: e.instanceOf(ObjectId, { instantiate: true }),
+  }).extends(InputRequestLogsSchema);
 
 export type TRequestLogInput = InputDocument<
   inferInput<typeof RequestLogSchema>
