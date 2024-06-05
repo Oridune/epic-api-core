@@ -171,7 +171,7 @@ export default class UsersController extends BaseController {
 
     // Define Body Schema
     const BodySchema = e
-      .omit(CreateUserSchema, { keys: ["oauthApp"] });
+      .omit(CreateUserSchema, ["oauthApp"]);
 
     return {
       postman: {

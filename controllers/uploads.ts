@@ -1,17 +1,17 @@
 import {
-  Controller,
   BaseController,
+  Controller,
   Get,
+  type IRequestContext,
+  type IRoute,
   Put,
   RequestMethod,
-  Versioned,
   Response,
-  type IRoute,
-  type IRequestContext,
+  Versioned,
 } from "@Core/common/mod.ts";
 import { type RouterContext } from "oak";
 import e from "validator";
-import { Uploads, AwsS3ACLs } from "@Lib/uploads/mod.ts";
+import { AwsS3ACLs, Uploads } from "@Lib/uploads/mod.ts";
 import { TFileOutput } from "@Models/file.ts";
 import OauthController, { TokenPayload } from "@Controllers/oauth.ts";
 
@@ -22,8 +22,8 @@ export type SignUploadOptions = {
   location?:
     | string
     | ((
-        ctx: IRequestContext<RouterContext<string>>
-      ) => string | Promise<string>);
+      ctx: IRequestContext<RouterContext<string>>,
+    ) => string | Promise<string>);
   expiresInMs?: number;
 };
 
@@ -38,12 +38,11 @@ export default class UploadsController extends BaseController {
       .object({
         name: e.optional(e.string().max(50)),
         alt: e.optional(e.string().max(50)),
-        contentType:
-          options?.allowedContentTypes instanceof Array
-            ? e.in(options.allowedContentTypes)
-            : e
-                .string()
-                .matches(options?.allowedContentTypes ?? /^\w+\/[-+.\w]+$/),
+        contentType: options?.allowedContentTypes instanceof Array
+          ? e.in(options.allowedContentTypes)
+          : e
+            .string()
+            .matches(options?.allowedContentTypes ?? /^\w+\/[-+.\w]+$/),
         contentLength: e.number({ cast: true }).amount({
           min: options?.minContentLength,
           max: options?.maxContentLength,
@@ -63,7 +62,7 @@ export default class UploadsController extends BaseController {
         // Query Validation
         const Query = await QuerySchema.validate(
           Object.fromEntries(ctx.router.request.url.searchParams),
-          { name: `${route.scope}.query` }
+          { name: `${route.scope}.query` },
         );
 
         // Params Validation
@@ -71,12 +70,11 @@ export default class UploadsController extends BaseController {
           name: `${route.scope}.params`,
         });
 
-        let Location =
-          typeof options?.location === "function"
-            ? await options.location(ctx)
-            : typeof options?.location === "string"
-            ? options.location
-            : "/public/";
+        let Location = typeof options?.location === "function"
+          ? await options.location(ctx)
+          : typeof options?.location === "string"
+          ? options.location
+          : "/public/";
 
         const Injection: Record<string, unknown> = {
           ...ctx.router.state.auth,
@@ -84,8 +82,10 @@ export default class UploadsController extends BaseController {
           ...Params,
         };
 
-        Location = Location.replace(/{{\s*([^{}\s]*)\s*}}/g, (match, key) =>
-          Injection[key] !== undefined ? `${Injection[key]}` : match
+        Location = Location.replace(
+          /{{\s*([^{}\s]*)\s*}}/g,
+          (match, key) =>
+            Injection[key] !== undefined ? `${Injection[key]}` : match,
         );
 
         const { name, alt, contentType, contentLength, ...restQuery } = Query;
@@ -112,9 +112,10 @@ export default class UploadsController extends BaseController {
                 metadata: {
                   ...restQuery,
                   ...Params,
-                },
+                } as Record<string, string>,
               },
-              secret: `${ctx.router.state.auth?.accountId}:${ctx.router.state.auth?.userId}`,
+              secret:
+                `${ctx.router.state.auth?.accountId}:${ctx.router.state.auth?.userId}`,
               expiresInSeconds: UploadRequest.expiresInSeconds + 30,
             })
           ).token,
@@ -131,11 +132,12 @@ export default class UploadsController extends BaseController {
     onSuccess?: (
       ctx: IRequestContext<RouterContext<string>>,
       file: TFileOutput,
-      metadata: T
-    ) => Promise<Response | void> | void
+      metadata: T,
+    ) => Promise<Response | void> | void,
   ) {
-    if (route.options.method === RequestMethod.GET)
+    if (route.options.method === RequestMethod.GET) {
       return UploadsController.sign(route, options);
+    }
 
     if (route.options.method === RequestMethod.PUT) {
       // Define Body Schema
@@ -153,11 +155,12 @@ export default class UploadsController extends BaseController {
               )
               .checkpoint(),
           },
-          { allowUnexpectedProps: true }
+          { allowUnexpectedProps: true },
         )
         .custom(async (ctx) => {
-          if (!(await Uploads.objectExists(ctx.output.token.url)))
+          if (!(await Uploads.objectExists(ctx.output.token.url))) {
             throw new Error(`File is not uploaded yet!`);
+          }
         });
 
       return Versioned.add("1.0.0", {
@@ -168,7 +171,7 @@ export default class UploadsController extends BaseController {
           // Body Validation
           const Body = await BodySchema.validate(
             await ctx.router.request.body({ type: "json" }).value,
-            { name: `${route.scope}.body`, context: ctx.router.state.auth }
+            { name: `${route.scope}.body`, context: ctx.router.state.auth },
           );
 
           const Upload = {
@@ -181,7 +184,7 @@ export default class UploadsController extends BaseController {
 
           return (
             (await onSuccess?.(ctx, Upload, Body.token.metadata as T)) ??
-            Response.data(Upload)
+              Response.data(Upload)
           );
         },
       });
