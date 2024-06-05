@@ -591,7 +591,7 @@ export default class OauthController extends BaseController {
         // Authorization Validation
         const Credentials = await e
           .object({
-            username: UsernameValidator(),
+            username: UsernameValidator,
             password: e.string(),
           })
           .validate(ctx.router.state.credentials, {
@@ -897,7 +897,7 @@ export default class OauthController extends BaseController {
         // Authorization Validation
         let Credentials = await e.optional(
           e.object({
-            username: UsernameValidator(),
+            username: UsernameValidator,
             password: e.string(),
           }),
         )

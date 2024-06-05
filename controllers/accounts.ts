@@ -30,7 +30,7 @@ export default class AccountsController extends BaseController {
   @Post("/")
   public create(route: IRoute) {
     // Define Body Schema
-    const BodySchema = InputAccountSchema();
+    const BodySchema = InputAccountSchema;
 
     return new Versioned().add("1.0.0", {
       postman: {

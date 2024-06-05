@@ -21,7 +21,7 @@ export default class EnvsController extends BaseController {
   @Post("/")
   public create(route: IRoute) {
     // Define Body Schema
-    const BodySchema = InputEnvSchema();
+    const BodySchema = InputEnvSchema;
 
     return new Versioned().add("1.0.0", {
       postman: {
@@ -49,7 +49,7 @@ export default class EnvsController extends BaseController {
     });
 
     // Define Body Schema
-    const BodySchema = e.partial(InputEnvSchema());
+    const BodySchema = e.partial(InputEnvSchema);
 
     return new Versioned().add("1.0.0", {
       postman: {
