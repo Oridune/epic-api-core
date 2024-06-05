@@ -5,7 +5,7 @@ import { SecurityGuard } from "@Lib/securityGuard.ts";
 import { TUserOutput } from "@Models/user.ts";
 import { TAccountOutput } from "@Models/account.ts";
 
-type SessionInfo = {
+export interface SessionInfo {
   claims: {
     secretId?: string;
     sessionId?: string;
@@ -21,9 +21,9 @@ type SessionInfo = {
     scopes: Record<string, Array<string>>;
     createdBy: string;
   };
-};
+}
 
-type Authorization = {
+export interface Authorization {
   secretId?: string;
   sessionId?: string;
   userId: string;
@@ -35,26 +35,30 @@ type Authorization = {
   resolvedRole: string;
   user: Omit<TUserOutput, "password" | "passwordHistory" | "collaborates">;
   account: TAccountOutput;
-};
+}
 
-type ScopePipeline = {
+export interface ScopePipeline {
   all: string[];
   available: string[];
   requested: string[];
   permitted: string[];
-};
+}
+
+export interface AuthCredentials {
+  username: string;
+  password: string;
+}
+
+export interface RouterState {
+  credentials?: AuthCredentials;
+  sessionInfo?: SessionInfo;
+  auth?: Authorization;
+  scopePipeline: ScopePipeline;
+  guard: SecurityGuard;
+}
 
 declare module "@Core/common/controller/base.ts" {
   interface IRouterContextExtendor {
-    state: {
-      credentials?: {
-        username: string;
-        password: string;
-      };
-      sessionInfo?: SessionInfo;
-      auth?: Authorization;
-      scopePipeline: ScopePipeline;
-      guard: SecurityGuard;
-    };
+    state: RouterState;
   }
 }

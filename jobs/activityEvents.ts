@@ -111,9 +111,36 @@ export default () => {
     async (event) => {
       const Request = event.detail.ctx;
 
-      if (Request.router.state.setFcmDeviceToken) {
+      if (Request.router.state.updateFcmDeviceTokens) {
         const User = await UserModel.findOne(
-          Request.router.state.setFcmDeviceToken,
+          Request.router.state.updateFcmDeviceTokens,
+        ).project({ _id: 1, fcmDeviceTokens: 1 });
+
+        if (User) {
+          const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
+
+          await Notifier.subscribers.setCredentials(
+            User._id.toString(),
+            PushProviderIdEnum.FCM,
+            { deviceTokens: User.fcmDeviceTokens },
+          );
+        }
+      }
+    },
+  );
+
+  Events.listen<{
+    ctx: IRequestContext<RouterContext<string>>;
+    res: Response<ReturnType<typeof OauthController.createOauthAccessTokens>>;
+  }>(
+    EventChannel.REQUEST,
+    "oauth.logout",
+    async (event) => {
+      const Request = event.detail.ctx;
+
+      if (Request.router.state.updateFcmDeviceTokens) {
+        const User = await UserModel.findOne(
+          Request.router.state.updateFcmDeviceTokens,
         ).project({ _id: 1, fcmDeviceTokens: 1 });
 
         if (User) {

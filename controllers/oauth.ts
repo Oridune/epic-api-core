@@ -803,8 +803,8 @@ export default class OauthController extends BaseController {
 
         // Push Device Token
         if (Body.fcmDeviceToken) {
-          // Background event may fetch the data based on this boolean
-          ctx.router.state.setFcmDeviceToken = Session.createdBy;
+          // Background event may fetch the data based on this userId
+          ctx.router.state.updateFcmDeviceTokens = Session.createdBy;
 
           await UserModel.updateOne(Session.createdBy, {
             $addToSet: {
@@ -1057,45 +1057,6 @@ export default class OauthController extends BaseController {
     });
   }
 
-  @Delete("/logout/")
-  public logout() {
-    // Define Query Schema
-    const QuerySchema = e.object(
-      {
-        allDevices: e.optional(e.boolean({ cast: true })),
-      },
-      { allowUnexpectedProps: true },
-    );
-
-    return Versioned.add("1.0.0", {
-      postman: {
-        query: QuerySchema.toSample(),
-      },
-      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (!ctx.router.state.auth?.sessionId) {
-          ctx.router.throw(Status.Unauthorized);
-        }
-
-        // Query Validation
-        const Query = await QuerySchema.validate(
-          Object.fromEntries(ctx.router.request.url.searchParams),
-          { name: "users.query" },
-        );
-
-        // Delete OauthSession
-        if (Query.allDevices) {
-          await OauthSessionModel.deleteMany({
-            createdBy: new ObjectId(ctx.router.state.auth.userId),
-          });
-        } else {await OauthSessionModel.deleteOne(
-            ctx.router.state.auth.sessionId,
-          );}
-
-        return Response.true();
-      },
-    });
-  }
-
   @Post("/permit/")
   public createPermit(route: IRoute) {
     // Define Body Schema
@@ -1173,6 +1134,60 @@ export default class OauthController extends BaseController {
             expiresInSeconds: Body.ttl,
           }),
         );
+      },
+    });
+  }
+
+  @Delete("/logout/")
+  public logout() {
+    // Define Query Schema
+    const QuerySchema = e.object(
+      {
+        allDevices: e.optional(e.boolean({ cast: true })),
+        fcmDeviceToken: e.optional(e.string()),
+      },
+      { allowUnexpectedProps: true },
+    );
+
+    return Versioned.add("1.0.0", {
+      postman: {
+        query: QuerySchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth?.sessionId) {
+          ctx.router.throw(Status.Unauthorized);
+        }
+
+        // Query Validation
+        const Query = await QuerySchema.validate(
+          Object.fromEntries(ctx.router.request.url.searchParams),
+          { name: "users.query" },
+        );
+
+        // Delete OauthSession
+        if (Query.allDevices) {
+          await OauthSessionModel.deleteMany({
+            createdBy: new ObjectId(ctx.router.state.auth.userId),
+          });
+        } else {
+          await OauthSessionModel.deleteOne(
+            ctx.router.state.auth.sessionId,
+          );
+        }
+
+        if (Query.allDevices || Query.fcmDeviceToken) {
+          // Background event may fetch the data based on this userId
+          ctx.router.state.updateFcmDeviceTokens = ctx.router.state.auth.userId;
+
+          await UserModel.updateOne(
+            ctx.router.state.auth.userId,
+            Query.allDevices
+              ? { fcmDeviceTokens: [] as string[] }
+              : { $pull: { fcmDeviceTokens: Query.fcmDeviceToken! } },
+          );
+        }
+
+        return Response.true();
       },
     });
   }
