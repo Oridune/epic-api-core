@@ -1,19 +1,21 @@
 import {
-  Controller,
   BaseController,
+  Controller,
+  Delete,
   Get,
+  type IRequestContext,
+  type IRoute,
   Put,
   RequestMethod,
-  Versioned,
   Response,
-  type IRoute,
-  type IRequestContext,
+  Versioned,
 } from "@Core/common/mod.ts";
 import { type RouterContext } from "oak";
 import e from "validator";
-import { Uploads, AwsS3ACLs } from "@Lib/uploads/mod.ts";
-import { TFileOutput } from "@Models/file.ts";
+import { AwsS3ACLs, Uploads } from "@Lib/uploads/mod.ts";
+import { TFileInput, TFileOutput } from "@Models/file.ts";
 import OauthController, { TokenPayload } from "@Controllers/oauth.ts";
+import { Status } from "https://deno.land/std@0.193.0/http/http_status.ts";
 
 export type SignUploadOptions = {
   allowedContentTypes?: string[] | RegExp;
@@ -22,8 +24,8 @@ export type SignUploadOptions = {
   location?:
     | string
     | ((
-        ctx: IRequestContext<RouterContext<string>>
-      ) => string | Promise<string>);
+      ctx: IRequestContext<RouterContext<string>>,
+    ) => string | Promise<string>);
   expiresInMs?: number;
 };
 
@@ -31,19 +33,18 @@ export type SignUploadOptions = {
 export default class UploadsController extends BaseController {
   static UploadTokenType = "upload_request";
 
-  @Get("/")
+  @Get("/sign/")
   static sign(route: IRoute, options?: SignUploadOptions) {
     // Define Query Schema
     const QuerySchema = e
       .object({
         name: e.optional(e.string().max(50)),
         alt: e.optional(e.string().max(50)),
-        contentType:
-          options?.allowedContentTypes instanceof Array
-            ? e.in(options.allowedContentTypes)
-            : e
-                .string()
-                .matches(options?.allowedContentTypes ?? /^\w+\/[-+.\w]+$/),
+        contentType: options?.allowedContentTypes instanceof Array
+          ? e.in(options.allowedContentTypes)
+          : e
+            .string()
+            .matches(options?.allowedContentTypes ?? /^\w+\/[-+.\w]+$/),
         contentLength: e.number({ cast: true }).amount({
           min: options?.minContentLength,
           max: options?.maxContentLength,
@@ -52,7 +53,7 @@ export default class UploadsController extends BaseController {
       .rest(e.any);
 
     // Define Params Schema
-    const ParamsSchema = e.record(e.string);
+    const ParamsSchema = e.record(e.string());
 
     return Versioned.add("1.0.0", {
       postman: {
@@ -63,7 +64,7 @@ export default class UploadsController extends BaseController {
         // Query Validation
         const Query = await QuerySchema.validate(
           Object.fromEntries(ctx.router.request.url.searchParams),
-          { name: `${route.scope}.query` }
+          { name: `${route.scope}.query` },
         );
 
         // Params Validation
@@ -71,12 +72,11 @@ export default class UploadsController extends BaseController {
           name: `${route.scope}.params`,
         });
 
-        let Location =
-          typeof options?.location === "function"
-            ? await options.location(ctx)
-            : typeof options?.location === "string"
-            ? options.location
-            : "/public/";
+        let Location = typeof options?.location === "function"
+          ? await options.location(ctx)
+          : typeof options?.location === "string"
+          ? options.location
+          : "/public/";
 
         const Injection: Record<string, unknown> = {
           ...ctx.router.state.auth,
@@ -84,8 +84,10 @@ export default class UploadsController extends BaseController {
           ...Params,
         };
 
-        Location = Location.replace(/{{\s*([^{}\s]*)\s*}}/g, (match, key) =>
-          Injection[key] !== undefined ? `${Injection[key]}` : match
+        Location = Location.replace(
+          /{{\s*([^{}\s]*)\s*}}/g,
+          (match, key) =>
+            Injection[key] !== undefined ? `${Injection[key]}` : match,
         );
 
         const { name, alt, contentType, contentLength, ...restQuery } = Query;
@@ -114,7 +116,8 @@ export default class UploadsController extends BaseController {
                   ...Params,
                 },
               },
-              secret: `${ctx.router.state.auth?.accountId}:${ctx.router.state.auth?.userId}`,
+              secret:
+                `${ctx.router.state.auth?.accountId}:${ctx.router.state.auth?.userId}`,
               expiresInSeconds: UploadRequest.expiresInSeconds + 30,
             })
           ).token,
@@ -125,68 +128,93 @@ export default class UploadsController extends BaseController {
 
   @Get("/")
   @Put("/")
+  @Delete("/")
   static upload<T extends TokenPayload>(
     route: IRoute,
     options?: SignUploadOptions,
     onSuccess?: (
       ctx: IRequestContext<RouterContext<string>>,
-      file: TFileOutput,
-      metadata: T
-    ) => Promise<Response | void> | void
+      file: TFileInput,
+      metadata: T,
+    ) => Promise<Response | void> | void,
+    onDelete?: (
+      ctx: IRequestContext<RouterContext<string>>,
+      deleteObject: typeof Uploads["deleteObject"],
+    ) => Promise<Response | void> | void,
   ) {
-    if (route.options.method === RequestMethod.GET)
-      return UploadsController.sign(route, options);
+    switch (route.options.method) {
+      case RequestMethod.GET:
+        return UploadsController.sign(route, options);
 
-    if (route.options.method === RequestMethod.PUT) {
-      // Define Body Schema
-      const BodySchema = e
-        .object(
-          {
-            token: e
-              .string()
-              .custom((ctx) =>
-                OauthController.verifyToken<TFileOutput>({
-                  token: ctx.output,
-                  type: UploadsController.UploadTokenType,
-                  secret: `${ctx.context?.accountId}:${ctx.context?.userId}`,
-                })
-              )
-              .checkpoint(),
+      case RequestMethod.PUT: {
+        // Define Body Schema
+        const BodySchema = e
+          .object(
+            {
+              token: e
+                .string()
+                .custom((ctx) =>
+                  OauthController.verifyToken<TFileOutput>({
+                    token: ctx.output,
+                    type: UploadsController.UploadTokenType,
+                    secret: `${ctx.context?.accountId}:${ctx.context?.userId}`,
+                  })
+                )
+                .checkpoint(),
+            },
+            { allowUnexpectedProps: true },
+          )
+          .custom(async (ctx) => {
+            if (!(await Uploads.objectExists(ctx.output.token.url))) {
+              throw new Error(`File is not uploaded yet!`);
+            }
+          });
+
+        return Versioned.add("1.0.0", {
+          postman: {
+            body: BodySchema.toSample(),
           },
-          { allowUnexpectedProps: true }
-        )
-        .custom(async (ctx) => {
-          if (!(await Uploads.objectExists(ctx.output.token.url)))
-            throw new Error(`File is not uploaded yet!`);
+          handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+            // Body Validation
+            const Body = await BodySchema.validate(
+              await ctx.router.request.body({ type: "json" }).value,
+              { name: `${route.scope}.body`, context: ctx.router.state.auth },
+            );
+
+            const Upload = {
+              createdBy: ctx.router.state.auth?.userId,
+              name: Body.token.name,
+              url: Body.token.url,
+              mimeType: Body.token.mimeType,
+              sizeInBytes: Body.token.sizeInBytes,
+              alt: Body.token.alt,
+            };
+
+            return (
+              (await onSuccess?.(ctx, Upload, Body.token.metadata as T)) ??
+                Response.data(Upload)
+            );
+          },
+        });
+      }
+
+      case RequestMethod.DELETE:
+        return Versioned.add("1.0.0", {
+          handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+            if (typeof onDelete !== "function") {
+              ctx.router.throw(
+                Status.MethodNotAllowed,
+                "This method is not available yet!",
+              );
+            }
+
+            return (await onDelete(ctx, Uploads.deleteObject) ??
+              Response.true());
+          },
         });
 
-      return Versioned.add("1.0.0", {
-        postman: {
-          body: BodySchema.toSample(),
-        },
-        handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-          // Body Validation
-          const Body = await BodySchema.validate(
-            await ctx.router.request.body({ type: "json" }).value,
-            { name: `${route.scope}.body`, context: ctx.router.state.auth }
-          );
-
-          const Upload = {
-            name: Body.token.name,
-            url: Body.token.url,
-            mimeType: Body.token.mimeType,
-            sizeInBytes: Body.token.sizeInBytes,
-            alt: Body.token.alt,
-          };
-
-          return (
-            (await onSuccess?.(ctx, Upload, Body.token.metadata as T)) ??
-            Response.data(Upload)
-          );
-        },
-      });
+      default:
+        throw new Error("Unsupported upload method!");
     }
-
-    throw new Error("Unsupported upload method!");
   }
 }
