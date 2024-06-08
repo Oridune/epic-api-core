@@ -3,7 +3,7 @@ import { Database } from "@Database";
 import * as bcrypt from "bcrypt";
 import { ClientSession, ObjectId } from "mongo";
 import { WalletModel } from "@Models/wallet.ts";
-import { TransactionModel, TransactionStatus } from "@Models/transaction.ts";
+import { TransactionModel } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
 import { Events } from "@Core/common/events.ts";
 
@@ -291,11 +291,6 @@ export class Wallet {
     description?: string | Record<string, string>;
 
     /**
-     * Initial status of the transfer
-     */
-    status?: TransactionStatus;
-
-    /**
      * Which method was used for 3D verification (Also indicates if a 3D verification has been taken or not)
      */
     methodOf3DSecurity?: string;
@@ -329,21 +324,8 @@ export class Wallet {
       throw new Error(`Please provide a valid non-zero positive amount!`);
     }
 
-    if (
-      options.sessionId &&
-      (await TransactionModel.count({ sessionId: options.sessionId }))
-    ) {
-      throw new Error(`Cannot transfer in the same session again!`);
-    }
-
     const Reference = options.reference ??
       `TX${10000 + (await Store.incr("wallet-transaction-reference"))}`;
-
-    if (await TransactionModel.count({ reference: Reference })) {
-      throw new Error(
-        `A payment with the same transaction reference '${Reference}' already exists!`,
-      );
-    }
 
     const FromName = options.fromName instanceof Array
       ? options.fromName.filter(Boolean).join(" ")
@@ -401,80 +383,76 @@ export class Wallet {
           overdraftLimit: options.overdraftLimit,
         },
       ))
-    ) {
-      throw new Error(`Insufficient balance!`);
-    }
+    ) throw new Error(`Insufficient balance!`);
 
     const WalletB = await this.get(To, {
       type: Type,
       currency: Currency,
     });
 
-    const Result = await Database.transaction(async (session) => {
-      // Create a Transaction
-      const Transaction = await TransactionModel.create({
-        sessionId: options.sessionId,
-        reference: Reference,
-        foreignRefType: options.foreignRefType,
-        foreignRef: options.foreignRef,
-        fromName: FromName,
-        from: From,
-        sender: options.sender,
-        toName: ToName,
-        to: To,
-        receiver: options.receiver,
-        description: options.description,
-        type: Type,
-        currency: Currency,
-        methodOf3DSecurity: options.methodOf3DSecurity,
-        amount: options.amount,
-        status: options.status ?? TransactionStatus.COMPLETED,
-        isRefund: options.isRefund,
-        metadata: options.metadata,
-        createdBy: options.user ?? options.sender,
-      });
+    WalletA.balance -= options.amount;
+    WalletB.balance += options.amount;
 
-      // Debit Balance
-      WalletA.balance -= Transaction.amount;
-      WalletA.digest = await this.createBalanceDigest(
+    const [WalletADigest, WalletBDigest] = await Promise.all([
+      this.createBalanceDigest(
         WalletA.account,
         WalletA.type,
         WalletA.currency,
         WalletA.balance,
-      );
+      ),
+      this.createBalanceDigest(
+        WalletB.account,
+        WalletB.type,
+        WalletB.currency,
+        WalletB.balance,
+      ),
+    ]);
 
+    const Result = await Database.transaction(async (session) => {
+      // Debit Balance
       await WalletModel.updateOne(
-        { _id: WalletA._id },
+        WalletA._id,
         {
           balance: WalletA.balance,
-          digest: WalletA.digest,
+          digest: WalletADigest,
         },
         { session },
       );
 
       // Credit Balance
-      if (Transaction.status === TransactionStatus.COMPLETED) {
-        WalletB.balance += Transaction.amount;
-        WalletB.digest = await this.createBalanceDigest(
-          WalletB.account,
-          WalletB.type,
-          WalletB.currency,
-          WalletB.balance,
-        );
-
-        await WalletModel.updateOne(
-          { _id: WalletB._id },
-          {
-            balance: WalletB.balance,
-            digest: WalletB.digest,
-          },
-          { session },
-        );
-      }
+      await WalletModel.updateOne(
+        WalletB._id,
+        {
+          balance: WalletB.balance,
+          digest: WalletBDigest,
+        },
+        { session },
+      );
 
       return {
         wallets: [WalletA, WalletB] as const,
-        transaction: Transaction,
+
+        // Create a Transaction
+        transaction: await TransactionModel.create({
+          sessionId: options.sessionId,
+          reference: Reference,
+          foreignRefType: options.foreignRefType,
+          foreignRef: options.foreignRef,
+          fromName: FromName,
+          from: From,
+          sender: options.sender,
+          toName: ToName,
+          to: To,
+          receiver: options.receiver,
+          description: options.description,
+          type: Type,
+          currency: Currency,
+          methodOf3DSecurity: options.methodOf3DSecurity,
+          amount: options.amount,
+          isRefund: options.isRefund,
+          metadata: options.metadata,
+          createdBy: options.user ?? options.sender,
+        }, { session }),
       };
     }, options.databaseSession);
 
@@ -539,10 +517,7 @@ export class Wallet {
      */
     databaseSession?: ClientSession;
   }) {
-    const Transaction = await TransactionModel.findOne({
-      _id: new ObjectId(options.transactionId),
-      status: TransactionStatus.COMPLETED,
-    });
+    const Transaction = await TransactionModel.findOne(options.transactionId);
 
     if (!Transaction) throw new Error("A completed transaction was not found!");
 
