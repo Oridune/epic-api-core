@@ -3,6 +3,7 @@ import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 
 export enum OauthProvider {
   LOCAL = "local",
+  PASSKEY = "passkey",
 }
 
 export const OauthSessionSchema = () =>

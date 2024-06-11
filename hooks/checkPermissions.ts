@@ -109,6 +109,7 @@ export default {
           ).project({
             password: 0,
             passwordHistory: 0,
+            passkey: 0,
             collaborates: 0,
           });
 

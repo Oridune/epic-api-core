@@ -1,7 +1,10 @@
 import { Typography, Link } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import Logo from "../../assets/logo.png";
 
-export const Credits = () => {
+export const Credits: React.FC<{ message?: string }> = ({ message }) => {
+  const { t } = useTranslation();
+
   return (
     <Typography variant="body2" align="center" sx={{ mb: "20px" }}>
       <Link color="#e85d04" href="https://oridune.com" target="_blank">
@@ -12,7 +15,7 @@ export const Credits = () => {
           src={Logo}
           alt="Oridune"
         />{" "}
-        Powered by Oridune
+        {message ?? t("Powered by Oridune")}
       </Link>
     </Typography>
   );

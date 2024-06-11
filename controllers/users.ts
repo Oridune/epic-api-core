@@ -291,7 +291,6 @@ export default class UsersController extends BaseController {
           {
             password: Body.hashedPassword,
             $push: { passwordHistory: Body.hashedPassword },
-            isBlocked: false,
           },
         );
 
@@ -488,6 +487,7 @@ export default class UsersController extends BaseController {
           .project({
             password: 0,
             passwordHistory: 0,
+            passkey: 0,
           })
           .skip(Query.offset)
           .limit(Query.limit)
@@ -537,6 +537,7 @@ export default class UsersController extends BaseController {
           .project({
             password: 0,
             passwordHistory: 0,
+            passkey: 0,
           })
           .populate(
             "collaborates",

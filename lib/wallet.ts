@@ -214,6 +214,10 @@ export class Wallet {
     );
   }
 
+  static roundTwo(amount: number) {
+    return Math.round((amount + Number.EPSILON) * 100) / 100;
+  }
+
   static async transfer(options: {
     /**
      * A sessionId can be used to identify a unique payment session.
@@ -324,6 +328,9 @@ export class Wallet {
       throw new Error(`Please provide a valid non-zero positive amount!`);
     }
 
+    // Fix floating-point errors
+    const Amount = this.roundTwo(options.amount);
+
     const Reference = options.reference ??
       `TX${10000 + (await Store.incr("wallet-transaction-reference"))}`;
 
@@ -351,13 +358,13 @@ export class Wallet {
     const MinTransferAmount = parseFloat(MinTransfer ?? "1");
     const MaxTransferAmount = parseFloat(MaxTransfer ?? "1e500");
 
-    if (options.amount < MinTransferAmount) {
+    if (Amount < MinTransferAmount) {
       throw new Error(
         `Minimum transfer amount required is ${MinTransferAmount}`,
       );
     }
 
-    if (options.amount > MaxTransferAmount) {
+    if (Amount > MaxTransferAmount) {
       throw new Error(
         `Maximum transfer amount allowed is ${MaxTransferAmount}`,
       );
@@ -368,16 +375,15 @@ export class Wallet {
       currency: Currency,
     });
 
-    // Check to allow negative balance
-    const PostTransactionBalance = WalletA.balance - options.amount;
+    WalletA.balance = this.roundTwo(WalletA.balance - Amount);
 
     if (
-      PostTransactionBalance < 0 &&
+      WalletA.balance < 0 &&
       !(await this.hasOverdraftMargin(
         From,
         Type,
         Currency,
-        PostTransactionBalance,
+        WalletA.balance,
         {
           skipAccountCheck: options.allowOverdraft,
           overdraftLimit: options.overdraftLimit,
@@ -390,8 +396,7 @@ export class Wallet {
       currency: Currency,
     });
 
-    WalletA.balance -= options.amount;
-    WalletB.balance += options.amount;
+    WalletB.balance = this.roundTwo(WalletB.balance + Amount);
 
     const [WalletADigest, WalletBDigest] = await Promise.all([
       this.createBalanceDigest(
@@ -448,7 +453,7 @@ export class Wallet {
           type: Type,
           currency: Currency,
           methodOf3DSecurity: options.methodOf3DSecurity,
-          amount: options.amount,
+          amount: Amount,
           isRefund: options.isRefund,
           metadata: options.metadata,
           createdBy: options.user ?? options.sender,

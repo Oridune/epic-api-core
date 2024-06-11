@@ -41,7 +41,8 @@
     "dfs": "jsr:@std/fs@0.223.0",
     "ejs": "npm:ejs@3.1.10",
     "i18next": "https://deno.land/x/i18next@v23.11.3/index.js",
-    "lngParser": "npm:accept-language-parser@^1.5.0"
+    "lngParser": "npm:accept-language-parser@^1.5.0",
+    "simplewebauthn": "https://deno.land/x/simplewebauthn@v10.0.0/deno/server.ts"
   },
   "scopes": {}
 }

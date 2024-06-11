@@ -105,11 +105,43 @@ export const OauthAccessExpirySecond = parseInt(
   ) ?? "86400", // 1d
 );
 
+export const AuthenticationSchema = () =>
+  e.object({
+    oauthAppId: e.string().checkpoint(),
+    oauthApp: e
+      .any()
+      .custom(async (ctx) => {
+        const App = await OauthAppModel.findOne(
+          ctx.parent!.output.oauthAppId,
+        ).project({
+          _id: 1,
+          "consent.allowedCallbackURLs": 1,
+        });
+
+        if (!App) throw new Error("Invalid oauth app id!");
+        return App;
+      })
+      .checkpoint(),
+    callbackURL: e.string().custom((ctx) => {
+      if (
+        !ctx.parent?.output.oauthApp.consent.allowedCallbackURLs.includes(
+          new URL(ctx.output).toString(),
+        )
+      ) {
+        throw "Return host not allowed!";
+      }
+    }),
+    codeChallenge: e.optional(e.string().length({ min: 1, max: 500 })),
+    codeChallengeMethod: e.optional(e.in(Object.values(OauthPKCEMethod))),
+    remember: e.optional(e.boolean({ cast: true })).default(false),
+  });
+
 @Controller("/oauth/", { group: "Oauth", name: "oauth" })
 export default class OauthController extends BaseController {
   static DefaultOauthIssuer = DefaultOauthIssuer;
   static DefaultOauthAudience = DefaultOauthAudience;
 
+  static DefaultOauthTokenExpirySecond = OauthTokenExpirySecond;
   static DefaultOauthAuthenticationExpirySeconds =
     OauthAuthenticationExpirySecond;
   static DefaultOauthCodeExpirySeconds = OauthCodeExpirySecond;
@@ -141,7 +173,7 @@ export default class OauthController extends BaseController {
       .setAudience(Audience)
       .setIssuedAt();
 
-    if (ExpiresAtSeconds !== Infinity) {
+    if (!isNaN(ExpiresAtSeconds) && ExpiresAtSeconds !== Infinity) {
       Signer.setExpirationTime(ExpiresAtSeconds);
     }
 
@@ -233,7 +265,7 @@ export default class OauthController extends BaseController {
         issuer: opts.issuer,
         audience: opts.audience,
         expiresInSeconds: opts.expiresInSeconds ??
-          OauthController.DefaultOauthAccessExpirySeconds * 2,
+          OauthController.DefaultOauthTokenExpirySecond * 2,
       }),
     };
   }
@@ -553,35 +585,7 @@ export default class OauthController extends BaseController {
   })
   public authenticate() {
     // Define Body Schema
-    const BodySchema = e.object({
-      oauthAppId: e.string().checkpoint(),
-      oauthApp: e
-        .any()
-        .custom(async (ctx) => {
-          const App = await OauthAppModel.findOne(
-            ctx.parent!.output.oauthAppId,
-          ).project({
-            _id: 1,
-            "consent.allowedCallbackURLs": 1,
-          });
-
-          if (!App) throw new Error("Invalid oauth app id!");
-          return App;
-        })
-        .checkpoint(),
-      callbackURL: e.string().custom((ctx) => {
-        if (
-          !ctx.parent?.output.oauthApp.consent.allowedCallbackURLs.includes(
-            new URL(ctx.output).toString(),
-          )
-        ) {
-          throw "Return host not allowed!";
-        }
-      }),
-      codeChallenge: e.optional(e.string().length({ min: 1, max: 500 })),
-      codeChallengeMethod: e.optional(e.in(Object.values(OauthPKCEMethod))),
-      remember: e.optional(e.boolean({ cast: true })).default(false),
-    });
+    const BodySchema = AuthenticationSchema();
 
     return Versioned.add("1.0.0", {
       postman: {
@@ -605,7 +609,7 @@ export default class OauthController extends BaseController {
         );
 
         const User = await UserModel.findOne(
-          ((await Env.get("ALLOW_CROSS_APP_AUTH", true)) ?? "0") === "1"
+          (await Env.enabled("ALLOW_CROSS_APP_AUTH"))
             ? { username: Credentials.username }
             : {
               oauthApp: new ObjectId(Body.oauthAppId),
@@ -616,29 +620,27 @@ export default class OauthController extends BaseController {
           username: 1,
           password: 1,
           failedLoginAttempts: 1,
-          loginCount: 1,
           isBlocked: 1,
         });
 
         login: if (User) {
           if (User.isBlocked) {
-            return Response.status(false).message(
-              "You have been blocked! Please reset your password.",
-            );
+            return Response.status(false).message("You have been blocked!");
           }
 
           // Authentication will always fail even if the password is correct, if multiple wrong attempts found!
           if (
-            User.failedLoginAttempts > 5 ||
+            User.failedLoginAttempts >
+              parseInt(
+                await Env.get("OAUTH_FAILED_LOGIN_LIMIT", true) ?? "5",
+              ) ||
             !(await bcrypt.compare(Credentials.password, User.password))
-          ) {
-            break login;
-          }
+          ) break login;
 
           // Update User
           await UserModel.updateOne(User._id, {
+            $inc: { loginCount: 1 },
             failedLoginAttempts: 0,
-            loginCount: User.loginCount + 1,
             deletionAt: null,
           });
 
@@ -661,7 +663,7 @@ export default class OauthController extends BaseController {
           { $inc: { failedLoginAttempts: 1 } },
         );
 
-        e.error("Invalid username or password!");
+        throw e.error("Invalid credentials provided!");
       },
     });
   }

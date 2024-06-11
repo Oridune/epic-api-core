@@ -15,6 +15,7 @@
     "@mui/icons-material": "^5.10.16",
     "@mui/material": "^5.10.17",
     "@oridune/validator": "^0.1.2",
+    "@simplewebauthn/browser": "^10.0.0",
     "@types/react-helmet": "^6.1.11",
     "axios": "^1.2.1",
     "framer-motion": "^8.1.7",

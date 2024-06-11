@@ -139,12 +139,13 @@ export const ContactsPage = () => {
           setVerificationMethod(null);
           if (Params.username) await fetchContacts(Params.username);
         } else setErrorMessage(Response.data.messages[0].message);
-      } catch (error) {
+      } catch (error: any) {
         console.error(error);
         if (error instanceof AxiosError)
           setErrorMessage(
             error.response?.data.messages[0].message ?? error.message
           );
+        else setErrorMessage(error?.message ?? "Something went wrong!!!");
       }
 
     setLoading(false);
