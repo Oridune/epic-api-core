@@ -487,7 +487,7 @@ export default class UsersController extends BaseController {
           .project({
             password: 0,
             passwordHistory: 0,
-            passkey: 0,
+            passkeys: 0,
           })
           .skip(Query.offset)
           .limit(Query.limit)
@@ -537,7 +537,10 @@ export default class UsersController extends BaseController {
           .project({
             password: 0,
             passwordHistory: 0,
-            passkey: 0,
+            "passkeys.publicKey": 0,
+            "passkeys.counter": 0,
+            "passkeys.deviceType": 0,
+            "passkeys.backedUp": 0,
           })
           .populate(
             "collaborates",
