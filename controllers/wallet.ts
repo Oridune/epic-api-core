@@ -1,6 +1,7 @@
 import {
   BaseController,
   Controller,
+  Delete,
   Env,
   EnvType,
   Get,
@@ -508,6 +509,37 @@ export default class WalletController extends BaseController {
             ? await TransactionModel.count(TransactionListBaseConditions)
             : undefined,
           results: await TransactionListQuery,
+        });
+      },
+    });
+  }
+
+  @Delete("/refund/:id/")
+  public refund(route: IRoute) {
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      id: e.string(),
+    });
+
+    return new Versioned().add("1.0.0", {
+      postman: {
+        params: ParamsSchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
+
+        const Transfer = await Wallet.refund({
+          transactionId: Params.id,
+          user: ctx.router.state.auth.userId,
+        });
+
+        return Response.data({
+          transaction: Transfer.transaction,
         });
       },
     });

@@ -1,6 +1,10 @@
 import e, { inferInput, inferOutput } from "validator";
 import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 
+export enum TransactionStatus {
+  COMPLETED = "completed",
+}
+
 export const TransactionSchema = () =>
   e.object({
     _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
@@ -23,6 +27,9 @@ export const TransactionSchema = () =>
     currency: e.string(),
     amount: e.number({ cast: true }),
     methodOf3DSecurity: e.optional(e.string()),
+    status: e.optional(e.in(Object.values(TransactionStatus))).default(
+      TransactionStatus.COMPLETED,
+    ),
     isRefund: e.optional(e.boolean()),
     metadata: e.optional(e.record(e.or([e.number(), e.boolean(), e.string()]))),
   });
