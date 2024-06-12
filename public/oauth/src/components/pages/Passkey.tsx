@@ -20,7 +20,6 @@ import { red, green } from "@mui/material/colors";
 import { motion } from "framer-motion";
 import axios, { AxiosError } from "../utils/axios";
 import { useTranslation } from "react-i18next";
-import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { startRegistration } from "@simplewebauthn/browser";
 
 import { useOauthApp } from "../context/OauthApp";
@@ -31,14 +30,10 @@ import Logo from "../../assets/logo.png";
 import { Passkey } from "../icons/Passkey";
 
 export const PasskeyPage = () => {
-  const Params = useParams();
   const Location = useLocation();
   const [Query] = useSearchParams();
 
-  const { app, integrations } = useOauthApp();
-  const { executeRecaptcha } = integrations.reCaptchaV3
-    ? useGoogleReCaptcha()
-    : { executeRecaptcha: () => {} };
+  const { app } = useOauthApp();
 
   if (!app?.consent.passkeyEnabled)
     return <Navigate to={`/login/${window.location.search}`} />;
@@ -63,12 +58,10 @@ export const PasskeyPage = () => {
 
     try {
       const PasskeyChallenge = await axios.get(
-        "/api/oauth/passkey/challenge/",
+        "/api/oauth/passkey/challenge/register/",
         {
-          params: {
-            username: Params.username,
-            register: true,
-            reCaptchaV3Token: await executeRecaptcha?.("passkeyChallenge"),
+          headers: {
+            Authorization: `Permit ${Query.get("permit")}`,
           },
         }
       );
@@ -80,14 +73,11 @@ export const PasskeyPage = () => {
         );
 
       const VerifyResponse = await axios.post(
-        "/api/oauth/passkey/challenge/verify/",
+        "/api/oauth/passkey/register/",
         {
           credentials: await startRegistration(
             PasskeyChallenge.data.data.challenge
-          ).catch((error) => {
-            console.error(error);
-            throw new Error("Operation timed out or cancelled!");
-          }),
+          ),
         },
         {
           headers: {

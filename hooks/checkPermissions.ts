@@ -109,7 +109,10 @@ export default {
           ).project({
             password: 0,
             passwordHistory: 0,
-            passkey: 0,
+            "passkeys.publicKey": 0,
+            "passkeys.counter": 0,
+            "passkeys.deviceType": 0,
+            "passkeys.backedUp": 0,
             collaborates: 0,
           });
 

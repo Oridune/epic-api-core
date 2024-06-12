@@ -37,7 +37,7 @@ export const AppRoutes = () => {
             element: <ContactsPage />,
           },
           {
-            path: "/passkey/:username",
+            path: "/passkey/setup/",
             element: <PasskeyPage />,
           },
           {

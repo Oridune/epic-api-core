@@ -135,7 +135,7 @@ export const LoginPage = () => {
         });
       } else {
         const PasskeyChallenge = await axios.get(
-          "/api/oauth/passkey/challenge/",
+          "/api/oauth/passkey/challenge/login/",
           {
             params: {
               username: data.username,

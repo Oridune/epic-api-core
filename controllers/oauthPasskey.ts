@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import {
   BaseController,
   Controller,
@@ -19,6 +20,7 @@ import {
   verifyAuthenticationResponse,
   verifyRegistrationResponse,
 } from "simplewebauthn";
+import { isoBase64URL } from "simplewebauthn/helpers";
 
 import verifyHuman from "@Middlewares/verifyHuman.ts";
 import { UserModel, UsernameValidator } from "@Models/user.ts";
@@ -27,58 +29,45 @@ import { OauthProvider } from "@Models/oauthSession.ts";
 
 @Controller("/oauth/passkey/", { name: "oauthPasskey" })
 export default class OauthPasskeyController extends BaseController {
-  @Get("/challenge/", {
-    middlewares: () => [verifyHuman()],
+  @Get("/challenge/register/", {
     disabled: !Env.enabledSync("ENABLE_PASSKEY_AUTH"),
   })
-  public challenge(route: IRoute) {
-    // Define Query Schema
-    const QuerySchema = e.object({
-      register: e.boolean({ cast: true }),
-      username: UsernameValidator(),
-    }, { allowUnexpectedProps: true });
-
+  public challengeRegister(_: IRoute) {
     return new Versioned().add("1.0.0", {
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        // Query Validation
-        const Query = await QuerySchema.validate(
-          Object.fromEntries(ctx.router.request.url.searchParams),
-          { name: `${route.scope}.query` },
-        );
+        const Auth = ctx.router.state.auth;
+
+        if (!Auth) ctx.router.throw(Status.Unauthorized);
 
         const Referer = new URL(
           ctx.router.request.headers.get("referer") ?? "localhost",
         );
 
-        const Challenge = Query.register
-          ? await generateRegistrationOptions({
-            rpName: await Env.get("DISPLAY_NAME"),
-            rpID: Referer.hostname,
-            userName: Query.username,
-            attestationType: "none",
-          })
-          : await generateAuthenticationOptions({
-            rpID: Referer.hostname,
-            allowCredentials: await (async () => {
-              const { passkey } = await UserModel.findOneOrFail({
-                username: Query.username,
-              })
-                .project({ passkey: 1 });
-
-              return [{
-                id: passkey.id,
-                transports: passkey.transports,
-              }];
-            })(),
-          });
+        const Challenge = await generateRegistrationOptions({
+          rpName: await Env.get("DISPLAY_NAME"),
+          rpID: Referer.hostname,
+          userID: new TextEncoder().encode(Auth.userId),
+          userName: Auth.user.username,
+          userDisplayName: [Auth.user.fname, Auth.user.mname, Auth.user.lname]
+            .filter(Boolean).join(" "),
+          attestationType: "none",
+          authenticatorSelection: {
+            authenticatorAttachment: "platform",
+            requireResidentKey: true,
+          },
+          excludeCredentials: Auth.user.passkeys?.map((passkey) => ({
+            id: passkey.id,
+            transports: passkey.transports as any,
+          })) ?? [],
+        });
 
         await Store.set(
           [
             "passkeyChallenge",
-            Query.register ? "register" : "login",
-            Query.username,
+            "register",
+            Auth.user.username,
           ].join(":"),
-          Challenge,
+          Challenge.challenge,
           {
             expiresInMs: 1000 * 60 * 10, // 10 minutes
           },
@@ -89,10 +78,10 @@ export default class OauthPasskeyController extends BaseController {
     });
   }
 
-  @Post("/challenge/verify/", {
+  @Post("/register/", {
     disabled: !Env.enabledSync("ENABLE_PASSKEY_AUTH"),
   })
-  public verifyChallenge(route: IRoute) {
+  public register(route: IRoute) {
     // Define Body Schema
     const BodySchema = e.object({
       credentials: e.object({
@@ -112,23 +101,17 @@ export default class OauthPasskeyController extends BaseController {
         body: BodySchema.toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+        const Auth = ctx.router.state.auth;
 
-        if (ctx.router.state.auth.user.passkeyEnabled) {
-          throw e.error("Passkey is already enabled!");
-        }
+        if (!Auth) ctx.router.throw(Status.Unauthorized);
 
         const ChallengeKey = [
           "passkeyChallenge",
           "register",
-          ctx.router.state.auth.user.username,
+          Auth.user.username,
         ].join(":");
 
-        const Challenge = await Store.get<
-          Awaited<ReturnType<typeof generateRegistrationOptions>>
-        >(
-          ChallengeKey,
-        );
+        const Challenge = await Store.get<string>(ChallengeKey);
 
         if (!Challenge) {
           throw e.error("You didn't initiate a challenge or it is expired!");
@@ -146,33 +129,37 @@ export default class OauthPasskeyController extends BaseController {
 
         const { verified, registrationInfo } = await verifyRegistrationResponse(
           {
-            expectedChallenge: Challenge.challenge,
+            expectedChallenge: Challenge,
             expectedOrigin: Referer.origin,
             expectedRPID: Referer.hostname,
             response: Body.credentials,
+            requireUserVerification: false,
           },
         );
 
-        if (!verified) {
+        if (!verified || !registrationInfo) {
           throw e.error("Passkey credentials verification has failed!");
         }
 
         await UserModel.updateOneOrFail({
-          _id: new ObjectId(ctx.router.state.auth.userId),
+          _id: new ObjectId(Auth.userId),
           passkeyEnabled: {
             $ne: true,
           },
         }, {
-          passkey: {
-            id: registrationInfo?.credentialID,
-            webAuthnUserID: Challenge.user.id,
-            publicKey: registrationInfo?.credentialPublicKey,
-            counter: registrationInfo?.counter,
-            deviceType: registrationInfo?.credentialDeviceType,
-            backedUp: registrationInfo?.credentialBackedUp,
-            transports: Body.credentials.response.transports,
-          },
           passkeyEnabled: true,
+          $push: {
+            passkeys: {
+              id: registrationInfo.credentialID,
+              publicKey: isoBase64URL.fromBuffer(
+                registrationInfo.credentialPublicKey,
+              ),
+              counter: registrationInfo.counter,
+              deviceType: registrationInfo.credentialDeviceType,
+              backedUp: registrationInfo.credentialBackedUp,
+              transports: Body.credentials.response.transports,
+            },
+          },
         }).catch(() => {
           throw e.error("A passkey is already configured!");
         });
@@ -180,6 +167,58 @@ export default class OauthPasskeyController extends BaseController {
         await Store.del(ChallengeKey).catch(console.error);
 
         return Response.true();
+      },
+    });
+  }
+
+  @Get("/challenge/login/", {
+    middlewares: () => [verifyHuman()],
+    disabled: !Env.enabledSync("ENABLE_PASSKEY_AUTH"),
+  })
+  public challengeLogin(route: IRoute) {
+    // Define Query Schema
+    const QuerySchema = e.object({
+      username: UsernameValidator(),
+    }, { allowUnexpectedProps: true });
+
+    return new Versioned().add("1.0.0", {
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Query Validation
+        const Query = await QuerySchema.validate(
+          Object.fromEntries(ctx.router.request.url.searchParams),
+          { name: `${route.scope}.query` },
+        );
+
+        const User = await UserModel.findOne({
+          username: Query.username,
+          passkeyEnabled: true,
+        }).project({ passkeys: 1 });
+
+        const Referer = new URL(
+          ctx.router.request.headers.get("referer") ?? "localhost",
+        );
+
+        const Challenge = await generateAuthenticationOptions({
+          rpID: Referer.hostname,
+          allowCredentials: User?.passkeys?.map((passkey) => ({
+            id: passkey.id,
+            transports: passkey.transports as any,
+          })) ?? [],
+        });
+
+        await Store.set(
+          [
+            "passkeyChallenge",
+            "login",
+            Query.username,
+          ].join(":"),
+          Challenge.challenge,
+          {
+            expiresInMs: 1000 * 60 * 10, // 10 minutes
+          },
+        );
+
+        return Response.data({ challenge: Challenge });
       },
     });
   }
@@ -221,9 +260,7 @@ export default class OauthPasskeyController extends BaseController {
           Body.username,
         ].join(":");
 
-        const Challenge = await Store.get<
-          Awaited<ReturnType<typeof generateAuthenticationOptions>>
-        >(ChallengeKey);
+        const Challenge = await Store.get<string>(ChallengeKey);
 
         if (!Challenge) {
           throw e.error("You didn't initiate a challenge or it is expired!");
@@ -243,7 +280,8 @@ export default class OauthPasskeyController extends BaseController {
         ).project({
           _id: 1,
           username: 1,
-          passkey: 1,
+          passkeys: 1,
+          passkeyEnabled: 1,
           failedLoginAttempts: 1,
           isBlocked: 1,
         });
@@ -256,7 +294,7 @@ export default class OauthPasskeyController extends BaseController {
           }
 
           if (
-            !User.passkey ||
+            !User.passkeyEnabled || !(User.passkeys instanceof Array) ||
             User.failedLoginAttempts >
               parseInt(await Env.get("OAUTH_FAILED_LOGIN_LIMIT") ?? "5")
           ) break login;
@@ -265,17 +303,26 @@ export default class OauthPasskeyController extends BaseController {
             ctx.router.request.headers.get("referer") ?? "localhost",
           );
 
+          const Passkey = User.passkeys.find((passkey) =>
+            passkey.id === Body.credentials.id
+          );
+
+          if (!Passkey) break login;
+
           const { verified } = await verifyAuthenticationResponse({
-            expectedChallenge: Challenge.challenge,
+            response: Body.credentials,
+            expectedChallenge: Challenge,
             expectedOrigin: Referer.origin,
             expectedRPID: Referer.hostname,
-            response: Body.credentials,
             authenticator: {
-              credentialID: User.passkey.id,
-              credentialPublicKey: User.passkey.publicKey,
-              counter: User.passkey.counter,
-              transports: User.passkey.transports,
+              credentialID: Passkey.id,
+              credentialPublicKey: isoBase64URL.toBuffer(
+                Passkey.publicKey,
+              ),
+              counter: Passkey.counter,
+              transports: Passkey.transports as any,
             },
+            requireUserVerification: false,
           });
 
           if (!verified) break login;
