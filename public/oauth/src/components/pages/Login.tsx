@@ -415,8 +415,10 @@ export const LoginPage = () => {
                     </Button>
                   </Grid>
                   <Grid item xs={12}>
-                    <Divider>
-                      <span style={{ color: "GrayText" }}>{t("or")}</span>
+                    <Divider sx={{ width: "100%" }}>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        {t("or")}
+                      </Typography>
                     </Divider>
                   </Grid>
                   <Grid item xs={12}>
