@@ -178,7 +178,7 @@ export default class OauthPasskeyController extends BaseController {
   public challengeLogin(route: IRoute) {
     // Define Query Schema
     const QuerySchema = e.object({
-      username: UsernameValidator(),
+      username: UsernameValidator,
     }, { allowUnexpectedProps: true });
 
     return new Versioned().add("1.0.0", {
@@ -230,7 +230,7 @@ export default class OauthPasskeyController extends BaseController {
   public login(route: IRoute) {
     // Define Body Schema
     const BodySchema = e.object({
-      username: UsernameValidator(),
+      username: UsernameValidator,
       credentials: e.object({
         id: e.string(),
         rawId: e.string(),

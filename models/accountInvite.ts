@@ -6,17 +6,16 @@ import {
   UsernameValidator,
 } from "@Models/user.ts";
 
-export const AccountInviteSchema = () =>
-  e.object({
-    _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
-    createdAt: e.optional(e.date()).default(() => new Date()),
-    updatedAt: e.optional(e.date()).default(() => new Date()),
-    createdBy: e.instanceOf(ObjectId, { instantiate: true }),
-    recipient: e.or([PhoneValidator, EmailValidator, UsernameValidator]),
-    role: e.string(),
-    account: e.instanceOf(ObjectId, { instantiate: true }),
-    token: e.optional(e.string()).default(() => crypto.randomUUID()),
-  });
+export const AccountInviteSchema = e.object({
+  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+  createdAt: e.optional(e.date()).default(() => new Date()),
+  updatedAt: e.optional(e.date()).default(() => new Date()),
+  createdBy: e.instanceOf(ObjectId, { instantiate: true }),
+  recipient: e.or([PhoneValidator, EmailValidator, UsernameValidator]),
+  role: e.string(),
+  account: e.instanceOf(ObjectId, { instantiate: true }),
+  token: e.optional(e.string()).default(() => crypto.randomUUID()),
+});
 
 export type TAccountInviteInput = InputDocument<
   inferInput<typeof AccountInviteSchema>
