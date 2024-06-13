@@ -26,7 +26,7 @@ export default class OauthAppsController extends BaseController {
   @Post("/")
   public create() {
     // Define Body Schema
-    const BodySchema = InputOauthAppSchema();
+    const BodySchema = InputOauthAppSchema;
 
     return Versioned.add("1.0.0", {
       postman: {

@@ -20,7 +20,7 @@ export default class RequestLogsController extends BaseController {
   @Post("/")
   public create(route: IRoute) {
     // Define Body Schema
-    const BodySchema = InputRequestLogsSchema();
+    const BodySchema = InputRequestLogsSchema;
 
     return new Versioned().add("1.0.0", {
       shape: {
