@@ -12,15 +12,16 @@ import {
 import { type RouterContext } from "oak";
 import e, { inferOutput } from "validator";
 
-const RequestInputSchema = e.object({
-  endpoint: e.optional(e.string()),
-  method: e.optional(e.in(Object.values(RequestMethod))).default(
-    RequestMethod.GET,
-  ),
-  headers: e.optional(e.record(e.string())),
-  body: e.optional(e.any()),
-  disabled: e.optional(e.boolean()),
-});
+const RequestInputSchema = () =>
+  e.object({
+    endpoint: e.optional(e.string()),
+    method: e.optional(e.in(Object.values(RequestMethod))).default(
+      RequestMethod.GET,
+    ),
+    headers: e.optional(e.record(e.string())),
+    body: e.optional(e.any()),
+    disabled: e.optional(e.boolean()),
+  });
 
 export type TRequestInput = inferOutput<typeof RequestInputSchema>;
 
@@ -34,11 +35,11 @@ export default class BatcherController extends BaseController {
         e.or([
           e.array(
             e.or([
-              RequestInputSchema,
+              RequestInputSchema(),
               e.string(),
             ]),
           ).min(1),
-          RequestInputSchema,
+          RequestInputSchema(),
           e.string(),
         ]),
       ).min(1),

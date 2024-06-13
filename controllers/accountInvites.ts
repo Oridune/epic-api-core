@@ -19,17 +19,18 @@ import { Notify } from "@Lib/notify.ts";
 import { AccountInviteModel } from "@Models/accountInvite.ts";
 import { EmailValidator, PhoneValidator } from "@Models/user.ts";
 
-export const InputAccountInviteSchema = e.object({
-  recipient: e.string(),
-  role: e.string(),
-});
+export const InputAccountInviteSchema = () =>
+  e.object({
+    recipient: e.string(),
+    role: e.string(),
+  });
 
 @Controller("/account/invites/", { name: "accountInvites" })
 export default class AccountInvitesController extends BaseController {
   @Post("/")
   public create(route: IRoute) {
     // Define Body Schema
-    const BodySchema = InputAccountInviteSchema;
+    const BodySchema = InputAccountInviteSchema();
 
     return new Versioned().add("1.0.0", {
       postman: {

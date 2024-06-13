@@ -1,17 +1,17 @@
 // deno-lint-ignore-file no-explicit-any ban-types
 import {
-  BaseController,
-  Controller,
   Env,
-  EnvType,
+  Controller,
+  BaseController,
   Get,
-  type IRequestContext,
-  Response,
   Versioned,
+  Response,
+  EnvType,
+  type IRequestContext,
 } from "@Core/common/mod.ts";
 import e from "validator";
 import { type RouterContext, Status } from "oak";
-import { UserModel, UsernameValidator } from "@Models/user.ts";
+import { UsernameValidator, UserModel } from "@Models/user.ts";
 import OauthController from "@Controllers/oauth.ts";
 import { Notify } from "@Lib/notify.ts";
 
@@ -31,7 +31,7 @@ export default class UsersIdentificationController extends BaseController {
   static async sign(
     purpose: IdentificationPurpose | (string & {}),
     method?: IdentificationMethod | null,
-    payload?: Record<string, any>,
+    payload?: Record<string, any>
   ) {
     const OTP = Math.floor(100000 + Math.random() * 900000);
 
@@ -56,7 +56,7 @@ export default class UsersIdentificationController extends BaseController {
     token: string,
     code: string | number,
     purpose: IdentificationPurpose,
-    method?: IdentificationMethod | null,
+    method?: IdentificationMethod | null
   ) {
     return OauthController.verifyToken<
       T & {
@@ -74,7 +74,7 @@ export default class UsersIdentificationController extends BaseController {
     purpose: IdentificationPurpose | (string & {}),
     method: IdentificationMethod,
     userFilter: Parameters<(typeof UserModel)["findOne"]>[0],
-    metadata?: Record<string, any>,
+    metadata?: Record<string, any>
   ) {
     const User = await UserModel.findOne(userFilter).project({
       _id: 1,
@@ -86,10 +86,10 @@ export default class UsersIdentificationController extends BaseController {
     const Challenge = await UsersIdentificationController.sign(
       purpose,
       method,
-      { userId: User._id, ...metadata },
+      { userId: User._id, ...metadata }
     );
 
-    if (!Env.is(EnvType.TEST)) {
+    if (!Env.is(EnvType.TEST))
       await Notify.sendWithNovu({
         subscriberId: User._id.toString(),
         [method]: User[method as "email" | "phone"],
@@ -98,7 +98,6 @@ export default class UsersIdentificationController extends BaseController {
           otp: Challenge.otp,
         },
       });
-    }
 
     return Challenge;
   }
@@ -131,7 +130,7 @@ export default class UsersIdentificationController extends BaseController {
   public publicMethods() {
     // Define Params Schema
     const ParamsSchema = e.object({
-      username: UsernameValidator,
+      username: UsernameValidator(),
     });
 
     return new Versioned().add("1.0.0", {
@@ -158,7 +157,7 @@ export default class UsersIdentificationController extends BaseController {
                 type: IdentificationMethod.EMAIL,
                 maskedValue: User.email?.replace(
                   /^(\w{3})[\w.-]+@([\w.]+\w)$/,
-                  "$1***@$2",
+                  "$1***@$2"
                 ),
                 verified: User.isEmailVerified,
               },
@@ -166,7 +165,7 @@ export default class UsersIdentificationController extends BaseController {
                 type: IdentificationMethod.PHONE,
                 maskedValue: User.phone?.replace(
                   /^(\+)\w+(\w{3})$/,
-                  "$1*********$2",
+                  "$1*********$2"
                 ),
                 verified: User.isPhoneVerified,
               },
@@ -182,7 +181,7 @@ export default class UsersIdentificationController extends BaseController {
     // Define Params Schema
     const ParamsSchema = e.object({
       purpose: e.in(Object.values(IdentificationPurpose)),
-      username: UsernameValidator,
+      username: UsernameValidator(),
       method: e.in(Object.values(IdentificationMethod)),
     });
 
@@ -199,7 +198,7 @@ export default class UsersIdentificationController extends BaseController {
         const Challenge = await UsersIdentificationController.request(
           Params.purpose,
           Params.method,
-          { username: Params.username },
+          { username: Params.username }
         );
 
         return Response.data({

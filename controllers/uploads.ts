@@ -114,7 +114,7 @@ export default class UploadsController extends BaseController {
                 metadata: {
                   ...restQuery,
                   ...Params,
-                } as Record<string, string>,
+                },
               },
               secret:
                 `${ctx.router.state.auth?.accountId}:${ctx.router.state.auth?.userId}`,

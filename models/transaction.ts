@@ -5,34 +5,35 @@ export enum TransactionStatus {
   COMPLETED = "completed",
 }
 
-export const TransactionSchema = e.object({
-  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
-  createdAt: e.optional(e.date()).default(() => new Date()),
-  updatedAt: e.optional(e.date()).default(() => new Date()),
-  createdBy: e.instanceOf(ObjectId, { instantiate: true }),
-  sessionId: e.optional(e.string()),
-  reference: e.string(),
-  foreignRefType: e.optional(e.string()),
-  foreignRef: e.optional(e.string()),
-  fromName: e.string(),
-  from: e.instanceOf(ObjectId, { instantiate: true }),
-  sender: e.instanceOf(ObjectId, { instantiate: true }),
-  toName: e.string(),
-  to: e.instanceOf(ObjectId, { instantiate: true }),
-  receiver: e.instanceOf(ObjectId, { instantiate: true }),
-  type: e.string(),
-  description: e.optional(e.or([e.record(e.string()), e.string()])),
-  tags: e.optional(e.array(e.string())),
-  currency: e.string(),
-  amount: e.number({ cast: true }),
-  methodOf3DSecurity: e.optional(e.string()),
-  status: e.optional(e.in(Object.values(TransactionStatus))).default(
-    TransactionStatus.COMPLETED,
-  ),
-  isRefund: e.optional(e.boolean()), // Indicates this transaction is a refund received (Received).
-  isRefunded: e.optional(e.boolean()), // Indicates this transaction has been refunded (Sent).
-  metadata: e.optional(e.record(e.or([e.number(), e.boolean(), e.string()]))),
-});
+export const TransactionSchema = () =>
+  e.object({
+    _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+    createdAt: e.optional(e.date()).default(() => new Date()),
+    updatedAt: e.optional(e.date()).default(() => new Date()),
+    createdBy: e.instanceOf(ObjectId, { instantiate: true }),
+    sessionId: e.optional(e.string()),
+    reference: e.string(),
+    foreignRefType: e.optional(e.string()),
+    foreignRef: e.optional(e.string()),
+    fromName: e.string(),
+    from: e.instanceOf(ObjectId, { instantiate: true }),
+    sender: e.instanceOf(ObjectId, { instantiate: true }),
+    toName: e.string(),
+    to: e.instanceOf(ObjectId, { instantiate: true }),
+    receiver: e.instanceOf(ObjectId, { instantiate: true }),
+    type: e.string(),
+    description: e.optional(e.or([e.record(e.string()), e.string()])),
+    tags: e.optional(e.array(e.string())),
+    currency: e.string(),
+    amount: e.number({ cast: true }),
+    methodOf3DSecurity: e.optional(e.string()),
+    status: e.optional(e.in(Object.values(TransactionStatus))).default(
+      TransactionStatus.COMPLETED,
+    ),
+    isRefund: e.optional(e.boolean()), // Indicates this transaction is a refund received (Received).
+    isRefunded: e.optional(e.boolean()), // Indicates this transaction has been refunded (Sent).
+    metadata: e.optional(e.record(e.or([e.number(), e.boolean(), e.string()]))),
+  });
 
 export type TTransactionInput = InputDocument<
   inferInput<typeof TransactionSchema>

@@ -14,28 +14,32 @@ const UserReferenceMinLength = parseInt(
 const UserReferenceStart = Env.getSync("USER_REFERENCE_START", true) ??
   "10000";
 
-export const UserReferenceValidator = e.string().matches({
-  regex: new RegExp(
-    `^(${
-      AllowedUserReferencePrefix.split(/\s*,\s*/).join("|")
-    })[0-9]{${UserReferenceMinLength},}$`,
-  ),
-});
+export const UserReferenceValidator = () =>
+  e.string().matches({
+    regex: new RegExp(
+      `^(${
+        AllowedUserReferencePrefix.split(/\s*,\s*/).join("|")
+      })[0-9]{${UserReferenceMinLength},}$`,
+    ),
+  });
 
-export const UsernameValidator = e.string().matches({
-  regex: /^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/,
-}).custom((ctx) => ctx.output.toLowerCase());
+export const UsernameValidator = () =>
+  e.string().matches({
+    regex: /^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/,
+  }).custom((ctx) => ctx.output.toLowerCase());
 
-export const PasswordValidator = e.string().min(6);
+export const PasswordValidator = () => e.string().min(6);
 
-export const EmailValidator = e.string().matches({
-  regex: /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/,
-});
+export const EmailValidator = () =>
+  e.string().matches({
+    regex: /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/,
+  });
 
-export const PhoneValidator = e.string().matches({
-  regex:
-    /^\+((?:9[679]|8[035789]|6[789]|5[90]|42|3[578]|2[1-689])|9[0-58]|8[1246]|6[0-6]|5[1-8]|4[013-9]|3[0-469]|2[70]|7|1)(?:\W*\d){7,13}\d$/,
-});
+export const PhoneValidator = () =>
+  e.string().matches({
+    regex:
+      /^\+((?:9[679]|8[035789]|6[789]|5[90]|42|3[578]|2[1-689])|9[0-58]|8[1246]|6[0-6]|5[1-8]|4[013-9]|3[0-469]|2[70]|7|1)(?:\W*\d){7,13}\d$/,
+  });
 
 export enum Gender {
   MALE = "male",
@@ -43,70 +47,74 @@ export enum Gender {
   OTHER = "other",
 }
 
-export const UpdateUserSchema = e.object({
-  fname: e.string(),
-  mname: e.optional(e.string()),
-  lname: e.optional(e.string()),
-  gender: e.optional(e.in(Object.values(Gender))),
-  dob: e.optional(e.date()),
-  locale: e.optional(e.string()),
-  country: e.optional(e.string()),
-  state: e.optional(e.string()),
-  city: e.optional(e.string()),
-  address_1: e.optional(e.string()),
-  address_2: e.optional(e.string()),
-  postalCode: e.optional(e.string()),
-});
-
-export const CreateUserSchema = e.object({
-  oauthApp: e.instanceOf(ObjectId, { instantiate: true }),
-  username: UsernameValidator,
-  password: PasswordValidator,
-  avatar: e.optional(FileSchema),
-  tags: e.optional(e.array(e.string(), { cast: true })).default([]),
-  email: e.optional(EmailValidator),
-  phone: e.optional(PhoneValidator),
-})
-  .extends(UpdateUserSchema);
-
-export const UserSchema = CreateUserSchema.extends(
+export const UpdateUserSchema = () =>
   e.object({
-    _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
-    createdAt: e.optional(e.date()).default(() => new Date()),
-    updatedAt: e.optional(e.date()).default(() => new Date()),
-    reference: e
-      .optional(UserReferenceValidator)
-      .default(
-        async () =>
-          `${DefaultUserReferencePrefix}${
-            parseInt(UserReferenceStart) +
-            (await Store.incr(`user-reference-${DefaultUserReferencePrefix}`))
-          }`,
-      ),
-    passwordHistory: e.array(e.string()),
-    role: e.string(),
-    isEmailVerified: e.optional(e.boolean({ cast: true })).default(false),
-    isPhoneVerified: e.optional(e.boolean({ cast: true })).default(false),
-    lastLogin: e.optional(e.date()),
-    loginCount: e.optional(e.number({ cast: true })).default(0),
-    failedLoginAttempts: e.optional(e.number({ cast: true })).default(0),
-    fcmDeviceTokens: e.optional(e.array(e.string())),
-    passkeys: e.optional(e.array(e.object({
-      id: e.string(),
-      publicKey: e.string(),
-      counter: e.number(),
-      deviceType: e.string(),
-      backedUp: e.boolean(),
-      transports: e.array(e.string()),
-      timestamp: e.optional(e.date()).default(() => new Date()),
-    }))),
-    passkeyEnabled: e.optional(e.boolean()),
-    requiresMfa: e.optional(e.boolean({ cast: true })).default(false),
-    isBlocked: e.optional(e.boolean({ cast: true })).default(false),
-    collaborates: e.array(e.instanceOf(ObjectId, { instantiate: true })),
-    deletionAt: e.optional(e.or([e.date(), e.null()])),
-  }),
-);
+    fname: e.string(),
+    mname: e.optional(e.string()),
+    lname: e.optional(e.string()),
+    gender: e.optional(e.in(Object.values(Gender))),
+    dob: e.optional(e.date()),
+    locale: e.optional(e.string()),
+    country: e.optional(e.string()),
+    state: e.optional(e.string()),
+    city: e.optional(e.string()),
+    address_1: e.optional(e.string()),
+    address_2: e.optional(e.string()),
+    postalCode: e.optional(e.string()),
+  });
+
+export const CreateUserSchema = () =>
+  e
+    .object({
+      oauthApp: e.instanceOf(ObjectId, { instantiate: true }),
+      username: UsernameValidator(),
+      password: PasswordValidator(),
+      avatar: e.optional(FileSchema),
+      tags: e.optional(e.array(e.string(), { cast: true })).default([]),
+      email: e.optional(EmailValidator()),
+      phone: e.optional(PhoneValidator()),
+    })
+    .extends(UpdateUserSchema);
+
+export const UserSchema = () =>
+  CreateUserSchema().extends(
+    e.object({
+      _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+      createdAt: e.optional(e.date()).default(() => new Date()),
+      updatedAt: e.optional(e.date()).default(() => new Date()),
+      reference: e
+        .optional(UserReferenceValidator())
+        .default(
+          async () =>
+            `${DefaultUserReferencePrefix}${
+              parseInt(UserReferenceStart) +
+              (await Store.incr(`user-reference-${DefaultUserReferencePrefix}`))
+            }`,
+        ),
+      passwordHistory: e.array(e.string()),
+      role: e.string(),
+      isEmailVerified: e.optional(e.boolean({ cast: true })).default(false),
+      isPhoneVerified: e.optional(e.boolean({ cast: true })).default(false),
+      lastLogin: e.optional(e.date()),
+      loginCount: e.optional(e.number({ cast: true })).default(0),
+      failedLoginAttempts: e.optional(e.number({ cast: true })).default(0),
+      fcmDeviceTokens: e.optional(e.array(e.string())),
+      passkeys: e.optional(e.array(e.object({
+        id: e.string(),
+        publicKey: e.string(),
+        counter: e.number(),
+        deviceType: e.string(),
+        backedUp: e.boolean(),
+        transports: e.array(e.string()),
+        timestamp: e.optional(e.date()).default(() => new Date()),
+      }))),
+      passkeyEnabled: e.optional(e.boolean()),
+      requiresMfa: e.optional(e.boolean({ cast: true })).default(false),
+      isBlocked: e.optional(e.boolean({ cast: true })).default(false),
+      collaborates: e.array(e.instanceOf(ObjectId, { instantiate: true })),
+      deletionAt: e.optional(e.or([e.date(), e.null()])),
+    }),
+  );
 
 export type TUserInput = InputDocument<inferInput<typeof UserSchema>>;
 export type TUserOutput = OutputDocument<inferOutput<typeof UserSchema>>;

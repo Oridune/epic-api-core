@@ -43,7 +43,7 @@ const ResponseWrapperSchema = <T extends ObjectValidator<any, any, any>>(
     { cast: true },
   );
 
-const DefaultOauthAppResponseSchema = ResponseWrapperSchema(OauthAppSchema);
+const DefaultOauthAppResponseSchema = ResponseWrapperSchema(OauthAppSchema());
 
 const UserResponseSchema = ResponseWrapperSchema(
   e.object({
