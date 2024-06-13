@@ -17,6 +17,6 @@
     "requestLogs.ts",
     "oauthPasskey.ts"
   ],
-  "excludes": ["oauthPasskey.ts"],
+  "excludes": [],
   "sequenceProps": {}
 }
