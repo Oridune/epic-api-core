@@ -522,39 +522,54 @@ export class Wallet {
      */
     databaseSession?: ClientSession;
   }) {
-    const Transaction = await TransactionModel.findOne(options.transactionId);
+    return await Database.transaction(async (session) => {
+      const Transaction = await TransactionModel.findAndUpdateOne(
+        options.transactionId,
+        { isRefunded: true },
+        { session },
+      );
 
-    if (!Transaction) throw new Error("A completed transaction was not found!");
+      if (!Transaction) throw new Error("Transaction not found!");
+      if (!Transaction.isRefunded) throw new Error("Cannot refund again!");
 
-    return await Wallet.transfer({
-      sessionId: options.sessionId,
-      reference: options.reference,
-      foreignRefType: options.foreignRefType,
-      foreignRef: options.foreignRef,
-      type: Transaction.type,
-      fromName: Transaction.toName,
-      from: Transaction.to,
-      sender: Transaction.receiver,
-      toName: Transaction.fromName,
-      to: Transaction.from,
-      receiver: Transaction.sender,
-      user: options.user,
-      currency: Transaction.currency,
-      amount: Transaction.amount,
-      description: options.description ??
-        (typeof Transaction.description === "object"
-          ? Object.fromEntries(
-            Object.entries(Transaction.description).map((trns) => {
-              trns[1] = ["(Refund)", trns[1]].join(" ");
-              return trns;
-            }),
-          )
-          : ["(Refund)", Transaction.description].join(" ")),
-      metadata: options.metadata,
-      allowOverdraft: options.allowOverdraft,
-      overdraftLimit: options.overdraftLimit,
-      isRefund: true,
-      databaseSession: options.databaseSession,
-    });
+      const RefundMessage = "(Refund)";
+
+      return await Wallet.transfer({
+        sessionId: options.sessionId,
+        reference: options.reference,
+        foreignRefType: options.foreignRefType,
+        foreignRef: options.foreignRef,
+        type: Transaction.type,
+        fromName: Transaction.toName,
+        from: Transaction.to,
+        sender: Transaction.receiver,
+        toName: Transaction.fromName,
+        to: Transaction.from,
+        receiver: Transaction.sender,
+        user: options.user,
+        currency: Transaction.currency,
+        amount: Transaction.amount,
+        description: options.description ??
+          (typeof Transaction.description === "object"
+            ? Object.fromEntries(
+              Object.entries(Transaction.description).map((trns) => {
+                trns[1] = [
+                  RefundMessage,
+                  trns[1].replace(RefundMessage, "").trim(),
+                ].join(" ");
+                return trns;
+              }),
+            )
+            : [
+              RefundMessage,
+              Transaction.description?.replace(RefundMessage, "").trim(),
+            ].join(" ")),
+        metadata: options.metadata,
+        allowOverdraft: options.allowOverdraft,
+        overdraftLimit: options.overdraftLimit,
+        isRefund: true,
+        databaseSession: session,
+      });
+    }, options.databaseSession);
   }
 }
