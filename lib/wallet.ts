@@ -214,6 +214,10 @@ export class Wallet {
     );
   }
 
+  static roundTwo(amount: number) {
+    return Math.round((amount + Number.EPSILON) * 100) / 100;
+  }
+
   static async transfer(options: {
     /**
      * A sessionId can be used to identify a unique payment session.
@@ -324,6 +328,9 @@ export class Wallet {
       throw new Error(`Please provide a valid non-zero positive amount!`);
     }
 
+    // Fix floating-point errors
+    const Amount = this.roundTwo(options.amount);
+
     const Reference = options.reference ??
       `TX${10000 + (await Store.incr("wallet-transaction-reference"))}`;
 
@@ -351,13 +358,13 @@ export class Wallet {
     const MinTransferAmount = parseFloat(MinTransfer ?? "1");
     const MaxTransferAmount = parseFloat(MaxTransfer ?? "1e500");
 
-    if (options.amount < MinTransferAmount) {
+    if (Amount < MinTransferAmount) {
       throw new Error(
         `Minimum transfer amount required is ${MinTransferAmount}`,
       );
     }
 
-    if (options.amount > MaxTransferAmount) {
+    if (Amount > MaxTransferAmount) {
       throw new Error(
         `Maximum transfer amount allowed is ${MaxTransferAmount}`,
       );
@@ -368,16 +375,15 @@ export class Wallet {
       currency: Currency,
     });
 
-    // Check to allow negative balance
-    const PostTransactionBalance = WalletA.balance - options.amount;
+    WalletA.balance = this.roundTwo(WalletA.balance - Amount);
 
     if (
-      PostTransactionBalance < 0 &&
+      WalletA.balance < 0 &&
       !(await this.hasOverdraftMargin(
         From,
         Type,
         Currency,
-        PostTransactionBalance,
+        WalletA.balance,
         {
           skipAccountCheck: options.allowOverdraft,
           overdraftLimit: options.overdraftLimit,
@@ -390,8 +396,7 @@ export class Wallet {
       currency: Currency,
     });
 
-    WalletA.balance -= options.amount;
-    WalletB.balance += options.amount;
+    WalletB.balance = this.roundTwo(WalletB.balance + Amount);
 
     const [WalletADigest, WalletBDigest] = await Promise.all([
       this.createBalanceDigest(
@@ -448,7 +453,7 @@ export class Wallet {
           type: Type,
           currency: Currency,
           methodOf3DSecurity: options.methodOf3DSecurity,
-          amount: options.amount,
+          amount: Amount,
           isRefund: options.isRefund,
           metadata: options.metadata,
           createdBy: options.user ?? options.sender,
@@ -517,39 +522,54 @@ export class Wallet {
      */
     databaseSession?: ClientSession;
   }) {
-    const Transaction = await TransactionModel.findOne(options.transactionId);
+    return await Database.transaction(async (session) => {
+      const Transaction = await TransactionModel.findAndUpdateOne(
+        options.transactionId,
+        { isRefunded: true },
+        { session },
+      );
 
-    if (!Transaction) throw new Error("A completed transaction was not found!");
+      if (!Transaction) throw new Error("Transaction not found!");
+      if (!Transaction.isRefunded) throw new Error("Cannot refund again!");
 
-    return await Wallet.transfer({
-      sessionId: options.sessionId,
-      reference: options.reference,
-      foreignRefType: options.foreignRefType,
-      foreignRef: options.foreignRef,
-      type: Transaction.type,
-      fromName: Transaction.toName,
-      from: Transaction.to,
-      sender: Transaction.receiver,
-      toName: Transaction.fromName,
-      to: Transaction.from,
-      receiver: Transaction.sender,
-      user: options.user,
-      currency: Transaction.currency,
-      amount: Transaction.amount,
-      description: options.description ??
-        (typeof Transaction.description === "object"
-          ? Object.fromEntries(
-            Object.entries(Transaction.description).map((trns) => {
-              trns[1] = ["(Refund)", trns[1]].join(" ");
-              return trns;
-            }),
-          )
-          : ["(Refund)", Transaction.description].join(" ")),
-      metadata: options.metadata,
-      allowOverdraft: options.allowOverdraft,
-      overdraftLimit: options.overdraftLimit,
-      isRefund: true,
-      databaseSession: options.databaseSession,
-    });
+      const RefundMessage = "(Refund)";
+
+      return await Wallet.transfer({
+        sessionId: options.sessionId,
+        reference: options.reference,
+        foreignRefType: options.foreignRefType,
+        foreignRef: options.foreignRef,
+        type: Transaction.type,
+        fromName: Transaction.toName,
+        from: Transaction.to,
+        sender: Transaction.receiver,
+        toName: Transaction.fromName,
+        to: Transaction.from,
+        receiver: Transaction.sender,
+        user: options.user,
+        currency: Transaction.currency,
+        amount: Transaction.amount,
+        description: options.description ??
+          (typeof Transaction.description === "object"
+            ? Object.fromEntries(
+              Object.entries(Transaction.description).map((trns) => {
+                trns[1] = [
+                  RefundMessage,
+                  trns[1].replace(RefundMessage, "").trim(),
+                ].join(" ");
+                return trns;
+              }),
+            )
+            : [
+              RefundMessage,
+              Transaction.description?.replace(RefundMessage, "").trim(),
+            ].join(" ")),
+        metadata: options.metadata,
+        allowOverdraft: options.allowOverdraft,
+        overdraftLimit: options.overdraftLimit,
+        isRefund: true,
+        databaseSession: session,
+      });
+    }, options.databaseSession);
   }
 }

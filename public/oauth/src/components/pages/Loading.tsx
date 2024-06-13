@@ -16,7 +16,7 @@ export const LoadingPage = () => {
           alignItems: "center",
         }}
       >
-        <Typography variant="body2" color="GrayText">
+        <Typography variant="body2" color="text.secondary">
           {t("Loading...")}
         </Typography>
       </Box>

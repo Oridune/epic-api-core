@@ -14,7 +14,8 @@
     "oauthPolicies.ts",
     "batcher.ts",
     "envs.ts",
-    "requestLogs.ts"
+    "requestLogs.ts",
+    "oauthPasskey.ts"
   ],
   "excludes": [],
   "sequenceProps": {}

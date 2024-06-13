@@ -10,6 +10,7 @@ export const OauthConsentStylingSchema = e.object({
 });
 
 export const OauthConsentSchema = e.object({
+  passkeyEnabled: e.optional(e.boolean()),
   availableCountryCodes: e.optional(
     e.array(e.string().length({ min: 2, max: 2 }), { cast: true }).min(1),
   ),

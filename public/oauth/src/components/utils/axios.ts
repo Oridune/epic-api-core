@@ -1,7 +1,7 @@
 import axios from "axios";
 import i18n from "i18next";
 
-export { AxiosError } from "axios";
+export { AxiosError, type AxiosResponse } from "axios";
 
 export const API = axios.create({
   baseURL: import.meta.env.VITE_API_HOST,

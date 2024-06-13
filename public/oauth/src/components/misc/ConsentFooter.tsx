@@ -18,7 +18,7 @@ export const ConsentFooter = () => {
         app.consent.privacyPolicyURL) && (
         <>
           <Divider sx={{ width: "100%" }}>
-            <Typography variant="subtitle2" color="GrayText">
+            <Typography variant="subtitle2" color="text.secondary">
               {t("See also")}
             </Typography>
           </Divider>

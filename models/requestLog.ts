@@ -30,6 +30,7 @@ export const InputRequestLogsSchema = e.object({
     messages: e.any(),
     data: e.any(),
     metrics: e.record(e.any()),
+    errorStack: e.any(),
   }),
 });
 

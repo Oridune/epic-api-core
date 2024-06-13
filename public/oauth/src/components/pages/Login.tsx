@@ -18,14 +18,16 @@ import {
   LinearProgress,
   Stack,
   Alert,
+  Divider,
 } from "@mui/material";
 import { motion } from "framer-motion";
-import { VisibilityOff, Visibility } from "@mui/icons-material";
+import { VisibilityOff, Visibility, Replay } from "@mui/icons-material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
-import axios, { AxiosError } from "../utils/axios";
+import axios, { type AxiosResponse, AxiosError } from "../utils/axios";
 import { useTranslation } from "react-i18next";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { startAuthentication } from "@simplewebauthn/browser";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
 import { PasswordValidator, UsernameValidator } from "../utils/validators";
@@ -66,6 +68,10 @@ export const LoginPage = () => {
     });
   }, []);
 
+  const [LoginWithPassword, setLoginWithPassword] = React.useState(
+    !app?.consent.passkeyEnabled
+  );
+
   const [ShowPassword, setShowPassword] = React.useState(false);
   const [Loading, setLoading] = React.useState(false);
   const [ErrorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -76,14 +82,14 @@ export const LoginPage = () => {
     () =>
       e.object({
         username: UsernameValidator(t),
-        password: PasswordValidator(t),
+        ...(LoginWithPassword ? { password: PasswordValidator(t) } : {}),
         remember: e
           .optional(
             e.or([e.boolean(), e.string()]).custom((ctx) => !!ctx.output)
           )
           .default(false),
       }),
-    [i18n.language]
+    [i18n.language, LoginWithPassword]
   );
 
   const {
@@ -92,6 +98,7 @@ export const LoginPage = () => {
     formState: { errors },
     reset,
     watch,
+    trigger,
   } = useForm<InferOutput<typeof LoginSchema>>({
     resolver: ValidatorResolver(LoginSchema),
   });
@@ -105,28 +112,65 @@ export const LoginPage = () => {
     setLoading(true);
 
     try {
-      const LoginResponse = await axios.post(
-        "/api/oauth/local/",
-        {
-          oauthAppId: app!._id,
-          codeChallenge: CodeChallenge ?? undefined,
-          codeChallengeMethod: CodeChallengeMethod ?? undefined,
-          callbackURL:
-            CallbackURL ?? app!.consent.allowedCallbackURLs[0] ?? undefined,
-          remember: Remember ?? data.remember,
-        },
-        {
+      let LoginResponse: AxiosResponse<any, any>;
+
+      const LoginPayload = {
+        oauthAppId: app!._id,
+        codeChallenge: CodeChallenge ?? undefined,
+        codeChallengeMethod: CodeChallengeMethod ?? undefined,
+        callbackURL:
+          CallbackURL ?? app!.consent.allowedCallbackURLs[0] ?? undefined,
+        remember: Remember ?? data.remember,
+      };
+
+      if (LoginWithPassword) {
+        LoginResponse = await axios.post("/api/oauth/local/", LoginPayload, {
           auth: {
             username: data.username,
-            password: data.password,
+            password: data.password ?? "",
           },
           params: {
             reCaptchaV3Token: await executeRecaptcha?.("login"),
           },
-        }
-      );
+        });
+      } else {
+        const PasskeyChallenge = await axios.get(
+          "/api/oauth/passkey/challenge/login/",
+          {
+            params: {
+              username: data.username,
+              reCaptchaV3Token: await executeRecaptcha?.("passkeyChallenge"),
+            },
+          }
+        );
 
-      if (LoginResponse.data.status) {
+        if (!PasskeyChallenge.data.status)
+          throw new Error(
+            PasskeyChallenge.data.messages?.[0]?.message ??
+              "Operation has failed!"
+          );
+
+        LoginResponse = await axios.post(
+          "/api/oauth/passkey/login/",
+          {
+            username: data.username,
+            credentials: await startAuthentication(
+              PasskeyChallenge.data.data.challenge
+            ).catch((error) => {
+              console.error(error);
+              throw new Error("Operation timed out or cancelled!");
+            }),
+            ...LoginPayload,
+          },
+          {
+            params: {
+              reCaptchaV3Token: await executeRecaptcha?.("login"),
+            },
+          }
+        );
+      }
+
+      if (LoginResponse && LoginResponse.data.status) {
         ReactGA4.event({
           category: "Oauth2",
           action: "Click",
@@ -282,7 +326,7 @@ export const LoginPage = () => {
             </Grid>
           </Grid>
           <Divider sx={{ width: "100%" }}>
-            <Typography variant="subtitle2" color="GrayText">
+            <Typography variant="subtitle2" color="text.secondary">
               or sign in with your credentials
             </Typography>
           </Divider> */}
@@ -314,121 +358,198 @@ export const LoginPage = () => {
                     type="text"
                     autoComplete="username"
                     error={!!errors.username?.message}
+                    endAdornment={
+                      LoginWithPassword &&
+                      app?.consent.passkeyEnabled && (
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label="change username"
+                            onClick={() => {
+                              reset();
+                              setLoginWithPassword(false);
+                            }}
+                            edge="end"
+                          >
+                            <Replay />
+                          </IconButton>
+                        </InputAdornment>
+                      )
+                    }
                     {...register("username", {
                       value: Query.get("username") ?? "",
                     })}
+                    disabled={LoginWithPassword && app?.consent.passkeyEnabled}
                   />
                   <FormHelperText error={!!errors.username?.message}>
                     {errors.username?.message}
                   </FormHelperText>
                 </FormControl>
               </Grid>
-              <Grid
-                item
-                xs={12}
-                sx={{ display: "flex", justifyContent: "right" }}
-              >
-                <Link
-                  href={`/forgot/${(() => {
-                    if (!LoginData.username) return window.location.search;
-
-                    const SearchParams = new URLSearchParams(
-                      window.location.search
-                    );
-
-                    SearchParams.set("username", LoginData.username);
-
-                    return "?" + SearchParams.toString();
-                  })()}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    Navigate(e.currentTarget.getAttribute("href")!);
-
-                    ReactGA4.event({
-                      category: "Oauth2",
-                      action: "Click",
-                      label: "Forgot password",
-                    });
-                  }}
-                  variant="body2"
-                >
-                  {t("Forgot password?")}
-                </Link>
-              </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel htmlFor="password">{t("Password")}</InputLabel>
-                  <OutlinedInput
-                    id="password"
-                    label="Password"
-                    type={ShowPassword ? "text" : "password"}
-                    autoComplete="password"
-                    endAdornment={
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          onClick={() => setShowPassword((_) => !_)}
-                          edge="end"
-                        >
-                          {ShowPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    }
-                    error={!!errors.password?.message}
-                    {...register("password")}
-                  />
-                  <FormHelperText error={!!errors.password?.message}>
-                    {errors.password?.message}
-                  </FormHelperText>
-                </FormControl>
-              </Grid>
-              {typeof Remember === "undefined" && (
-                <Grid item xs={12}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        value="remember"
-                        color="primary"
-                        {...register("remember")}
+              {!LoginWithPassword && (
+                <>
+                  {typeof Remember === "undefined" && (
+                    <Grid item xs={12}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            value="remember"
+                            color="primary"
+                            {...register("remember")}
+                          />
+                        }
+                        label={t("Remember me")}
                       />
-                    }
-                    label={t("Remember me")}
-                  />
-                </Grid>
+                    </Grid>
+                  )}
+                  <Grid item xs={12}>
+                    <Button
+                      type="submit"
+                      fullWidth
+                      variant="contained"
+                      disabled={Loading}
+                      onClick={async () => {
+                        if (await trigger()) setLoginWithPassword(true);
+                      }}
+                    >
+                      {t("Continue")}
+                    </Button>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Divider>
+                      <span style={{ color: "GrayText" }}>{t("or")}</span>
+                    </Divider>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Button
+                      type="button"
+                      fullWidth
+                      variant="contained"
+                      color="inherit"
+                      sx={{ color: "black" }}
+                      disabled={Loading}
+                      onClick={handleSubmit(HandleLogin)}
+                    >
+                      {t("Sign in with a passkey")}
+                    </Button>
+                  </Grid>
+                </>
               )}
-              <Grid item xs={12}>
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  disabled={Loading}
-                >
-                  {t("Sign In")}
-                </Button>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sx={{ display: "flex", justifyContent: "right" }}
-              >
-                <Link
-                  href={`/signup/${window.location.search}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const Path = e.currentTarget.getAttribute("href")!;
-                    if (Path) Navigate(Path);
+              {LoginWithPassword && (
+                <>
+                  <Grid
+                    item
+                    xs={12}
+                    sx={{ display: "flex", justifyContent: "right" }}
+                  >
+                    <Link
+                      href={`/forgot/${(() => {
+                        if (!LoginData.username) return window.location.search;
 
-                    ReactGA4.event({
-                      category: "Oauth2",
-                      action: "Click",
-                      label: "Create an account",
-                    });
-                  }}
-                  variant="body2"
-                >
-                  {t("Don't have an account?")}
-                </Link>
-              </Grid>
+                        const SearchParams = new URLSearchParams(
+                          window.location.search
+                        );
+
+                        SearchParams.set("username", LoginData.username);
+
+                        return "?" + SearchParams.toString();
+                      })()}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        Navigate(e.currentTarget.getAttribute("href")!);
+
+                        ReactGA4.event({
+                          category: "Oauth2",
+                          action: "Click",
+                          label: "Forgot password",
+                        });
+                      }}
+                      variant="body2"
+                    >
+                      {t("Forgot password?")}
+                    </Link>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControl fullWidth variant="outlined">
+                      <InputLabel htmlFor="password">
+                        {t("Password")}
+                      </InputLabel>
+                      <OutlinedInput
+                        id="password"
+                        label="Password"
+                        type={ShowPassword ? "text" : "password"}
+                        autoComplete="password"
+                        endAdornment={
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label="toggle password visibility"
+                              onClick={() => setShowPassword((_) => !_)}
+                              edge="end"
+                            >
+                              {ShowPassword ? (
+                                <VisibilityOff />
+                              ) : (
+                                <Visibility />
+                              )}
+                            </IconButton>
+                          </InputAdornment>
+                        }
+                        error={!!errors.password?.message}
+                        {...register("password")}
+                      />
+                      <FormHelperText error={!!errors.password?.message}>
+                        {errors.password?.message}
+                      </FormHelperText>
+                    </FormControl>
+                  </Grid>
+                  {typeof Remember === "undefined" && (
+                    <Grid item xs={12}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            value="remember"
+                            color="primary"
+                            {...register("remember")}
+                          />
+                        }
+                        label={t("Remember me")}
+                      />
+                    </Grid>
+                  )}
+                  <Grid item xs={12}>
+                    <Button
+                      type="submit"
+                      fullWidth
+                      variant="contained"
+                      disabled={Loading}
+                    >
+                      {t("Sign In")}
+                    </Button>
+                  </Grid>
+                  <Grid
+                    item
+                    xs={12}
+                    sx={{ display: "flex", justifyContent: "right" }}
+                  >
+                    <Link
+                      href={`/signup/${window.location.search}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const Path = e.currentTarget.getAttribute("href")!;
+                        if (Path) Navigate(Path);
+
+                        ReactGA4.event({
+                          category: "Oauth2",
+                          action: "Click",
+                          label: "Create an account",
+                        });
+                      }}
+                      variant="body2"
+                    >
+                      {t("Don't have an account?")}
+                    </Link>
+                  </Grid>
+                </>
+              )}
             </Grid>
           </Box>
           <ConsentFooter />

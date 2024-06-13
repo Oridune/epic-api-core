@@ -208,7 +208,7 @@ export default class UploadsController extends BaseController {
               );
             }
 
-            return (await onDelete(ctx, Uploads.deleteObject) ??
+            return (await onDelete(ctx, Uploads.deleteObject.bind(Uploads)) ??
               Response.true());
           },
         });

@@ -45,7 +45,7 @@ export default (options?: {
         [OauthAppIdKey]: e.optional(e.string()),
         reCaptchaV3Token: e.optional(e.string()),
       }, { allowUnexpectedProps: true })
-      .validate(Object.fromEntries(ctx.request.url.searchParams), {
+      .validate(Object.fromEntries(ctx.request.url.searchParams) ?? {}, {
         name: "query",
       });
 
@@ -53,13 +53,13 @@ export default (options?: {
     const Params = await e.object({
       [OauthAppIdKey]: e.optional(e.string()),
     }, { allowUnexpectedProps: true })
-      .validate(ctx.params, { name: "params" });
+      .validate(ctx.params ?? {}, { name: "params" });
 
     // Body Validation
     const Body = await e.object({
       [OauthAppIdKey]: e.optional(e.string()),
     }, { allowUnexpectedProps: true })
-      .validate(await ctx.request.body({ type: "json" }).value, {
+      .validate(await ctx.request.body({ type: "json" }).value ?? {}, {
         name: "body",
       });
 

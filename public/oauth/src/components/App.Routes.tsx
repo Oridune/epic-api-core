@@ -8,6 +8,7 @@ import { LoginPage } from "./pages/Login";
 import { SignupPage } from "./pages/Signup";
 import { ForgotPage } from "./pages/Forgot";
 import { ContactsPage } from "./pages/Contacts";
+import { PasskeyPage } from "./pages/Passkey";
 import { NotFoundPage } from "./pages/NotFound";
 
 export const AppRoutes = () => {
@@ -34,6 +35,10 @@ export const AppRoutes = () => {
           {
             path: "/contacts/:username",
             element: <ContactsPage />,
+          },
+          {
+            path: "/passkey/setup/",
+            element: <PasskeyPage />,
           },
           {
             path: "*",
