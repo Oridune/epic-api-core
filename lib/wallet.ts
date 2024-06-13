@@ -530,7 +530,7 @@ export class Wallet {
       );
 
       if (!Transaction) throw new Error("Transaction not found!");
-      if (!Transaction.isRefunded) throw new Error("Cannot refund again!");
+      if (Transaction.isRefunded) throw new Error("Cannot refund again!");
 
       const RefundMessage = "(Refund)";
 
