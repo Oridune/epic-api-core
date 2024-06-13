@@ -30,7 +30,8 @@ export const TransactionSchema = () =>
     status: e.optional(e.in(Object.values(TransactionStatus))).default(
       TransactionStatus.COMPLETED,
     ),
-    isRefund: e.optional(e.boolean()),
+    isRefund: e.optional(e.boolean()), // Indicates this transaction is a refund received (Received).
+    isRefunded: e.optional(e.boolean()), // Indicates this transaction has been refunded (Sent).
     metadata: e.optional(e.record(e.or([e.number(), e.boolean(), e.string()]))),
   });
 
@@ -54,7 +55,7 @@ TransactionModel.createIndex(
   {
     key: { sessionId: 1 },
     unique: true,
-    partialFilterExpression: { sessionId: { $exists: true } },
+    partialFilterExpression: { sessionId: { $type: "string" } },
     background: true,
   },
   {
