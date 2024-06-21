@@ -186,11 +186,19 @@ export class Wallet {
       (_) => new ObjectId(_),
     );
 
+    if (!Accounts.length) {
+      throw new Error("Please provide an account id!");
+    }
+
+    const BaseCondition = Accounts.length === 1
+      ? Accounts[0]
+      : { $in: Accounts };
+
     return await Promise.all(
       (
         await WalletModel.find(
           {
-            account: { $in: Accounts },
+            account: BaseCondition,
             ...(options?.types instanceof Array
               ? { type: { $in: options.types } }
               : {}),
