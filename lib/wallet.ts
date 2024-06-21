@@ -175,18 +175,22 @@ export class Wallet {
   }
 
   static async list(
-    account: ObjectId | string,
+    accounts: ObjectId | string | (ObjectId | string)[],
     options?: {
       types?: string[];
       currencies?: string[];
       databaseSession?: ClientSession;
     },
   ) {
+    const Accounts = (accounts instanceof Array ? accounts : [accounts]).map(
+      (_) => new ObjectId(_),
+    );
+
     return await Promise.all(
       (
         await WalletModel.find(
           {
-            account: new ObjectId(account),
+            account: { $in: Accounts },
             ...(options?.types instanceof Array
               ? { type: { $in: options.types } }
               : {}),
@@ -370,50 +374,53 @@ export class Wallet {
       );
     }
 
-    const WalletA = await this.get(From, {
-      type: Type,
-      currency: Currency,
-    });
-
-    WalletA.balance = this.roundTwo(WalletA.balance - Amount);
-
-    if (
-      WalletA.balance < 0 &&
-      !(await this.hasOverdraftMargin(
-        From,
-        Type,
-        Currency,
-        WalletA.balance,
-        {
-          skipAccountCheck: options.allowOverdraft,
-          overdraftLimit: options.overdraftLimit,
-        },
-      ))
-    ) throw new Error(`Insufficient balance!`);
-
-    const WalletB = await this.get(To, {
-      type: Type,
-      currency: Currency,
-    });
-
-    WalletB.balance = this.roundTwo(WalletB.balance + Amount);
-
-    const [WalletADigest, WalletBDigest] = await Promise.all([
-      this.createBalanceDigest(
-        WalletA.account,
-        WalletA.type,
-        WalletA.currency,
-        WalletA.balance,
-      ),
-      this.createBalanceDigest(
-        WalletB.account,
-        WalletB.type,
-        WalletB.currency,
-        WalletB.balance,
-      ),
-    ]);
-
     const Result = await Database.transaction(async (session) => {
+      //! It is required to fetch wallet inside of a transaction for latest balance in case of multiple transfers in the same session
+      const WalletA = await this.get(From, {
+        type: Type,
+        currency: Currency,
+        databaseSession: session,
+      });
+
+      WalletA.balance = this.roundTwo(WalletA.balance - Amount);
+
+      if (
+        WalletA.balance < 0 &&
+        !(await this.hasOverdraftMargin(
+          From,
+          Type,
+          Currency,
+          WalletA.balance,
+          {
+            skipAccountCheck: options.allowOverdraft,
+            overdraftLimit: options.overdraftLimit,
+          },
+        ))
+      ) throw new Error(`Insufficient balance!`);
+
+      const WalletB = await this.get(To, {
+        type: Type,
+        currency: Currency,
+        databaseSession: session,
+      });
+
+      WalletB.balance = this.roundTwo(WalletB.balance + Amount);
+
+      const [WalletADigest, WalletBDigest] = await Promise.all([
+        this.createBalanceDigest(
+          WalletA.account,
+          WalletA.type,
+          WalletA.currency,
+          WalletA.balance,
+        ),
+        this.createBalanceDigest(
+          WalletB.account,
+          WalletB.type,
+          WalletB.currency,
+          WalletB.balance,
+        ),
+      ]);
+
       // Debit Balance
       await WalletModel.updateOne(
         WalletA._id,
