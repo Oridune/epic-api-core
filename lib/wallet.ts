@@ -2,7 +2,7 @@ import { Env } from "@Core/common/env.ts";
 import { Database } from "@Database";
 import * as blakejs from "blakejs";
 import { ClientSession, ObjectId } from "mongo";
-import { WalletModel } from "@Models/wallet.ts";
+import { TWalletOutput, WalletModel } from "@Models/wallet.ts";
 import { TransactionModel } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
 import { Events } from "@Core/common/events.ts";
@@ -37,31 +37,21 @@ export class Wallet {
     return (await this.getCurrencies()).includes(currency);
   }
 
-  static async createBalanceDigest(
-    account: ObjectId | string,
-    type: string,
-    currency: string,
-    balance: number,
-  ) {
+  static async createBalanceDigest(wallet: {
+    account: ObjectId | string;
+    type: string;
+    currency: string;
+    balance: number;
+  }) {
     const Key = await Env.get("ENCRYPTION_KEY");
-    const Target = `${Key}:${account}:${type}:${currency}:${balance}`;
+    const Target =
+      `${Key}:${wallet.account}:${wallet.type}:${wallet.currency}:${wallet.balance}`;
 
     return blakejs.blake2bHex(Target);
   }
 
-  static async compareBalanceDigest(
-    account: ObjectId | string,
-    type: string,
-    currency: string,
-    balance: number,
-    digest: string,
-  ) {
-    return (await this.createBalanceDigest(
-      account,
-      type,
-      currency,
-      balance,
-    )) === digest;
+  static async compareBalanceDigest(wallet: TWalletOutput) {
+    return (await this.createBalanceDigest(wallet)) === wallet.digest;
   }
 
   static async hasOverdraftMargin(
@@ -99,6 +89,35 @@ export class Wallet {
     return postTransactionBalance >= Limit;
   }
 
+  static async invalidateTamper(wallet: TWalletOutput, options?: {
+    databaseSession?: ClientSession;
+  }) {
+    if (await this.compareBalanceDigest(wallet)) return wallet;
+
+    const Enabled = await Env.enabled("WALLET_TAMPER_INVALIDATION");
+
+    if (Enabled && typeof wallet.digest !== "string") {
+      const NewDigest = await this.createBalanceDigest(wallet);
+
+      await WalletModel.updateOneOrFail(
+        {
+          _id: wallet._id,
+          updatedAt: wallet.updatedAt,
+        },
+        { digest: NewDigest },
+        { session: options?.databaseSession },
+      ).catch(() => {
+        throw new Error("Balance digest invalidation failed!");
+      });
+
+      wallet.digest = NewDigest;
+
+      return wallet;
+    }
+
+    throw new Error("Balance tampering detected!");
+  }
+
   static async create(
     account: ObjectId | string,
     options?: {
@@ -126,12 +145,12 @@ export class Wallet {
         type: Type,
         currency: Currency,
         balance: Balance,
-        digest: await this.createBalanceDigest(
+        digest: await this.createBalanceDigest({
           account,
-          Type,
-          Currency,
-          Balance,
-        ),
+          type: Type,
+          currency: Currency,
+          balance: Balance,
+        }),
       },
       { session: options?.databaseSession },
     );
@@ -158,19 +177,8 @@ export class Wallet {
     ).project({ transactions: 0 });
 
     if (!Wallet) Wallet = await this.create(account, options);
-    else if (
-      !(await this.compareBalanceDigest(
-        Wallet.account,
-        Wallet.type,
-        Wallet.currency,
-        Wallet.balance,
-        Wallet.digest,
-      ))
-    ) {
-      throw new Error(`Balance tampering detected!`);
-    }
 
-    return Wallet;
+    return await this.invalidateTamper(Wallet);
   }
 
   static async list(
@@ -208,17 +216,9 @@ export class Wallet {
           { session: options?.databaseSession },
         ).project({ transactions: 0 })
       ).map(async (wallet) => {
-        if (
-          !(await this.compareBalanceDigest(
-            wallet.account,
-            wallet.type,
-            wallet.currency,
-            wallet.balance,
-            wallet.digest,
-          ))
-        ) {
+        await this.invalidateTamper(wallet).catch(() => {
           wallet.balance = 0;
-        }
+        });
 
         return wallet;
       }),
@@ -420,18 +420,8 @@ export class Wallet {
       WalletB.lastTxnReference = Reference;
 
       const [WalletADigest, WalletBDigest] = await Promise.all([
-        this.createBalanceDigest(
-          WalletA.account,
-          WalletA.type,
-          WalletA.currency,
-          WalletA.balance,
-        ),
-        this.createBalanceDigest(
-          WalletB.account,
-          WalletB.type,
-          WalletB.currency,
-          WalletB.balance,
-        ),
+        this.createBalanceDigest(WalletA),
+        this.createBalanceDigest(WalletB),
       ]);
 
       // Debit Balance
