@@ -1,6 +1,6 @@
 import { Env } from "@Core/common/env.ts";
 import { Database } from "@Database";
-import * as bcrypt from "bcrypt";
+import * as blakejs from "blakejs";
 import { ClientSession, ObjectId } from "mongo";
 import { WalletModel } from "@Models/wallet.ts";
 import { TransactionModel } from "@Models/transaction.ts";
@@ -43,11 +43,10 @@ export class Wallet {
     currency: string,
     balance: number,
   ) {
-    return bcrypt.hash(
-      `${await Env.get(
-        "ENCRYPTION_KEY",
-      )}:${account}:${type}:${currency}:${balance}`,
-    );
+    const Key = await Env.get("ENCRYPTION_KEY");
+    const Target = `${Key}:${account}:${type}:${currency}:${balance}`;
+
+    return blakejs.blake2bHex(Target);
   }
 
   static async compareBalanceDigest(
@@ -57,12 +56,12 @@ export class Wallet {
     balance: number,
     digest: string,
   ) {
-    return bcrypt.compare(
-      `${await Env.get(
-        "ENCRYPTION_KEY",
-      )}:${account}:${type}:${currency}:${balance}`,
-      digest,
-    );
+    return (await this.createBalanceDigest(
+      account,
+      type,
+      currency,
+      balance,
+    )) === digest;
   }
 
   static async hasOverdraftMargin(
@@ -390,7 +389,10 @@ export class Wallet {
         databaseSession: session,
       });
 
-      WalletA.balance = this.roundTwo(WalletA.balance - Amount);
+      WalletA.balance = this.roundTwo(
+        (WalletA.lastBalance = WalletA.balance) - Amount,
+      );
+      WalletA.lastTxnReference = Reference;
 
       if (
         WalletA.balance < 0 &&
@@ -412,7 +414,10 @@ export class Wallet {
         databaseSession: session,
       });
 
-      WalletB.balance = this.roundTwo(WalletB.balance + Amount);
+      WalletB.balance = this.roundTwo(
+        (WalletB.lastBalance = WalletB.balance) + Amount,
+      );
+      WalletB.lastTxnReference = Reference;
 
       const [WalletADigest, WalletBDigest] = await Promise.all([
         this.createBalanceDigest(
@@ -430,24 +435,38 @@ export class Wallet {
       ]);
 
       // Debit Balance
-      await WalletModel.updateOne(
-        WalletA._id,
+      const { modifications: modificationsA } = await WalletModel.updateOne(
+        {
+          _id: WalletA._id,
+          updatedAt: WalletA.updatedAt,
+        },
         {
           balance: WalletA.balance,
           digest: WalletADigest,
+          lastBalance: WalletA.lastBalance,
+          lastTxnReference: WalletA.lastTxnReference,
         },
         { session },
       );
 
+      WalletA.updatedAt = modificationsA.updatedAt;
+
       // Credit Balance
-      await WalletModel.updateOne(
-        WalletB._id,
+      const { modifications: modificationsB } = await WalletModel.updateOne(
+        {
+          _id: WalletB._id,
+          updatedAt: WalletB.updatedAt,
+        },
         {
           balance: WalletB.balance,
           digest: WalletBDigest,
+          lastBalance: WalletB.lastBalance,
+          lastTxnReference: WalletB.lastTxnReference,
         },
         { session },
       );
+
+      WalletB.updatedAt = modificationsB.updatedAt;
 
       return {
         wallets: [WalletA, WalletB] as const,

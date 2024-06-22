@@ -1,5 +1,5 @@
 import e, { inferInput, inferOutput } from "validator";
-import { Mongo, ObjectId, InputDocument, OutputDocument } from "mongo";
+import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 
 export const WalletSchema = () =>
   e.object({
@@ -11,6 +11,8 @@ export const WalletSchema = () =>
     currency: e.string(),
     balance: e.number(),
     digest: e.string(),
+    lastBalance: e.optional(e.number()),
+    lastTxnReference: e.optional(e.string()),
   });
 
 export type TWalletInput = InputDocument<inferInput<typeof WalletSchema>>;
