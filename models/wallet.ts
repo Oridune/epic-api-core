@@ -10,6 +10,8 @@ export const WalletSchema = e.object({
   currency: e.string(),
   balance: e.number(),
   digest: e.string(),
+  lastBalance: e.optional(e.number()),
+  lastTxnReference: e.optional(e.string()),
 });
 
 export type TWalletInput = InputDocument<inferInput<typeof WalletSchema>>;
