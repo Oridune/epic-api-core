@@ -78,31 +78,31 @@ export type TokenPayload = {
 export const DefaultOauthIssuer = Env.getSync("DISPLAY_NAME");
 export const DefaultOauthAudience = DefaultOauthIssuer;
 export const OauthTokenExpirySecond = parseInt(
-  Env.getSync("OAUTH_TOKEN_EXPIRY_SECOND", true) ?? "300", // 5m
+  Env.getSync("OAUTH_TOKEN_EXPIRY_SECOND", true) || "300", // 5m
 );
 export const OauthAuthenticationExpirySecond = parseInt(
   Env.getSync(
     "OAUTH_AUTHENTICATION_EXPIRY_SECOND",
     true,
-  ) ?? "180", // 3m
+  ) || "180", // 3m
 );
 export const OauthCodeExpirySecond = parseInt(
   Env.getSync(
     "OAUTH_CODE_EXPIRY_SECOND",
     true,
-  ) ?? "300", // 5m
+  ) || "300", // 5m
 );
 export const OauthRefreshExpirySecond = parseInt(
   Env.getSync(
     "OAUTH_REFRESH_EXPIRY_SECOND",
     true,
-  ) ?? "604800", // 1w
+  ) || "604800", // 1w
 );
 export const OauthAccessExpirySecond = parseInt(
   Env.getSync(
     "OAUTH_ACCESS_EXPIRY_SECOND",
     true,
-  ) ?? "86400", // 1d
+  ) || "86400", // 1d
 );
 
 export const AuthenticationSchema = () =>
