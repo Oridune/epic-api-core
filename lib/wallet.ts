@@ -178,7 +178,7 @@ export class Wallet {
 
     if (!Wallet) Wallet = await this.create(account, options);
 
-    return await this.invalidateTamper(Wallet);
+    return await this.invalidateTamper(Wallet, options);
   }
 
   static async list(
@@ -216,7 +216,7 @@ export class Wallet {
           { session: options?.databaseSession },
         ).project({ transactions: 0 })
       ).map(async (wallet) => {
-        await this.invalidateTamper(wallet).catch(() => {
+        await this.invalidateTamper(wallet, options).catch(() => {
           wallet.balance = 0;
         });
 
