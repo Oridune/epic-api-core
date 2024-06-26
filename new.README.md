@@ -44,3 +44,12 @@ the following command.
 # Following command updates the core of the application and make sure that the application has the latest security patches.
 deno task update:core
 ```
+
+### Collaborators
+
+If you want to collaborate on this project than fork this project on your github
+account and use the .sample.env file to setup the environment variables.
+
+**See the
+[branching strategy guide](https://dev.to/ak_23/branching-strategy-guide-24d6)
+for the best collaboration practices when working with github repositories.**
