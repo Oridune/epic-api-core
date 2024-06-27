@@ -103,36 +103,29 @@ export const updateCore = async (options: {
     const RepositoryPath = "Oridune/epic-api";
     const GitRepoUrl = new URL(RepositoryPath, "https://github.com");
     const TempPath = join(Deno.cwd(), "_temp", RepositoryPath);
+    const Pull = existsSync(TempPath);
 
     const Command = new Deno.Command("git", {
-      args: existsSync(TempPath)
-        ? [
-          "pull",
-          "origin",
-          Options.template,
-          "--progress",
-        ]
-        : [
-          "clone",
-          "--single-branch",
-          "--branch",
-          Options.template,
-          GitRepoUrl.toString(),
-          TempPath,
-          "--progress",
-        ],
+      args: Pull ? ["pull", "origin", Options.template, "--progress"] : [
+        "clone",
+        "--single-branch",
+        "--branch",
+        Options.template,
+        GitRepoUrl.toString(),
+        TempPath,
+        "--progress",
+      ],
+      cwd: Pull ? TempPath : undefined,
       stdout: "piped",
       stderr: "piped",
     });
 
     const Process = Command.spawn();
 
-    const [Out] = await Promise.all(
-      [
-        printStream(Process.stdout),
-        printStream(Process.stderr),
-      ],
-    );
+    const [Out] = await Promise.all([
+      printStream(Process.stdout),
+      printStream(Process.stderr),
+    ]);
 
     const Status = await Process.status;
 
@@ -152,12 +145,30 @@ export const updateCore = async (options: {
         )
       ) {
         for await (const Entry of Glob) {
-          if (!Entry.isDirectory) {
+          if (
+            !Entry.isDirectory &&
+            !/^(\\|\/)?(\.git)(\\|\/)?/.test(Entry.path.replace(TempPath, ""))
+          ) {
             const SourcePath = Entry.path;
-            const TargetPath = Entry.path.replace(TempPath, Deno.cwd());
-            const TargetDirectory = dirname(TargetPath);
+            const TargetPath = SourcePath.replace(TempPath, Deno.cwd());
 
-            if (existsSync(TargetPath)) continue;
+            if (
+              existsSync(TargetPath) && [
+                /^(\\|\/)?(core)(\\|\/)?/,
+                /^(\\|\/)?(docs)(\\|\/)?/,
+                /^(\\|\/)?(templates)(\\|\/)?/,
+                /^(\\|\/)?(tests)(\\|\/)?/,
+                /^(\\|\/)?(serve.ts)/,
+                /^(\\|\/)?(base.d.ts)/,
+              ].reduce(
+                (continues, expect) =>
+                  continues &&
+                  !expect.test(Entry.path.replace(TempPath, "")),
+                true,
+              )
+            ) continue;
+
+            const TargetDirectory = dirname(TargetPath);
 
             await Deno.mkdir(TargetDirectory, { recursive: true }).catch(() => {
               // Do nothing...
@@ -170,42 +181,11 @@ export const updateCore = async (options: {
         }
       }
 
-      // Create/Update Files
-      for (
-        const Glob of [
-          ".vscode/epic.code-snippets",
-          "core/**/*",
-          "docs/**/*",
-          "templates/**/*",
-          "tests/**/*",
-          "serve.ts",
-          "base.d.ts",
-        ].map((pattern) =>
-          expandGlob(pattern, {
-            root: TempPath,
-            globstar: true,
-          })
-        )
-      ) {
-        for await (const Entry of Glob) {
-          if (!Entry.isDirectory) {
-            const SourcePath = Entry.path;
-            const TargetPath = Entry.path.replace(TempPath, Deno.cwd());
-            const TargetDirectory = dirname(TargetPath);
-
-            // If file is not already created just now than create/update...
-            if (!CreatedFiles.has(TargetPath)) {
-              await Deno.mkdir(TargetDirectory, { recursive: true }).catch(
-                () => {
-                  // Do nothing...
-                },
-              );
-
-              await Deno.copyFile(SourcePath, TargetPath);
-            }
-          }
-        }
-      }
+      // Update Code Snippets
+      await Deno.copyFile(
+        join(TempPath, ".vscode/epic.code-snippets"),
+        join(Deno.cwd(), ".vscode/new.epic.code-snippets"),
+      );
 
       // Update Docs File
       await Deno.copyFile(
