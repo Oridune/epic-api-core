@@ -939,11 +939,14 @@ export default class OauthController extends BaseController {
             password: "Test123!",
           };
 
-          Context.user = await UserModel.findOne({
-            username: Credentials.username,
-          });
+          Context.user = {
+            status: true,
+            data: await UserModel.findOne({
+              username: Credentials.username,
+            }),
+          };
 
-          if (!Context.user) {
+          if (!Context.user.data) {
             const Register = (await fetch(
               ctx.router.app,
               new URL(
