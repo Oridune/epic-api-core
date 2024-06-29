@@ -939,7 +939,11 @@ export default class OauthController extends BaseController {
             password: "Test123!",
           };
 
-          if (!(await UserModel.exists({ username: Credentials.username }))) {
+          Context.user = await UserModel.findOne({
+            username: Credentials.username,
+          });
+
+          if (!Context.user) {
             const Register = (await fetch(
               ctx.router.app,
               new URL(
@@ -964,11 +968,13 @@ export default class OauthController extends BaseController {
                 .message("Tester registration failed!")
                 .data(Context);
             }
-
-            await UserModel.updateOneOrFail(Register.data._id, {
-              role: Body.asRole ?? "user",
-            });
           }
+        }
+
+        if (typeof Body.asRole === "string" && Context.user) {
+          await UserModel.updateOneOrFail(Context.user.data._id, {
+            role: Body.asRole,
+          });
         }
 
         // Authenticate with the api

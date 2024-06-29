@@ -59,7 +59,6 @@ export const UpdateUserSchema = e.object({
 });
 
 export const CreateUserSchema = e.object({
-  oauthApp: e.instanceOf(ObjectId, { instantiate: true }),
   username: UsernameValidator,
   password: PasswordValidator,
   avatar: e.optional(FileSchema),
@@ -74,6 +73,7 @@ export const UserSchema = CreateUserSchema.extends(
     _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
     createdAt: e.optional(e.date()).default(() => new Date()),
     updatedAt: e.optional(e.date()).default(() => new Date()),
+    oauthApp: e.instanceOf(ObjectId, { instantiate: true }),
     reference: e
       .optional(UserReferenceValidator)
       .default(
