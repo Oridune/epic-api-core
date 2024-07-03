@@ -414,6 +414,29 @@ export const LoginPage = () => {
                       {t("Continue")}
                     </Button>
                   </Grid>
+                  <Grid
+                    item
+                    xs={12}
+                    sx={{ display: "flex", justifyContent: "right" }}
+                  >
+                    <Link
+                      href={`/signup/${window.location.search}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const Path = e.currentTarget.getAttribute("href")!;
+                        if (Path) Navigate(Path);
+
+                        ReactGA4.event({
+                          category: "Oauth2",
+                          action: "Click",
+                          label: "Create an account",
+                        });
+                      }}
+                      variant="body2"
+                    >
+                      {t("Don't have an account?")}
+                    </Link>
+                  </Grid>
                   <Grid item xs={12}>
                     <Divider sx={{ width: "100%" }}>
                       <Typography variant="subtitle2" color="text.secondary">
