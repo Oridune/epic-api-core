@@ -15,7 +15,8 @@
     "batcher.ts",
     "envs.ts",
     "requestLogs.ts",
-    "oauthPasskey.ts"
+    "oauthPasskey.ts",
+    "manageWallets.ts"
   ],
   "excludes": [],
   "sequenceProps": {}
