@@ -46,20 +46,26 @@ export default class UsersController extends BaseController {
     user: Omit<TUserInput, "role" | "passwordHistory" | "collaborates">,
   ) {
     if (
-      user.reference && await UserModel.exists({ reference: user.reference })
-    ) throw e.error(`Reference already registered!`);
+      user.reference &&
+      (await UserModel.exists({ reference: user.reference }))
+    ) {
+      throw e.error(`Reference already registered!`);
+    }
 
     if (
-      user.username && await UserModel.exists({ username: user.username })
-    ) throw e.error(`Username is already taken!`);
+      user.username &&
+      (await UserModel.exists({ username: user.username }))
+    ) {
+      throw e.error(`Username is already taken!`);
+    }
 
-    if (
-      user.phone && await UserModel.exists({ phone: user.phone })
-    ) throw e.error(`Phone number already registered!`);
+    if (user.phone && (await UserModel.exists({ phone: user.phone }))) {
+      throw e.error(`Phone number already registered!`);
+    }
 
-    if (
-      user.email && await UserModel.exists({ email: user.email })
-    ) throw e.error(`Email already registered!`);
+    if (user.email && (await UserModel.exists({ email: user.email }))) {
+      throw e.error(`Email already registered!`);
+    }
 
     return Mongo.transaction(async (session) => {
       const UserId = new ObjectId();
@@ -170,8 +176,7 @@ export default class UsersController extends BaseController {
     });
 
     // Define Body Schema
-    const BodySchema = e
-      .omit(CreateUserSchema, ["oauthApp"]);
+    const BodySchema = e.omit(CreateUserSchema, ["oauthApp"]);
 
     return {
       postman: {
@@ -290,7 +295,11 @@ export default class UsersController extends BaseController {
           { _id: new ObjectId(Payload.userId) },
           {
             password: Body.hashedPassword,
-            $push: { passwordHistory: Body.hashedPassword },
+            $push: {
+              passwordHistory: Body.hashedPassword,
+            },
+            failedLoginAttempts: 0,
+            deletionAt: null,
           },
         );
 
