@@ -630,10 +630,10 @@ export default class OauthController extends BaseController {
 
           // Authentication will always fail even if the password is correct, if multiple wrong attempts found!
           if (
-            User.failedLoginAttempts >
+            (User.failedLoginAttempts >
               parseInt(
                 await Env.get("OAUTH_FAILED_LOGIN_LIMIT", true) ?? "5",
-              ) ||
+              )) ||
             !(await bcrypt.compare(Credentials.password, User.password))
           ) break login;
 

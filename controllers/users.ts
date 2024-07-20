@@ -287,9 +287,7 @@ export default class UsersController extends BaseController {
           User!.passwordHistory?.some((hashedPassword) =>
             bcrypt.compareSync(Body.password, hashedPassword)
           )
-        ) {
-          e.error(`Cannot use an old password!`);
-        }
+        ) e.error(`Cannot use an old password!`);
 
         await UserModel.updateOne(
           { _id: new ObjectId(Payload.userId) },
