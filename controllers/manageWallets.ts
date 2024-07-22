@@ -16,6 +16,8 @@ import { Wallet } from "@Lib/wallet.ts";
 
 import { WalletModel } from "@Models/wallet.ts";
 import { TransactionModel } from "@Models/transaction.ts";
+import { UserModel } from "@Models/user.ts";
+import { AccountModel } from "@Models/account.ts";
 
 @Controller("/manage/wallets/", { name: "manageWallets" })
 export default class ManageWalletsController extends BaseController {
@@ -232,6 +234,110 @@ export default class ManageWalletsController extends BaseController {
             ? await TransactionModel.count(TransactionListBaseConditions)
             : undefined,
           results: await TransactionListQuery,
+        });
+      },
+    });
+  }
+
+  @Post("/charge/:type?/:currency?/")
+  public charge(route: IRoute) {
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      type: e.optional(e.string()),
+      currency: e.optional(e.string()),
+    });
+
+    // Define Body Schema
+    const BodySchema = e.object({
+      payer: e.string(),
+      amount: e.number({ cast: true }),
+      description: e.optional(e.string().max(300)),
+      metadata: e.optional(
+        e.record(e.or([e.number(), e.boolean(), e.string()]), { cast: true }),
+      ),
+    });
+
+    return new Versioned().add("1.0.0", {
+      postman: {
+        params: ParamsSchema.toSample(),
+        body: BodySchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
+
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: `${route.scope}.body` },
+        );
+
+        const [payerId, accountId] = Body.payer.split(":");
+
+        const PayerUser = await UserModel.findOne({
+          $or: [
+            ...(ObjectId.isValid(payerId)
+              ? [{ _id: new ObjectId(payerId) }]
+              : []),
+            { username: payerId },
+            { email: payerId },
+            { phone: payerId },
+          ],
+        }).project({
+          _id: 1,
+          fname: 1,
+          mname: 1,
+          lname: 1,
+          avatar: 1,
+        });
+
+        if (!PayerUser) {
+          throw e.error(
+            `Payer user not found!`,
+            `${route.scope}.body.payer`,
+          );
+        }
+
+        const PayerAccount = await AccountModel.findOne({
+          ...(ObjectId.isValid(accountId)
+            ? { _id: new ObjectId(accountId) }
+            : {}),
+          createdFor: PayerUser._id,
+        }).project({
+          _id: 1,
+        });
+
+        if (!PayerAccount) throw e.error("Payer account not found!");
+
+        const Transfer = await Wallet.transfer({
+          fromName: [
+            PayerUser.fname,
+            PayerUser.mname!,
+            PayerUser.lname!,
+          ],
+          from: PayerAccount._id,
+          sender: PayerUser._id,
+          toName: [
+            ctx.router.state.auth.user.fname,
+            ctx.router.state.auth.user.mname!,
+            ctx.router.state.auth.user.lname!,
+          ],
+          to: ctx.router.state.auth.accountId,
+          receiver: ctx.router.state.auth.userId,
+          user: ctx.router.state.auth.userId,
+          type: Params.type,
+          currency: Params.currency,
+          amount: Body.amount,
+          description: Body.description,
+          metadata: Body.metadata,
+        });
+
+        return Response.statusCode(Status.Created).data({
+          transaction: Transfer.transaction,
         });
       },
     });
