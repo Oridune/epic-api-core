@@ -1,5 +1,6 @@
 import e from "validator";
 import { type RouterContext } from "oak";
+import { Flags } from "@Core/common/flags.ts";
 import { OauthAppModel, SupportedIntegrationId } from "@Models/oauthApp.ts";
 
 export const verifyRecaptchaV3 = async (
@@ -39,6 +40,8 @@ export default (options?: {
   const OauthAppIdKey = options?.oauthAppIdKey ?? "oauthAppId";
 
   return async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
+    if (Flags.noHumanVerification) await next();
+
     // Query Validation
     const Query = await e
       .object({

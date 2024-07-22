@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import { parse } from "flags";
 import {
   BaseController,
   Controller,
@@ -32,8 +31,7 @@ import { AccountModel } from "@Models/account.ts";
 import { SecurityGuard } from "@Lib/securityGuard.ts";
 import { ResolveScopeRole } from "../hooks/checkPermissions.ts";
 import { OauthSecretModel } from "@Models/oauthSecret.ts";
-
-const { allowQuickLogin } = parse(Deno.args);
+import { Flags } from "@Core/common/flags.ts";
 
 export enum OauthTokenType {
   AUTHENTICATION = "oauth_authentication",
@@ -883,7 +881,7 @@ export default class OauthController extends BaseController {
   }
 
   @Post("/local/quick/login/", {
-    disabled: !allowQuickLogin && Env.is(EnvType.PRODUCTION),
+    disabled: !Flags.allowQuickLogin && Env.is(EnvType.PRODUCTION),
   })
   public quickLogin(route: IRoute) {
     // Define Body Schema
