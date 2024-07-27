@@ -53,6 +53,13 @@
     "Verify": "التحقق",
     "Change": "التغيير",
     "Change your contact": "تغيير الهاتف الخاص بك",
-    "Return back?": "العودة إلى الوراء؟"
+    "Return back?": "العودة إلى الوراء؟",
+    "Continue": "يكمل",
+    "Sign in with a passkey": "تسجيل الدخول باستخدام مفتاح المرور",
+    "The operation has failed!": "لقد فشلت العملية!",
+    "Setup a Passkey": "إعداد مفتاح المرور",
+    "Start using passkeys to make getting into your account fast & easy!": "ابدأ باستخدام مفاتيح المرور لتسهيل عملية الدخول إلى حسابك وسرعة إنجازه!",
+    "Start setup": "بدء الإعداد",
+    "The passkey setup was successful!": "تم إعداد مفتاح المرور بنجاح!"
   }
 }

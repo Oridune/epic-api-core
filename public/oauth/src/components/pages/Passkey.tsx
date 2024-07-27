@@ -69,7 +69,7 @@ export const PasskeyPage = () => {
       if (!PasskeyChallenge.data.status)
         throw new Error(
           PasskeyChallenge.data.messages?.[0]?.message ??
-            "Operation has failed!"
+            t("The operation has failed!")
         );
 
       const VerifyResponse = await axios.post(
@@ -193,7 +193,7 @@ export const PasskeyPage = () => {
                       ) : (
                         <center>
                           <Typography variant="subtitle2" color={green[500]}>
-                            {t("Passkey setup successful!")}
+                            {t("The passkey setup was successful!")}
                           </Typography>
                         </center>
                       )}

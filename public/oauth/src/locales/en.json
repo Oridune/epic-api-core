@@ -53,6 +53,13 @@
     "Verify": "Verify",
     "Change": "Change",
     "Change your contact": "Change your contact",
-    "Return back?": "Return back?"
+    "Return back?": "Return back?",
+    "Continue": "Continue",
+    "Sign in with a passkey": "Sign in with a passkey",
+    "The operation has failed!": "Operation has failed!",
+    "Setup a Passkey": "Setup a Passkey",
+    "Start using passkeys to make getting into your account fast & easy!": "Start using passkeys to make getting into your account fast & easy!",
+    "Start setup": "Start setup",
+    "The passkey setup was successful!": "The passkey setup was successful!"
   }
 }

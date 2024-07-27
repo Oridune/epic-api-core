@@ -40,7 +40,7 @@ export default (options?: {
   const OauthAppIdKey = options?.oauthAppIdKey ?? "oauthAppId";
 
   return async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
-    if (Flags.noHumanVerification) await next();
+    if (Flags.noHumanVerification) return await next();
 
     // Query Validation
     const Query = await e
