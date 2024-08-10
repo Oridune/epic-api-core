@@ -158,7 +158,7 @@ export default class UsersController extends BaseController {
       {
         reference: e.any().custom(async (ctx) => {
           if (typeof ctx.output === "string") {
-            const { error } = await UserReferenceValidator.try(ctx.output);
+            const { error } = await UserReferenceValidator().try(ctx.output);
             if (error) ctx.output = undefined;
           }
         }),
@@ -249,7 +249,7 @@ export default class UsersController extends BaseController {
       method: e.in(Object.values(IdentificationMethod)),
       token: e.string(),
       code: e.number({ cast: true }).length(6),
-      password: PasswordValidator,
+      password: PasswordValidator(),
       hashedPassword: e
         .any()
         .custom((ctx) => bcrypt.hash(ctx.parent?.output.password)),
@@ -310,7 +310,7 @@ export default class UsersController extends BaseController {
   public updateEmail(route: IRoute) {
     // Define Body Schema
     const BodySchema = e.object({
-      email: EmailValidator.custom(async (ctx) => {
+      email: EmailValidator().custom(async (ctx) => {
         if (await UserModel.count({ email: ctx.output })) {
           throw "Please provide a different email!";
         }
@@ -350,7 +350,7 @@ export default class UsersController extends BaseController {
   public updatePhone(route: IRoute) {
     // Define Body Schema
     const BodySchema = e.object({
-      phone: PhoneValidator.custom(async (ctx) => {
+      phone: PhoneValidator().custom(async (ctx) => {
         if (await UserModel.count({ phone: ctx.output })) {
           throw "Please provide a different phone!";
         }

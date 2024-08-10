@@ -6,8 +6,8 @@ import { EmailValidator, PhoneValidator } from "@Models/user.ts";
 export const InputAccountSchema = e.object({
   name: e.optional(e.string()),
   description: e.optional(e.string()),
-  email: e.optional(EmailValidator),
-  phone: e.optional(PhoneValidator),
+  email: e.optional(EmailValidator()),
+  phone: e.optional(PhoneValidator()),
 });
 
 export const AccountSchema = e.object({

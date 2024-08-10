@@ -11,7 +11,7 @@ export const AccountInviteSchema = e.object({
   createdAt: e.optional(e.date()).default(() => new Date()),
   updatedAt: e.optional(e.date()).default(() => new Date()),
   createdBy: e.instanceOf(ObjectId, { instantiate: true }),
-  recipient: e.or([PhoneValidator, EmailValidator, UsernameValidator]),
+  recipient: e.or([PhoneValidator(), EmailValidator(), UsernameValidator()]),
   role: e.string(),
   account: e.instanceOf(ObjectId, { instantiate: true }),
   token: e.optional(e.string()).default(() => crypto.randomUUID()),

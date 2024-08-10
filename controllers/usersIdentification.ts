@@ -131,7 +131,7 @@ export default class UsersIdentificationController extends BaseController {
   public publicMethods() {
     // Define Params Schema
     const ParamsSchema = e.object({
-      username: UsernameValidator,
+      username: UsernameValidator(),
     });
 
     return new Versioned().add("1.0.0", {
@@ -182,7 +182,7 @@ export default class UsersIdentificationController extends BaseController {
     // Define Params Schema
     const ParamsSchema = e.object({
       purpose: e.in(Object.values(IdentificationPurpose)),
-      username: UsernameValidator,
+      username: UsernameValidator(),
       method: e.in(Object.values(IdentificationMethod)),
     });
 

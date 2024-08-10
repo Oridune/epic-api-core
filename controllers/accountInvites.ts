@@ -58,8 +58,8 @@ export default class AccountInvitesController extends BaseController {
 
         if (!Env.is(EnvType.TEST)) {
           const [isEmail, isPhone] = await Promise.all([
-            e.is(EmailValidator, Body.recipient),
-            e.is(PhoneValidator, Body.recipient),
+            e.is(EmailValidator(), Body.recipient),
+            e.is(PhoneValidator(), Body.recipient),
           ]);
 
           await Notify.sendWithNovu({
