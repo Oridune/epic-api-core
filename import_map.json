@@ -44,8 +44,7 @@
     "lngParser": "npm:accept-language-parser@^1.5.0",
     "simplewebauthn": "https://deno.land/x/simplewebauthn@v10.0.0/deno/server.ts",
     "simplewebauthn/helpers": "https://deno.land/x/simplewebauthn@v10.0.0/deno/server/helpers.ts",
-    "blakejs": "npm:blakejs@^1.2.1",
-    "axios": "npm:axios@1.7.2"
+    "blakejs": "npm:blakejs@^1.2.1"
   },
   "scopes": {}
 }
