@@ -99,11 +99,14 @@ export const LoginPage = () => {
     reset,
     watch,
     trigger,
+    getFieldState,
   } = useForm<InferOutput<typeof LoginSchema>>({
     resolver: ValidatorResolver(LoginSchema),
   });
 
   const LoginData = watch();
+
+  console.log("Login Data:", LoginData);
 
   const HandleLogin: SubmitHandler<InferOutput<typeof LoginSchema>> = async (
     data
