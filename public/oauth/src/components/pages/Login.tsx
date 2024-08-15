@@ -99,7 +99,6 @@ export const LoginPage = () => {
     reset,
     watch,
     trigger,
-    getFieldState,
   } = useForm<InferOutput<typeof LoginSchema>>({
     resolver: ValidatorResolver(LoginSchema),
   });
@@ -381,7 +380,7 @@ export const LoginPage = () => {
                     {...register("username", {
                       value: Query.get("username") ?? "",
                     })}
-                    disabled={LoginWithPassword && app?.consent.passkeyEnabled}
+                    readOnly={LoginWithPassword && app?.consent.passkeyEnabled}
                   />
                   <FormHelperText error={!!errors.username?.message}>
                     {errors.username?.message}
