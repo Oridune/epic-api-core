@@ -25,6 +25,7 @@ import { LoadingFormPage } from "./pages/LoadingForm";
 import Logo from "../assets/logo.png";
 
 export const AppTheme = () => {
+  const [locizeInit, setLocizeInit] = React.useState(false);
   const { app, loading, integrations } = useOauthApp();
 
   const ThemeMode = useThemeMode();
@@ -50,6 +51,28 @@ export const AppTheme = () => {
     app?.consent.secondaryColor ??
     DefaultSecondaryColor;
   const Roundness = app?.consent.styling?.roundness ?? DefaultRoundness;
+
+  React.useEffect(() => {
+    if (integrations.i18nLocize?.publicKey && !locizeInit) {
+      setLocizeInit(true);
+
+      (async () => {
+        const locizeBackend = await import("i18next-locize-backend");
+
+        await i18n.use(locizeBackend.default).init({
+          backend: {
+            projectId: integrations.i18nLocize?.props?.projectId,
+            apiKey: integrations.i18nLocize?.publicKey,
+            // referenceLng: i18n.options.fallbackLng,
+          },
+          ...i18n.options,
+          resources: undefined,
+          lng: i18n.language,
+          saveMissing: true,
+        });
+      })();
+    }
+  }, [integrations.i18nLocize]);
 
   React.useEffect(() => {
     if (integrations.googleAnalytics4?.publicKey) {

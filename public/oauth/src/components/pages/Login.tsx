@@ -105,8 +105,6 @@ export const LoginPage = () => {
 
   const LoginData = watch();
 
-  console.log("Login Data:", LoginData);
-
   const HandleLogin: SubmitHandler<InferOutput<typeof LoginSchema>> = async (
     data
   ) => {

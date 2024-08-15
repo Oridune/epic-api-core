@@ -28,8 +28,14 @@ export interface IOauthConsent {
   };
 }
 
+export const ExpectedIntegrationsMapping = {
+  "re-captcha-v3": "reCaptchaV3",
+  "google-analytics-4": "googleAnalytics4",
+  "i18n-locize": "i18nLocize",
+} as const;
+
 export interface IOauthIntegration {
-  id: "re-captcha-v3" | "google-analytics-4";
+  id: keyof typeof ExpectedIntegrationsMapping;
   enabled: boolean;
   publicKey?: string;
   props?: Record<string, string>;
@@ -54,6 +60,7 @@ export const OauthAppContext = React.createContext<{
   integrations: {
     googleAnalytics4?: IOauthIntegration;
     reCaptchaV3?: IOauthIntegration;
+    i18nLocize?: IOauthIntegration;
   };
 }>({ app: null, loading: false, integrations: {} });
 
@@ -101,14 +108,13 @@ export const OauthAppProvider: React.FC<IOauthAppProviderProps> = ({
       value={{
         app: App,
         loading: Loading,
-        integrations: {
-          googleAnalytics4: App?.integrations?.find(
-            (i) => i.enabled && i.id === "google-analytics-4"
-          ),
-          reCaptchaV3: App?.integrations?.find(
-            (i) => i.enabled && i.id === "re-captcha-v3"
-          ),
-        },
+        integrations: Object.entries(ExpectedIntegrationsMapping).reduce(
+          (obj, [id, key]) => ({
+            ...obj,
+            [key]: App?.integrations?.find((i) => i.enabled && i.id === id),
+          }),
+          {}
+        ),
       }}
     >
       {children}
