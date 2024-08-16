@@ -414,6 +414,8 @@ export default class UsersController extends BaseController {
 
         // Background event may fetch the data based on this userId
         ctx.router.state.updateFcmDeviceTokens = ctx.router.state.auth.userId;
+
+        return Response.true();
       },
     });
   }
@@ -449,6 +451,8 @@ export default class UsersController extends BaseController {
 
         // Background event may fetch the data based on this userId
         ctx.router.state.updateFcmDeviceTokens = ctx.router.state.auth.userId;
+
+        return Response.true();
       },
     });
   }
