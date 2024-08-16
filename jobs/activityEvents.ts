@@ -107,7 +107,7 @@ export default () => {
     res: Response<ReturnType<typeof OauthController.createOauthAccessTokens>>;
   }>(
     EventChannel.REQUEST,
-    "oauth.exchangeCode",
+    ["oauth.exchangeCode", "users.setFcmToken", "users.deleteFcmToken"],
     async (event) => {
       const Request = event.detail.ctx;
 
@@ -288,22 +288,35 @@ export default () => {
       const Request = event.detail.ctx;
       const Body = event.detail.res.getBody();
 
-      if (typeof Request.router.state.auth?.userId === "string") {
-        if (Body.status && Body.data) {
-          const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
+      if (
+        Body.status && typeof Request.router.state.auth?.userId === "string"
+      ) {
+        const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
 
-          const Payload = {
-            avatar: Body.data.url,
-          };
+        switch (Request.router.request.method.toLowerCase()) {
+          case "put":
+            if (Body.data) {
+              const Payload = {
+                avatar: Body.data.url,
+              };
 
-          await Notifier.subscribers
-            .update(Request.router.state.auth.userId, Payload)
-            .catch(() =>
-              Notifier.subscribers.identify(
-                Request.router.state.auth!.userId,
-                Payload,
-              )
-            );
+              await Notifier.subscribers
+                .update(Request.router.state.auth.userId, Payload)
+                .catch(() =>
+                  Notifier.subscribers.identify(
+                    Request.router.state.auth!.userId,
+                    Payload,
+                  )
+                );
+            }
+            break;
+
+          case "delete":
+            //! Need to delete avatar from Novu!
+            break;
+
+          default:
+            break;
         }
       }
     } catch {

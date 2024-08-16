@@ -386,6 +386,73 @@ export default class UsersController extends BaseController {
     });
   }
 
+  @Put("/fcm/token/")
+  public setFcmToken() {
+    // Define Body Schema
+    const BodySchema = e.object({
+      token: e.string(),
+    });
+
+    return Versioned.add("1.0.0", {
+      postman: {
+        body: BodySchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body({ type: "json" }).value,
+          { name: "oauth.body" },
+        );
+
+        await UserModel.updateOne(ctx.router.state.auth.userId, {
+          $addToSet: {
+            fcmDeviceTokens: Body.token,
+          },
+        });
+
+        // Background event may fetch the data based on this userId
+        ctx.router.state.updateFcmDeviceTokens = ctx.router.state.auth.userId;
+      },
+    });
+  }
+
+  @Delete("/fcm/token/")
+  public deleteFcmToken(route: IRoute) {
+    // Define Query Schema
+    const QuerySchema = e.object(
+      {
+        token: e.string(),
+      },
+      { allowUnexpectedProps: true },
+    );
+
+    return Versioned.add("1.0.0", {
+      postman: {
+        query: QuerySchema.toSample(),
+      },
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Query Validation
+        const Query = await QuerySchema.validate(
+          Object.fromEntries(ctx.router.request.url.searchParams),
+          { name: `${route.scope}.query` },
+        );
+
+        await UserModel.updateOne(ctx.router.state.auth.userId, {
+          $pull: {
+            fcmDeviceTokens: Query.token,
+          },
+        });
+
+        // Background event may fetch the data based on this userId
+        ctx.router.state.updateFcmDeviceTokens = ctx.router.state.auth.userId;
+      },
+    });
+  }
+
   @Post("/verify/")
   public verify(route: IRoute) {
     // Define Body Schema
@@ -643,6 +710,7 @@ export default class UsersController extends BaseController {
 
   @Get("/avatar/sign/")
   @Put("/avatar/")
+  @Delete("/avatar/")
   public updateAvatar(route: IRoute) {
     return UploadsController.upload(
       route,
@@ -660,9 +728,24 @@ export default class UsersController extends BaseController {
       async (ctx, avatar) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
-        await UserModel.updateOne(ctx.router.state.auth!.userId, {
+        await UserModel.updateOneOrFail(ctx.router.state.auth!.userId, {
           avatar,
         });
+      },
+      async (ctx, deleteObject) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        const ObjectUrl = ctx.router.state.auth?.user.avatar?.url;
+
+        if (ObjectUrl) {
+          await UserModel.updateOneOrFail(ctx.router.state.auth!.userId, {
+            $unset: {
+              avatar: 1,
+            },
+          });
+
+          await deleteObject(ObjectUrl);
+        }
       },
     );
   }
