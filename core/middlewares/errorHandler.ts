@@ -8,6 +8,7 @@ import {
   respondWith,
   Response,
 } from "@Core/common/mod.ts";
+import { inspect } from "node:util";
 
 export const errorHandler = () =>
 async (
@@ -16,7 +17,9 @@ async (
 ) => {
   try {
     await next();
-  } catch (error) {
+  } catch (err) {
+    const error: any = err;
+
     if (error instanceof Response || error instanceof RawResponse) {
       await respondWith(ctx, error);
     } else {
@@ -49,7 +52,7 @@ async (
     if (!Env.is(EnvType.PRODUCTION)) {
       console.error(
         `${ctx.request.method.toUpperCase()}: ${ctx.request.url.pathname}`,
-        error,
+        inspect(error, true, Infinity, true),
       );
 
       if (error.cause !== undefined) {

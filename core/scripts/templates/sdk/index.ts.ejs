@@ -1,0 +1,40 @@
+/**
+ * Copyright © Oridune <%- new Date().getFullYear() %>
+ *
+ * This is a generated file. Do not edit the contents of this file!
+ */
+
+import axios, { AxiosInstance } from "axios";
+import type { TSDKOptions } from "./types.ts";
+
+<% for (const [Scope, RouteGroups] of Object.entries(scopeGroups)) { -%>
+import { IController$<%- Scope %>, <%- Scope %>Module } from "<%- await generateModule(Scope, RouteGroups) %>";
+<% } -%>
+
+export class EpicSDK {
+    static options?: TSDKOptions;
+    static client?: AxiosInstance;
+    static accessToken?: string;
+    static permissions?: Set<string>;
+
+    static init(options: TSDKOptions) {
+        EpicSDK.options = options;
+        EpicSDK.client = axios.create(options);
+    }
+
+    static isPermitted(scope: string, permission?: string) {
+        if(!(EpicSDK.permissions instanceof Set))
+            return true;
+
+        return EpicSDK.permissions.has(scope) || EpicSDK.permissions.has(`${scope}.${permission}`);
+    }
+
+    static checkPermission(scope: string, permission?: string) {
+        if(!EpicSDK.isPermitted(scope, permission))
+            throw new Error(`You are not authorized to perform this action! Missing permission '${scope}.${permission}'!`);
+    }
+
+<% for (const [Scope, RouteGroups] of Object.entries(scopeGroups)) { -%>
+    static <%- Scope %>: IController$<%- Scope %> = <%- Scope %>Module(EpicSDK);
+<% } -%>
+}
