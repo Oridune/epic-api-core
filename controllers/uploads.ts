@@ -104,7 +104,7 @@ export default class UploadsController extends BaseController {
           ...UploadRequest,
           token: (
             await OauthController.createToken({
-              type: this.UploadTokenType,
+              type: UploadsController.UploadTokenType,
               payload: {
                 name,
                 url: UploadRequest.getUrl,

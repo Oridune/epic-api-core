@@ -124,7 +124,7 @@ export const SignupPage = () => {
           fname: data.fname,
           lname: data.lname,
           email: data.email,
-          phone: `${DialingCode}${parseInt(data.phone)}`,
+          phone: data.phone && `${DialingCode}${parseInt(data.phone)}`,
           username: data.username,
           password: data.password,
         },
