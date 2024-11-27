@@ -31,9 +31,9 @@ export default class CollaboratorsController extends BaseController {
     });
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
@@ -138,10 +138,10 @@ export default class CollaboratorsController extends BaseController {
     });
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         params: ParamsSchema.toSample(),
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
@@ -189,9 +189,9 @@ export default class CollaboratorsController extends BaseController {
     });
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
@@ -248,10 +248,10 @@ export default class CollaboratorsController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
@@ -319,9 +319,9 @@ export default class CollaboratorsController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 

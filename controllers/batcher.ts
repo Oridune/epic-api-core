@@ -45,9 +45,9 @@ export default class BatcherController extends BaseController {
     });
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
         const Body = await BodySchema.validate(
@@ -113,9 +113,12 @@ export default class BatcherController extends BaseController {
                   const Data = await FetchResponse?.json();
 
                   Responses.push(Data);
-                } catch (error) {
+                } catch (err) {
+                  // deno-lint-ignore no-explicit-any
+                  const error: any = err;
+
                   Responses.push(
-                    Response.false().message(error.message).getBody(),
+                    Response.false().message(error?.message ?? error).getBody(),
                   );
                 }
               }

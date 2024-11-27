@@ -1,18 +1,18 @@
 import {
-  Loader,
-  Controller,
   BaseController,
-  Get,
-  Post,
-  Patch,
+  Controller,
   Delete,
-  Response,
-  type IRequestContext,
   Env,
   EnvType,
+  Get,
+  type IRequestContext,
+  Loader,
+  Patch,
+  Post,
+  Response,
   Versioned,
 } from "@Core/common/mod.ts";
-import { Status, type RouterContext } from "oak";
+import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { addPlugin, PluginSource } from "@Core/scripts/addPlugin.ts";
 import { removePlugin } from "@Core/scripts/removePlugin.ts";
@@ -36,16 +36,17 @@ export default class AdminPluginsController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (Env.is(EnvType.PRODUCTION))
+        if (Env.is(EnvType.PRODUCTION)) {
           e.error("This operation is not possible in production!");
+        }
 
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: "Plugins.body" }
+          { name: "Plugins.body" },
         );
 
         await e.try(() => addPlugin(Body));
@@ -63,17 +64,18 @@ export default class AdminPluginsController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (Env.is(EnvType.PRODUCTION))
+        if (Env.is(EnvType.PRODUCTION)) {
           e.error("This operation is not possible in production!");
+        }
 
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: "Plugins.body" }
+          { name: "Plugins.body" },
         );
 
         // Toggle Plugin
@@ -92,12 +94,13 @@ export default class AdminPluginsController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (Env.is(EnvType.PRODUCTION))
+        if (Env.is(EnvType.PRODUCTION)) {
           e.error("This operation is not possible in production!");
+        }
 
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {

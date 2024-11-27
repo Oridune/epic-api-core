@@ -589,9 +589,9 @@ export default class OauthController extends BaseController {
     const BodySchema = AuthenticationSchema();
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Authorization Validation
         const Credentials = await e
@@ -716,9 +716,9 @@ export default class OauthController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
         const Body = await BodySchema.validate(
@@ -774,9 +774,9 @@ export default class OauthController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
         const Body = await BodySchema.validate(
@@ -845,9 +845,9 @@ export default class OauthController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
         const Body = await BodySchema.validate(
@@ -893,9 +893,9 @@ export default class OauthController extends BaseController {
     });
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Authorization Validation
         let Credentials = await e.optional(
@@ -1077,9 +1077,9 @@ export default class OauthController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (
           !ctx.router.state.auth?.sessionId ||
@@ -1120,9 +1120,9 @@ export default class OauthController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
@@ -1162,9 +1162,9 @@ export default class OauthController extends BaseController {
     );
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         query: QuerySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth?.sessionId) {
           ctx.router.throw(Status.Unauthorized);

@@ -33,9 +33,9 @@ export default class AccountsController extends BaseController {
     const BodySchema = InputAccountSchema;
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
@@ -133,10 +133,10 @@ export default class AccountsController extends BaseController {
     const BodySchema = e.partial(InputAccountSchema);
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         params: ParamsSchema.toSample(),
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
@@ -204,10 +204,10 @@ export default class AccountsController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
@@ -267,9 +267,9 @@ export default class AccountsController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
@@ -341,9 +341,9 @@ export default class AccountsController extends BaseController {
     });
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {

@@ -23,9 +23,9 @@ export default class RequestLogsController extends BaseController {
     const BodySchema = InputRequestLogsSchema;
 
     return new Versioned().add("1.0.0", {
-      shape: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
@@ -85,10 +85,10 @@ export default class RequestLogsController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      shape: {
+      shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
@@ -154,9 +154,9 @@ export default class RequestLogsController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      shape: {
+      shape: () => ({
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 

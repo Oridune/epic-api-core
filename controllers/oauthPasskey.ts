@@ -97,9 +97,9 @@ export default class OauthPasskeyController extends BaseController {
     });
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         const Auth = ctx.router.state.auth;
 
@@ -244,9 +244,9 @@ export default class OauthPasskeyController extends BaseController {
     }).extends(AuthenticationSchema);
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
         const Body = await BodySchema.validate(

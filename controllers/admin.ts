@@ -1,11 +1,11 @@
 import {
-  Controller,
   BaseController,
-  Patch,
-  Response,
-  type IRequestContext,
+  Controller,
   Env,
   EnvType,
+  type IRequestContext,
+  Patch,
+  Response,
   Versioned,
 } from "@Core/common/mod.ts";
 import { type RouterContext } from "oak";
@@ -22,17 +22,18 @@ export default class AdminController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (Env.is(EnvType.PRODUCTION))
+        if (Env.is(EnvType.PRODUCTION)) {
           e.error("This operation is not possible in production!");
+        }
 
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body({ type: "json" }).value,
-          { name: "admin.body" }
+          { name: "admin.body" },
         );
 
         await e.try(() => updateCore(Body));

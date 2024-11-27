@@ -30,9 +30,9 @@ export default class OauthPoliciesController extends BaseController {
     const BodySchema = InputOauthPolicySchema;
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
         const Body = await BodySchema.validate(
@@ -58,10 +58,10 @@ export default class OauthPoliciesController extends BaseController {
     const BodySchema = e.partial(InputOauthPolicySchema);
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         params: ParamsSchema.toSample(),
         body: BodySchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {
@@ -119,10 +119,10 @@ export default class OauthPoliciesController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
         const Query = await QuerySchema.validate(
@@ -197,9 +197,9 @@ export default class OauthPoliciesController extends BaseController {
     });
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {

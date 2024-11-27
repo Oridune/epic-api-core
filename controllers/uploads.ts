@@ -56,10 +56,10 @@ export default class UploadsController extends BaseController {
     const ParamsSchema = e.record(e.string());
 
     return Versioned.add("1.0.0", {
-      postman: {
+      shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
         const Query = await QuerySchema.validate(
@@ -171,9 +171,9 @@ export default class UploadsController extends BaseController {
           });
 
         return Versioned.add("1.0.0", {
-          postman: {
+          shape: () => ({
             body: BodySchema.toSample(),
-          },
+          }),
           handler: async (ctx: IRequestContext<RouterContext<string>>) => {
             // Body Validation
             const Body = await BodySchema.validate(

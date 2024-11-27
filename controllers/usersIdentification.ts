@@ -135,9 +135,9 @@ export default class UsersIdentificationController extends BaseController {
     });
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {
@@ -187,9 +187,9 @@ export default class UsersIdentificationController extends BaseController {
     });
 
     return new Versioned().add("1.0.0", {
-      postman: {
+      shape: () => ({
         params: ParamsSchema.toSample(),
-      },
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {
