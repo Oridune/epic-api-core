@@ -2,6 +2,7 @@ import { createHttpError, type RouterContext, Status } from "oak";
 import e from "validator";
 import { decode } from "encoding/base64.ts";
 import OauthController, { OauthTokenType } from "@Controllers/oauth.ts";
+import OauthSecretsController from "@Controllers/oauthSecrets.ts";
 
 export const CredentialsValidator = () =>
   e
@@ -50,7 +51,7 @@ async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
         break;
 
       case "apikey":
-        ctx.state.sessionInfo = await OauthController.verifySecret({
+        ctx.state.sessionInfo = await OauthSecretsController.verifySecret({
           token: Token,
         }).catch((error) => {
           throw createHttpError(Status.Unauthorized, error);
