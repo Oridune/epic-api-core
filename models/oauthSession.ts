@@ -1,10 +1,18 @@
 import e, { inferInput, inferOutput } from "validator";
 import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
+import { OauthScopeValidator } from "@Models/oauthPolicy.ts";
 
 export enum OauthProvider {
   LOCAL = "local",
   PASSKEY = "passkey",
 }
+
+export const OauthAccessScopesValidator = e.record(
+  e.array(OauthScopeValidator),
+  {
+    key: e.instanceOf(ObjectId, { instantiate: true }),
+  },
+);
 
 export const OauthSessionSchema = e.object({
   _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
@@ -16,9 +24,7 @@ export const OauthSessionSchema = e.object({
   useragent: e.optional(e.string()),
   version: e.number({ cast: true }),
   provider: e.in(Object.values(OauthProvider)),
-  scopes: e.record(e.array(e.string().matches(/\w+(\.\w+)*|^\*$/)), {
-    cast: true,
-  }),
+  scopes: OauthAccessScopesValidator,
 });
 
 export type TOauthSessionInput = InputDocument<

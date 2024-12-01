@@ -1,9 +1,11 @@
 import e, { inferInput, inferOutput } from "validator";
 import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 
+export const OauthScopeValidator = e.string().matches(/\w+(\.\w+)*|^\*$/);
+
 export const InputOauthPolicySchema = e.object({
   role: e.string(),
-  scopes: e.array(e.string()),
+  scopes: e.array(OauthScopeValidator),
   subRoles: e.optional(e.array(e.string())),
   ttl: e.optional(e.number()),
 });

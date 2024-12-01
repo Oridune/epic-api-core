@@ -16,8 +16,12 @@
     "envs.ts",
     "requestLogs.ts",
     "oauthPasskey.ts",
-    "manageWallets.ts"
+    "manageWallets.ts",
+    "oauthSecrets.ts"
   ],
+  "sequence.development": [],
+  "sequence.test": [],
+  "sequence.production": [],
   "excludes": [],
   "sequenceProps": {}
 }

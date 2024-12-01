@@ -1,10 +1,6 @@
 import e, { inferInput, inferOutput } from "validator";
 import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
-
-export enum OauthSecretStatus {
-  ACTIVE = "active",
-  BLOCKED = "blocked",
-}
+import { OauthAccessScopesValidator } from "@Models/oauthSession.ts";
 
 export const OauthSecretSchema = e.object({
   _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
@@ -14,12 +10,8 @@ export const OauthSecretSchema = e.object({
   createdBy: e.instanceOf(ObjectId, { instantiate: true }),
   oauthApp: e.instanceOf(ObjectId, { instantiate: true }),
   name: e.string().min(2).max(300),
-  scopes: e.record(e.array(e.string().matches(/\w+(\.\w+)*|^\*$/)), {
-    cast: true,
-  }),
-  status: e.optional(e.in(Object.values(OauthSecretStatus))).default(
-    OauthSecretStatus.ACTIVE,
-  ),
+  scopes: OauthAccessScopesValidator,
+  isBlocked: e.optional(e.boolean({ cast: true })).default(false),
 });
 
 export type TOauthSecretInput = InputDocument<

@@ -30,7 +30,6 @@ import { OauthPolicyModel } from "@Models/oauthPolicy.ts";
 import { AccountModel } from "@Models/account.ts";
 import { SecurityGuard } from "@Lib/securityGuard.ts";
 import { ResolveScopeRole } from "../hooks/checkPermissions.ts";
-import { OauthSecretModel } from "@Models/oauthSecret.ts";
 import { Flags } from "@Core/common/flags.ts";
 
 export enum OauthTokenType {
@@ -46,11 +45,13 @@ export enum OauthPKCEMethod {
   SHA256 = "sha256",
 }
 
+export type OauthTokenVerifyOptions = JWTVerifyOptions;
+
 export interface IOauthVerifyOptions {
   type: string;
   token: string;
   secret?: string;
-  verifyOpts?: JWTVerifyOptions;
+  verifyOpts?: OauthTokenVerifyOptions;
 }
 
 export interface IOauthToken {
@@ -271,42 +272,6 @@ export default class OauthController extends BaseController {
     };
   }
 
-  static async createOauthSecret(opts: {
-    userId: ObjectId | string;
-    oauthAppId: ObjectId | string;
-    name: string;
-    scopes: Record<string, string[]>;
-    payload?: Record<
-      string,
-      string | string[] | number | boolean | null | undefined
-    >;
-    expiresInSeconds?: number;
-  }) {
-    const Secret = await OauthSecretModel.create({
-      createdBy: new ObjectId(opts.userId),
-      oauthApp: new ObjectId(opts.oauthAppId),
-      name: opts.name,
-      scopes: opts.scopes,
-      expiresAt: opts.expiresInSeconds
-        ? new Date(
-          Date.now() + opts.expiresInSeconds * 1000,
-        )
-        : undefined,
-    });
-
-    const Payload = {
-      secretId: Secret._id.toString(),
-    };
-
-    return {
-      secret: await OauthController.createOauthToken({
-        type: OauthTokenType.SECRET,
-        payload: { ...opts.payload, ...Payload },
-        expiresInSeconds: opts.expiresInSeconds,
-      }),
-    };
-  }
-
   static async verifyToken<P>(opts: IOauthVerifyOptions) {
     const JWTSecret = new TextEncoder().encode(
       (opts.secret ?? "") + (await Env.get("ENCRYPTION_KEY")),
@@ -394,7 +359,7 @@ export default class OauthController extends BaseController {
     token: string;
     useragent: string;
     useragentCheck?: boolean;
-    verifyOpts?: JWTVerifyOptions;
+    verifyOpts?: OauthTokenVerifyOptions;
   }) {
     const Claims = await OauthController.verifyToken({
       type: opts.type,
@@ -435,30 +400,6 @@ export default class OauthController extends BaseController {
     return {
       claims: Claims,
       session: Session,
-    };
-  }
-
-  static async verifySecret(opts: {
-    token: string;
-    verifyOpts?: JWTVerifyOptions;
-  }) {
-    const Claims = await OauthController.verifyToken({
-      type: OauthTokenType.SECRET,
-      token: opts.token,
-      verifyOpts: opts.verifyOpts,
-    });
-
-    if (typeof Claims.secretId !== "string") {
-      throw new Error(`No secret id claim!`);
-    }
-
-    const Secret = await OauthSecretModel.findOne(Claims.secretId);
-
-    if (!Secret) throw new Error(`We didn't found that secret!`);
-
-    return {
-      claims: Claims,
-      secret: Secret,
     };
   }
 
@@ -1099,51 +1040,6 @@ export default class OauthController extends BaseController {
             version: ctx.router.state.sessionInfo.claims.version,
             sessionId: ctx.router.state.auth.sessionId,
             scopes: Body.scopes,
-          }),
-        );
-      },
-    });
-  }
-
-  @Post("/secret/")
-  public createSecret(route: IRoute) {
-    // Define Body Schema
-    const BodySchema = e.object({
-      name: e.string(),
-      scopes: e.optional(
-        e.or([
-          e.record(e.array(e.string(), { cast: true })),
-          e.array(e.string(), { cast: true }),
-        ]),
-      ),
-      ttl: e.optional(e.number()),
-    });
-
-    return Versioned.add("1.0.0", {
-      shape: () => ({
-        body: BodySchema.toSample(),
-      }),
-      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
-
-        // Body Validation
-        const Body = await BodySchema.validate(
-          await ctx.router.request.body({ type: "json" }).value,
-          { name: `${route.scope}.body` },
-        );
-
-        return Response.data(
-          await OauthController.createOauthSecret({
-            name: Body.name,
-            oauthAppId: ctx.router.state.auth.user.oauthApp,
-            userId: ctx.router.state.auth.userId,
-            scopes: (Body.scopes instanceof Array || Body.scopes === undefined)
-              ? {
-                [ctx.router.state.auth.accountId]: Body.scopes ??
-                  ctx.router.state.scopePipeline.requested,
-              }
-              : Body.scopes,
-            expiresInSeconds: Body.ttl,
           }),
         );
       },

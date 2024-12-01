@@ -47,7 +47,14 @@ export const DefaultOauthPolicies = {
     "accounts.delete",
     "accounts.updateLogo",
   ],
-  user: ["role:unverified", "wallet.signTransfer", "wallet.transfer"],
+  user: [
+    "role:unverified",
+    "oauthSecrets.create",
+    "oauthSecrets.get",
+    "oauthSecrets.delete",
+    "wallet.signTransfer",
+    "wallet.transfer",
+  ],
 };
 
 export type TOauthPolicies =
