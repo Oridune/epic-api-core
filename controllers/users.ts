@@ -15,7 +15,7 @@ import {
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import * as bcrypt from "bcrypt";
-import { Mongo, ObjectId } from "mongo";
+import { ClientSession, Mongo, ObjectId } from "mongo";
 
 import verifyHuman from "@Middlewares/verifyHuman.ts";
 import {
@@ -39,11 +39,15 @@ import UsersIdentificationController, {
   IdentificationPurpose,
 } from "@Controllers/usersIdentification.ts";
 import UploadsController from "@Controllers/uploads.ts";
+import { Database } from "@Database";
 
 @Controller("/users/", { group: "Users", name: "users" })
 export default class UsersController extends BaseController {
   static async create(
     user: Omit<TUserInput, "role" | "passwordHistory" | "collaborates">,
+    opts?: {
+      databaseSession?: ClientSession;
+    },
   ) {
     if (
       user.reference &&
@@ -67,56 +71,52 @@ export default class UsersController extends BaseController {
       throw e.error(`Email already registered!`);
     }
 
-    return Mongo.transaction(async (session) => {
-      const UserId = new ObjectId();
-      const AccountId = new ObjectId();
-      const CollaboratorId = new ObjectId();
+    const UserId = new ObjectId();
+    const AccountId = new ObjectId();
+    const CollaboratorId = new ObjectId();
 
-      const Password = await bcrypt.hash(
-        user.password ?? Math.random().toString(36) + Date.now().toString(36),
-      );
+    const Password = await bcrypt.hash(
+      user.password ?? Math.random().toString(36) + Date.now().toString(36),
+    );
 
-      const Result = {
-        user: await UserModel.create(
-          {
-            ...user,
-            _id: UserId,
-            password: Password,
-            passwordHistory: [Password],
-            role: ["", undefined].includes(
-                await Env.get("VERIFIED_ROLE_POLICY", true),
-              )
-              ? "user"
-              : "unverified",
-            collaborates: [CollaboratorId],
-          },
-          { session },
-        ),
-        account: await AccountModel.create(
-          {
-            _id: AccountId,
-            createdBy: UserId,
-            createdFor: UserId,
-            email: user.email,
-            phone: user.phone,
-          },
-          { session },
-        ),
-        collaborator: await CollaboratorModel.create(
-          {
-            _id: CollaboratorId,
-            createdBy: UserId,
-            createdFor: UserId,
-            account: AccountId,
-            isOwned: true,
-            isPrimary: true,
-          },
-          { session },
-        ),
-      };
-
-      return Result;
-    });
+    return Mongo.transaction(async (session) => ({
+      user: await UserModel.create(
+        {
+          ...user,
+          _id: UserId,
+          password: Password,
+          passwordHistory: [Password],
+          role: ["", undefined].includes(
+              await Env.get("VERIFIED_ROLE_POLICY", true),
+            )
+            ? "user"
+            : "unverified",
+          collaborates: [CollaboratorId],
+        },
+        { session },
+      ),
+      account: await AccountModel.create(
+        {
+          _id: AccountId,
+          createdBy: UserId,
+          createdFor: UserId,
+          email: user.email,
+          phone: user.phone,
+        },
+        { session },
+      ),
+      collaborator: await CollaboratorModel.create(
+        {
+          _id: CollaboratorId,
+          createdBy: UserId,
+          createdFor: UserId,
+          account: AccountId,
+          isOwned: true,
+          isPrimary: true,
+        },
+        { session },
+      ),
+    }), opts?.databaseSession);
   }
 
   static async verify(method: IdentificationMethod, userId: string) {
@@ -168,11 +168,25 @@ export default class UsersController extends BaseController {
 
     // Define Params Schema
     const ParamsSchema = e.object({
-      oauthAppId: e.string().custom(async (ctx) => {
-        if (!(await OauthAppModel.exists(ctx.parent!.output.oauthAppId))) {
-          throw new Error(`Invalid oauth app id!`);
-        }
-      }),
+      oauthAppId: e.string().checkpoint(),
+      oauthApp: e
+        .any()
+        .custom(async (ctx) => {
+          const App = await OauthAppModel.findOne(
+            ctx.parent!.output.oauthAppId,
+          ).project({
+            _id: 1,
+            "consent.availableSignups": 1,
+          });
+
+          if (!App) throw new Error("Invalid oauth app id!");
+
+          if (!App.consent.availableSignups) {
+            throw new Error("Signup is not available!");
+          }
+
+          return App;
+        }),
     });
 
     // Define Body Schema
@@ -202,14 +216,29 @@ export default class UsersController extends BaseController {
           { name: `${route.scope}.body` },
         );
 
-        // deno-lint-ignore no-unused-vars
-        const { password, passwordHistory, oauthApp, collaborates, ...User } = (
-          await UsersController.create({
-            oauthApp: new ObjectId(Params.oauthAppId),
-            reference: Query.reference,
-            ...Body,
-          })
-        ).user;
+        const User = await Database.transaction(async (session) => {
+          const {
+            password: _,
+            passwordHistory: __,
+            oauthApp: ___,
+            collaborates: ____,
+            ...user
+          } = (
+            await UsersController.create({
+              oauthApp: new ObjectId(Params.oauthAppId),
+              reference: Query.reference,
+              ...Body,
+            }, { databaseSession: session })
+          ).user;
+
+          await OauthAppModel.updateOneOrFail(Params.oauthAppId, {
+            $inc: {
+              "consent.availableSignups": -1,
+            },
+          });
+
+          return user;
+        });
 
         return Response.statusCode(Status.Created).data(User);
       },

@@ -58,7 +58,7 @@ export const SignupPage = () => {
   const { app, integrations } = useOauthApp();
   const { executeRecaptcha } = integrations.reCaptchaV3
     ? useGoogleReCaptcha()
-    : { executeRecaptcha: () => {} };
+    : { executeRecaptcha: undefined };
 
   React.useEffect(() => {
     ReactGA4.send({
@@ -71,7 +71,10 @@ export const SignupPage = () => {
   const [DialingCode, setDialingCode] = React.useState<string | null>(null);
   const [ShowPassword, setShowPassword] = React.useState(false);
   const [ShowConfirmPassword, setShowConfirmPassword] = React.useState(false);
-  const [Loading, setLoading] = React.useState(false);
+
+  const [_Loading, setLoading] = React.useState(false);
+  const Loading = _Loading || (integrations.reCaptchaV3 && !executeRecaptcha);
+
   const [ErrorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   const { t, i18n } = useTranslation();
@@ -135,7 +138,7 @@ export const SignupPage = () => {
           },
           params: {
             reference: tryAtob(CustomReference ?? "") || undefined,
-            reCaptchaV3Token: await executeRecaptcha?.("signup"),
+            reCaptchaV3Token: await executeRecaptcha!("signup"),
           },
         }
       );
@@ -171,7 +174,7 @@ export const SignupPage = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          minHeight: "100vh",
+          minHeight: "95vh",
         }}
       >
         <Box sx={{ maxWidth: 333, paddingX: 1 }}>

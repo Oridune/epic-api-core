@@ -265,7 +265,7 @@ export const ContactsPage = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          minHeight: "100vh",
+          minHeight: "95vh",
         }}
       >
         <Box sx={{ maxWidth: 333, paddingX: 1 }}>

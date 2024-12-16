@@ -27,13 +27,14 @@ export class MinioProvider {
   }
 
   static async signUploadUrl(
-    options?: Omit<ISignUploadUrlOptions, "provider">
+    options?: Omit<ISignUploadUrlOptions, "provider">,
   ) {
     // Gather information
-    const BucketName =
-      options?.bucketName ?? (await Env.get("MINIO_BUCKET_NAME"));
+    const BucketName = options?.bucketName ??
+      (await Env.get("MINIO_BUCKET_NAME"));
     const Location = options?.location ?? "";
-    const Key = join(Location, Utils.uuidV4()).replace(/\\/g, "/");
+    const Key = join(Location, Utils.uuidV4()).trim().replace(/\\/g, "/")
+      .replace(/^\//, "");
     const ContentType = options?.contentType;
     const ContentLength = options?.contentLength;
     const ExpiresInSeconds = (options?.expiresInMs ?? 3600000) / 1000; // Default 1 hour
@@ -46,8 +47,9 @@ export class MinioProvider {
     Policy.setKey(Key);
 
     if (typeof ContentType === "string") Policy.setContentType(ContentType);
-    if (typeof ContentLength === "number")
+    if (typeof ContentLength === "number") {
       Policy.setContentLengthRange(0, ContentLength);
+    }
 
     const Expiry = new Date();
     Expiry.setSeconds(ExpiresInSeconds);
@@ -68,15 +70,14 @@ export class MinioProvider {
 
   static async signGetUrl(
     objectUrl: string | Omit<IParsedObjectUrl, "provider">,
-    options?: Omit<IObjectLocation, "provider"> & { expiresInMs?: number }
+    options?: Omit<IObjectLocation, "provider"> & { expiresInMs?: number },
   ) {
     // Gather information
-    const BucketName =
-      options?.bucketName ?? (await Env.get("MINIO_BUCKET_NAME"));
-    const ObjectUrl =
-      typeof objectUrl === "object"
-        ? objectUrl
-        : await this.parseObjectUrl(objectUrl);
+    const BucketName = options?.bucketName ??
+      (await Env.get("MINIO_BUCKET_NAME"));
+    const ObjectUrl = typeof objectUrl === "object"
+      ? objectUrl
+      : await this.parseObjectUrl(objectUrl);
     const ExpiresInSeconds = (options?.expiresInMs ?? 3600000) / 1000; // Default 1 hour
     const Client = await this.getClient();
 
@@ -85,7 +86,7 @@ export class MinioProvider {
       getUrl: await Client.presignedGetObject(
         BucketName,
         ObjectUrl.key,
-        ExpiresInSeconds
+        ExpiresInSeconds,
       ),
       expiresInSeconds: ExpiresInSeconds,
     };
@@ -93,15 +94,14 @@ export class MinioProvider {
 
   static async getObject(
     objectUrl: string | Omit<IParsedObjectUrl, "provider">,
-    options?: Omit<IObjectLocation, "provider">
+    options?: Omit<IObjectLocation, "provider">,
   ) {
     // Gather information
-    const BucketName =
-      options?.bucketName ?? (await Env.get("MINIO_BUCKET_NAME"));
-    const ObjectUrl =
-      typeof objectUrl === "object"
-        ? objectUrl
-        : await this.parseObjectUrl(objectUrl);
+    const BucketName = options?.bucketName ??
+      (await Env.get("MINIO_BUCKET_NAME"));
+    const ObjectUrl = typeof objectUrl === "object"
+      ? objectUrl
+      : await this.parseObjectUrl(objectUrl);
     const Client = await this.getClient();
 
     const Data = await Client.getObject(BucketName, ObjectUrl.key);
@@ -113,15 +113,14 @@ export class MinioProvider {
 
   static async objectExists(
     objectUrl: string | Omit<IParsedObjectUrl, "provider">,
-    options?: Omit<IObjectLocation, "provider">
+    options?: Omit<IObjectLocation, "provider">,
   ) {
     // Gather information
-    const BucketName =
-      options?.bucketName ?? (await Env.get("MINIO_BUCKET_NAME"));
-    const ObjectUrl =
-      typeof objectUrl === "object"
-        ? objectUrl
-        : await this.parseObjectUrl(objectUrl);
+    const BucketName = options?.bucketName ??
+      (await Env.get("MINIO_BUCKET_NAME"));
+    const ObjectUrl = typeof objectUrl === "object"
+      ? objectUrl
+      : await this.parseObjectUrl(objectUrl);
     const Client = await this.getClient();
 
     return Client.statObject(BucketName, ObjectUrl.key)
@@ -131,14 +130,13 @@ export class MinioProvider {
 
   static async deleteObject(
     objectUrl: string | Omit<IParsedObjectUrl, "provider">,
-    options?: Omit<IObjectLocation, "provider">
+    options?: Omit<IObjectLocation, "provider">,
   ) {
-    const BucketName =
-      options?.bucketName ?? (await Env.get("MINIO_BUCKET_NAME"));
-    const ObjectUrl =
-      typeof objectUrl === "object"
-        ? objectUrl
-        : await this.parseObjectUrl(objectUrl);
+    const BucketName = options?.bucketName ??
+      (await Env.get("MINIO_BUCKET_NAME"));
+    const ObjectUrl = typeof objectUrl === "object"
+      ? objectUrl
+      : await this.parseObjectUrl(objectUrl);
     const Client = await this.getClient();
 
     return Client.removeObject(BucketName, ObjectUrl.key);
@@ -146,7 +144,7 @@ export class MinioProvider {
 
   static async parseObjectUrl(
     objectUrl: string,
-    options?: Omit<IObjectLocation, "provider">
+    options?: Omit<IObjectLocation, "provider">,
   ): Promise<IParsedObjectUrl> {
     const Endpoint = await Env.get("MINIO_ENDPOINT");
     const SourceUrl = new URL(`https://${Endpoint}`);
@@ -158,10 +156,11 @@ export class MinioProvider {
       const UploadedLocation = ResolvedPath.slice(0, -1).join("/");
       const CheckLocation = options?.location?.replace(/^\/|\/$/g, "");
 
-      if (CheckLocation && UploadedLocation !== CheckLocation)
+      if (CheckLocation && UploadedLocation !== CheckLocation) {
         throw new Error(
-          `Invalid upload location '${UploadedLocation}'! Expected location is '${CheckLocation}'`
+          `Invalid upload location '${UploadedLocation}'! Expected location is '${CheckLocation}'`,
         );
+      }
 
       const Path = ResolvedPath.join("/");
 
@@ -174,7 +173,7 @@ export class MinioProvider {
     }
 
     throw new Error(
-      `Invalid upload URL host '${TargetUrl.host}' has been provided! Expected host is '${SourceUrl.host}'!`
+      `Invalid upload URL host '${TargetUrl.host}' has been provided! Expected host is '${SourceUrl.host}'!`,
     );
   }
 }

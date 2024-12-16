@@ -28,6 +28,9 @@ export const AppTheme = () => {
   const [locizeInit, setLocizeInit] = React.useState(false);
   const { app, loading, integrations } = useOauthApp();
 
+  const Loading =
+    loading || (integrations.i18nLocize?.publicKey && !locizeInit);
+
   const ThemeMode = useThemeMode();
   const { i18n } = useTranslation();
 
@@ -54,22 +57,27 @@ export const AppTheme = () => {
 
   React.useEffect(() => {
     if (integrations.i18nLocize?.publicKey && !locizeInit) {
-      setLocizeInit(true);
-
       (async () => {
         const locizeBackend = await import("i18next-locize-backend");
 
-        await i18n.use(locizeBackend.default).init({
-          backend: {
-            projectId: integrations.i18nLocize?.props?.projectId,
-            apiKey: integrations.i18nLocize?.publicKey,
-            // referenceLng: i18n.options.fallbackLng,
-          },
-          ...i18n.options,
-          resources: undefined,
-          lng: i18n.language,
-          saveMissing: true,
-        });
+        await i18n
+          .use(locizeBackend.default)
+          .init({
+            backend: {
+              projectId: integrations.i18nLocize?.props?.projectId,
+              apiKey: integrations.i18nLocize?.publicKey,
+              // referenceLng: i18n.options.fallbackLng,
+            },
+            ...i18n.options,
+            resources: undefined,
+            lng: i18n.language,
+            saveMissing: true,
+          })
+          .catch(() => {
+            // Do nothing...
+          });
+
+        setLocizeInit(true);
       })();
     }
   }, [integrations.i18nLocize]);
@@ -80,7 +88,7 @@ export const AppTheme = () => {
     }
   }, [integrations.googleAnalytics4]);
 
-  const MainContent = loading ? (
+  const MainContent = Loading ? (
     <LoadingFormPage />
   ) : !app ? (
     <NoAppPage />
@@ -93,7 +101,9 @@ export const AppTheme = () => {
           type="image/x-icon"
         />
       </Helmet>
-      <AppRoutes />
+      <React.Suspense fallback={<LoadingFormPage />}>
+        <AppRoutes />
+      </React.Suspense>
     </>
   );
 

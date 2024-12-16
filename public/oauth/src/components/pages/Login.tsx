@@ -58,7 +58,7 @@ export const LoginPage = () => {
   const { app, integrations } = useOauthApp();
   const { executeRecaptcha } = integrations.reCaptchaV3
     ? useGoogleReCaptcha()
-    : { executeRecaptcha: () => {} };
+    : { executeRecaptcha: undefined };
 
   React.useEffect(() => {
     ReactGA4.send({
@@ -73,7 +73,10 @@ export const LoginPage = () => {
   );
 
   const [ShowPassword, setShowPassword] = React.useState(false);
-  const [Loading, setLoading] = React.useState(false);
+
+  const [_Loading, setLoading] = React.useState(false);
+  const Loading = _Loading || (integrations.reCaptchaV3 && !executeRecaptcha);
+
   const [ErrorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   const { t, i18n } = useTranslation();
@@ -130,7 +133,7 @@ export const LoginPage = () => {
             password: data.password ?? "",
           },
           params: {
-            reCaptchaV3Token: await executeRecaptcha?.("login"),
+            reCaptchaV3Token: await executeRecaptcha!("login"),
           },
         });
       } else {
@@ -139,7 +142,7 @@ export const LoginPage = () => {
           {
             params: {
               username: data.username,
-              reCaptchaV3Token: await executeRecaptcha?.("passkeyChallenge"),
+              reCaptchaV3Token: await executeRecaptcha!("passkeyChallenge"),
             },
           }
         );
@@ -250,7 +253,7 @@ export const LoginPage = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          minHeight: "100vh",
+          minHeight: "95vh",
         }}
       >
         <Box sx={{ maxWidth: 333, paddingX: 1 }}>
@@ -414,29 +417,31 @@ export const LoginPage = () => {
                       {t("Continue")}
                     </Button>
                   </Grid>
-                  <Grid
-                    item
-                    xs={12}
-                    sx={{ display: "flex", justifyContent: "right" }}
-                  >
-                    <Link
-                      href={`/signup/${window.location.search}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        const Path = e.currentTarget.getAttribute("href")!;
-                        if (Path) Navigate(Path);
-
-                        ReactGA4.event({
-                          category: "Oauth2",
-                          action: "Click",
-                          label: "Create an account",
-                        });
-                      }}
-                      variant="body2"
+                  {!!app?.consent.availableSignups && (
+                    <Grid
+                      item
+                      xs={12}
+                      sx={{ display: "flex", justifyContent: "right" }}
                     >
-                      {t("Don't have an account?")}
-                    </Link>
-                  </Grid>
+                      <Link
+                        href={`/signup/${window.location.search}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const Path = e.currentTarget.getAttribute("href")!;
+                          if (Path) Navigate(Path);
+
+                          ReactGA4.event({
+                            category: "Oauth2",
+                            action: "Click",
+                            label: "Create an account",
+                          });
+                        }}
+                        variant="body2"
+                      >
+                        {t("Don't have an account?")}
+                      </Link>
+                    </Grid>
+                  )}
                   <Grid item xs={12}>
                     <Divider sx={{ width: "100%" }}>
                       <Typography variant="subtitle2" color="text.secondary">
@@ -550,29 +555,31 @@ export const LoginPage = () => {
                       {t("Sign In")}
                     </Button>
                   </Grid>
-                  <Grid
-                    item
-                    xs={12}
-                    sx={{ display: "flex", justifyContent: "right" }}
-                  >
-                    <Link
-                      href={`/signup/${window.location.search}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        const Path = e.currentTarget.getAttribute("href")!;
-                        if (Path) Navigate(Path);
-
-                        ReactGA4.event({
-                          category: "Oauth2",
-                          action: "Click",
-                          label: "Create an account",
-                        });
-                      }}
-                      variant="body2"
+                  {!!app?.consent.availableSignups && (
+                    <Grid
+                      item
+                      xs={12}
+                      sx={{ display: "flex", justifyContent: "right" }}
                     >
-                      {t("Don't have an account?")}
-                    </Link>
-                  </Grid>
+                      <Link
+                        href={`/signup/${window.location.search}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const Path = e.currentTarget.getAttribute("href")!;
+                          if (Path) Navigate(Path);
+
+                          ReactGA4.event({
+                            category: "Oauth2",
+                            action: "Click",
+                            label: "Create an account",
+                          });
+                        }}
+                        variant="body2"
+                      >
+                        {t("Don't have an account?")}
+                      </Link>
+                    </Grid>
+                  )}
                 </>
               )}
             </Grid>
