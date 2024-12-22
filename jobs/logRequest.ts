@@ -8,7 +8,7 @@ export default (app: Application) => {
   Events.listen(
     EventChannel.CUSTOM,
     "response",
-    async ({ detail: { ctx, res } }) => {
+    async ({ detail: { ctx, res, err } }) => {
       // Log error cases
       const LogEndpoint = "/api/request/logs/";
 
@@ -46,6 +46,7 @@ export default (app: Application) => {
             auth,
             responseStatus: res.getStatusCode(),
             response: res.getBody(),
+            errorStack: err instanceof Error ? err.stack : err,
           }),
         }).catch(console.error);
       }
