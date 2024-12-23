@@ -1,4 +1,4 @@
-import { Application } from "oak/application.ts";
+import { Application } from "oak/application";
 import { EventChannel, Events } from "@Core/common/events.ts";
 import { Env, prepareFetch } from "@Core/common/mod.ts";
 
