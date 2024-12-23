@@ -177,7 +177,7 @@ export default class UploadsController extends BaseController {
           handler: async (ctx: IRequestContext<RouterContext<string>>) => {
             // Body Validation
             const Body = await BodySchema.validate(
-              await ctx.router.request.body({ type: "json" }).value,
+              await ctx.router.request.body.json(),
               { name: `${route.scope}.body`, context: ctx.router.state.auth },
             );
 

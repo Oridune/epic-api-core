@@ -62,7 +62,7 @@ export default (options?: {
     const Body = await e.object({
       [OauthAppIdKey]: e.optional(e.string()),
     }, { allowUnexpectedProps: true })
-      .validate(await ctx.request.body({ type: "json" }).value ?? {}, {
+      .validate(await ctx.request.body.json() ?? {}, {
         name: "body",
       });
 

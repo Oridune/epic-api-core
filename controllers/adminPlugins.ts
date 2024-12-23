@@ -45,7 +45,7 @@ export default class AdminPluginsController extends BaseController {
         }
 
         const Body = await BodySchema.validate(
-          await ctx.router.request.body({ type: "json" }).value,
+          await ctx.router.request.body.json(),
           { name: "Plugins.body" },
         );
 
@@ -74,7 +74,7 @@ export default class AdminPluginsController extends BaseController {
 
         // Body Validation
         const Body = await BodySchema.validate(
-          await ctx.router.request.body({ type: "json" }).value,
+          await ctx.router.request.body.json(),
           { name: "Plugins.body" },
         );
 
