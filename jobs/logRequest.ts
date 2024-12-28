@@ -1,6 +1,6 @@
 import { Application } from "oak/application";
 import { EventChannel, Events } from "@Core/common/events.ts";
-import { Env, prepareFetch } from "@Core/common/mod.ts";
+import { Env, EnvType, prepareFetch } from "@Core/common/mod.ts";
 
 export default (app: Application) => {
   const handle = prepareFetch({ app });
@@ -13,6 +13,7 @@ export default (app: Application) => {
       const LogEndpoint = "/api/request/logs/";
 
       if (
+        !Env.is(EnvType.TEST) &&
         await Env.enabled("REQUEST_LOG_ENABLED") &&
         res.getStatusCode() >= 400 &&
         !(ctx.request.method.toLowerCase() === "post" &&

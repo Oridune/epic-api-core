@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { ITriggerPayloadOptions, Novu as _Novu } from "novu";
 import { Env } from "@Core/common/env.ts";
 import { UserModel } from "@Models/user.ts";
@@ -50,7 +51,7 @@ export class Notify {
     await Novu.trigger(options.template, {
       to: { subscriberId: SubscriberId, ...SubscriberData },
       payload: options.payload,
-    }).catch((error) => {
+    }).catch((error: any) => {
       if (error.response.data.message === "workflow_not_found") {
         throw new Error(`Notification workflow template not found!`, {
           cause: error,
@@ -69,7 +70,7 @@ export class Notify {
     await Novu.trigger(options.template, {
       to: options.subscriberIds.map((subscriberId) => ({ subscriberId })),
       payload: options.payload,
-    }).catch((error) => {
+    }).catch((error: any) => {
       if (error.response.data.message === "workflow_not_found") {
         throw new Error(`Notification workflow template not found!`, {
           cause: error,

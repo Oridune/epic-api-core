@@ -4,6 +4,7 @@ import "./plugins.d.ts";
 
 import { I18next } from "@I18n";
 import { Context } from "oak/context";
+import { RouterContext } from "oak/router";
 import { IRequestHandlerObjectExtendor } from "@Core/common/controller/base.ts";
 import { IValidatorJSONSchema } from "validator";
 
@@ -27,6 +28,12 @@ declare module "oak/context" {
      * @param opts
      */
     tvar(key: string | string[], ...opts: any[]): Record<string, any>;
+
+    /**
+     * Takes the snapshot of the heap memory and returns the file path
+     * @returns
+     */
+    takeHeapSnapshot?: (filename?: string) => Promise<string>;
   }
 }
 
@@ -40,6 +47,12 @@ type Shape = {
 
 declare module "@Core/common/controller/base.ts" {
   interface IRequestHandlerObjectExtendor {
+    idempotencyKey?:
+      | string
+      | ((
+        ctx: IRequestContext<RouterContext<string>>,
+      ) => string | undefined | Promise<string | undefined>);
+
     shape?: Shape | (() => Shape);
 
     postman?: {

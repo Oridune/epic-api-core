@@ -165,7 +165,7 @@ Deno.test({
 
         Context.defaultOauthApp = await DefaultOauthAppResponseSchema.validate(
           await Response?.json(),
-        ).catch((e) => {
+        ).catch((e: any) => {
           console.error(e.issues);
           throw e;
         });
@@ -173,7 +173,7 @@ Deno.test({
     );
 
     await t.step("POST /api/users/:appId Register user(s)", async () => {
-      expect(Context.defaultOauthApp).toBeTypeOf("object");
+      expect(typeof Context.defaultOauthApp).toBe("object");
 
       await Promise.all(
         TestUsers.map(async (user) => {
@@ -194,7 +194,7 @@ Deno.test({
           const Data = await Response?.json();
 
           const Results = await UserResponseSchema.validate(Data).catch(
-            (e) => {
+            (e: any) => {
               console.error(e.issues);
               throw e;
             },
@@ -206,7 +206,7 @@ Deno.test({
     });
 
     await t.step("POST /api/users/:appId Duplicate user(s) error", async () => {
-      expect(Context.defaultOauthApp).toBeTypeOf("object");
+      expect(typeof Context.defaultOauthApp).toBe("object");
 
       await Promise.all(
         TestUsers.map(async (user) => {
