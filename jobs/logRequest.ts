@@ -1,6 +1,7 @@
 import { Application } from "oak/application";
 import { EventChannel, Events } from "@Core/common/events.ts";
 import { Env, EnvType, prepareFetch } from "@Core/common/mod.ts";
+import { getMemoryUsageDetails } from "@Core/common/memoryUtils.ts";
 
 export default (app: Application) => {
   const handle = prepareFetch({ app });
@@ -15,7 +16,7 @@ export default (app: Application) => {
       if (
         !Env.is(EnvType.TEST) &&
         await Env.enabled("REQUEST_LOG_ENABLED") &&
-        res.getStatusCode() >= 400 &&
+        res.getStatusCode() >= 200 &&
         !(ctx.request.method.toLowerCase() === "post" &&
           LogEndpoint.replace(/^\/|\/$/g, "") ===
             ctx.request.url.pathname.replace(/^\/|\/$/g, ""))
@@ -48,6 +49,15 @@ export default (app: Application) => {
             responseStatus: res.getStatusCode(),
             response: res.getBody(),
             errorStack: err instanceof Error ? err.stack : err,
+            memoryUsageDetails: getMemoryUsageDetails({
+              project: {
+                baseDiffMb: 1,
+                diffMb: 1,
+                heapPercentage: 1,
+                rssPercentage: 1,
+                usageMb: 1,
+              },
+            }),
           }),
         }).catch(console.error);
       }

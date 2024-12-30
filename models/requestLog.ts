@@ -33,14 +33,14 @@ export const InputRequestLogsSchema = e.object({
     errorStack: e.any(),
   }),
   errorStack: e.any(),
-});
+}, { allowUnexpectedProps: true });
 
 export const RequestLogSchema = e.object({
   _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
   createdAt: e.optional(e.date()).default(() => new Date()),
   createdBy: e.instanceOf(ObjectId, { instantiate: true }),
   account: e.instanceOf(ObjectId, { instantiate: true }),
-}).extends(InputRequestLogsSchema);
+}, { allowUnexpectedProps: true }).extends(InputRequestLogsSchema);
 
 export type TRequestLogInput = InputDocument<
   inferInput<typeof RequestLogSchema>
@@ -67,9 +67,18 @@ RequestLogModel.createIndex(
     unique: true,
     background: true,
   },
+  // TTL index to remove >= 4xx status logs after 7 days
   {
     key: { createdAt: 1 },
-    expireAfterSeconds: 60 * 60 * 24 * 7, // Log retention 7 days
+    expireAfterSeconds: 60 * 60 * 24 * 7, // 7 days
+    partialFilterExpression: { responseStatus: { $gte: 400 } },
+    background: true,
+  },
+  // TTL index to remove < 4xx status logs after 3 days
+  {
+    key: { createdAt: 1 },
+    expireAfterSeconds: 60 * 60 * 24 * 3, // 3 days
+    partialFilterExpression: { responseStatus: { $lt: 400 } },
     background: true,
   },
 );
