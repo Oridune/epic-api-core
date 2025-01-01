@@ -27,8 +27,6 @@ export default class RequestLogsController extends BaseController {
         body: BodySchema.toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
-
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body.json(),
@@ -38,8 +36,8 @@ export default class RequestLogsController extends BaseController {
         return Response.statusCode(Status.Created).data(
           await RequestLogModel.create({
             ...Body,
-            createdBy: ctx.router.state.auth.userId,
-            account: ctx.router.state.auth.accountId,
+            createdBy: ctx.router.state.auth?.userId,
+            account: ctx.router.state.auth?.accountId,
           }),
         );
       },
@@ -90,8 +88,6 @@ export default class RequestLogsController extends BaseController {
         params: ParamsSchema.toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
-
         // Query Validation
         const Query = await QuerySchema.validate(
           Object.fromEntries(ctx.router.request.url.searchParams),
@@ -108,10 +104,11 @@ export default class RequestLogsController extends BaseController {
           name: `${route.scope}.params`,
         });
 
-        const AccountId = new ObjectId(ctx.router.state.auth.accountId);
-
         const RequestLogsBaseFilters = {
-          account: AccountId,
+          account: (ctx.router.state.auth?.accountId &&
+            new ObjectId(ctx.router.state.auth.accountId)) as
+              | undefined
+              | ObjectId,
           ...(Query.range instanceof Array
             ? {
               createdAt: {
@@ -158,8 +155,6 @@ export default class RequestLogsController extends BaseController {
         params: ParamsSchema.toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
-        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
-
         // Params Validation
         const Params = await ParamsSchema.validate(ctx.router.params, {
           name: `${route.scope}.params`,
@@ -167,7 +162,8 @@ export default class RequestLogsController extends BaseController {
 
         await RequestLogModel.deleteOneOrFail({
           _id: new ObjectId(Params.id),
-          account: new ObjectId(ctx.router.state.auth.accountId),
+          account: ctx.router.state.auth?.accountId &&
+            new ObjectId(ctx.router.state.auth.accountId),
         });
 
         return Response.true();

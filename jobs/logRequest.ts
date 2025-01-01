@@ -34,7 +34,9 @@ export default (app: Application) => {
         await (HostUrl ? fetch : handle)(Url, {
           method: "POST",
           headers: {
-            Authorization: `ApiKey ${ApiKey}`,
+            Authorization: ApiKey
+              ? `ApiKey ${ApiKey}`
+              : `Bypass ${await Env.get("ENCRYPTION_KEY")}`,
           },
           body: JSON.stringify({
             namespace: await Env.get("APP_NAME", true),

@@ -78,152 +78,161 @@ export default {
     name: string,
     ctx: IRequestContext<RouterContext<string>>,
   ) => {
-    const SessionInfo = await SessionValidator.validate(
-      ctx.router.state.sessionInfo,
-      {
-        name: `${scope}.state.sessionInfo`,
-      },
-    );
-
-    if (SessionInfo) {
-      const Session = SessionInfo.session ?? SessionInfo.secret;
-      const Scopes = Session?.scopes ?? {};
-
-      const AccountId = await e
-        .instanceOf(ObjectId, { instantiate: true })
-        .validate(
-          ctx.router.request.headers.get("X-Account-ID") ??
-            Object.keys(Scopes)[0],
-          { name: `${scope}.headers.x-account-id` },
-        );
-
-      const { auth, scopePipeline } = await Store.cache(
-        `checkPermissions:${
-          SessionInfo.claims.sessionId ?? SessionInfo.claims.secretId
-        }:${AccountId}`,
-        async () => {
-          const UserId = new ObjectId(Session?.createdBy);
-
-          const User = await UserModel.findOne(
-            UserId,
-          ).project({
-            password: 0,
-            passwordHistory: 0,
-            "passkeys.publicKey": 0,
-            "passkeys.counter": 0,
-            "passkeys.deviceType": 0,
-            "passkeys.backedUp": 0,
-            collaborates: 0,
-          });
-
-          if (!User || User.isBlocked) {
-            throw Response.statusCode(Status.Unauthorized)
-              .message(
-                "Authorized user not found or is blocked!",
-              );
-          }
-
-          const Collaborator = await CollaboratorModel.findOne({
-            account: AccountId,
-            createdFor: UserId,
-          })
-            .project({
-              createdBy: 1,
-              role: 1,
-              isOwned: 1,
-              isPrimary: 1,
-              isBlocked: 1,
-            });
-
-          if (!Collaborator || Collaborator.isBlocked) {
-            throw Response.statusCode(Status.Unauthorized)
-              .message(
-                "You don't have access to this account or it is blocked!",
-              );
-          }
-
-          const Account = await AccountModel.findOne(AccountId);
-
-          if (!Account || Account.isBlocked) {
-            throw Response.statusCode(Status.Unauthorized)
-              .message(
-                "Account not found or is blocked!",
-              );
-          }
-          if (Collaborator.isOwned) {
-            // deno-lint-ignore no-explicit-any
-            let Updates: Record<string, any> | undefined;
-
-            if (!Account.phone && User.phone) {
-              (Updates ??= {}).phone = User.phone;
-            }
-
-            if (!Account.email && User.email) {
-              (Updates ??= {}).email = User.email;
-            }
-
-            if (Updates) {
-              await AccountModel.updateOne(AccountId, Updates);
-            }
-          }
-
-          let GlobalRole = User.role;
-
-          if (!GlobalRole) {
-            throw Response.statusCode(Status.Unauthorized)
-              .message(
-                "You don't have a role assigned!",
-              );
-          }
-
-          if (Collaborator.createdBy !== User._id) {
-            const ParentUser =
-              (await UserModel.findOne(Collaborator.createdBy).project({
-                role: 1,
-              })) ?? User;
-
-            GlobalRole = ParentUser.role;
-          }
-
-          return {
-            auth: {
-              secretId: SessionInfo.claims.secretId,
-              sessionId: SessionInfo.claims.sessionId,
-              userId: UserId.toString(),
-              accountId: AccountId.toString(),
-              isAccountOwned: Collaborator.isOwned,
-              isAccountPrimary: Collaborator.isPrimary,
-              role: GlobalRole,
-              accountRole: Collaborator.role,
-              resolvedRole: Collaborator.role === "root"
-                ? GlobalRole
-                : Collaborator.role,
-              user: User,
-              account: Account,
-            },
-            scopePipeline: {
-              all: [`role:${GlobalRole}`],
-              available: [`role:${Collaborator.role}`],
-              requested: Scopes[AccountId.toString()] ?? [],
-              permitted: SessionInfo.claims.scopes ?? ["*"],
-            },
-          };
+    if (!ctx.router.state.authBypass) {
+      const SessionInfo = await SessionValidator.validate(
+        ctx.router.state.sessionInfo,
+        {
+          name: `${scope}.state.sessionInfo`,
         },
-        60 * 1000, // 1m cache
       );
 
-      ctx.router.state.auth = auth;
-      ctx.router.state.scopePipeline = scopePipeline;
+      if (SessionInfo) {
+        const Session = SessionInfo.session ?? SessionInfo.secret;
+        const Scopes = Session?.scopes ?? {};
+
+        const AccountId = await e
+          .instanceOf(ObjectId, { instantiate: true })
+          .validate(
+            ctx.router.request.headers.get("X-Account-ID") ??
+              Object.keys(Scopes)[0],
+            { name: `${scope}.headers.x-account-id` },
+          );
+
+        const { auth, scopePipeline } = await Store.cache(
+          `checkPermissions:${
+            SessionInfo.claims.sessionId ?? SessionInfo.claims.secretId
+          }:${AccountId}`,
+          async () => {
+            const UserId = new ObjectId(Session?.createdBy);
+
+            const User = await UserModel.findOne(
+              UserId,
+            ).project({
+              password: 0,
+              passwordHistory: 0,
+              "passkeys.publicKey": 0,
+              "passkeys.counter": 0,
+              "passkeys.deviceType": 0,
+              "passkeys.backedUp": 0,
+              collaborates: 0,
+            });
+
+            if (!User || User.isBlocked) {
+              throw Response.statusCode(Status.Unauthorized)
+                .message(
+                  "Authorized user not found or is blocked!",
+                );
+            }
+
+            const Collaborator = await CollaboratorModel.findOne({
+              account: AccountId,
+              createdFor: UserId,
+            })
+              .project({
+                createdBy: 1,
+                role: 1,
+                isOwned: 1,
+                isPrimary: 1,
+                isBlocked: 1,
+              });
+
+            if (!Collaborator || Collaborator.isBlocked) {
+              throw Response.statusCode(Status.Unauthorized)
+                .message(
+                  "You don't have access to this account or it is blocked!",
+                );
+            }
+
+            const Account = await AccountModel.findOne(AccountId);
+
+            if (!Account || Account.isBlocked) {
+              throw Response.statusCode(Status.Unauthorized)
+                .message(
+                  "Account not found or is blocked!",
+                );
+            }
+            if (Collaborator.isOwned) {
+              // deno-lint-ignore no-explicit-any
+              let Updates: Record<string, any> | undefined;
+
+              if (!Account.phone && User.phone) {
+                (Updates ??= {}).phone = User.phone;
+              }
+
+              if (!Account.email && User.email) {
+                (Updates ??= {}).email = User.email;
+              }
+
+              if (Updates) {
+                await AccountModel.updateOne(AccountId, Updates);
+              }
+            }
+
+            let GlobalRole = User.role;
+
+            if (!GlobalRole) {
+              throw Response.statusCode(Status.Unauthorized)
+                .message(
+                  "You don't have a role assigned!",
+                );
+            }
+
+            if (Collaborator.createdBy !== User._id) {
+              const ParentUser =
+                (await UserModel.findOne(Collaborator.createdBy).project({
+                  role: 1,
+                })) ?? User;
+
+              GlobalRole = ParentUser.role;
+            }
+
+            return {
+              auth: {
+                secretId: SessionInfo.claims.secretId,
+                sessionId: SessionInfo.claims.sessionId,
+                userId: UserId.toString(),
+                accountId: AccountId.toString(),
+                isAccountOwned: Collaborator.isOwned,
+                isAccountPrimary: Collaborator.isPrimary,
+                role: GlobalRole,
+                accountRole: Collaborator.role,
+                resolvedRole: Collaborator.role === "root"
+                  ? GlobalRole
+                  : Collaborator.role,
+                user: User,
+                account: Account,
+              },
+              scopePipeline: {
+                all: [`role:${GlobalRole}`],
+                available: [`role:${Collaborator.role}`],
+                requested: Scopes[AccountId.toString()] ?? [],
+                permitted: SessionInfo.claims.scopes ?? ["*"],
+              },
+            };
+          },
+          60 * 1000, // 1m cache
+        );
+
+        ctx.router.state.auth = auth;
+        ctx.router.state.scopePipeline = scopePipeline;
+      }
+
+      const DefaultScopePipeline = {
+        all: ["role:unauthenticated"],
+        available: ["*"],
+        requested: ["*"],
+        permitted: ["*"],
+      };
+
+      ctx.router.state.scopePipeline ??= DefaultScopePipeline;
+    } else {
+      ctx.router.state.scopePipeline = {
+        all: ["*"],
+        available: ["*"],
+        requested: ["*"],
+        permitted: ["*"],
+      };
     }
-
-    const DefaultScopePipeline = {
-      all: ["role:unauthenticated"],
-      available: ["*"],
-      requested: ["*"],
-      permitted: ["*"],
-    };
-
-    ctx.router.state.scopePipeline ??= DefaultScopePipeline;
 
     const Guard = (ctx.router.state.guard = new SecurityGuard())
       .addStage(ctx.router.state.scopePipeline.all)

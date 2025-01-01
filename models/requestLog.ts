@@ -38,8 +38,8 @@ export const InputRequestLogsSchema = e.object({
 export const RequestLogSchema = e.object({
   _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
   createdAt: e.optional(e.date()).default(() => new Date()),
-  createdBy: e.instanceOf(ObjectId, { instantiate: true }),
-  account: e.instanceOf(ObjectId, { instantiate: true }),
+  createdBy: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+  account: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
 }, { allowUnexpectedProps: true }).extends(InputRequestLogsSchema);
 
 export type TRequestLogInput = InputDocument<

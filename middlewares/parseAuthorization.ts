@@ -1,5 +1,6 @@
 import { createHttpError, type RouterContext, Status } from "oak";
 import e from "validator";
+import { Env } from "@Core/common/env.ts";
 import { decode } from "encoding/base64.ts";
 import OauthController, { OauthTokenType } from "@Controllers/oauth.ts";
 import OauthSecretsController from "@Controllers/oauthSecrets.ts";
@@ -34,8 +35,8 @@ async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
           type: OauthTokenType.ACCESS,
           token: Token,
           useragent: ctx.request.headers.get("User-Agent") ?? "",
-        }).catch((error) => {
-          throw createHttpError(Status.Unauthorized, error);
+        }).catch((error: Error) => {
+          throw createHttpError(Status.Unauthorized, error.message ?? error);
         });
         break;
 
@@ -45,18 +46,28 @@ async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
           token: Token,
           useragent: ctx.request.headers.get("User-Agent") ?? "",
           useragentCheck: false,
-        }).catch((error) => {
-          throw createHttpError(Status.Unauthorized, error);
+        }).catch((error: Error) => {
+          throw createHttpError(Status.Unauthorized, error.message ?? error);
         });
         break;
 
       case "apikey":
         ctx.state.sessionInfo = await OauthSecretsController.verifySecret({
           token: Token,
-        }).catch((error) => {
-          throw createHttpError(Status.Unauthorized, error);
+        }).catch((error: Error) => {
+          throw createHttpError(Status.Unauthorized, error.message ?? error);
         });
         break;
+
+      case "bypass": {
+        if (Token !== await Env.get("ENCRYPTION_KEY")) {
+          throw createHttpError(Status.Unauthorized, "Invalid bypass token");
+        }
+
+        ctx.state.authBypass = true;
+
+        break;
+      }
     }
   }
 

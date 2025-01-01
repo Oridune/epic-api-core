@@ -52,6 +52,7 @@ export interface AuthCredentials {
 export interface RouterState {
   credentials?: AuthCredentials;
   sessionInfo?: SessionInfo;
+  authBypass?: boolean;
   auth?: Authorization;
   scopePipeline: ScopePipeline;
   guard: SecurityGuard;
