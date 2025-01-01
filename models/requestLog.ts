@@ -3,7 +3,7 @@ import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 import { RequestMethod } from "@Core/common/mod.ts";
 
 export const InputRequestLogsSchema = e.object({
-  namespace: e.string(),
+  namespace: e.optional(e.string()),
   requestId: e.string(),
   method: e.in(Object.values(RequestMethod)),
   url: e.string(),

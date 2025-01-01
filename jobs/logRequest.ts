@@ -21,13 +21,13 @@ export default (app: Application) => {
           LogEndpoint.replace(/^\/|\/$/g, "") ===
             ctx.request.url.pathname.replace(/^\/|\/$/g, ""))
       ) {
-        const HostUrl = await Env.get("REQUEST_LOG_HOST");
+        const HostUrl = await Env.get("REQUEST_LOG_HOST", true);
         const Url = new URL(
           LogEndpoint,
           HostUrl || ctx.request.url.origin,
         );
 
-        const ApiKey = await Env.get("REQUEST_LOG_API_KEY");
+        const ApiKey = await Env.get("REQUEST_LOG_API_KEY", true);
 
         const { user: _, account: __, ...auth } = ctx.state.auth ?? {};
 
@@ -37,7 +37,7 @@ export default (app: Application) => {
             Authorization: `ApiKey ${ApiKey}`,
           },
           body: JSON.stringify({
-            namespace: await Env.get("APP_NAME"),
+            namespace: await Env.get("APP_NAME", true),
             requestId: ctx.state._requestId,
             method: ctx.request.method.toLowerCase(),
             url: ctx.request.url.toString(),
