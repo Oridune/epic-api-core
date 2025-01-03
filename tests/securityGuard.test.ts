@@ -5,7 +5,9 @@ const roles: Record<string, string[]> = {
   root: ["*"],
   unauthenticated: ["users.create"],
   user: ["role:unauthenticated", "posts.read"],
+  limited: ["role:unauthenticated", "-users.create", "posts.read"],
   author: ["role:user", "posts"],
+  admin: ["role:author", "role:limited"],
 };
 
 const resolveScopeRole = (role: string) => roles[role];
@@ -82,6 +84,21 @@ Deno.test({
         expect(guard.isAllowed("users", "create")).toBe(false);
         expect(guard.isAllowed("posts", "write")).toBe(true);
         expect(guard.isAllowed("any")).toBe(true);
+      },
+    );
+
+    await t.step(
+      "Check nested role permissions with inline denial 2",
+      async () => {
+        const guard = new SecurityGuard();
+
+        guard.addStage(["role:admin"]);
+
+        await guard.compile({ resolveScopeRole });
+
+        expect(guard.isAllowed("users")).toBe(false);
+        expect(guard.isAllowed("users", "create")).toBe(false);
+        expect(guard.isAllowed("posts", "write")).toBe(true);
       },
     );
 
