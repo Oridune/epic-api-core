@@ -1,9 +1,11 @@
 export type TScopeResolverOptions = {
-  resolveScopeRole?: (role: string) => Promise<Array<string> | undefined>;
+  resolveScopeRole?: (
+    role: string,
+  ) => Promise<Array<string> | undefined> | Array<string> | undefined;
   resolveDepth?: number;
 };
 
-export type TStage = Array<string> | {
+export type TRawStage = Array<string> | {
   scopes: Array<string>;
   resolveDepth?: number;
 };
@@ -49,16 +51,16 @@ export class SecurityGuard {
     }, Promise.resolve<Array<string>>([]));
   }
 
-  protected RawScopePipeline: Array<TStage> = [];
+  protected RawScopePipeline: Array<TRawStage> = [];
   protected ScopePipeline: Array<Set<string>> = [];
 
-  protected RawDenialScopePipeline: Array<TStage> = [];
+  protected RawDenialScopePipeline: Array<TRawStage> = [];
   protected DenialScopePipeline: Array<Set<string>> = [];
 
   constructor() {}
 
   public addStage(
-    stage: TStage,
+    stage: TRawStage,
     options?: { denial?: boolean },
   ) {
     if (options?.denial) this.RawDenialScopePipeline.push(stage);
@@ -105,44 +107,44 @@ export class SecurityGuard {
     );
   }
 
-  public isAllowed(scope: string, permission?: string) {
-    let Permitted = true;
+  public isAllowed(scope: string, permission?: string, opts?: {
+    customPipeline?: Array<Set<string>>;
+    default?: boolean;
+  }) {
+    const Default = opts?.default ?? true;
 
-    for (let i = 0; i < this.ScopePipeline.length; i++) {
-      if (!Permitted) break;
+    let Permitted = Default;
 
-      const Stage = this.ScopePipeline[i];
+    const Pipeline = opts?.customPipeline ?? this.ScopePipeline;
 
-      if (Stage.has("*")) continue;
-      if (Stage.has(scope)) continue;
+    for (let i = 0; i < Pipeline.length; i++) {
+      if ((Default && !Permitted) || (!Default && Permitted)) break;
 
-      Permitted = typeof permission === "string"
-        ? Stage.has(`${scope}.${permission}`)
-        : false;
+      const Scopes = Pipeline[i];
+
+      Permitted = Scopes.has("*") || Scopes.has(scope) ||
+        (typeof permission === "string"
+          ? Scopes.has(`${scope}.${permission}`)
+          : false);
+
+      if (
+        Permitted && (Scopes.has(`-${scope}`) ||
+          (typeof permission === "string"
+            ? Scopes.has(`-${scope}.${permission}`)
+            : Array.from(Scopes).some((_) => _.startsWith(`-${scope}`))))
+      ) Permitted = false;
     }
 
     return Permitted;
   }
 
-  public isDenied(scope: string, permission?: string) {
-    let Permitted = true;
-
-    for (let i = 0; i < this.DenialScopePipeline.length; i++) {
-      if (!Permitted) break;
-
-      const Stage = this.DenialScopePipeline[i];
-
-      if (Stage.has("*")) Permitted = false;
-      if (Stage.has(scope)) Permitted = false;
-
-      if (Permitted) {
-        Permitted = typeof permission === "string"
-          ? !Stage.has(`${scope}.${permission}`)
-          : true;
-      }
-    }
-
-    return !Permitted;
+  public isDenied(scope: string, permission?: string, opts?: {
+    customPipeline?: Array<Set<string>>;
+  }) {
+    return this.isAllowed(scope, permission, {
+      customPipeline: opts?.customPipeline ?? this.DenialScopePipeline,
+      default: false,
+    });
   }
 
   public isPermitted(scope: string, permission?: string) {
