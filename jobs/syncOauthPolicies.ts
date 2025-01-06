@@ -2,6 +2,7 @@ import { OauthPolicyModel } from "@Models/oauthPolicy.ts";
 
 export const DefaultOauthPolicies = {
   root: ["*"],
+  debugger: ["*", "-api"], // Maintenance role (Use in denial context)
   unauthenticated: [
     "api",
     "oauthApps.getDefault",
