@@ -2,6 +2,7 @@
 import {
   BaseController,
   Controller,
+  createHashBase64,
   Delete,
   Env,
   EnvType,
@@ -10,15 +11,14 @@ import {
   type IRoute,
   Post,
   Response,
+  SupportedHashAlg,
   Versioned,
 } from "@Core/common/mod.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
-import * as bcrypt from "bcrypt";
+import { verify as bcryptVerify } from "bcrypt";
 import { JWTPayload, jwtVerify, JWTVerifyOptions, SignJWT } from "jose";
-import { createHash } from "hash";
 import { ObjectId } from "mongo";
-// @deno-types="npm:@types/ua-parser-js"
 import { UAParser } from "useragent";
 
 import verifyHuman from "@Middlewares/verifyHuman.ts";
@@ -39,10 +39,6 @@ export enum OauthTokenType {
   ACCESS = "oauth_access_token",
   PERMIT = "oauth_permit",
   SECRET = "oauth_secret",
-}
-
-export enum OauthPKCEMethod {
-  SHA256 = "sha256",
 }
 
 export type OauthTokenVerifyOptions = JWTVerifyOptions;
@@ -134,7 +130,7 @@ export const AuthenticationSchema = () =>
       }
     }),
     codeChallenge: e.optional(e.string().length({ min: 1, max: 500 })),
-    codeChallengeMethod: e.optional(e.in(Object.values(OauthPKCEMethod))),
+    codeChallengeMethod: e.optional(e.in(Object.values(SupportedHashAlg))),
     remember: e.optional(e.boolean({ cast: true })).default(false),
   });
 
@@ -426,7 +422,7 @@ export default class OauthController extends BaseController {
       oauthAppId: opts.oauthAppId.toString(),
       codeChallenge: opts.codeChallenge ?? null,
       codeChallengeMethod: opts.codeChallenge
-        ? opts.codeChallengeMethod ?? OauthPKCEMethod.SHA256
+        ? opts.codeChallengeMethod ?? SupportedHashAlg.SHA_256
         : null,
       remember: opts.remember ?? false,
     };
@@ -460,7 +456,7 @@ export default class OauthController extends BaseController {
       sessionId: opts.sessionId,
       codeChallenge: opts.codeChallenge ?? null,
       codeChallengeMethod: opts.codeChallenge
-        ? opts.codeChallengeMethod ?? OauthPKCEMethod.SHA256
+        ? opts.codeChallengeMethod ?? SupportedHashAlg.SHA_256
         : null,
       remember: opts.remember ?? false,
     };
@@ -477,16 +473,14 @@ export default class OauthController extends BaseController {
     };
   }
 
-  static verifyCodeChallenge(opts: {
-    alg: OauthPKCEMethod;
+  static async verifyCodeChallenge(opts: {
+    alg: SupportedHashAlg;
     challenge: string;
     verifier: string;
   }) {
     try {
       return (
-        createHash(opts.alg)
-          .update(opts.verifier)
-          .toString("base64")
+        (await createHashBase64(opts.alg, opts.verifier))
           .split("=")[0]
           .replaceAll("+", "-")
           .replaceAll("/", "_") ===
@@ -576,7 +570,7 @@ export default class OauthController extends BaseController {
               parseInt(
                 await Env.get("OAUTH_FAILED_LOGIN_LIMIT", true) ?? "5",
               )) ||
-            !(await bcrypt.compare(Credentials.password, User.password))
+            !(bcryptVerify(Credentials.password, User.password))
           ) break login;
 
           // Update User
@@ -728,8 +722,8 @@ export default class OauthController extends BaseController {
         // Code Verification
         if (
           Body.codeVerifier &&
-          !OauthController.verifyCodeChallenge({
-            alg: Body.codePayload.codeChallengeMethod as OauthPKCEMethod,
+          !await OauthController.verifyCodeChallenge({
+            alg: Body.codePayload.codeChallengeMethod as SupportedHashAlg,
             challenge: Body.codePayload.codeChallenge as string,
             verifier: Body.codeVerifier,
           })

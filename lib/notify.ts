@@ -3,7 +3,8 @@ import { ITriggerPayloadOptions, Novu as _Novu } from "novu";
 import { Env } from "@Core/common/env.ts";
 import { UserModel } from "@Models/user.ts";
 
-export const Novu = new _Novu(Env.getSync("NOVU_API_KEY"));
+export const NovuSecretKey = Env.getSync("NOVU_API_KEY", true);
+export const Novu = NovuSecretKey ? new _Novu(NovuSecretKey) : undefined;
 
 export type NovuTriggerPayload = ITriggerPayloadOptions["payload"];
 
@@ -24,6 +25,8 @@ export type NovuManyTriggerOptions = {
 
 export class Notify {
   static async sendWithNovu(options: NovuTriggerOptions) {
+    if (!Novu) throw new Error("Novu is not initialized!");
+
     let SubscriberId = options.subscriberId;
 
     if (!SubscriberId) {
@@ -63,6 +66,8 @@ export class Notify {
   static async sendManyWithNovu(
     options: NovuManyTriggerOptions,
   ) {
+    if (!Novu) throw new Error("Novu is not initialized!");
+
     if (!options.subscriberIds.length) {
       throw new Error(`No subscriber id provided!`);
     }

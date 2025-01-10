@@ -14,7 +14,7 @@ import {
 } from "@Core/common/mod.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
-import * as bcrypt from "bcrypt";
+import { hash as bcryptHash, verify as bcryptVerify } from "bcrypt";
 import { ClientSession, Mongo, ObjectId } from "mongo";
 
 import verifyHuman from "@Middlewares/verifyHuman.ts";
@@ -75,7 +75,7 @@ export default class UsersController extends BaseController {
     const AccountId = new ObjectId();
     const CollaboratorId = new ObjectId();
 
-    const Password = await bcrypt.hash(
+    const Password = bcryptHash(
       user.password ?? Math.random().toString(36) + Date.now().toString(36),
     );
 
@@ -281,7 +281,7 @@ export default class UsersController extends BaseController {
       password: PasswordValidator(),
       hashedPassword: e
         .any()
-        .custom((ctx) => bcrypt.hash(ctx.parent?.output.password)),
+        .custom((ctx) => bcryptHash(ctx.parent?.output.password)),
     });
 
     return new Versioned().add("1.0.0", {
@@ -314,7 +314,7 @@ export default class UsersController extends BaseController {
 
         if (
           User!.passwordHistory?.some((hashedPassword) =>
-            bcrypt.compareSync(Body.password, hashedPassword)
+            bcryptVerify(Body.password, hashedPassword)
           )
         ) e.error(`Cannot use an old password!`);
 

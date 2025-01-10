@@ -1,5 +1,4 @@
 import { TransactionQueue } from "@Core/common/mod.ts";
-import { Cron } from "croner";
 import { ClientSession, ObjectId } from "mongo";
 import { Database } from "@Database";
 
@@ -18,15 +17,16 @@ export const PermanentlyDeleteUser = TransactionQueue.add<{
 
     const Accounts = await AccountModel.find(
       { createdFor: ctx.input.userId },
-      { session }
+      { session },
     ).project({ _id: 1 });
 
-    for (const Account of Accounts)
+    for (const Account of Accounts) {
       await PermanentlyDeleteAccount.exec({
         userId: ctx.input.userId,
         accountId: Account._id,
         databaseSession: ctx.input.databaseSession,
       });
+    }
 
     await next();
   }, ctx.input.databaseSession);
@@ -40,26 +40,27 @@ export const PermanentlyDeleteAccount = TransactionQueue.add<{
   await Database.transaction(async (session) => {
     await AccountModel.deleteOneOrFail(
       { _id: ctx.input.accountId, createdFor: ctx.input.userId },
-      { session }
+      { session },
     );
 
     await CollaboratorModel.deleteMany(
       { account: ctx.input.accountId },
-      { session }
+      { session },
     );
 
     await AccountInviteModel.deleteMany(
       { account: ctx.input.accountId },
-      { session }
+      { session },
     );
 
     const Wallets = await WalletModel.find(
       { account: ctx.input.accountId },
-      { session }
+      { session },
     ).project({ balance: 1 });
 
-    for (const Wallet of Wallets)
+    for (const Wallet of Wallets) {
       if (Wallet.balance !== 0) throw new Error("Wallet balance is not 0!");
+    }
 
     // Just delete Wallet. Transactions cannot be deleted as they are shared.
     await WalletModel.deleteMany({ account: ctx.input.accountId }, { session });
@@ -73,22 +74,18 @@ export const deleteScheduledUsers = async () => {
     .project({ _id: 1 })
     .catch(console.error);
 
-  if (Users?.length)
-    for (const User of Users)
+  if (Users?.length) {
+    for (const User of Users) {
       await PermanentlyDeleteUser.exec({ userId: User._id }).catch(
-        console.error
+        console.error,
       );
+    }
+  }
 };
 
 export default async () => {
   // Delete scheduled users on start
   await deleteScheduledUsers();
 
-  // Delete every day...
-  const Job = new Cron("0 0 0 * * *").schedule(deleteScheduledUsers);
-
-  return () => {
-    // Job cleanup...
-    Job.stop();
-  };
+  // TODO: Schedule user deletion using cron!
 };
