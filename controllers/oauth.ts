@@ -7,6 +7,7 @@ import {
   Env,
   EnvType,
   fetch,
+  HashAlg,
   type IRequestContext,
   type IRoute,
   Post,
@@ -130,7 +131,11 @@ export const AuthenticationSchema = () =>
       }
     }),
     codeChallenge: e.optional(e.string().length({ min: 1, max: 500 })),
-    codeChallengeMethod: e.optional(e.in(Object.values(SupportedHashAlg))),
+    codeChallengeMethod: e.optional(
+      e.in([...Object.values(SupportedHashAlg), "sha256"]).custom((ctx) =>
+        ctx.output === "sha256" ? SupportedHashAlg.SHA_256 : ctx.output
+      ),
+    ),
     remember: e.optional(e.boolean({ cast: true })).default(false),
   });
 
@@ -474,7 +479,7 @@ export default class OauthController extends BaseController {
   }
 
   static async verifyCodeChallenge(opts: {
-    alg: SupportedHashAlg;
+    alg: HashAlg;
     challenge: string;
     verifier: string;
   }) {
@@ -723,7 +728,7 @@ export default class OauthController extends BaseController {
         if (
           Body.codeVerifier &&
           !await OauthController.verifyCodeChallenge({
-            alg: Body.codePayload.codeChallengeMethod as SupportedHashAlg,
+            alg: Body.codePayload.codeChallengeMethod as HashAlg,
             challenge: Body.codePayload.codeChallenge as string,
             verifier: Body.codeVerifier,
           })
