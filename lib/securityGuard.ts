@@ -11,45 +11,86 @@ export type TRawStage = Array<string> | {
 };
 
 export class SecurityGuard {
-  static resolveScopes(scopes: string[], options?: TScopeResolverOptions) {
-    const RoleRegExp = /^role:(.*)/;
+  static async resolveScopes(
+    scopes: string[],
+    options?: TScopeResolverOptions,
+  ) {
+    if (options?.resolveDepth === 0) return Array.from(new Set(scopes));
+
+    const RoleRegExp = /^role:([A-Za-z_-]+)(\?.*)?/;
     const ScopesCache: Record<string, Array<string>> = {};
 
-    const ResolveScopeRole = async (
-      role: string,
-      prevScopes: Array<string>,
-      level = 0,
-    ): Promise<Array<string>> =>
-      (ScopesCache[role] ??= (await options?.resolveScopeRole?.(role)) ?? [])
-        .reduce(
-          async (scopes, scope) => {
-            const Scopes = await scopes;
-            const Match = scope.match(RoleRegExp);
+    const Scopes: string[] = [];
 
-            if (
-              Match &&
-              (typeof options?.resolveDepth !== "number" ||
-                (options.resolveDepth > level))
-            ) return ResolveScopeRole(Match[1], Scopes, level + 1);
-
-            Scopes.push(scope);
-
-            return Scopes;
-          },
-          Promise.resolve(prevScopes),
-        );
-
-    return scopes.reduce(async (scopes, scope) => {
-      const Scopes = await scopes;
+    await Promise.all(scopes.map(async (scope) => {
       const Match = scope.match(RoleRegExp);
 
-      if (Match) return ResolveScopeRole(Match[1], Scopes);
+      if (!Match) return Scopes.push(scope);
 
-      Scopes.push(scope);
+      const Role = Match[1];
+      const Params = new URLSearchParams(Match[2]);
+      const Excludes = Params.get("ex")?.trim().split(/\s*,\s*/);
 
-      return Scopes;
-    }, Promise.resolve<Array<string>>([]));
+      const _scopes = ScopesCache[Role] ??=
+        await options?.resolveScopeRole?.(Role) ?? [];
+
+      const __scopes = await SecurityGuard.resolveScopes(
+        Excludes instanceof Array && Excludes.length
+          ? _scopes.filter((scope) => !Excludes.includes(scope))
+          : _scopes,
+        {
+          resolveScopeRole: options?.resolveScopeRole,
+          resolveDepth: typeof options?.resolveDepth === "number"
+            ? options?.resolveDepth - 1
+            : undefined,
+        },
+      );
+
+      Scopes.push(...__scopes);
+    }));
+
+    return Array.from(new Set(Scopes));
   }
+
+  // static _resolveScopes(scopes: string[], options?: TScopeResolverOptions) {
+  //   const RoleRegExp = /^role:([A-Za-z_-]+)(\?.*)?/;
+  //   const ScopesCache: Record<string, Array<string>> = {};
+
+  //   const ResolveScopeRole = async (
+  //     role: string,
+  //     prevScopes: Array<string>,
+  //     level = 0,
+  //   ): Promise<Array<string>> =>
+  //     (ScopesCache[role] ??= (await options?.resolveScopeRole?.(role)) ?? [])
+  //       .reduce(
+  //         async (scopes, scope) => {
+  //           const Scopes = await scopes;
+  //           const Match = scope.match(RoleRegExp);
+
+  //           if (
+  //             Match &&
+  //             (typeof options?.resolveDepth !== "number" ||
+  //               (options.resolveDepth > level))
+  //           ) return ResolveScopeRole(Match[1], Scopes, level + 1);
+
+  //           Scopes.push(scope);
+
+  //           return Scopes;
+  //         },
+  //         Promise.resolve(prevScopes),
+  //       );
+
+  //   return scopes.reduce(async (scopes, scope) => {
+  //     const Scopes = await scopes;
+  //     const Match = scope.match(RoleRegExp);
+
+  //     if (Match) return ResolveScopeRole(Match[1], Scopes);
+
+  //     Scopes.push(scope);
+
+  //     return Scopes;
+  //   }, Promise.resolve<Array<string>>([]));
+  // }
 
   protected RawScopePipeline: Array<TRawStage> = [];
   protected ScopePipeline: Array<Set<string>> = [];

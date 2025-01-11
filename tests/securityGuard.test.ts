@@ -15,6 +15,74 @@ const resolveScopeRole = (role: string) => roles[role];
 Deno.test({
   name: "Security guard Test",
   async fn(t) {
+    await t.step("Check role resolver depth 0", async () => {
+      const scopes = ["users.create", "role:unauthenticated"];
+      const results = await SecurityGuard.resolveScopes(scopes, {
+        resolveScopeRole,
+        resolveDepth: 0,
+      });
+
+      expect({ s: results }).toMatchObject({ s: scopes });
+    });
+
+    await t.step("Check role resolver depth 1", async () => {
+      const scopes = ["users.create", "role:unauthenticated"];
+      const results = await SecurityGuard.resolveScopes(scopes, {
+        resolveScopeRole,
+        resolveDepth: 1,
+      });
+
+      expect({ s: results }).toMatchObject({ s: ["users.create"] });
+    });
+
+    await t.step("Check role resolver depth 2", async () => {
+      const scopes = ["users.create", "role:author"];
+      const results = await SecurityGuard.resolveScopes(scopes, {
+        resolveScopeRole,
+        resolveDepth: 2,
+      });
+
+      expect({ s: results }).toMatchObject({
+        s: [
+          "users.create",
+          "posts",
+          "role:unauthenticated",
+          "posts.read",
+        ],
+      });
+    });
+
+    await t.step("Check role resolver depth infinity", async () => {
+      const scopes = ["role:admin"];
+      const results = await SecurityGuard.resolveScopes(scopes, {
+        resolveScopeRole,
+      });
+
+      expect({ s: results }).toMatchObject({
+        s: [
+          "-users.create",
+          "posts.read",
+          "users.create",
+          "posts",
+        ],
+      });
+    });
+
+    await t.step("Check role resolver with exclusion", async () => {
+      const scopes = ["role:limited?ex=-users.create", "role:author"];
+      const results = await SecurityGuard.resolveScopes(scopes, {
+        resolveScopeRole,
+      });
+
+      expect({ s: results }).toMatchObject({
+        s: [
+          "posts.read",
+          "users.create",
+          "posts",
+        ],
+      });
+    });
+
     await t.step("Check full permissions", async () => {
       const guard = new SecurityGuard();
 
