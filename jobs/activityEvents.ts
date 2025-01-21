@@ -136,11 +136,11 @@ export default () => {
     EventChannel.REQUEST,
     "oauth.logout",
     async (event) => {
-      const Request = event.detail.ctx;
+      const { ctx } = event.detail;
 
-      if (Request.router.state.updateFcmDeviceTokens) {
+      if (ctx.router.state.updateFcmDeviceTokens) {
         const User = await UserModel.findOne(
-          Request.router.state.updateFcmDeviceTokens,
+          ctx.router.state.updateFcmDeviceTokens,
         ).project({ _id: 1, fcmDeviceTokens: 1 });
 
         if (User) {
@@ -153,6 +153,14 @@ export default () => {
           );
         }
       }
+
+      // Invalidate Cached Session
+      await Store.del(
+        `checkPermissions:${
+          ctx.router.state.sessionInfo?.claims.sessionId ??
+            ctx.router.state.sessionInfo?.claims.secretId
+        }:${ctx.router.state.auth?.accountId}`,
+      );
     },
   );
 

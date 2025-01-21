@@ -174,7 +174,7 @@ export const prepareAppServer = async (app: AppServer, router: AppRouter) => {
         },
         ...Middlewares,
         async (ctx) => {
-          const TargetVersion = ctx.request.headers.get("x-app-version") ??
+          const TargetVersion = ctx.request.headers.get("x-api-version") ??
             "latest";
 
           const RequestContext: IRequestContext<RouterContext<string>> = {
@@ -234,7 +234,7 @@ export const prepareAppServer = async (app: AppServer, router: AppRouter) => {
               : RequestHandler?.idempotencyKey;
 
           if (typeof IdempotencyKey === "string") {
-            await new Promise((resolve) => {
+            await new Promise((resolve, reject) => {
               Queue.acquireLock(
                 [
                   "sequentialRequest",
@@ -243,10 +243,14 @@ export const prepareAppServer = async (app: AppServer, router: AppRouter) => {
                   IdempotencyKey,
                 ],
                 async (release) => {
-                  await handle();
-                  await release();
+                  try {
+                    await handle();
+                    await release();
 
-                  resolve(0);
+                    resolve(0);
+                  } catch (e) {
+                    reject(e);
+                  }
                 },
                 () => {
                   // Do nothing on lock release...
