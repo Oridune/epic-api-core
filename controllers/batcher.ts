@@ -193,7 +193,15 @@ export default class BatcherController extends BaseController {
                         { "x-api-version": CurrentHeaders["x-api-version"] }),
                       ...RequestPayload.headers,
                     },
-                    data: RequestPayload.body,
+                    data: RequestPayload.body ?? ([
+                        RequestMethod.POST,
+                        RequestMethod.PUT,
+                        RequestMethod.PATCH,
+                        RequestMethod.DELETE,
+                        RequestMethod.OPTIONS,
+                      ].includes(RequestPayload.method)
+                      ? {}
+                      : undefined),
                     validateStatus: () => true,
                   });
 
