@@ -150,11 +150,11 @@ export default class OauthPasskeyController extends BaseController {
           passkeyEnabled: true,
           $push: {
             passkeys: {
-              id: registrationInfo.credentialID,
+              id: registrationInfo.credential.id,
               publicKey: isoBase64URL.fromBuffer(
-                registrationInfo.credentialPublicKey,
+                registrationInfo.credential.publicKey,
               ),
-              counter: registrationInfo.counter,
+              counter: registrationInfo.credential.counter,
               deviceType: registrationInfo.credentialDeviceType,
               backedUp: registrationInfo.credentialBackedUp,
               transports: Body.credentials.response.transports,
@@ -314,9 +314,9 @@ export default class OauthPasskeyController extends BaseController {
             expectedChallenge: Challenge,
             expectedOrigin: Referer.origin,
             expectedRPID: Referer.hostname,
-            authenticator: {
-              credentialID: Passkey.id,
-              credentialPublicKey: isoBase64URL.toBuffer(
+            credential: {
+              id: Passkey.id,
+              publicKey: isoBase64URL.toBuffer(
                 Passkey.publicKey,
               ),
               counter: Passkey.counter,

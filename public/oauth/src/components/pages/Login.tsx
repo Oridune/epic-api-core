@@ -22,6 +22,7 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { VisibilityOff, Visibility, Replay } from "@mui/icons-material";
+import { Helmet } from "react-helmet";
 import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
 import axios, { type AxiosResponse, AxiosError } from "../utils/axios";
@@ -245,6 +246,10 @@ export const LoginPage = () => {
 
   return (
     <>
+      <Helmet>
+        <title>{t("Sign In")}</title>
+        <meta name="description" content={t("Sign in to continue")} />
+      </Helmet>
       <LinearProgress style={{ opacity: Loading ? 1 : 0 }} />
       <motion.div
         animate={{ opacity: 1, y: 0, transition: { duration: 0.2 } }}

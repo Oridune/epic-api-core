@@ -23,6 +23,7 @@ import {
   Skeleton,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Helmet } from "react-helmet";
 import { motion } from "framer-motion";
 import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
@@ -240,6 +241,10 @@ export const ForgotPage = () => {
 
   return (
     <>
+      <Helmet>
+        <title>{t("Password Recovery")}</title>
+        <meta name="description" content={t("Recover your password")} />
+      </Helmet>
       <LinearProgress style={{ opacity: Loading ? 1 : 0 }} />
       <motion.div
         animate={{ opacity: 1, y: 0, transition: { duration: 0.2 } }}

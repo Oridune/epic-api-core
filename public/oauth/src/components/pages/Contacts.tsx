@@ -22,6 +22,7 @@ import {
   ListSubheader,
   Chip,
 } from "@mui/material";
+import { Helmet } from "react-helmet";
 import { motion } from "framer-motion";
 import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
@@ -257,6 +258,10 @@ export const ContactsPage = () => {
 
   return (
     <>
+      <Helmet>
+        <title>{t("Manage credentails")}</title>
+        <meta name="description" content={t("Manage your recovery methods")} />
+      </Helmet>
       <LinearProgress style={{ opacity: Loading ? 1 : 0 }} />
       <motion.div
         animate={{ opacity: 1, y: 0, transition: { duration: 0.2 } }}

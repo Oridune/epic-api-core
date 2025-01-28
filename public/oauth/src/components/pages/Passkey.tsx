@@ -16,6 +16,7 @@ import {
   Alert,
   Stack,
 } from "@mui/material";
+import { Helmet } from "react-helmet";
 import { red, green } from "@mui/material/colors";
 import { motion } from "framer-motion";
 import axios, { AxiosError } from "../utils/axios";
@@ -111,6 +112,10 @@ export const PasskeyPage = () => {
 
   return (
     <>
+      <Helmet>
+        <title>{t("Passkeys")}</title>
+        <meta name="description" content={t("Manage your passkeys")} />
+      </Helmet>
       <LinearProgress style={{ opacity: Loading ? 1 : 0 }} />
       <motion.div
         animate={{ opacity: 1, y: 0, transition: { duration: 0.2 } }}
