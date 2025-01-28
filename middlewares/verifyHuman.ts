@@ -62,9 +62,12 @@ export default (options?: {
     const Body = await e.object({
       [OauthAppIdKey]: e.optional(e.string()),
     }, { allowUnexpectedProps: true })
-      .validate(await ctx.request.body.json() ?? {}, {
-        name: "body",
-      });
+      .validate(
+        (ctx.request.hasBody ? await ctx.request.body.json() : undefined) ?? {},
+        {
+          name: "body",
+        },
+      );
 
     const OauthAppId = Body[OauthAppIdKey] ?? Params[OauthAppIdKey] ??
       Query[OauthAppIdKey];
