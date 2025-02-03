@@ -26,7 +26,9 @@ export const InputAccountInviteSchema = e.object({
 
 @Controller("/account/invites/", { name: "accountInvites" })
 export default class AccountInvitesController extends BaseController {
-  @Post("/")
+  @Post("/", {
+    group: "public",
+  })
   public create(route: IRoute) {
     // Define Body Schema
     const BodySchema = InputAccountInviteSchema;
@@ -99,7 +101,9 @@ export default class AccountInvitesController extends BaseController {
     });
   }
 
-  @Get("/:id?/")
+  @Get("/:id?/", {
+    group: "public",
+  })
   public get(route: IRoute) {
     const CurrentTimestamp = Date.now();
 
@@ -192,7 +196,9 @@ export default class AccountInvitesController extends BaseController {
     });
   }
 
-  @Delete("/:id/")
+  @Delete("/:id/", {
+    group: "public",
+  })
   public delete(route: IRoute) {
     // Define Params Schema
     const ParamsSchema = e.object({

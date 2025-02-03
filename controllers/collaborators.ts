@@ -125,7 +125,9 @@ export default class CollaboratorsController extends BaseController {
     });
   }
 
-  @Patch("/:id/")
+  @Patch("/:id/", {
+    group: "public",
+  })
   public update(route: IRoute) {
     // Define Params Schema
     const ParamsSchema = e.object({
@@ -210,7 +212,9 @@ export default class CollaboratorsController extends BaseController {
     });
   }
 
-  @Get("/:id?/")
+  @Get("/:id?/", {
+    group: "public",
+  })
   public get(route: IRoute) {
     const CurrentTimestamp = Date.now();
 
@@ -311,7 +315,9 @@ export default class CollaboratorsController extends BaseController {
     });
   }
 
-  @Delete("/:id/")
+  @Delete("/:id/", {
+    group: "public",
+  })
   public delete(route: IRoute) {
     // Define Params Schema
     const ParamsSchema = e.object({

@@ -141,6 +141,7 @@ export const prepareAppServer = async (app: AppServer, router: AppRouter) => {
 
     const RoutesTableData: Array<{
       Type: string;
+      Group?: string;
       Method: string;
       Permission: string;
       Endpoint: string;
@@ -149,6 +150,7 @@ export const prepareAppServer = async (app: AppServer, router: AppRouter) => {
     for (const Route of routes) {
       RoutesTableData.push({
         Type: "Endpoint",
+        Group: Route.options.group,
         Method: Route.options.method.toUpperCase(),
         Permission: `${Route.scope}.${Route.options.name}`,
         Endpoint: Route.endpoint,
@@ -243,16 +245,26 @@ export const prepareAppServer = async (app: AppServer, router: AppRouter) => {
                   "sequentialRequest",
                   Route.scope,
                   Route.options.name,
+                  "key",
                   IdempotencyKey,
                 ],
                 async (release) => {
+                  let error;
+
                   try {
                     await handle();
-                    await release();
-
-                    resolve(0);
                   } catch (e) {
-                    reject(e);
+                    error = e;
+                  }
+
+                  await release().catch(() => {
+                    // Do nothing on lock release error...
+                  });
+
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(0);
                   }
                 },
                 () => {

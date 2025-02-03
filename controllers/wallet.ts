@@ -27,7 +27,9 @@ import { TFileOutput } from "@Models/file.ts";
 
 @Controller("/wallet/", { name: "wallet" })
 export default class WalletController extends BaseController {
-  @Get("/metadata/")
+  @Get("/metadata/", {
+    group: "public",
+  })
   public metadata() {
     return async () => {
       const [
@@ -51,7 +53,9 @@ export default class WalletController extends BaseController {
     };
   }
 
-  @Get("/transfer/sign/:type?/:currency?/")
+  @Get("/transfer/sign/:type?/:currency?/", {
+    group: "public",
+  })
   public signTransfer(route: IRoute) {
     // Define Query Schema
     const QuerySchema = e.object(
@@ -198,7 +202,9 @@ export default class WalletController extends BaseController {
     });
   }
 
-  @Post("/transfer/")
+  @Post("/transfer/", {
+    group: "public",
+  })
   public transfer(route: IRoute) {
     // Define Body Schema
     const BodySchema = e.object({
@@ -276,7 +282,9 @@ export default class WalletController extends BaseController {
     });
   }
 
-  @Get("/balance/:type?/:currency?/")
+  @Get("/balance/:type?/:currency?/", {
+    group: "public",
+  })
   public balance(route: IRoute) {
     // Define Params Schema
     const ParamsSchema = e.object({
@@ -303,7 +311,9 @@ export default class WalletController extends BaseController {
     });
   }
 
-  @Post("/balance/list/")
+  @Post("/balance/list/", {
+    group: "public",
+  })
   public balanceList(route: IRoute) {
     // Define Body Schema
     const BodySchema = e.object({
@@ -331,7 +341,9 @@ export default class WalletController extends BaseController {
     });
   }
 
-  @Get("/transactions/:type?/:currency?/")
+  @Get("/transactions/:type?/:currency?/", {
+    group: "public",
+  })
   public transactions(route: IRoute) {
     const CurrentTimestamp = Date.now();
 

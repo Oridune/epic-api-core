@@ -27,7 +27,9 @@ import { OauthSecretModel } from "@Models/oauthSecret.ts";
 
 @Controller("/accounts/", { name: "accounts" })
 export default class AccountsController extends BaseController {
-  @Post("/")
+  @Post("/", {
+    group: "public",
+  })
   public create(route: IRoute) {
     // Define Body Schema
     const BodySchema = InputAccountSchema;
@@ -122,7 +124,9 @@ export default class AccountsController extends BaseController {
     });
   }
 
-  @Patch("/:id/")
+  @Patch("/:id/", {
+    group: "public",
+  })
   public update(route: IRoute) {
     // Define Params Schema
     const ParamsSchema = e.object({
@@ -166,7 +170,9 @@ export default class AccountsController extends BaseController {
     });
   }
 
-  @Get("/:id?/")
+  @Get("/:id?/", {
+    group: "public",
+  })
   public get(route: IRoute) {
     const CurrentTimestamp = Date.now();
 
@@ -259,7 +265,9 @@ export default class AccountsController extends BaseController {
     });
   }
 
-  @Delete("/:id/")
+  @Delete("/:id/", {
+    group: "public",
+  })
   public delete(route: IRoute) {
     // Define Params Schema
     const ParamsSchema = e.object({
@@ -297,8 +305,12 @@ export default class AccountsController extends BaseController {
     });
   }
 
-  @Get("/logo/:account/")
-  @Put("/logo/")
+  @Get("/logo/:account/", {
+    group: "public",
+  })
+  @Put("/logo/", {
+    group: "public",
+  })
   public updateLogo(route: IRoute) {
     return UploadsController.upload<{
       account: string;
