@@ -59,7 +59,7 @@ export interface RouterState {
 }
 
 declare module "@Core/common/controller/base.ts" {
-  interface IRouterContextExtendor {
+  interface IRouterContextExtender {
     state: RouterState;
   }
 }
