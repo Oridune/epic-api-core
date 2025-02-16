@@ -236,6 +236,11 @@ export class Wallet {
     sessionId?: string;
 
     /**
+     * Provide a custom transactionId.
+     */
+    transactionId?: ObjectId;
+
+    /**
      * Reference is calculated automatically by default (TX10001). But you can pass a custom reference also.
      */
     reference?: string;
@@ -296,7 +301,7 @@ export class Wallet {
     currency?: string;
 
     /**
-     * Amount to be transfered
+     * Amount to be transferred
      */
     amount: number;
 
@@ -463,6 +468,7 @@ export class Wallet {
 
         // Create a Transaction
         transaction: await TransactionModel.create({
+          _id: options.transactionId,
           sessionId: options.sessionId,
           reference: Reference,
           foreignRefType: options.foreignRefType,
@@ -495,6 +501,11 @@ export class Wallet {
      * A sessionId can be used to identify a unique payment session.
      */
     sessionId?: string;
+
+    /**
+     * Provide a custom transactionId for the refund transaction.
+     */
+    refundTransactionId?: ObjectId;
 
     /**
      * Reference is calculated automatically by default (TX10001). But you can pass a custom reference also.
@@ -560,6 +571,7 @@ export class Wallet {
 
       return await Wallet.transfer({
         sessionId: options.sessionId,
+        transactionId: options.refundTransactionId,
         reference: options.reference,
         foreignRefType: options.foreignRefType,
         foreignRef: options.foreignRef,
