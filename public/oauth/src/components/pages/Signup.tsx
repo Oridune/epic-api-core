@@ -139,7 +139,11 @@ export const SignupPage = () => {
           },
           params: {
             reference: tryAtob(CustomReference ?? "") || undefined,
-            reCaptchaV3Token: await executeRecaptcha!("signup"),
+            ...(typeof executeRecaptcha === "function"
+              ? {
+                  reCaptchaV3Token: await executeRecaptcha("signup"),
+                }
+              : {}),
           },
         }
       );

@@ -133,9 +133,13 @@ export const LoginPage = () => {
             username: data.username,
             password: data.password ?? "",
           },
-          params: {
-            reCaptchaV3Token: await executeRecaptcha!("login"),
-          },
+          ...(typeof executeRecaptcha === "function"
+            ? {
+                params: {
+                  reCaptchaV3Token: await executeRecaptcha("login"),
+                },
+              }
+            : {}),
         });
       } else {
         const PasskeyChallenge = await axios.get(
@@ -143,7 +147,13 @@ export const LoginPage = () => {
           {
             params: {
               username: data.username,
-              reCaptchaV3Token: await executeRecaptcha!("passkeyChallenge"),
+              ...(typeof executeRecaptcha === "function"
+                ? {
+                    reCaptchaV3Token: await executeRecaptcha(
+                      "passkeyChallenge"
+                    ),
+                  }
+                : {}),
             },
           }
         );
@@ -167,9 +177,13 @@ export const LoginPage = () => {
             ...LoginPayload,
           },
           {
-            params: {
-              reCaptchaV3Token: await executeRecaptcha?.("login"),
-            },
+            ...(typeof executeRecaptcha === "function"
+              ? {
+                  params: {
+                    reCaptchaV3Token: await executeRecaptcha("login"),
+                  },
+                }
+              : {}),
           }
         );
       }

@@ -586,7 +586,8 @@ export class Wallet {
         currency: Transaction.currency,
         amount: Transaction.amount,
         description: options.description ??
-          (typeof Transaction.description === "object"
+          (typeof Transaction.description === "object" &&
+              Transaction.description !== null
             ? Object.fromEntries(
               Object.entries(Transaction.description).map((trns) => {
                 trns[1] = [
@@ -598,7 +599,8 @@ export class Wallet {
             )
             : [
               RefundMessage,
-              Transaction.description?.replace(RefundMessage, "").trim(),
+              Transaction.description?.replace(RefundMessage, "")?.trim() ??
+                Transaction.reference,
             ].join(" ")),
         metadata: options.metadata,
         allowOverdraft: options.allowOverdraft,
