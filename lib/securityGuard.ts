@@ -52,46 +52,6 @@ export class SecurityGuard {
     return Array.from(new Set(Scopes));
   }
 
-  // static _resolveScopes(scopes: string[], options?: TScopeResolverOptions) {
-  //   const RoleRegExp = /^role:([A-Za-z_-]+)(\?.*)?/;
-  //   const ScopesCache: Record<string, Array<string>> = {};
-
-  //   const ResolveScopeRole = async (
-  //     role: string,
-  //     prevScopes: Array<string>,
-  //     level = 0,
-  //   ): Promise<Array<string>> =>
-  //     (ScopesCache[role] ??= (await options?.resolveScopeRole?.(role)) ?? [])
-  //       .reduce(
-  //         async (scopes, scope) => {
-  //           const Scopes = await scopes;
-  //           const Match = scope.match(RoleRegExp);
-
-  //           if (
-  //             Match &&
-  //             (typeof options?.resolveDepth !== "number" ||
-  //               (options.resolveDepth > level))
-  //           ) return ResolveScopeRole(Match[1], Scopes, level + 1);
-
-  //           Scopes.push(scope);
-
-  //           return Scopes;
-  //         },
-  //         Promise.resolve(prevScopes),
-  //       );
-
-  //   return scopes.reduce(async (scopes, scope) => {
-  //     const Scopes = await scopes;
-  //     const Match = scope.match(RoleRegExp);
-
-  //     if (Match) return ResolveScopeRole(Match[1], Scopes);
-
-  //     Scopes.push(scope);
-
-  //     return Scopes;
-  //   }, Promise.resolve<Array<string>>([]));
-  // }
-
   protected RawScopePipeline: Array<TRawStage> = [];
   protected ScopePipeline: Array<Set<string>> = [];
 
@@ -146,6 +106,23 @@ export class SecurityGuard {
         },
       ),
     );
+  }
+
+  public load(
+    data: {
+      scopePipeline: Array<Set<string>>;
+      denialScopePipeline?: Array<Set<string>>;
+    },
+  ) {
+    if (data.scopePipeline instanceof Array) {
+      this.ScopePipeline = data.scopePipeline;
+    }
+
+    if (data.denialScopePipeline instanceof Array) {
+      this.DenialScopePipeline = data.denialScopePipeline;
+    }
+
+    return this;
   }
 
   public isAllowed(scope: string, permission?: string, opts?: {

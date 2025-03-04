@@ -33,6 +33,7 @@
     "cache": "deno cache ./serve.ts",
     "generate:erd": "deno run -A ./core/scripts/generateERD.ts",
     "deploy:docker": "deno run -A ./core/scripts/deployDocker.ts",
-    "generate:sdk": "deno run -A ./core/scripts/generateSDK.ts"
+    "generate:sdk": "deno run -A ./core/scripts/generateSDK.ts",
+    "generate:sdk:extension": "deno run -A ./core/scripts/generateSDKExtension.ts"
   }
 }

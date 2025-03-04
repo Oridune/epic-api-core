@@ -1,7 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
+import { parseArgs as parse } from "flags/parse-args";
 import { dirname, join } from "path";
 import { existsSync, expandGlob } from "dfs";
-import { IValidatorJSONSchema, ValidationException } from "validator";
+import e, { IValidatorJSONSchema, ValidationException } from "validator";
 
 import { Mongo } from "mongo";
 
@@ -149,17 +150,29 @@ export const translateFieldToPossibleEntity = (id: string) => {
   }
 };
 
-export const generateERDData = async () => {
+export const generateERDData = async (options?: {
+  includes?: string[];
+  excludes?: string[];
+}) => {
   const data: IERDData = {
     entities: [],
     references: [],
   };
+
+  for (const [, SubLoader] of Loader.getLoaders() ?? []) {
+    for (const [_, Module] of (SubLoader.tree.get("models")?.modules ?? [])) {
+      await Module.import();
+    }
+  }
 
   await Loader.loadModules("models");
 
   const ExistingEntities = new Set<string>();
 
   for (const [_, model] of Mongo.models) {
+    if (options?.includes && !options.includes.includes(model.name)) continue;
+    if (options?.excludes && options.excludes.includes(model.name)) continue;
+
     const schema = model.getSchema().toJSON().schema;
 
     data.entities.push({
@@ -204,8 +217,25 @@ export const generateERDData = async () => {
   return data;
 };
 
-export const generateERD = async () => {
+export const generateERD = async (options?: {
+  includes?: string[];
+  excludes?: string[];
+}) => {
   try {
+    const Options = await e
+      .object(
+        {
+          includes: e.optional(
+            e.array(e.string(), { cast: true, splitter: /\s*,\s*/ }),
+          ),
+          excludes: e.optional(
+            e.array(e.string(), { cast: true, splitter: /\s*,\s*/ }),
+          ),
+        },
+        { allowUnexpectedProps: true },
+      )
+      .validate(options);
+
     const RepoName = "Oridune/epic-api-erd";
     const GitRepoUrl = new URL(RepoName, "https://github.com");
     const TempPath = join(Deno.cwd(), "_temp", RepoName);
@@ -299,7 +329,7 @@ export const generateERD = async () => {
 
     await Deno.writeTextFile(
       join(Deno.cwd(), "public", UIID, "www/data.json"),
-      JSON.stringify(await generateERDData()),
+      JSON.stringify(await generateERDData(Options)),
     );
   } catch (error) {
     if (error instanceof ValidationException) {
@@ -311,9 +341,14 @@ export const generateERD = async () => {
 };
 
 if (import.meta.main) {
+  const { i, includes, e, excludes } = parse(Deno.args);
+
   await Loader.load({ includeTypes: ["models", "plugins", "public"] });
 
-  await generateERD();
+  await generateERD({
+    includes: includes ?? i,
+    excludes: excludes ?? e,
+  });
 
   Deno.exit();
 }

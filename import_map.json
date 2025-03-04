@@ -33,7 +33,7 @@
     "u-semver": "npm:u-semver@^0.7.1",
     "useragent": "npm:ua-parser-js@^2.0.0",
     "ts-reset": "npm:@total-typescript/ts-reset@^0.6.1",
-    "redis": "npm:ioredis@^5.4.2",
+    "redis": "npm:ioredis@^5.5.0",
     "novu": "npm:@novu/node@^2.0.6",
     "aws-s3": "npm:@aws-sdk/client-s3@3.418.0",
     "aws-s3-presigner": "npm:@aws-sdk/s3-request-presigner@3.418.0",
@@ -45,7 +45,8 @@
     "simplewebauthn/helpers": "npm:@simplewebauthn/server@13.0.0/helpers",
     "blakejs": "npm:blakejs@^1.2.1",
     "queue": "jsr:@oridune/queue@0.0.6",
-    "axios": "npm:axios@^1.7.9"
+    "axios": "npm:axios@^1.7.9",
+    "ohash": "npm:ohash@2.0.7"
   },
   "scopes": {}
 }

@@ -151,6 +151,7 @@ export default {
                   "Account not found or is blocked!",
                 );
             }
+
             if (Collaborator.isOwned) {
               // deno-lint-ignore no-explicit-any
               let Updates: Record<string, any> | undefined;
@@ -177,13 +178,15 @@ export default {
                 );
             }
 
-            if (Collaborator.createdBy !== User._id) {
-              const ParentUser =
-                (await UserModel.findOne(Collaborator.createdBy).project({
-                  role: 1,
-                })) ?? User;
+            if (!Collaborator.createdBy.equals(User._id)) {
+              const ParentCollaborator = (await CollaboratorModel.findOne({
+                account: AccountId,
+                createdFor: Collaborator.createdBy,
+              }).project({
+                role: 1,
+              })) ?? User;
 
-              GlobalRole = ParentUser.role;
+              GlobalRole = ParentCollaborator.role;
             }
 
             return {
