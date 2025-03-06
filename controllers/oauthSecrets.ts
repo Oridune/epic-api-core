@@ -9,18 +9,19 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { queryValidator, responseValidator } from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
-import { queryValidator } from "@Core/common/validators.ts";
 import { ObjectId } from "mongo";
 
 import OauthController, {
   OauthTokenType,
   OauthTokenVerifyOptions,
+  TokenSchema,
 } from "@Controllers/oauth.ts";
 import { OauthSecretModel } from "@Models/oauthSecret.ts";
 
-@Controller("/oauth/secrets/", { name: "oauthSecrets" })
+@Controller("/oauth/secrets/", { group: "Oauth", name: "oauthSecrets" })
 export default class OauthSecretsController extends BaseController {
   static async createSecret(opts: {
     userId: ObjectId | string;
@@ -102,6 +103,9 @@ export default class OauthSecretsController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(e.object({
+          secret: TokenSchema(),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -147,6 +151,9 @@ export default class OauthSecretsController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(e.object({
+          secret: TokenSchema(),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -189,6 +196,10 @@ export default class OauthSecretsController extends BaseController {
       shape: {
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
+        return: responseValidator(e.object({
+          totalCount: e.optional(e.number()),
+          results: e.array(OauthSecretModel.getSchema()),
+        })).toSample(),
       },
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);

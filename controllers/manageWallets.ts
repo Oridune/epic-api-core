@@ -18,8 +18,9 @@ import { WalletModel } from "@Models/wallet.ts";
 import { TransactionModel } from "@Models/transaction.ts";
 import { UserModel } from "@Models/user.ts";
 import { AccountModel } from "@Models/account.ts";
+import { responseValidator } from "@Core/common/validators.ts";
 
-@Controller("/manage/wallets/", { name: "manageWallets" })
+@Controller("/manage/wallets/", { group: "Wallet", name: "manageWallets" })
 export default class ManageWalletsController extends BaseController {
   @Get("/all/:id?/")
   public getAll(route: IRoute) {
@@ -58,6 +59,10 @@ export default class ManageWalletsController extends BaseController {
       shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
+        return: responseValidator(e.object({
+          totalCount: e.optional(e.number()),
+          results: e.array(WalletModel.getSchema()),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
@@ -123,6 +128,7 @@ export default class ManageWalletsController extends BaseController {
       shape: () => ({
         params: ParamsSchema.toSample(),
         body: BodySchema.toSample(),
+        return: responseValidator(e.array(WalletModel.getSchema())).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
@@ -188,6 +194,10 @@ export default class ManageWalletsController extends BaseController {
       shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
+        return: responseValidator(e.object({
+          totalCount: e.optional(e.number()),
+          results: e.array(TransactionModel.getSchema()),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
@@ -261,6 +271,9 @@ export default class ManageWalletsController extends BaseController {
       shape: () => ({
         params: ParamsSchema.toSample(),
         body: BodySchema.toSample(),
+        return: responseValidator(e.object({
+          transaction: TransactionModel.getSchema(),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -353,6 +366,9 @@ export default class ManageWalletsController extends BaseController {
     return new Versioned().add("1.0.0", {
       shape: () => ({
         params: ParamsSchema.toSample(),
+        return: responseValidator(e.object({
+          transaction: TransactionModel.getSchema(),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);

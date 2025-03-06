@@ -29,7 +29,7 @@ export type SignUploadOptions = {
   expiresInMs?: number;
 };
 
-@Controller("/uploads/", { name: "uploads" })
+@Controller("/uploads/", { group: "System", name: "uploads" })
 export default class UploadsController extends BaseController {
   static UploadTokenType = "upload_request";
 

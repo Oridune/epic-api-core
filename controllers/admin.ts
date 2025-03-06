@@ -38,7 +38,7 @@ export default class AdminController extends BaseController {
 
         await e.try(() => updateCore(Body));
 
-        return Response.status(true);
+        return Response.true();
       },
     });
   }

@@ -15,6 +15,7 @@ import {
   SupportedHashAlg,
   Versioned,
 } from "@Core/common/mod.ts";
+import { responseValidator } from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { verify as bcryptVerify } from "bcrypt";
@@ -131,12 +132,16 @@ export const AuthenticationSchema = () =>
       }
     }),
     codeChallenge: e.optional(e.string().length({ min: 1, max: 500 })),
-    codeChallengeMethod: e.optional(
-      e.in([...Object.values(SupportedHashAlg), "sha256"]).custom((ctx) =>
-        ctx.output === "sha256" ? SupportedHashAlg.SHA_256 : ctx.output
-      ),
-    ),
+    codeChallengeMethod: e.optional(e.in(Object.values(SupportedHashAlg))),
     remember: e.optional(e.boolean({ cast: true })).default(false),
+  });
+
+export const TokenSchema = () =>
+  e.object({
+    issuer: e.string(),
+    type: e.string(),
+    token: e.string(),
+    expiresAtSeconds: e.number(),
   });
 
 @Controller("/oauth/", { group: "Oauth", name: "oauth" })
@@ -531,6 +536,14 @@ export default class OauthController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(e.object({
+          authenticationToken: TokenSchema(),
+          availableScopes: e.array(
+            e.object({
+              scopes: e.array(e.string()),
+            }).extends(CollaboratorModel.getSchema()),
+          ),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Authorization Validation
@@ -658,6 +671,9 @@ export default class OauthController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(e.object({
+          oauthCode: TokenSchema(),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
@@ -716,6 +732,10 @@ export default class OauthController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(e.object({
+          refresh: e.optional(TokenSchema()),
+          access: TokenSchema(),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
@@ -787,6 +807,10 @@ export default class OauthController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(e.object({
+          refresh: e.optional(TokenSchema()),
+          access: TokenSchema(),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
@@ -1019,6 +1043,9 @@ export default class OauthController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(e.object({
+          permit: TokenSchema(),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (

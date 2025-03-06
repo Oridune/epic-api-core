@@ -38,7 +38,7 @@ export const DashboardPage = () => {
       generateCodeChallenge(randomString.generate(128)).then(
         ({ verifier, challenge }) => {
           localStorage.setItem("codeChallengeVerifier", verifier);
-          window.location.href = `/oauth/login/?appId=default&codeChallengeMethod=sha256&codeChallenge=${challenge}&callbackURL=${new URL(
+          window.location.href = `/oauth/login/?appId=default&codeChallengeMethod=sha-256&codeChallenge=${challenge}&callbackURL=${new URL(
             import.meta.env.BASE_URL,
             window.location.origin
           ).toString()}`;

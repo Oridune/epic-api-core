@@ -12,6 +12,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { responseValidator } from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { hash as bcryptHash, verify as bcryptVerify } from "bcrypt";
@@ -41,7 +42,7 @@ import UsersIdentificationController, {
 import UploadsController from "@Controllers/uploads.ts";
 import { Database } from "@Database";
 
-@Controller("/users/", { group: "Users", name: "users" })
+@Controller("/users/", { group: "User", name: "users" })
 export default class UsersController extends BaseController {
   static async create(
     user: Omit<TUserInput, "role" | "passwordHistory" | "collaborates">,
@@ -197,6 +198,11 @@ export default class UsersController extends BaseController {
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
         body: BodySchema.toSample(),
+        return: responseValidator(e.object({
+          user: UserModel.getSchema(),
+          account: AccountModel.getSchema(),
+          collaborator: CollaboratorModel.getSchema(),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
@@ -253,6 +259,7 @@ export default class UsersController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(e.partial(UserModel.getSchema())).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -349,6 +356,11 @@ export default class UsersController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(e.object({
+          type: e.in(Object.values(IdentificationMethod)),
+          value: e.string(),
+          verified: e.boolean(),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -389,6 +401,11 @@ export default class UsersController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(e.object({
+          type: e.in(Object.values(IdentificationMethod)),
+          value: e.string(),
+          verified: e.boolean(),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -565,6 +582,10 @@ export default class UsersController extends BaseController {
       shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
+        return: responseValidator(e.object({
+          totalCount: e.optional(e.number()),
+          users: e.array(UserModel.getSchema()),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
@@ -630,6 +651,11 @@ export default class UsersController extends BaseController {
     );
 
     return Versioned.add("1.0.0", {
+      shape: () => ({
+        return: responseValidator(e.object({
+          user: UserModel.getSchema(),
+        })).toSample(),
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 

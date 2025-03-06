@@ -9,6 +9,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { responseValidator } from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
@@ -19,7 +20,7 @@ import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 export default class OauthAppsController extends BaseController {
   static DefaultOauthAppID = new ObjectId("63b6a997e1275524350649f4");
   static PublicOauthAppCacheTTL = 60 * 10; // Cache for 10 minutes
-  static SensetiveFieldsRemovalProjection = {
+  static SensitiveFieldsRemovalProjection = {
     "integrations.secretKey": 0,
   };
 
@@ -31,6 +32,7 @@ export default class OauthAppsController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(OauthAppModel.getSchema()).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
@@ -60,6 +62,8 @@ export default class OauthAppsController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         query: QuerySchema.toSample(),
+        return: responseValidator(e.array(OauthAppModel.getSchema()))
+          .toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
@@ -85,6 +89,7 @@ export default class OauthAppsController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         params: ParamsSchema.toSample(),
+        return: responseValidator(OauthAppModel.getSchema()).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
@@ -104,6 +109,9 @@ export default class OauthAppsController extends BaseController {
   @Get("/default/")
   public getDefault() {
     return Versioned.add("1.0.0", {
+      shape: () => ({
+        return: responseValidator(OauthAppModel.getSchema()).toSample(),
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         const App = (await OauthAppModel.findOne(
           OauthAppsController.DefaultOauthAppID,
@@ -113,7 +121,7 @@ export default class OauthAppsController extends BaseController {
               ttl: OauthAppsController.PublicOauthAppCacheTTL,
             },
           },
-        ).project(OauthAppsController.SensetiveFieldsRemovalProjection)) ??
+        ).project(OauthAppsController.SensitiveFieldsRemovalProjection)) ??
           (await OauthAppModel.create({
             _id: OauthAppsController.DefaultOauthAppID,
             name: `${await Env.get("DISPLAY_NAME")} (By Oridune)`,
@@ -147,6 +155,7 @@ export default class OauthAppsController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         params: ParamsSchema.toSample(),
+        return: responseValidator(OauthAppModel.getSchema()).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
@@ -159,7 +168,7 @@ export default class OauthAppsController extends BaseController {
             key: `oauth-app-public:${Params.appId}`,
             ttl: OauthAppsController.PublicOauthAppCacheTTL,
           },
-        }).project(OauthAppsController.SensetiveFieldsRemovalProjection);
+        }).project(OauthAppsController.SensitiveFieldsRemovalProjection);
 
         if (!App) e.error("Oauth app not found!");
 
@@ -191,7 +200,7 @@ export default class OauthAppsController extends BaseController {
 
         await OauthAppModel.deleteOne({ _id: new ObjectId(Params.appId) });
 
-        return Response.status(true);
+        return Response.true();
       },
     });
   }

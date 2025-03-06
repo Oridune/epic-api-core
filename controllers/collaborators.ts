@@ -10,6 +10,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { responseValidator } from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
@@ -21,7 +22,7 @@ import { UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauthSession.ts";
 import { OauthSecretModel } from "@Models/oauthSecret.ts";
 
-@Controller("/collaborators/", { name: "collaborators" })
+@Controller("/collaborators/", { group: "Account", name: "collaborators" })
 export default class CollaboratorsController extends BaseController {
   @Post("/:token/")
   public create(route: IRoute) {
@@ -33,6 +34,7 @@ export default class CollaboratorsController extends BaseController {
     return new Versioned().add("1.0.0", {
       shape: () => ({
         params: ParamsSchema.toSample(),
+        return: responseValidator(CollaboratorModel.getSchema()).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -255,6 +257,10 @@ export default class CollaboratorsController extends BaseController {
       shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
+        return: responseValidator(e.object({
+          totalCount: e.optional(e.number()),
+          results: e.array(CollaboratorModel.getSchema()),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);

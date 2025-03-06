@@ -4,37 +4,94 @@
  * This is a generated file. Do not edit the contents of this file!
  */
 
-import axios, { AxiosInstance } from "axios";
-import type { TSDKOptions } from "./types.ts";
+import axios, { AxiosInstance, AxiosResponse } from "axios";
+
+import type { TSDKOptions } from "./types";
 
 <% for (const [Scope, RouteGroups] of Object.entries(scopeGroups)) { -%>
-import { IController$<%- Scope %>, <%- Scope %>Module } from "<%- await generateModule(Scope, RouteGroups) %>";
+import { <%- Scope %>Module } from "<%- await generateModule(Scope, RouteGroups) %>";
+<% } -%>
+
+<% for (const {name, entry} of extensions) { -%>
+import { <%- name %>Entry } from "<%- entry %>";
 <% } -%>
 
 export class EpicSDK {
     static options?: TSDKOptions;
-    static client?: AxiosInstance;
-    static accessToken?: string;
+    static axios?: AxiosInstance;
     static permissions?: Set<string>;
 
     static init(options: TSDKOptions) {
-        EpicSDK.options = options;
-        EpicSDK.client = axios.create(options);
+        this.options = options;
+        this.axios = axios.create(options);
     }
 
     static isPermitted(scope: string, permission?: string) {
-        if(!(EpicSDK.permissions instanceof Set))
+        if(!(this.permissions instanceof Set))
             return true;
 
-        return EpicSDK.permissions.has(scope) || EpicSDK.permissions.has(`${scope}.${permission}`);
+        return this.permissions.has(scope) || this.permissions.has(`${scope}.${permission}`);
     }
 
     static checkPermission(scope: string, permission?: string) {
-        if(!EpicSDK.isPermitted(scope, permission))
+        if(!this.isPermitted(scope, permission))
             throw new Error(`You are not authorized to perform this action! Missing permission '${scope}.${permission}'!`);
     }
 
+    static resolveAxiosResponse<T>(executor: () => Promise<AxiosResponse<T>>) {
+        const verifyData = (res: AxiosResponse) => {
+            // Check if the data object exists
+            if (!res.data || typeof res.data !== "object") {
+                throw new Error("Response data is missing or invalid!");
+            } else if (!res.data.status) {
+                throw new Error(res.data.messages?.[0]?.message ?? "failure");
+            }
+
+            return res.data;
+        };
+
+        const executors = {
+            get raw() {
+                return executor();
+            },
+            get res() {
+                return new Promise<T>((resolve, reject) =>
+                    executors.raw
+                        .then((res) => {
+                            try {
+                                resolve(verifyData(res));
+                            } catch (err) {
+                                reject(err);
+                            }
+                        })
+                        .catch((err) => reject(err))
+                );
+            },
+            get data() {
+                return (async () => {
+                    const res = await executors.res;
+
+                    if (
+                        typeof res === "object" && res !== null && "data" in res
+                    ) return res.data;
+
+                    throw new Error(
+                        "Unexpected response! Data is not available or valid!",
+                    );
+                })();
+            },
+        };
+
+        return executors;
+    }
+
 <% for (const [Scope, RouteGroups] of Object.entries(scopeGroups)) { -%>
-    static <%- Scope %>: IController$<%- Scope %> = <%- Scope %>Module(EpicSDK);
+    static <%- Scope %> = <%- Scope %>Module(this);
 <% } -%>
+
+    static extensions = {
+<% for (const {name} of extensions) { -%>
+        <%- name %>: <%- name %>Entry,
+<% } -%>
+    }
 }

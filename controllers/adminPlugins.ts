@@ -109,7 +109,7 @@ export default class AdminPluginsController extends BaseController {
 
         await e.try(() => removePlugin(Params));
 
-        return Response.status(true);
+        return Response.true();
       },
     });
   }

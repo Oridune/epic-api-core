@@ -27,7 +27,7 @@ import { UserModel, UsernameValidator } from "@Models/user.ts";
 import OauthController, { AuthenticationSchema } from "@Controllers/oauth.ts";
 import { OauthProvider } from "@Models/oauthSession.ts";
 
-@Controller("/oauth/passkey/", { name: "oauthPasskey" })
+@Controller("/oauth/passkey/", { group: "Oauth", name: "oauthPasskey" })
 export default class OauthPasskeyController extends BaseController {
   @Get("/challenge/register/", {
     disabled: !Env.enabledSync("ENABLE_PASSKEY_AUTH"),

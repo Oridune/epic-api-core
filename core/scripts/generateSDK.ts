@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { parseArgs as parse } from "flags/parse-args";
-import { join } from "path";
+import { dirname, join } from "path";
+import { exists, expandGlob } from "dfs";
 import e, { IValidatorJSONSchema, ValidationException } from "validator";
 
 import { denoConfig, IRoute, Loader, Server } from "@Core/common/mod.ts";
@@ -8,11 +9,21 @@ import { APIController } from "@Core/controller.ts";
 import { exec } from "@Core/scripts/lib/run.ts";
 import { ejsRender } from "@Core/scripts/lib/ejsRender.ts";
 
-export const createPackageJSON = (opts: {
-  version: string;
-}) => ({
+export interface IPackageJSON {
+  name?: string;
+  version?: string;
+  private?: boolean;
+  main?: string;
+  scripts?: Record<string, string>;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+
+  [K: string]: unknown;
+}
+
+export const createPackageJSON = (opts?: IPackageJSON): IPackageJSON => ({
   name: "epic-api-sdk",
-  version: opts.version,
+  version: "0.0.0",
   private: true,
   main: "./dist/index.js",
   scripts: {
@@ -21,6 +32,7 @@ export const createPackageJSON = (opts: {
   author: denoConfig.title,
   license: "MIT",
   homepage: denoConfig.homepage,
+  ...opts,
 });
 
 export const createTsConfigJSON = () => ({
@@ -35,8 +47,6 @@ export const createTsConfigJSON = () => ({
     strict: true,
     esModuleInterop: true,
     forceConsistentCasingInFileNames: true,
-    allowImportingTsExtensions: true,
-    emitDeclarationOnly: true,
   },
   include: ["./src/"],
   exclude: ["./test/"],
@@ -82,11 +92,11 @@ export const schemaToTsType = (schema?: IValidatorJSONSchema, content = "") => {
     content += "}";
 
     if (schema.additionalProperties) {
-      const { optional, content: c } = schemaToTsType(
+      const { content: c } = schemaToTsType(
         schema.additionalProperties,
       );
 
-      content += ` & { [K: string]${optional ? "?" : ""}: ${c} }\n`;
+      content += ` & { [K: string]: ${c} }\n`;
     }
 
     return { optional: !schema.requiredProperties?.length, content };
@@ -133,6 +143,86 @@ export const schemaToTsType = (schema?: IValidatorJSONSchema, content = "") => {
   };
 };
 
+export const syncSDKExtensions = async (opts: {
+  extensionsDir: string;
+  sdkDir: string;
+}) => {
+  const SDKExtensionsDir = join(opts.sdkDir, "src/extensions");
+
+  if (!await exists(opts.sdkDir)) return [];
+
+  const Files = expandGlob("**/**/*", {
+    root: opts.extensionsDir,
+    globstar: true,
+  });
+
+  for await (const File of Files) {
+    if (
+      !File.isDirectory &&
+      // Do not copy these files and folders
+      [
+        /^(\\|\/)?(\.git)(\\|\/)?/,
+        /^(\\|\/)?(\.vscode)(\\|\/)?/,
+        /^(\\|\/)?(\.husky)(\\|\/)?/,
+        /(\\|\/)?(node_modules)(\\|\/)?/,
+      ].reduce(
+        (allow, expect) =>
+          allow &&
+          !expect.test(File.path.replace(opts.extensionsDir, "")),
+        true,
+      )
+    ) {
+      const SourcePath = File.path;
+      const TargetPath = SourcePath.replace(
+        opts.extensionsDir,
+        SDKExtensionsDir,
+      );
+
+      const TargetDirectory = dirname(TargetPath);
+
+      await Deno.mkdir(TargetDirectory, { recursive: true }).catch(
+        () => {
+          // Do nothing...
+        },
+      );
+
+      const sourceContent = await Deno.readTextFile(SourcePath);
+
+      await Deno.writeTextFile(
+        TargetPath,
+        sourceContent.replace(
+          /from\s*"epic-api-sdk"/g,
+          'from "../../../"',
+        ),
+      );
+    }
+  }
+
+  if (!await exists(SDKExtensionsDir)) return [];
+
+  const Extensions: Array<{
+    name: string;
+    package: IPackageJSON;
+    entry: string;
+  }> = [];
+
+  for await (const Entry of Deno.readDir(SDKExtensionsDir)) {
+    if (Entry.isDirectory) {
+      Extensions.push({
+        name: Entry.name,
+        package: JSON.parse(
+          await Deno.readTextFile(
+            join(SDKExtensionsDir, Entry.name, "package.json"),
+          ),
+        ) as IPackageJSON,
+        entry: `./extensions/${Entry.name}/src/entry`,
+      });
+    }
+  }
+
+  return Extensions;
+};
+
 export const generateSDK = async (options: {
   version?: string;
 }) => {
@@ -147,13 +237,22 @@ export const generateSDK = async (options: {
     const SDKDir = join(Deno.cwd(), `public/${SDKName}/`);
     const SDKSrc = join(SDKDir, "src");
     const SDKPublicDir = join(SDKDir, "www");
+    const ExtensionsDir = join(Deno.cwd(), "sdk-extensions");
 
     await Deno.mkdir(join(SDKSrc, "modules"), { recursive: true }).catch(() => {
       // Do nothing...
     });
 
+    const Extensions = await syncSDKExtensions({
+      extensionsDir: ExtensionsDir,
+      sdkDir: SDKDir,
+    });
+
     const PackageJSON = createPackageJSON({
       version: Options.version,
+      dependencies: Extensions.map(($) => $.package.dependencies).filter(
+        Boolean,
+      ).reduce<Record<string, string>>(($, deps) => ({ ...$, ...deps }), {}),
     });
 
     const TsConfigJSON = createTsConfigJSON();
@@ -234,8 +333,9 @@ export const generateSDK = async (options: {
           ),
         );
 
-        return ModulePath;
+        return ModulePath.replace(/\.ts$/, "");
       },
+      extensions: Extensions,
     };
 
     await Promise.all([

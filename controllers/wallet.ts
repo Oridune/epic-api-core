@@ -10,6 +10,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { responseValidator } from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
@@ -23,34 +24,45 @@ import UsersIdentificationController, {
 import { UserModel } from "@Models/user.ts";
 import { TransactionModel } from "@Models/transaction.ts";
 import { AccountModel } from "@Models/account.ts";
-import { TFileOutput } from "@Models/file.ts";
+import { FileSchema, TFileOutput } from "@Models/file.ts";
+import { WalletModel } from "@Models/wallet.ts";
 
-@Controller("/wallet/", { name: "wallet" })
+@Controller("/wallet/", { group: "Wallet", name: "wallet" })
 export default class WalletController extends BaseController {
   @Get("/metadata/", {
     group: "public",
   })
   public metadata() {
-    return async () => {
-      const [
-        defaultType,
-        availableTypes,
-        defaultCurrency,
-        availableCurrencies,
-      ] = await Promise.all([
-        Wallet.getDefaultType(),
-        Wallet.getTypes(),
-        Wallet.getDefaultCurrency(),
-        Wallet.getCurrencies(),
-      ]);
+    return new Versioned().add("1.0.0", {
+      shape: () => ({
+        return: responseValidator(e.object({
+          defaultType: e.string(),
+          availableTypes: e.array(e.string()),
+          defaultCurrency: e.string(),
+          availableCurrencies: e.array(e.string()),
+        })).toSample(),
+      }),
+      handler: async () => {
+        const [
+          defaultType,
+          availableTypes,
+          defaultCurrency,
+          availableCurrencies,
+        ] = await Promise.all([
+          Wallet.getDefaultType(),
+          Wallet.getTypes(),
+          Wallet.getDefaultCurrency(),
+          Wallet.getCurrencies(),
+        ]);
 
-      return Response.data({
-        defaultType,
-        availableTypes,
-        defaultCurrency,
-        availableCurrencies,
-      });
-    };
+        return Response.data({
+          defaultType,
+          availableTypes,
+          defaultCurrency,
+          availableCurrencies,
+        });
+      },
+    });
   }
 
   @Get("/transfer/sign/:type?/:currency?/", {
@@ -83,6 +95,38 @@ export default class WalletController extends BaseController {
       shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
+        return: responseValidator(e.object({
+          sender: e.object({
+            accountId: e.string(),
+            userId: e.string(),
+            fname: e.string(),
+            mname: e.string(),
+            lname: e.string(),
+            avatar: e.string(),
+          }),
+          receiver: e.object({
+            accountId: e.string(),
+            accountName: e.string(),
+            accountLogo: FileSchema,
+            userId: e.string(),
+            fname: e.string(),
+            mname: e.string(),
+            lname: e.string(),
+            avatar: e.string(),
+          }),
+          transactionDetails: e.object({
+            type: e.string(),
+            currency: e.string(),
+            amount: e.number(),
+            fee: e.number(),
+            description: e.string(),
+            metadata: e.record(e.or([e.string(), e.number(), e.boolean()])),
+          }),
+          challenge: e.object({
+            token: e.string(),
+            otp: e.optional(e.number()),
+          }),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -216,6 +260,9 @@ export default class WalletController extends BaseController {
     return new Versioned().add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(e.object({
+          transaction: TransactionModel.getSchema(),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -295,6 +342,7 @@ export default class WalletController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         params: ParamsSchema.toSample(),
+        return: responseValidator(WalletModel.getSchema()).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -324,6 +372,7 @@ export default class WalletController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(e.array(WalletModel.getSchema())).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -387,6 +436,10 @@ export default class WalletController extends BaseController {
       shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
+        return: responseValidator(e.object({
+          totalCount: e.optional(e.number()),
+          results: e.array(TransactionModel.getSchema()),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);

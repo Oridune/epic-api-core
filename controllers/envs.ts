@@ -10,13 +10,14 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { responseValidator } from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
 
 import { EnvModel, InputEnvSchema } from "@Models/env.ts";
 
-@Controller("/envs/", { name: "envs" })
+@Controller("/envs/", { group: "System", name: "envs" })
 export default class EnvsController extends BaseController {
   @Post("/")
   public create(route: IRoute) {
@@ -26,6 +27,7 @@ export default class EnvsController extends BaseController {
     return new Versioned().add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(EnvModel.getSchema()).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
@@ -119,6 +121,10 @@ export default class EnvsController extends BaseController {
       shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
+        return: responseValidator(e.object({
+          totalCount: e.optional(e.number()),
+          results: e.array(EnvModel.getSchema()),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation

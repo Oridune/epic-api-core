@@ -1,4 +1,4 @@
-import e from "validator";
+import e, { BaseValidator } from "validator";
 
 export const queryValidator = () =>
   e.deepCast(e.object(
@@ -24,3 +24,29 @@ export const queryValidator = () =>
     },
     { allowUnexpectedProps: true },
   ));
+
+export const responseValidator = <T extends (BaseValidator)>(data?: T, opts?: {
+  falseResponse?: boolean;
+}) =>
+  e.object({
+    status: opts?.falseResponse ? e.false() : e.true(),
+    ...(data ? { data } : {}),
+    messages: e.optional(e.array(
+      e.partial(
+        e.object({
+          message: e.string(),
+          location: e.string(),
+          name: e.string(),
+        }).rest(e.any()),
+      ),
+    )),
+    metrics: e.optional(
+      e.partial(
+        e.object({
+          handledInMs: e.number(),
+          respondInMs: e.number(),
+        }).rest(e.any()),
+      ),
+    ),
+    metadata: e.optional(e.record(e.any())),
+  });
