@@ -1,3 +1,12 @@
 {
-  "sequence": ["admin", "oauth"]
+  "sequence": [
+    "admin",
+    "oauth",
+    "sdk@latest"
+  ],
+  "sequence.development": [],
+  "sequence.test": [],
+  "sequence.production": [],
+  "excludes": [],
+  "sequenceProps": {}
 }

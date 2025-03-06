@@ -9,6 +9,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { responseValidator } from "@Core/common/validators.ts";
 import { type RouterContext } from "oak";
 import e, { inferOutput } from "validator";
 
@@ -24,7 +25,7 @@ const RequestInputSchema = e.object({
 
 export type TRequestInput = inferOutput<typeof RequestInputSchema>;
 
-@Controller("/batcher/", { name: "batcher" })
+@Controller("/batcher/", { group: "System", name: "batcher" })
 export default class BatcherController extends BaseController {
   @Post("/")
   public request(route: IRoute) {
@@ -48,6 +49,8 @@ export default class BatcherController extends BaseController {
       .add("1.0.0", {
         shape: () => ({
           body: BodySchema.toSample(),
+          return: responseValidator(e.object({ responses: e.array(e.any()) }))
+            .toSample(),
         }),
         handler: async (ctx: IRequestContext<RouterContext<string>>) => {
           // Body Validation

@@ -11,6 +11,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { responseValidator } from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
@@ -24,7 +25,7 @@ export const InputAccountInviteSchema = e.object({
   role: e.string(),
 });
 
-@Controller("/account/invites/", { name: "accountInvites" })
+@Controller("/account/invites/", { group: "Account", name: "accountInvites" })
 export default class AccountInvitesController extends BaseController {
   @Post("/", {
     group: "public",
@@ -36,6 +37,7 @@ export default class AccountInvitesController extends BaseController {
     return new Versioned().add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(AccountInviteModel.getSchema()).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -144,6 +146,10 @@ export default class AccountInvitesController extends BaseController {
       shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
+        return: responseValidator(e.object({
+          totalCount: e.optional(e.number()),
+          results: e.array(AccountInviteModel.getSchema()),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);

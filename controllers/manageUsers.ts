@@ -13,7 +13,7 @@ import { ObjectId } from "mongo";
 import { PasswordValidator, UserModel } from "@Models/user.ts";
 import { hash as bcryptHash } from "bcrypt";
 
-@Controller("/manage/users/", { name: "manageUsers" })
+@Controller("/manage/users/", { group: "User", name: "manageUsers" })
 export default class ManageUsersController extends BaseController {
   @Put("/password/:id/")
   public updatePassword(route: IRoute) {

@@ -10,6 +10,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { responseValidator } from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
@@ -22,7 +23,7 @@ export const InputOauthPolicySchema = e.object({
   subRoles: e.optional(e.array(e.string())),
 });
 
-@Controller("/oauth/policies/", { name: "oauthPolicies" })
+@Controller("/oauth/policies/", { group: "Oauth", name: "oauthPolicies" })
 export default class OauthPoliciesController extends BaseController {
   @Post("/")
   public create(route: IRoute) {
@@ -32,6 +33,7 @@ export default class OauthPoliciesController extends BaseController {
     return new Versioned().add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
+        return: responseValidator(OauthPolicyModel.getSchema()).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
@@ -122,6 +124,10 @@ export default class OauthPoliciesController extends BaseController {
       shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
+        return: responseValidator(e.object({
+          totalCount: e.optional(e.number()),
+          results: e.array(OauthPolicyModel.getSchema()),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
@@ -172,6 +178,12 @@ export default class OauthPoliciesController extends BaseController {
   @Get("/me/")
   public me() {
     return new Versioned().add("1.0.0", {
+      shape: () => ({
+        return: responseValidator(e.object({
+          policy: OauthPolicyModel.getSchema(),
+          scopePipeline: e.array(e.array(e.string())),
+        })).toSample(),
+      }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 

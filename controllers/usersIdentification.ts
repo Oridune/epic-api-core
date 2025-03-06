@@ -9,6 +9,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { responseValidator } from "@Core/common/validators.ts";
 import e from "validator";
 import { type RouterContext, Status } from "oak";
 import { UserModel, UsernameValidator } from "@Models/user.ts";
@@ -26,7 +27,10 @@ export enum IdentificationMethod {
   IN_APP = "in-app",
 }
 
-@Controller("/users/identification/", { name: "usersIdentification" })
+@Controller("/users/identification/", {
+  group: "User",
+  name: "usersIdentification",
+})
 export default class UsersIdentificationController extends BaseController {
   static async sign(
     purpose: IdentificationPurpose | (string & {}),
@@ -106,6 +110,15 @@ export default class UsersIdentificationController extends BaseController {
   @Get("/methods/me/")
   public methods() {
     return new Versioned().add("1.0.0", {
+      shape: () => ({
+        return: responseValidator(e.object({
+          availableMethods: e.array(e.object({
+            type: e.in(Object.values(IdentificationMethod)),
+            value: e.string(),
+            verified: e.boolean(),
+          })),
+        })).toSample(),
+      }),
       handler: (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
 
@@ -137,6 +150,13 @@ export default class UsersIdentificationController extends BaseController {
     return new Versioned().add("1.0.0", {
       shape: () => ({
         params: ParamsSchema.toSample(),
+        return: responseValidator(e.object({
+          availableMethods: e.array(e.object({
+            type: e.in(Object.values(IdentificationMethod)),
+            maskedValue: e.string(),
+            verified: e.boolean(),
+          })),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
@@ -189,6 +209,10 @@ export default class UsersIdentificationController extends BaseController {
     return new Versioned().add("1.0.0", {
       shape: () => ({
         params: ParamsSchema.toSample(),
+        return: responseValidator(e.object({
+          token: e.string(),
+          otp: e.optional(e.number()),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Params Validation
