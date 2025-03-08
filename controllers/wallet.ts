@@ -342,7 +342,8 @@ export default class WalletController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         params: ParamsSchema.toSample(),
-        return: responseValidator(WalletModel.getSchema()).toSample(),
+        return: responseValidator(e.omit(WalletModel.getSchema(), ["digest"]))
+          .toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -352,9 +353,16 @@ export default class WalletController extends BaseController {
           name: `${route.scope}.params`,
         });
 
-        return Response.data(
-          await Wallet.get(ctx.router.state.auth.accountId, Params),
+        const wallet = await Wallet.get(
+          ctx.router.state.auth.accountId,
+          Params,
         );
+
+        // deno-lint-ignore ban-ts-comment
+        // @ts-ignore
+        delete wallet.digest;
+
+        return Response.data(wallet);
       },
     });
   }
@@ -372,7 +380,9 @@ export default class WalletController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
-        return: responseValidator(e.array(WalletModel.getSchema())).toSample(),
+        return: responseValidator(
+          e.array(e.omit(WalletModel.getSchema(), ["digest"])),
+        ).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -383,9 +393,18 @@ export default class WalletController extends BaseController {
           { name: `${route.scope}.body` },
         );
 
-        return Response.data(
-          await Wallet.list(ctx.router.state.auth.accountId, Body),
+        const walletList = await Wallet.list(
+          ctx.router.state.auth.accountId,
+          Body,
         );
+
+        return Response.data(walletList.map((wallet) => {
+          // deno-lint-ignore ban-ts-comment
+          // @ts-ignore
+          delete wallet.digest;
+
+          return wallet;
+        }));
       },
     });
   }
