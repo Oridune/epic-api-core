@@ -219,7 +219,12 @@ export default class ManageWalletsController extends BaseController {
         ];
 
         const TransactionListBaseConditions = {
-          ...(targets.length === 1 ? targets[0] : { $or: targets }),
+          ...(targets.length === 1 ? targets[0] : {
+            $or: targets.length ? targets : [
+              { from: TargetAccountId },
+              { to: TargetAccountId },
+            ],
+          }),
           type: Params.type,
           currency: Params.currency,
           ...(Query.range instanceof Array
