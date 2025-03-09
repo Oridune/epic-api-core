@@ -157,16 +157,16 @@ export default class ManageWalletsController extends BaseController {
     const QuerySchema = e.object(
       {
         search: e.optional(e.string()),
+        sent: e.optional(e.boolean()),
+        received: e.optional(e.boolean()),
         range: e.optional(
           e.tuple([e.date().end(CurrentTimestamp), e.date()], { cast: true }),
         ),
         offset: e.optional(e.number({ cast: true }).min(0)).default(0),
         limit: e.optional(e.number({ cast: true }).max(2000)).default(2000),
-        sort: e
-          .optional(
-            e.record(e.number({ cast: true }).min(-1).max(1), { cast: true }),
-          )
-          .default({ _id: -1 }),
+        sort: e.optional(
+          e.record(e.number({ cast: true }).min(-1).max(1), { cast: true }),
+        ).default({ _id: -1 }),
         project: e.optional(
           e.record(e.number({ cast: true }).min(0).max(1), { cast: true }),
         ),
@@ -213,11 +213,13 @@ export default class ManageWalletsController extends BaseController {
 
         const TargetAccountId = new ObjectId(Params.accountId);
 
+        const targets = [
+          ...(Query.sent ? [{ from: TargetAccountId }] : []),
+          ...(Query.received ? [{ to: TargetAccountId }] : []),
+        ];
+
         const TransactionListBaseConditions = {
-          $or: [
-            { from: TargetAccountId },
-            { to: TargetAccountId },
-          ],
+          ...(targets.length === 1 ? targets[0] : { $or: targets }),
           type: Params.type,
           currency: Params.currency,
           ...(Query.range instanceof Array
