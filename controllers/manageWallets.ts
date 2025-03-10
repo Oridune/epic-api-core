@@ -154,7 +154,7 @@ export default class ManageWalletsController extends BaseController {
     const CurrentTimestamp = Date.now();
 
     // Define Query Schema
-    const QuerySchema = e.object(
+    const QuerySchema = e.deepCast(e.object(
       {
         search: e.optional(e.string()),
         sent: e.optional(e.boolean()),
@@ -179,7 +179,7 @@ export default class ManageWalletsController extends BaseController {
         ),
       },
       { allowUnexpectedProps: true },
-    );
+    ));
 
     // Define Params Schema
     const ParamsSchema = e.object({

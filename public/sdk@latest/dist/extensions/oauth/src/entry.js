@@ -5,6 +5,7 @@ const __1 = require("../../../");
 const base64_arraybuffer_1 = require("base64-arraybuffer");
 const js_sha256_1 = require("js-sha256");
 class oauthEntry {
+    static selectedAccount;
     static auth;
     static _refreshRequest;
     static generateRandomString(length) {
@@ -28,7 +29,31 @@ class oauthEntry {
         };
     }
     static oauth2Login(appId, opts) {
-        __1.EpicSDK.axios?.interceptors.request.use(async (config) => {
+        const { verifier, method, challenge } = this.generateCodeChallenge();
+        const url = new URL(`/oauth/login
+            ?appId=${appId}
+            &codeChallengeMethod=${method}
+            &codeChallenge=${challenge}
+            &callbackURL=${opts.callbackUrl}
+            &state=${btoa(JSON.stringify(opts.state))}
+            &theme=${opts.theme}
+            &lng=${opts.lng}
+            ${opts.username ? `&username=${opts.username}` : ""}`, __1.EpicSDK._options?.baseURL).toString();
+        return {
+            verifier,
+            url,
+        };
+    }
+    static async getAccessToken(code, verifier, opts) {
+        this.auth = await __1.EpicSDK.oauth.exchangeCode({
+            body: {
+                code,
+                codePayload: undefined,
+                codeVerifier: verifier,
+                fcmDeviceToken: opts.deviceToken,
+            },
+        }).data;
+        __1.EpicSDK._axios?.interceptors.request.use(async (config) => {
             if (!config.headers["Authorization"] && this.auth) {
                 const timeInSeconds = Date.now() / 1000;
                 if (this.auth.access.expiresAtSeconds <= timeInSeconds) {
@@ -44,35 +69,13 @@ class oauthEntry {
                 }
                 config.headers["Authorization"] =
                     `Bearer ${this.auth.access.token}`;
+                config.headers["X-Account-ID"] = __1.EpicSDK._apiVersion;
+                if (this.selectedAccount) {
+                    config.headers["X-Account-ID"] = this.selectedAccount;
+                }
             }
             return config;
-        }, (error) => {
-            return Promise.reject(error);
         });
-        const { verifier, method, challenge } = this.generateCodeChallenge();
-        const url = new URL(`/oauth/login
-            ?appId=${appId}
-            &codeChallengeMethod=${method}
-            &codeChallenge=${challenge}
-            &callbackURL=${opts.callbackUrl}
-            &state=${btoa(JSON.stringify(opts.state))}
-            &theme=${opts.theme}
-            &lng=${opts.lng}
-            ${opts.username ? `&username=${opts.username}` : ""}`, __1.EpicSDK.options?.baseURL).toString();
-        return {
-            verifier,
-            url,
-        };
-    }
-    static async getAccessToken(code, verifier, opts) {
-        this.auth = await __1.EpicSDK.oauth.exchangeCode({
-            body: {
-                code,
-                codePayload: undefined,
-                codeVerifier: verifier,
-                fcmDeviceToken: opts.deviceToken,
-            },
-        }).data;
     }
     static async refreshAccessToken(refreshToken) {
         //! this._refreshRequest is used to stop bubbling do not remove it!

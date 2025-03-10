@@ -290,11 +290,11 @@ export const oauthModule = (sdk: any): IController$oauth => ({
     
     quickLogin(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("oauth", "quickLogin");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/oauth/local/quick/login/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -308,11 +308,11 @@ export const oauthModule = (sdk: any): IController$oauth => ({
     
     exchangeAuthentication(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("oauth", "exchangeAuthentication");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/oauth/exchange/authentication/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -326,11 +326,11 @@ export const oauthModule = (sdk: any): IController$oauth => ({
     
     exchangeCode(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("oauth", "exchangeCode");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/oauth/exchange/code/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -344,11 +344,11 @@ export const oauthModule = (sdk: any): IController$oauth => ({
     
     authenticate(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("oauth", "authenticate");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/oauth/local/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -362,11 +362,11 @@ export const oauthModule = (sdk: any): IController$oauth => ({
     
     logout(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("oauth", "logout");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
                 url: `/api/oauth/logout/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -380,11 +380,11 @@ export const oauthModule = (sdk: any): IController$oauth => ({
     
     createPermit(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("oauth", "createPermit");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/oauth/permit/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -398,11 +398,11 @@ export const oauthModule = (sdk: any): IController$oauth => ({
     
     refresh(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("oauth", "refresh");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/oauth/refresh/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,

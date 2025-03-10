@@ -9,6 +9,7 @@ export type TAuthorization = {
     access: TAuthToken<"oauth_access_token">;
 };
 export declare class oauthEntry {
+    static selectedAccount?: string;
     static auth?: TAuthorization;
     protected static _refreshRequest?: Promise<TAuthorization>;
     protected static generateRandomString(length: number): string;

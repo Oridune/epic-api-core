@@ -199,11 +199,11 @@ export const usersIdentificationModule = (sdk: any): IController$usersIdentifica
     
     methods(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("usersIdentification", "methods");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/users/identification/methods/me/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -217,11 +217,11 @@ export const usersIdentificationModule = (sdk: any): IController$usersIdentifica
     
     publicMethods(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("usersIdentification", "publicMethods");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/users/identification/methods/:username/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -235,11 +235,11 @@ export const usersIdentificationModule = (sdk: any): IController$usersIdentifica
     
     request(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("usersIdentification", "request");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/users/identification/:purpose/:username/:method/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,

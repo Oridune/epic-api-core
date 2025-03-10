@@ -306,6 +306,8 @@ export interface IController$manageWallets {
     }>;
     transactions<Method extends "get", QueryShape extends {
         search?: string;
+        sent?: boolean;
+        received?: boolean;
         range?: Array<{} | undefined>;
         offset?: number;
         limit?: number;

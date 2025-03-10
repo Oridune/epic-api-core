@@ -27,11 +27,11 @@ export const manageUsersModule = (sdk: any): IController$manageUsers => ({
     
     updatePassword(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("manageUsers", "updatePassword");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "put" ?? "get",
                 url: `/api/manage/users/password/:id/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,

@@ -4,10 +4,10 @@ exports.batcherModule = void 0;
 const batcherModule = (sdk) => ({
     request(data) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios)
+            if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("batcher", "request");
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/batcher/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,

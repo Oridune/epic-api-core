@@ -17,6 +17,7 @@ export type TAuthorization = {
 };
 
 export class oauthEntry {
+    static selectedAccount?: string;
     static auth?: TAuthorization;
 
     protected static _refreshRequest?: Promise<TAuthorization>;
@@ -57,7 +58,40 @@ export class oauthEntry {
             state?: Record<string, any>;
         },
     ) {
-        EpicSDK.axios?.interceptors.request.use(
+        const { verifier, method, challenge } = this.generateCodeChallenge();
+
+        const url = new URL(
+            `/oauth/login
+            ?appId=${appId}
+            &codeChallengeMethod=${method}
+            &codeChallenge=${challenge}
+            &callbackURL=${opts.callbackUrl}
+            &state=${btoa(JSON.stringify(opts.state))}
+            &theme=${opts.theme}
+            &lng=${opts.lng}
+            ${opts.username ? `&username=${opts.username}` : ""}`,
+            EpicSDK._options?.baseURL,
+        ).toString();
+
+        return {
+            verifier,
+            url,
+        };
+    }
+
+    static async getAccessToken(code: string, verifier: string, opts: {
+        deviceToken?: string;
+    }) {
+        this.auth = await EpicSDK.oauth.exchangeCode({
+            body: {
+                code,
+                codePayload: undefined,
+                codeVerifier: verifier,
+                fcmDeviceToken: opts.deviceToken,
+            },
+        }).data as TAuthorization;
+
+        EpicSDK._axios?.interceptors.request.use(
             async (config) => {
                 if (!config.headers["Authorization"] && this.auth) {
                     const timeInSeconds = Date.now() / 1000;
@@ -80,47 +114,17 @@ export class oauthEntry {
 
                     config.headers["Authorization"] =
                         `Bearer ${this.auth.access.token}`;
+
+                    config.headers["X-Account-ID"] = EpicSDK._apiVersion;
+
+                    if (this.selectedAccount) {
+                        config.headers["X-Account-ID"] = this.selectedAccount;
+                    }
                 }
 
                 return config;
             },
-            (error) => {
-                return Promise.reject(error);
-            },
         );
-
-        const { verifier, method, challenge } = this.generateCodeChallenge();
-
-        const url = new URL(
-            `/oauth/login
-            ?appId=${appId}
-            &codeChallengeMethod=${method}
-            &codeChallenge=${challenge}
-            &callbackURL=${opts.callbackUrl}
-            &state=${btoa(JSON.stringify(opts.state))}
-            &theme=${opts.theme}
-            &lng=${opts.lng}
-            ${opts.username ? `&username=${opts.username}` : ""}`,
-            EpicSDK.options?.baseURL,
-        ).toString();
-
-        return {
-            verifier,
-            url,
-        };
-    }
-
-    static async getAccessToken(code: string, verifier: string, opts: {
-        deviceToken?: string;
-    }) {
-        this.auth = await EpicSDK.oauth.exchangeCode({
-            body: {
-                code,
-                codePayload: undefined,
-                codeVerifier: verifier,
-                fcmDeviceToken: opts.deviceToken,
-            },
-        }).data as TAuthorization;
     }
 
     static async refreshAccessToken(refreshToken: string) {
@@ -131,5 +135,14 @@ export class oauthEntry {
                 refreshTokenPayload: undefined,
             },
         }).data as Promise<TAuthorization>);
+    }
+
+    static async fetchMe() {
+        const {user} = await EpicSDK.users.me().data;
+        
+    }
+
+    static async fetchPermissions() {
+        EpicSDK.oauthPolicies.me();
     }
 }

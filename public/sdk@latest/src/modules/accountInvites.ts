@@ -158,11 +158,11 @@ export const accountInvitesModule = (sdk: any): IController$accountInvites => ({
     
     create(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("accountInvites", "create");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/account/invites/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -176,11 +176,11 @@ export const accountInvitesModule = (sdk: any): IController$accountInvites => ({
     
     delete(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("accountInvites", "delete");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
                 url: `/api/account/invites/:id/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -194,11 +194,11 @@ export const accountInvitesModule = (sdk: any): IController$accountInvites => ({
     
     get(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("accountInvites", "get");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/account/invites/:id?/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,

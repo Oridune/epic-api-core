@@ -4,10 +4,10 @@ exports.manageWalletsModule = void 0;
 const manageWalletsModule = (sdk) => ({
     balanceList(data) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios)
+            if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("manageWallets", "balanceList");
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/manage/wallets/balance/list/:accountId/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -19,10 +19,10 @@ const manageWalletsModule = (sdk) => ({
     },
     getAll(data) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios)
+            if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("manageWallets", "getAll");
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/manage/wallets/all/:id?/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -34,10 +34,10 @@ const manageWalletsModule = (sdk) => ({
     },
     refund(data) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios)
+            if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("manageWallets", "refund");
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
                 url: `/api/manage/wallets/refund/:id/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -49,10 +49,10 @@ const manageWalletsModule = (sdk) => ({
     },
     charge(data) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios)
+            if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("manageWallets", "charge");
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/manage/wallets/charge/:type?/:currency?/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -64,10 +64,10 @@ const manageWalletsModule = (sdk) => ({
     },
     transactions(data) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios)
+            if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("manageWallets", "transactions");
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/manage/wallets/transactions/:accountId/:type?/:currency?/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,

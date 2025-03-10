@@ -200,11 +200,11 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
     
     update(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("collaborators", "update");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "patch" ?? "get",
                 url: `/api/collaborators/:id/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -218,11 +218,11 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
     
     delete(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("collaborators", "delete");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
                 url: `/api/collaborators/:id/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -236,11 +236,11 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
     
     get(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("collaborators", "get");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/collaborators/:id?/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -254,11 +254,11 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
     
     create(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("collaborators", "create");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/collaborators/:token/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -272,11 +272,11 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
     
     toggleBlocked(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("collaborators", "toggleBlocked");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "patch" ?? "get",
                 url: `/api/collaborators/toggle/blocked/:id/:isBlocked/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,

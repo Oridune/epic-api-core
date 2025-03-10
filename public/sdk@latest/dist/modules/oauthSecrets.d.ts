@@ -128,10 +128,10 @@ export interface IController$oauthSecrets {
         range?: Array<{} | undefined>;
         offset?: number;
         limit?: number;
-        sort?: /*(optional default:[object Object])*/ {} & {
+        sort?: /*(optional default:[object Object]) Provide a sorting information in mongodb sort object format*/ {} & {
             [K: string]: number;
         };
-        project?: /*(optional)*/ {} & {
+        project?: /*(optional) Provide a projection information in mongodb project object format*/ {} & {
             [K: string]: number;
         };
         includeTotalCount?: boolean;

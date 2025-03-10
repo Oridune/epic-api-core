@@ -77,11 +77,11 @@ export const uploadsModule = (sdk: any): IController$uploads => ({
     
     sign(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("uploads", "sign");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/uploads/sign/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -95,11 +95,11 @@ export const uploadsModule = (sdk: any): IController$uploads => ({
     
     upload(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("uploads", "upload");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/uploads/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,

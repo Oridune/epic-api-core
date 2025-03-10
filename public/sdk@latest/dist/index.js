@@ -32,18 +32,16 @@ const oauthSecrets_1 = require("./modules/oauthSecrets");
 const manageUsers_1 = require("./modules/manageUsers");
 const entry_1 = require("./extensions/oauth/src/entry");
 class EpicSDK {
-    static options;
-    static axios;
-    static permissions;
+    static _apiVersion = "latest";
+    static _options;
+    static _axios;
     static init(options) {
-        this.options = options;
-        this.axios = axios_1.default.create(options);
+        this._options = options;
+        this._axios = axios_1.default.create(options);
     }
-    static isPermitted(scope, permission) {
-        if (!(this.permissions instanceof Set))
-            return true;
-        return this.permissions.has(scope) || this.permissions.has(`${scope}.${permission}`);
-    }
+    static isPermitted = (scope, permission) => {
+        return true;
+    };
     static checkPermission(scope, permission) {
         if (!this.isPermitted(scope, permission))
             throw new Error(`You are not authorized to perform this action! Missing permission '${scope}.${permission}'!`);

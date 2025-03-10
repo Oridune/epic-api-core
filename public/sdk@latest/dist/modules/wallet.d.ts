@@ -18,7 +18,6 @@ export interface IController$wallet {
             type: string;
             currency: string;
             balance: number;
-            digest: string;
             lastBalance?: number;
             lastTxnReference?: string;
         }>;
@@ -302,7 +301,6 @@ export interface IController$wallet {
             type: string;
             currency: string;
             balance: number;
-            digest: string;
             lastBalance?: number;
             lastTxnReference?: string;
         };
@@ -341,7 +339,6 @@ export interface IController$wallet {
             type: string;
             currency: string;
             balance: number;
-            digest: string;
             lastBalance?: number;
             lastTxnReference?: string;
         };
@@ -416,6 +413,8 @@ export interface IController$wallet {
     }>;
     transactions<Method extends "get", QueryShape extends {
         search?: string;
+        sent?: boolean;
+        received?: boolean;
         range?: Array<{} | undefined>;
         offset?: number;
         limit?: number;

@@ -27,7 +27,6 @@ export interface IController$wallet {
 		type: string;
 		currency: string;
 		balance: number;
-		digest: string;
 		lastBalance?: number;
 		lastTxnReference?: string;
 }>;
@@ -334,7 +333,6 @@ export interface IController$wallet {
 		type: string;
 		currency: string;
 		balance: number;
-		digest: string;
 		lastBalance?: number;
 		lastTxnReference?: string;
 };
@@ -378,7 +376,6 @@ export interface IController$wallet {
 		type: string;
 		currency: string;
 		balance: number;
-		digest: string;
 		lastBalance?: number;
 		lastTxnReference?: string;
 };
@@ -456,6 +453,8 @@ export interface IController$wallet {
         Method extends "get",
         QueryShape extends {
 		search?: string;
+		sent?: boolean;
+		received?: boolean;
 		range?: Array<{} | undefined>;
 		offset?: number;
 		limit?: number;
@@ -535,11 +534,11 @@ export const walletModule = (sdk: any): IController$wallet => ({
     
     balanceList(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("wallet", "balanceList");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/wallet/balance/list/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -553,11 +552,11 @@ export const walletModule = (sdk: any): IController$wallet => ({
     
     metadata(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("wallet", "metadata");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/wallet/metadata/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -571,11 +570,11 @@ export const walletModule = (sdk: any): IController$wallet => ({
     
     transfer(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("wallet", "transfer");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/wallet/transfer/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -589,11 +588,11 @@ export const walletModule = (sdk: any): IController$wallet => ({
     
     signTransfer(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("wallet", "signTransfer");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/wallet/transfer/sign/:type?/:currency?/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -607,11 +606,11 @@ export const walletModule = (sdk: any): IController$wallet => ({
     
     balance(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("wallet", "balance");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/wallet/balance/:type?/:currency?/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -625,11 +624,11 @@ export const walletModule = (sdk: any): IController$wallet => ({
     
     transactions(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("wallet", "transactions");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/wallet/transactions/:type?/:currency?/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,

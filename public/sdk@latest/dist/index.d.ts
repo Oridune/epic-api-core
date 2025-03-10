@@ -7,11 +7,11 @@ import { AxiosInstance, AxiosResponse } from "axios";
 import type { TSDKOptions } from "./types";
 import { oauthEntry } from "./extensions/oauth/src/entry";
 export declare class EpicSDK {
-    static options?: TSDKOptions;
-    static axios?: AxiosInstance;
-    static permissions?: Set<string>;
+    static _apiVersion: string;
+    static _options?: TSDKOptions;
+    static _axios?: AxiosInstance;
     static init(options: TSDKOptions): void;
-    static isPermitted(scope: string, permission?: string): boolean;
+    static isPermitted: (scope: string, permission?: string) => boolean;
     static checkPermission(scope: string, permission?: string): void;
     static resolveAxiosResponse<T>(executor: () => Promise<AxiosResponse<T>>): {
         readonly raw: Promise<AxiosResponse<T, any>>;

@@ -32,20 +32,17 @@ import { manageUsersModule } from "./modules/manageUsers";
 import { oauthEntry } from "./extensions/oauth/src/entry";
 
 export class EpicSDK {
-    static options?: TSDKOptions;
-    static axios?: AxiosInstance;
-    static permissions?: Set<string>;
+    static _apiVersion = "latest";
+    static _options?: TSDKOptions;
+    static _axios?: AxiosInstance;
 
     static init(options: TSDKOptions) {
-        this.options = options;
-        this.axios = axios.create(options);
+        this._options = options;
+        this._axios = axios.create(options);
     }
 
-    static isPermitted(scope: string, permission?: string) {
-        if(!(this.permissions instanceof Set))
-            return true;
-
-        return this.permissions.has(scope) || this.permissions.has(`${scope}.${permission}`);
+    static isPermitted = (scope: string, permission?: string): boolean => {
+        return true;
     }
 
     static checkPermission(scope: string, permission?: string) {

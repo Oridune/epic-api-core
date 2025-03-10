@@ -797,11 +797,11 @@ export const oauthAppsModule = (sdk: any): IController$oauthApps => ({
     
     getDefault(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("oauthApps", "getDefault");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/oauth/apps/default/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -815,11 +815,11 @@ export const oauthAppsModule = (sdk: any): IController$oauthApps => ({
     
     create(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("oauthApps", "create");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url: `/api/oauth/apps/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -833,11 +833,11 @@ export const oauthAppsModule = (sdk: any): IController$oauthApps => ({
     
     list(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("oauthApps", "list");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/oauth/apps/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -851,11 +851,11 @@ export const oauthAppsModule = (sdk: any): IController$oauthApps => ({
     
     getDetails(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("oauthApps", "getDetails");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/oauth/apps/details/:appId/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -869,11 +869,11 @@ export const oauthAppsModule = (sdk: any): IController$oauthApps => ({
     
     get(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("oauthApps", "get");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url: `/api/oauth/apps/:appId/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
@@ -887,11 +887,11 @@ export const oauthAppsModule = (sdk: any): IController$oauthApps => ({
     
     delete(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
-            if (!sdk.axios) throw new Error("Axios not initialized!");
+            if (!sdk._axios) throw new Error("Axios not initialized!");
 
             sdk.checkPermission("oauthApps", "delete");
 
-            const res = await sdk.axios.request({
+            const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
                 url: `/api/oauth/apps/:appId/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
