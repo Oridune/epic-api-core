@@ -15,7 +15,7 @@ const adminModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
 });
 exports.adminModule = adminModule;

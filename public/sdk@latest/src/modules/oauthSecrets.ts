@@ -1,13 +1,13 @@
-import type { ObjectId, TRequestOptions, TRequestExecutors } from "../types";
+import type { ObjectId, TRequestOptions, TRequestExecutors, TResponseShape } from "../types";
 
-export interface IController$oauthSecrets {
-    
-                
-            createFor<
-        Method extends "post",
-        QueryShape extends {},
-        ParamsShape extends {},
-        BodyShape extends {
+
+
+
+
+export type TRoute$oauthSecrets$createFor = {
+    query: {},
+    params: {},
+    body: {
 		userId: string;
 		name: string;
 		scopes: /*(optional)*/{
@@ -15,13 +15,7 @@ export interface IController$oauthSecrets {
  | Array<string>;
 		ttl?: number;
 },
-    >(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body: BodyShape;
-    } & TRequestOptions): TRequestExecutors<
-        {
+    return: {
 		status: boolean;
 		data: {
 		secret: {
@@ -45,28 +39,23 @@ export interface IController$oauthSecrets {
 		metadata?: /*(optional)*/{
 } & { [K: string]: any }
 ;
-}
-    , BodyShape>;
-        
-                
-            create<
-        Method extends "post",
-        QueryShape extends {},
-        ParamsShape extends {},
-        BodyShape extends {
+},
+};
+
+
+
+
+export type TRoute$oauthSecrets$create = {
+    query: {},
+    params: {},
+    body: {
 		name: string;
 		scopes: /*(optional)*/{
 } & { [K: string]: Array<string> }
  | Array<string>;
 		ttl?: number;
 },
-    >(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body: BodyShape;
-    } & TRequestOptions): TRequestExecutors<
-        {
+    return: {
 		status: boolean;
 		data: {
 		secret: {
@@ -90,65 +79,26 @@ export interface IController$oauthSecrets {
 		metadata?: /*(optional)*/{
 } & { [K: string]: any }
 ;
-}
-    , BodyShape>;
-        
-                
-            delete<
-        Method extends "delete",
-        QueryShape extends {},
-        ParamsShape extends {
+},
+};
+
+
+
+
+export type TRoute$oauthSecrets$delete = {
+    query: {},
+    params: {
 		id: string;
 },
-        BodyShape extends {},
-    >(data: {
-        method?: Method;
-        query?: QueryShape;
-        params: ParamsShape;
-        body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<
-        { status: boolean; data: undefined }
-    , BodyShape>;
-        
-                
-            get(): TRequestExecutors<
-        {
-		status: boolean;
-		data: {
-		totalCount?: number;
-		results: Array<{
-		_id?: ObjectId;
-		createdAt?: Date;
-		updatedAt?: Date;
-		expiresAt?: Date;
-		createdBy: ObjectId;
-		oauthApp: ObjectId;
-		name: string;
-		scopes?: {
-} & { [K: string]: Array<string> }
-;
-		isBlocked?: boolean;
-}>;
+    body: {},
+    return: { status: boolean; data: undefined },
 };
-		messages?: Array<{
-		message?: string;
-		location?: string;
-		name?: string;
-} & { [K: string]: any }
->;
-		metrics: /*(optional)*/{
-		handledInMs?: number;
-		respondInMs?: number;
-} & { [K: string]: any }
-;
-		metadata?: /*(optional)*/{
-} & { [K: string]: any }
-;
-}
-    >;
-        get<
-        Method extends "get",
-        QueryShape extends {
+
+
+
+
+export type TRoute$oauthSecrets$get = {
+    query: {
 		search?: string;
 		range?: Array<{} | undefined>;
 		offset?: number;
@@ -161,17 +111,11 @@ export interface IController$oauthSecrets {
 ;
 		includeTotalCount?: boolean;
 },
-        ParamsShape extends {
+    params: {
 		id?: string;
 },
-        BodyShape extends {},
-    >(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<
-        {
+    body: {},
+    return: {
 		status: boolean;
 		data: {
 		totalCount?: number;
@@ -203,12 +147,64 @@ export interface IController$oauthSecrets {
 		metadata?: /*(optional)*/{
 } & { [K: string]: any }
 ;
+},
+};
+
+
+export interface IController$oauthSecrets {
+    createFor<
+        Method extends "post",
+        QueryShape extends TRoute$oauthSecrets$createFor["query"],
+        ParamsShape extends TRoute$oauthSecrets$createFor["params"],
+        BodyShape extends TRoute$oauthSecrets$createFor["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$oauthSecrets$createFor["return"],
+    >(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    create<
+        Method extends "post",
+        QueryShape extends TRoute$oauthSecrets$create["query"],
+        ParamsShape extends TRoute$oauthSecrets$create["params"],
+        BodyShape extends TRoute$oauthSecrets$create["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$oauthSecrets$create["return"],
+    >(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    delete<
+        Method extends "delete",
+        QueryShape extends TRoute$oauthSecrets$delete["query"],
+        ParamsShape extends TRoute$oauthSecrets$delete["params"],
+        BodyShape extends TRoute$oauthSecrets$delete["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$oauthSecrets$delete["return"],
+    >(data: {
+        method?: Method;
+        query?: QueryShape;
+        params: ParamsShape;
+        body?: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    get(): TRequestExecutors<TRoute$oauthSecrets$get["return"]>;
+    get<
+        Method extends "get",
+        QueryShape extends TRoute$oauthSecrets$get["query"],
+        ParamsShape extends TRoute$oauthSecrets$get["params"],
+        BodyShape extends TRoute$oauthSecrets$get["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$oauthSecrets$get["return"],
+    >(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body?: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }
-    , BodyShape>;
-        }
 
 export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
-    
+
     createFor(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
@@ -224,9 +220,9 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
             });
 
             return res;
-        });
+        }, data);
     },
-    
+
     create(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
@@ -242,9 +238,9 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
             });
 
             return res;
-        });
+        }, data);
     },
-    
+
     delete(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
@@ -260,9 +256,9 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
             });
 
             return res;
-        });
+        }, data);
     },
-    
+
     get(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
@@ -278,7 +274,7 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
             });
 
             return res;
-        });
+        }, data);
     },
-    
+
 });

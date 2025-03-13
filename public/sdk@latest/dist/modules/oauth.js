@@ -15,7 +15,7 @@ const oauthModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     exchangeAuthentication(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -30,7 +30,7 @@ const oauthModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     exchangeCode(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -45,7 +45,7 @@ const oauthModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     authenticate(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -60,7 +60,7 @@ const oauthModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     logout(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -75,7 +75,7 @@ const oauthModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     createPermit(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -90,7 +90,7 @@ const oauthModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     refresh(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -105,7 +105,7 @@ const oauthModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
 });
 exports.oauthModule = oauthModule;

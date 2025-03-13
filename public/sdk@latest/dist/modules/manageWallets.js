@@ -15,7 +15,7 @@ const manageWalletsModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     getAll(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -30,7 +30,7 @@ const manageWalletsModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     refund(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -45,7 +45,7 @@ const manageWalletsModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     charge(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -60,7 +60,7 @@ const manageWalletsModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     transactions(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -75,7 +75,7 @@ const manageWalletsModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
 });
 exports.manageWalletsModule = manageWalletsModule;

@@ -15,7 +15,7 @@ const batcherModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
 });
 exports.batcherModule = batcherModule;

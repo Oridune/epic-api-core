@@ -4,16 +4,24 @@
  * This is a generated file. Do not edit the contents of this file!
  */
 import { AxiosInstance, AxiosResponse } from "axios";
-import type { TSDKOptions } from "./types";
+import type { TSDKOptions, TCacheKey, TCacheOptions } from "./types";
 import { oauthEntry } from "./extensions/oauth/src/entry";
 export declare class EpicSDK {
     static _apiVersion: string;
     static _options?: TSDKOptions;
     static _axios?: AxiosInstance;
-    static init(options: TSDKOptions): void;
+    protected static resolveCacheKey(keys: TCacheKey, namespace?: string): string;
+    protected static setCache(keys: TCacheKey, value: any): Promise<boolean>;
+    protected static getCache<T>(keys: TCacheKey): Promise<{
+        value: T;
+        timestamp: number;
+    } | null>;
+    protected static delCache(keys: TCacheKey): Promise<boolean>;
+    static init(options?: TSDKOptions): void;
     static isPermitted: (scope: string, permission?: string) => boolean;
     static checkPermission(scope: string, permission?: string): void;
-    static resolveAxiosResponse<T>(executor: () => Promise<AxiosResponse<T>>): {
+    static useCache<T>(callback: () => T | Promise<T>, options?: TCacheOptions<T>): Promise<T>;
+    static resolveAxiosResponse<T>(executor: () => Promise<AxiosResponse<T>>, options?: TCacheOptions<T>): {
         readonly raw: Promise<AxiosResponse<T, any>>;
         readonly res: Promise<T>;
         readonly data: Promise<unknown>;

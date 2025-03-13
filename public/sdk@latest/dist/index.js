@@ -35,9 +35,30 @@ class EpicSDK {
     static _apiVersion = "latest";
     static _options;
     static _axios;
+    static resolveCacheKey(keys, namespace = "__epic-sdk:cache") {
+        return `${namespace}:${(keys instanceof Array ? keys : [keys]).join(":")}`;
+    }
+    static async setCache(keys, value) {
+        if (typeof this._options?.cache?.setter !== "function")
+            throw new Error("A cache setter is not defined!");
+        return await this._options.cache.setter(this.resolveCacheKey(keys), JSON.stringify({ value, timestamp: Date.now() / 1000 }));
+    }
+    static async getCache(keys) {
+        if (typeof this._options?.cache?.getter !== "function")
+            throw new Error("A cache getter is not defined!");
+        const value = await this._options.cache.getter(this.resolveCacheKey(keys));
+        if (!value)
+            return null;
+        return JSON.parse(value);
+    }
+    static async delCache(keys) {
+        if (typeof this._options?.cache?.delete !== "function")
+            throw new Error("A cache delete function is not defined!");
+        return await this._options.cache.delete(this.resolveCacheKey(keys));
+    }
     static init(options) {
         this._options = options;
-        this._axios = axios_1.default.create(options);
+        this._axios = axios_1.default.create(options?.axiosConfig);
     }
     static isPermitted = (scope, permission) => {
         return true;
@@ -46,7 +67,23 @@ class EpicSDK {
         if (!this.isPermitted(scope, permission))
             throw new Error(`You are not authorized to perform this action! Missing permission '${scope}.${permission}'!`);
     }
-    static resolveAxiosResponse(executor) {
+    static async useCache(callback, options) {
+        const Cached = options?.cacheKey ? await this.getCache(options.cacheKey) : null;
+        returnCache: if (Cached !== null) {
+            if (options?.cacheTTL && (Cached.timestamp + (typeof options.cacheTTL === "function" ? options.cacheTTL(Cached.value, Cached.timestamp) : options.cacheTTL)) < Date.now()) {
+                await this.delCache(options.cacheKey);
+                break returnCache;
+            }
+            return Cached.value;
+        }
+        const Results = await callback();
+        // deno-lint-ignore no-explicit-any
+        if (options?.cacheKey && ![null, undefined].includes(Results)) {
+            await this.setCache(options.cacheKey, Results);
+        }
+        return Results;
+    }
+    static resolveAxiosResponse(executor, options) {
         const verifyData = (res) => {
             // Check if the data object exists
             if (!res.data || typeof res.data !== "object") {
@@ -62,16 +99,18 @@ class EpicSDK {
                 return executor();
             },
             get res() {
-                return new Promise((resolve, reject) => executors.raw
-                    .then((res) => {
-                    try {
-                        resolve(verifyData(res));
-                    }
-                    catch (err) {
-                        reject(err);
-                    }
-                })
-                    .catch((err) => reject(err)));
+                return EpicSDK.useCache(() => new Promise((resolve, reject) => {
+                    executors.raw
+                        .then((res) => {
+                        try {
+                            resolve(verifyData(res));
+                        }
+                        catch (err) {
+                            reject(err);
+                        }
+                    })
+                        .catch((err) => reject(err));
+                }), options);
             },
             get data() {
                 return (async () => {

@@ -70,7 +70,7 @@ export class oauthEntry {
             &theme=${opts.theme}
             &lng=${opts.lng}
             ${opts.username ? `&username=${opts.username}` : ""}`,
-            EpicSDK._options?.baseURL,
+            EpicSDK._options?.axiosConfig?.baseURL,
         ).toString();
 
         return {

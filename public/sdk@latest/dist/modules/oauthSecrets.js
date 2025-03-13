@@ -15,7 +15,7 @@ const oauthSecretsModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     create(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -30,7 +30,7 @@ const oauthSecretsModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     delete(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -45,7 +45,7 @@ const oauthSecretsModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     get(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -60,7 +60,7 @@ const oauthSecretsModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
 });
 exports.oauthSecretsModule = oauthSecretsModule;

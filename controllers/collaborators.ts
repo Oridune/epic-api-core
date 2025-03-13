@@ -52,7 +52,9 @@ export default class CollaboratorsController extends BaseController {
             ctx.router.state.auth.user.username,
             ctx.router.state.auth.user.email,
             ctx.router.state.auth.user.phone,
-          ].includes(Invite.recipient)
+          ].filter(Boolean).map(($) => $.toLowerCase()).includes(
+            Invite.recipient.toLowerCase(),
+          )
         ) {
           throw e.error("Invalid or expired invitation token!");
         }

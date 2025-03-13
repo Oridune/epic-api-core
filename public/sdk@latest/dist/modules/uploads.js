@@ -15,7 +15,7 @@ const uploadsModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     upload(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -30,7 +30,7 @@ const uploadsModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
 });
 exports.uploadsModule = uploadsModule;

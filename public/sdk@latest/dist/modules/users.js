@@ -15,7 +15,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     setFcmToken(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -30,7 +30,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     deleteFcmToken(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -45,7 +45,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     updateEmail(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -60,7 +60,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     update(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -75,7 +75,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     me(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -90,7 +90,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     updatePassword(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -105,7 +105,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     updatePhone(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -120,7 +120,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     verify(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -135,7 +135,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     delete(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -150,7 +150,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     updateRole(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -165,7 +165,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     get(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -180,7 +180,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     create(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -195,7 +195,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     toggleBlocked(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -210,7 +210,7 @@ const usersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
 });
 exports.usersModule = usersModule;

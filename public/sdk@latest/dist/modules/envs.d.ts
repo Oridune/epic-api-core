@@ -1,15 +1,13 @@
-import type { ObjectId, TRequestOptions, TRequestExecutors } from "../types";
-export interface IController$envs {
-    create<Method extends "post", QueryShape extends {}, ParamsShape extends {}, BodyShape extends {
+import type { ObjectId, TRequestOptions, TRequestExecutors, TResponseShape } from "../types";
+export type TRoute$envs$create = {
+    query: {};
+    params: {};
+    body: {
         key: string;
         value: string;
         ttl?: number;
-    }>(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body: BodyShape;
-    } & TRequestOptions): TRequestExecutors<{
+    };
+    return: {
         status: boolean;
         data: {
             _id?: ObjectId;
@@ -35,64 +33,36 @@ export interface IController$envs {
         metadata?: /*(optional)*/ {} & {
             [K: string]: any;
         };
-    }, BodyShape>;
-    update<Method extends "patch", QueryShape extends {}, ParamsShape extends {
+    };
+};
+export type TRoute$envs$update = {
+    query: {};
+    params: {
         id: string;
-    }, BodyShape extends {
+    };
+    body: {
         key?: string;
         value?: string;
         ttl?: number;
-    }>(data: {
-        method?: Method;
-        query?: QueryShape;
-        params: ParamsShape;
-        body: BodyShape;
-    } & TRequestOptions): TRequestExecutors<{
+    };
+    return: {
         status: boolean;
         data: undefined;
-    }, BodyShape>;
-    delete<Method extends "delete", QueryShape extends {}, ParamsShape extends {
+    };
+};
+export type TRoute$envs$delete = {
+    query: {};
+    params: {
         id: string;
-    }, BodyShape extends {}>(data: {
-        method?: Method;
-        query?: QueryShape;
-        params: ParamsShape;
-        body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<{
+    };
+    body: {};
+    return: {
         status: boolean;
         data: undefined;
-    }, BodyShape>;
-    get(): TRequestExecutors<{
-        status: boolean;
-        data: {
-            totalCount?: number;
-            results: Array<{
-                _id?: ObjectId;
-                createdAt?: Date;
-                updatedAt?: Date;
-                key: string;
-                value: string;
-                ttl?: number;
-            }>;
-        };
-        messages?: Array<{
-            message?: string;
-            location?: string;
-            name?: string;
-        } & {
-            [K: string]: any;
-        }>;
-        metrics: /*(optional)*/ {
-            handledInMs?: number;
-            respondInMs?: number;
-        } & {
-            [K: string]: any;
-        };
-        metadata?: /*(optional)*/ {} & {
-            [K: string]: any;
-        };
-    }>;
-    get<Method extends "get", QueryShape extends {
+    };
+};
+export type TRoute$envs$get = {
+    query: {
         search?: string;
         range?: Array<{} | undefined>;
         offset?: number;
@@ -104,14 +74,12 @@ export interface IController$envs {
             [K: string]: number;
         };
         includeTotalCount?: boolean;
-    }, ParamsShape extends {
+    };
+    params: {
         id?: string;
-    }, BodyShape extends {}>(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<{
+    };
+    body: {};
+    return: {
         status: boolean;
         data: {
             totalCount?: number;
@@ -140,6 +108,33 @@ export interface IController$envs {
         metadata?: /*(optional)*/ {} & {
             [K: string]: any;
         };
-    }, BodyShape>;
+    };
+};
+export interface IController$envs {
+    create<Method extends "post", QueryShape extends TRoute$envs$create["query"], ParamsShape extends TRoute$envs$create["params"], BodyShape extends TRoute$envs$create["body"], ReturnShape extends TResponseShape<any> = TRoute$envs$create["return"]>(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    update<Method extends "patch", QueryShape extends TRoute$envs$update["query"], ParamsShape extends TRoute$envs$update["params"], BodyShape extends TRoute$envs$update["body"], ReturnShape extends TResponseShape<any> = TRoute$envs$update["return"]>(data: {
+        method?: Method;
+        query?: QueryShape;
+        params: ParamsShape;
+        body: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    delete<Method extends "delete", QueryShape extends TRoute$envs$delete["query"], ParamsShape extends TRoute$envs$delete["params"], BodyShape extends TRoute$envs$delete["body"], ReturnShape extends TResponseShape<any> = TRoute$envs$delete["return"]>(data: {
+        method?: Method;
+        query?: QueryShape;
+        params: ParamsShape;
+        body?: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    get(): TRequestExecutors<TRoute$envs$get["return"]>;
+    get<Method extends "get", QueryShape extends TRoute$envs$get["query"], ParamsShape extends TRoute$envs$get["params"], BodyShape extends TRoute$envs$get["body"], ReturnShape extends TResponseShape<any> = TRoute$envs$get["return"]>(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body?: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }
 export declare const envsModule: (sdk: any) => IController$envs;

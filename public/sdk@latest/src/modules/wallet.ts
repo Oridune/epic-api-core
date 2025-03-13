@@ -1,23 +1,17 @@
-import type { ObjectId, TRequestOptions, TRequestExecutors } from "../types";
+import type { ObjectId, TRequestOptions, TRequestExecutors, TResponseShape } from "../types";
 
-export interface IController$wallet {
-    
-                
-            balanceList<
-        Method extends "post",
-        QueryShape extends {},
-        ParamsShape extends {},
-        BodyShape extends {
+
+
+
+
+export type TRoute$wallet$balanceList = {
+    query: {},
+    params: {},
+    body: {
 		types?: Array<string>;
 		currencies?: Array<string>;
 },
-    >(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<
-        {
+    return: {
 		status: boolean;
 		data: Array<{
 		_id?: ObjectId;
@@ -44,12 +38,17 @@ export interface IController$wallet {
 		metadata?: /*(optional)*/{
 } & { [K: string]: any }
 ;
-}
-    , BodyShape>;
-        
-                
-            metadata(): TRequestExecutors<
-        {
+},
+};
+
+
+
+
+export type TRoute$wallet$metadata = {
+    query: {},
+    params: {},
+    body: {},
+    return: {
 		status: boolean;
 		data: {
 		defaultType: string;
@@ -71,61 +70,21 @@ export interface IController$wallet {
 		metadata?: /*(optional)*/{
 } & { [K: string]: any }
 ;
-}
-    >;
-        metadata<
-        Method extends "get",
-        QueryShape extends {},
-        ParamsShape extends {},
-        BodyShape extends {},
-    >(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<
-        {
-		status: boolean;
-		data: {
-		defaultType: string;
-		availableTypes: Array<string>;
-		defaultCurrency: string;
-		availableCurrencies: Array<string>;
+},
 };
-		messages?: Array<{
-		message?: string;
-		location?: string;
-		name?: string;
-} & { [K: string]: any }
->;
-		metrics: /*(optional)*/{
-		handledInMs?: number;
-		respondInMs?: number;
-} & { [K: string]: any }
-;
-		metadata?: /*(optional)*/{
-} & { [K: string]: any }
-;
-}
-    , BodyShape>;
-        
-                
-            transfer<
-        Method extends "post",
-        QueryShape extends {},
-        ParamsShape extends {},
-        BodyShape extends {
+
+
+
+
+export type TRoute$wallet$transfer = {
+    query: {},
+    params: {},
+    body: {
 		method: string;
 		token: string;
 		code: number;
 },
-    >(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body: BodyShape;
-    } & TRequestOptions): TRequestExecutors<
-        {
+    return: {
 		status: boolean;
 		data: {
 		transaction: {
@@ -173,74 +132,14 @@ export interface IController$wallet {
 		metadata?: /*(optional)*/{
 } & { [K: string]: any }
 ;
-}
-    , BodyShape>;
-        
-                
-            signTransfer(): TRequestExecutors<
-        {
-		status: boolean;
-		data: {
-		sender: {
-		accountId: string;
-		userId: string;
-		fname: string;
-		mname: string;
-		lname: string;
-		avatar: string;
+},
 };
-		receiver: {
-		accountId: string;
-		accountName: string;
-		accountLogo: {
-		_id?: ObjectId;
-		createdBy?: ObjectId;
-		name?: string;
-		url: string;
-		mimeType?: string;
-		sizeInBytes?: number;
-		alt?: string;
-};
-		userId: string;
-		fname: string;
-		mname: string;
-		lname: string;
-		avatar: string;
-};
-		transactionDetails: {
-		type: string;
-		currency: string;
-		amount: number;
-		fee: number;
-		description: string;
-		metadata?: {
-} & { [K: string]: string | number | boolean }
-;
-};
-		challenge: {
-		token: string;
-		otp?: number;
-};
-};
-		messages?: Array<{
-		message?: string;
-		location?: string;
-		name?: string;
-} & { [K: string]: any }
->;
-		metrics: /*(optional)*/{
-		handledInMs?: number;
-		respondInMs?: number;
-} & { [K: string]: any }
-;
-		metadata?: /*(optional)*/{
-} & { [K: string]: any }
-;
-}
-    >;
-        signTransfer<
-        Method extends "get",
-        QueryShape extends {
+
+
+
+
+export type TRoute$wallet$signTransfer = {
+    query: {
 		method: string;
 		receiver: string;
 		amount: number;
@@ -249,18 +148,12 @@ export interface IController$wallet {
 } & { [K: string]: number | boolean | string }
 ;
 },
-        ParamsShape extends {
+    params: {
 		type?: string;
 		currency?: string;
 },
-        BodyShape extends {},
-    >(data: {
-        method?: Method;
-        query: QueryShape;
-        params?: ParamsShape;
-        body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<
-        {
+    body: {},
+    return: {
 		status: boolean;
 		data: {
 		sender: {
@@ -318,55 +211,20 @@ export interface IController$wallet {
 		metadata?: /*(optional)*/{
 } & { [K: string]: any }
 ;
-}
-    , BodyShape>;
-        
-                
-            balance(): TRequestExecutors<
-        {
-		status: boolean;
-		data: {
-		_id?: ObjectId;
-		createdAt?: Date;
-		updatedAt?: Date;
-		account: ObjectId;
-		type: string;
-		currency: string;
-		balance: number;
-		lastBalance?: number;
-		lastTxnReference?: string;
+},
 };
-		messages?: Array<{
-		message?: string;
-		location?: string;
-		name?: string;
-} & { [K: string]: any }
->;
-		metrics: /*(optional)*/{
-		handledInMs?: number;
-		respondInMs?: number;
-} & { [K: string]: any }
-;
-		metadata?: /*(optional)*/{
-} & { [K: string]: any }
-;
-}
-    >;
-        balance<
-        Method extends "get",
-        QueryShape extends {},
-        ParamsShape extends {
+
+
+
+
+export type TRoute$wallet$balance = {
+    query: {},
+    params: {
 		type?: string;
 		currency?: string;
 },
-        BodyShape extends {},
-    >(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<
-        {
+    body: {},
+    return: {
 		status: boolean;
 		data: {
 		_id?: ObjectId;
@@ -393,65 +251,14 @@ export interface IController$wallet {
 		metadata?: /*(optional)*/{
 } & { [K: string]: any }
 ;
-}
-    , BodyShape>;
-        
-                
-            transactions(): TRequestExecutors<
-        {
-		status: boolean;
-		data: {
-		totalCount?: number;
-		results: Array<{
-		_id?: ObjectId;
-		createdAt?: Date;
-		updatedAt?: Date;
-		createdBy: ObjectId;
-		sessionId?: string;
-		reference: string;
-		foreignRefType?: string;
-		foreignRef?: string;
-		fromName: string;
-		from: ObjectId;
-		sender: ObjectId;
-		toName: string;
-		to: ObjectId;
-		receiver: ObjectId;
-		type: string;
-		description: /*(optional)*/{
-} & { [K: string]: string }
- | string;
-		tags?: Array<string>;
-		currency: string;
-		amount: number;
-		methodOf3DSecurity?: string;
-		status: string;
-		isRefund?: boolean;
-		isRefunded?: boolean;
-		metadata?: /*(optional)*/{
-} & { [K: string]: number | boolean | string }
-;
-}>;
+},
 };
-		messages?: Array<{
-		message?: string;
-		location?: string;
-		name?: string;
-} & { [K: string]: any }
->;
-		metrics: /*(optional)*/{
-		handledInMs?: number;
-		respondInMs?: number;
-} & { [K: string]: any }
-;
-		metadata?: /*(optional)*/{
-} & { [K: string]: any }
-;
-}
-    >;
-        transactions<
-        Method extends "get",
-        QueryShape extends {
+
+
+
+
+export type TRoute$wallet$transactions = {
+    query: {
 		search?: string;
 		sent?: boolean;
 		received?: boolean;
@@ -466,18 +273,12 @@ export interface IController$wallet {
 ;
 		includeTotalCount?: boolean;
 },
-        ParamsShape extends {
+    params: {
 		type?: string;
 		currency?: string;
 },
-        BodyShape extends {},
-    >(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<
-        {
+    body: {},
+    return: {
 		status: boolean;
 		data: {
 		totalCount?: number;
@@ -526,12 +327,91 @@ export interface IController$wallet {
 		metadata?: /*(optional)*/{
 } & { [K: string]: any }
 ;
+},
+};
+
+
+export interface IController$wallet {
+    balanceList<
+        Method extends "post",
+        QueryShape extends TRoute$wallet$balanceList["query"],
+        ParamsShape extends TRoute$wallet$balanceList["params"],
+        BodyShape extends TRoute$wallet$balanceList["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$wallet$balanceList["return"],
+    >(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body?: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    metadata(): TRequestExecutors<TRoute$wallet$metadata["return"]>;
+    metadata<
+        Method extends "get",
+        QueryShape extends TRoute$wallet$metadata["query"],
+        ParamsShape extends TRoute$wallet$metadata["params"],
+        BodyShape extends TRoute$wallet$metadata["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$wallet$metadata["return"],
+    >(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body?: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    transfer<
+        Method extends "post",
+        QueryShape extends TRoute$wallet$transfer["query"],
+        ParamsShape extends TRoute$wallet$transfer["params"],
+        BodyShape extends TRoute$wallet$transfer["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$wallet$transfer["return"],
+    >(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    signTransfer(): TRequestExecutors<TRoute$wallet$signTransfer["return"]>;
+    signTransfer<
+        Method extends "get",
+        QueryShape extends TRoute$wallet$signTransfer["query"],
+        ParamsShape extends TRoute$wallet$signTransfer["params"],
+        BodyShape extends TRoute$wallet$signTransfer["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$wallet$signTransfer["return"],
+    >(data: {
+        method?: Method;
+        query: QueryShape;
+        params?: ParamsShape;
+        body?: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    balance(): TRequestExecutors<TRoute$wallet$balance["return"]>;
+    balance<
+        Method extends "get",
+        QueryShape extends TRoute$wallet$balance["query"],
+        ParamsShape extends TRoute$wallet$balance["params"],
+        BodyShape extends TRoute$wallet$balance["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$wallet$balance["return"],
+    >(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body?: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    transactions(): TRequestExecutors<TRoute$wallet$transactions["return"]>;
+    transactions<
+        Method extends "get",
+        QueryShape extends TRoute$wallet$transactions["query"],
+        ParamsShape extends TRoute$wallet$transactions["params"],
+        BodyShape extends TRoute$wallet$transactions["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$wallet$transactions["return"],
+    >(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body?: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }
-    , BodyShape>;
-        }
 
 export const walletModule = (sdk: any): IController$wallet => ({
-    
+
     balanceList(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
@@ -547,9 +427,9 @@ export const walletModule = (sdk: any): IController$wallet => ({
             });
 
             return res;
-        });
+        }, data);
     },
-    
+
     metadata(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
@@ -565,9 +445,9 @@ export const walletModule = (sdk: any): IController$wallet => ({
             });
 
             return res;
-        });
+        }, data);
     },
-    
+
     transfer(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
@@ -583,9 +463,9 @@ export const walletModule = (sdk: any): IController$wallet => ({
             });
 
             return res;
-        });
+        }, data);
     },
-    
+
     signTransfer(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
@@ -601,9 +481,9 @@ export const walletModule = (sdk: any): IController$wallet => ({
             });
 
             return res;
-        });
+        }, data);
     },
-    
+
     balance(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
@@ -619,9 +499,9 @@ export const walletModule = (sdk: any): IController$wallet => ({
             });
 
             return res;
-        });
+        }, data);
     },
-    
+
     transactions(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
@@ -637,7 +517,7 @@ export const walletModule = (sdk: any): IController$wallet => ({
             });
 
             return res;
-        });
+        }, data);
     },
-    
+
 });

@@ -38,7 +38,7 @@ class oauthEntry {
             &state=${btoa(JSON.stringify(opts.state))}
             &theme=${opts.theme}
             &lng=${opts.lng}
-            ${opts.username ? `&username=${opts.username}` : ""}`, __1.EpicSDK._options?.baseURL).toString();
+            ${opts.username ? `&username=${opts.username}` : ""}`, __1.EpicSDK._options?.axiosConfig?.baseURL).toString();
         return {
             verifier,
             url,

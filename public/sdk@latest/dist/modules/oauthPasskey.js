@@ -15,7 +15,7 @@ const oauthPasskeyModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     challengeRegister(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -30,7 +30,7 @@ const oauthPasskeyModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     login(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -45,7 +45,7 @@ const oauthPasskeyModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     register(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -60,7 +60,7 @@ const oauthPasskeyModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
 });
 exports.oauthPasskeyModule = oauthPasskeyModule;

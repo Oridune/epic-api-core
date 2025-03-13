@@ -1,6 +1,8 @@
-import type { TRequestOptions, TRequestExecutors } from "../types";
-export interface IController$batcher {
-    request<Method extends "post", QueryShape extends {}, ParamsShape extends {}, BodyShape extends {
+import type { TRequestOptions, TRequestExecutors, TResponseShape } from "../types";
+export type TRoute$batcher$request = {
+    query: {};
+    params: {};
+    body: {
         requests: Array<Array<{
             endpoint?: string;
             method: string;
@@ -18,12 +20,8 @@ export interface IController$batcher {
             body?: any;
             disabled?: boolean;
         } | string>;
-    }>(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body: BodyShape;
-    } & TRequestOptions): TRequestExecutors<{
+    };
+    return: {
         status: boolean;
         data: {
             responses: Array<any>;
@@ -44,6 +42,14 @@ export interface IController$batcher {
         metadata?: /*(optional)*/ {} & {
             [K: string]: any;
         };
-    }, BodyShape>;
+    };
+};
+export interface IController$batcher {
+    request<Method extends "post", QueryShape extends TRoute$batcher$request["query"], ParamsShape extends TRoute$batcher$request["params"], BodyShape extends TRoute$batcher$request["body"], ReturnShape extends TResponseShape<any> = TRoute$batcher$request["return"]>(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }
 export declare const batcherModule: (sdk: any) => IController$batcher;

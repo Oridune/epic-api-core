@@ -15,7 +15,7 @@ const manageUsersModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
 });
 exports.manageUsersModule = manageUsersModule;

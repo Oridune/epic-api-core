@@ -15,7 +15,7 @@ const usersIdentificationModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     publicMethods(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -30,7 +30,7 @@ const usersIdentificationModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     request(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -45,7 +45,7 @@ const usersIdentificationModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
 });
 exports.usersIdentificationModule = usersIdentificationModule;

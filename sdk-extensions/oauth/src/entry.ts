@@ -1,4 +1,5 @@
 import { EpicSDK } from "epic-api-sdk";
+import { TRoute$users$me } from "epic-api-sdk/src/modules/users";
 
 import { encode as base64encode } from "base64-arraybuffer";
 import { sha256 } from "js-sha256";
@@ -17,14 +18,16 @@ export type TAuthorization = {
 };
 
 export class oauthEntry {
-    static selectedAccount?: string;
     static auth?: TAuthorization;
+    static me?: TRoute$users$me["return"]["data"]["user"];
+    static selectedAccount?: string;
 
     protected static _refreshRequest?: Promise<TAuthorization>;
 
     protected static generateRandomString(length: number): string {
         const characters =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            
         let result = "";
 
         for (let i = 0; i < length; i++) {
@@ -70,7 +73,7 @@ export class oauthEntry {
             &theme=${opts.theme}
             &lng=${opts.lng}
             ${opts.username ? `&username=${opts.username}` : ""}`,
-            EpicSDK._options?.baseURL,
+            EpicSDK._options?.axiosConfig?.baseURL,
         ).toString();
 
         return {
@@ -135,14 +138,5 @@ export class oauthEntry {
                 refreshTokenPayload: undefined,
             },
         }).data as Promise<TAuthorization>);
-    }
-
-    static async fetchMe() {
-        const {user} = await EpicSDK.users.me().data;
-        
-    }
-
-    static async fetchPermissions() {
-        EpicSDK.oauthPolicies.me();
     }
 }

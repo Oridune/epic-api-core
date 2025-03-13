@@ -52,25 +52,27 @@ export default class UsersController extends BaseController {
   ) {
     if (
       user.reference &&
-      (await UserModel.exists({ reference: user.reference }))
-    ) {
-      throw e.error(`Reference already registered!`);
-    }
+      (await UserModel.exists({
+        reference: new RegExp(`^${user.reference}$`, "i"),
+      }))
+    ) throw e.error(`Reference already registered!`);
 
     if (
       user.username &&
-      (await UserModel.exists({ username: user.username }))
-    ) {
-      throw e.error(`Username is already taken!`);
-    }
+      (await UserModel.exists({
+        username: new RegExp(`^${user.username}$`, "i"),
+      }))
+    ) throw e.error(`Username is already taken!`);
 
-    if (user.phone && (await UserModel.exists({ phone: user.phone }))) {
-      throw e.error(`Phone number already registered!`);
-    }
+    if (
+      user.phone &&
+      (await UserModel.exists({ phone: new RegExp(`^${user.phone}$`, "i") }))
+    ) throw e.error(`Phone number already registered!`);
 
-    if (user.email && (await UserModel.exists({ email: user.email }))) {
-      throw e.error(`Email already registered!`);
-    }
+    if (
+      user.email &&
+      (await UserModel.exists({ email: new RegExp(`^${user.email}$`, "i") }))
+    ) throw e.error(`Email already registered!`);
 
     const UserId = new ObjectId();
     const AccountId = new ObjectId();

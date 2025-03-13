@@ -15,7 +15,7 @@ const apiModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     postman(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -30,7 +30,7 @@ const apiModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     test(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -45,7 +45,7 @@ const apiModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     home(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -60,7 +60,7 @@ const apiModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     heapSnapshot(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -75,7 +75,7 @@ const apiModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
 });
 exports.apiModule = apiModule;

@@ -15,7 +15,7 @@ const walletModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     metadata(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -30,7 +30,7 @@ const walletModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     transfer(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -45,7 +45,7 @@ const walletModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     signTransfer(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -60,7 +60,7 @@ const walletModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     balance(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -75,7 +75,7 @@ const walletModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
     transactions(data) {
         return sdk.resolveAxiosResponse(async () => {
@@ -90,7 +90,7 @@ const walletModule = (sdk) => ({
                 ...data?.axiosConfig,
             });
             return res;
-        });
+        }, data);
     },
 });
 exports.walletModule = walletModule;

@@ -1,48 +1,39 @@
-import type { TRequestOptions, TRequestExecutors } from "../types";
-export interface IController$api {
-    memoryUsage(): TRequestExecutors<{
+import type { TRequestOptions, TRequestExecutors, TResponseShape } from "../types";
+export type TRoute$api$memoryUsage = {
+    query: {};
+    params: {};
+    body: {};
+    return: {
         status: boolean;
         data: undefined;
-    }>;
-    memoryUsage<Method extends "get", QueryShape extends {}, ParamsShape extends {}, BodyShape extends {}>(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<{
-        status: boolean;
-        data: undefined;
-    }, BodyShape>;
-    postman(): TRequestExecutors<{
-        status: boolean;
-        data: undefined;
-    }>;
-    postman<Method extends "get", QueryShape extends {
+    };
+};
+export type TRoute$api$postman = {
+    query: {
         name?: string;
         description?: string;
-    }, ParamsShape extends {}, BodyShape extends {}>(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<{
+    };
+    params: {};
+    body: {};
+    return: {
         status: boolean;
         data: undefined;
-    }, BodyShape>;
-    test(): TRequestExecutors<{
+    };
+};
+export type TRoute$api$test = {
+    query: {};
+    params: {};
+    body: {};
+    return: {
         status: boolean;
         data: undefined;
-    }>;
-    test<Method extends "get", QueryShape extends {}, ParamsShape extends {}, BodyShape extends {}>(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<{
-        status: boolean;
-        data: undefined;
-    }, BodyShape>;
-    home(): TRequestExecutors<{
+    };
+};
+export type TRoute$api$home = {
+    query: {};
+    params: {};
+    body: {};
+    return: {
         status: boolean;
         data: {
             environment: string;
@@ -71,54 +62,52 @@ export interface IController$api {
         metadata?: /*(optional)*/ {} & {
             [K: string]: any;
         };
-    }>;
-    home<Method extends "get", QueryShape extends {}, ParamsShape extends {}, BodyShape extends {}>(data: {
+    };
+};
+export type TRoute$api$heapSnapshot = {
+    query: {};
+    params: {};
+    body: {};
+    return: {
+        status: boolean;
+        data: undefined;
+    };
+};
+export interface IController$api {
+    memoryUsage(): TRequestExecutors<TRoute$api$memoryUsage["return"]>;
+    memoryUsage<Method extends "get", QueryShape extends TRoute$api$memoryUsage["query"], ParamsShape extends TRoute$api$memoryUsage["params"], BodyShape extends TRoute$api$memoryUsage["body"], ReturnShape extends TResponseShape<any> = TRoute$api$memoryUsage["return"]>(data: {
         method?: Method;
         query?: QueryShape;
         params?: ParamsShape;
         body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<{
-        status: boolean;
-        data: {
-            environment: string;
-            database: {
-                connected: boolean;
-            };
-            store: {
-                type: string;
-                connected: boolean;
-            };
-            languages: Array<string>;
-        };
-        messages?: Array<{
-            message?: string;
-            location?: string;
-            name?: string;
-        } & {
-            [K: string]: any;
-        }>;
-        metrics: /*(optional)*/ {
-            handledInMs?: number;
-            respondInMs?: number;
-        } & {
-            [K: string]: any;
-        };
-        metadata?: /*(optional)*/ {} & {
-            [K: string]: any;
-        };
-    }, BodyShape>;
-    heapSnapshot(): TRequestExecutors<{
-        status: boolean;
-        data: undefined;
-    }>;
-    heapSnapshot<Method extends "get", QueryShape extends {}, ParamsShape extends {}, BodyShape extends {}>(data: {
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    postman(): TRequestExecutors<TRoute$api$postman["return"]>;
+    postman<Method extends "get", QueryShape extends TRoute$api$postman["query"], ParamsShape extends TRoute$api$postman["params"], BodyShape extends TRoute$api$postman["body"], ReturnShape extends TResponseShape<any> = TRoute$api$postman["return"]>(data: {
         method?: Method;
         query?: QueryShape;
         params?: ParamsShape;
         body?: BodyShape;
-    } & TRequestOptions): TRequestExecutors<{
-        status: boolean;
-        data: undefined;
-    }, BodyShape>;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    test(): TRequestExecutors<TRoute$api$test["return"]>;
+    test<Method extends "get", QueryShape extends TRoute$api$test["query"], ParamsShape extends TRoute$api$test["params"], BodyShape extends TRoute$api$test["body"], ReturnShape extends TResponseShape<any> = TRoute$api$test["return"]>(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body?: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    home(): TRequestExecutors<TRoute$api$home["return"]>;
+    home<Method extends "get", QueryShape extends TRoute$api$home["query"], ParamsShape extends TRoute$api$home["params"], BodyShape extends TRoute$api$home["body"], ReturnShape extends TResponseShape<any> = TRoute$api$home["return"]>(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body?: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    heapSnapshot(): TRequestExecutors<TRoute$api$heapSnapshot["return"]>;
+    heapSnapshot<Method extends "get", QueryShape extends TRoute$api$heapSnapshot["query"], ParamsShape extends TRoute$api$heapSnapshot["params"], BodyShape extends TRoute$api$heapSnapshot["body"], ReturnShape extends TResponseShape<any> = TRoute$api$heapSnapshot["return"]>(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body?: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }
 export declare const apiModule: (sdk: any) => IController$api;

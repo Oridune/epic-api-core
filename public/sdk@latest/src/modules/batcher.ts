@@ -1,13 +1,13 @@
-import type { ObjectId, TRequestOptions, TRequestExecutors } from "../types";
+import type { ObjectId, TRequestOptions, TRequestExecutors, TResponseShape } from "../types";
 
-export interface IController$batcher {
-    
-                
-            request<
-        Method extends "post",
-        QueryShape extends {},
-        ParamsShape extends {},
-        BodyShape extends {
+
+
+
+
+export type TRoute$batcher$request = {
+    query: {},
+    params: {},
+    body: {
 		requests: Array<Array<{
 		endpoint?: string;
 		method: string;
@@ -26,13 +26,7 @@ export interface IController$batcher {
 		disabled?: boolean;
 } | string>;
 },
-    >(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body: BodyShape;
-    } & TRequestOptions): TRequestExecutors<
-        {
+    return: {
 		status: boolean;
 		data: {
 		responses: Array<any>;
@@ -51,12 +45,27 @@ export interface IController$batcher {
 		metadata?: /*(optional)*/{
 } & { [K: string]: any }
 ;
+},
+};
+
+
+export interface IController$batcher {
+    request<
+        Method extends "post",
+        QueryShape extends TRoute$batcher$request["query"],
+        ParamsShape extends TRoute$batcher$request["params"],
+        BodyShape extends TRoute$batcher$request["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$batcher$request["return"],
+    >(data: {
+        method?: Method;
+        query?: QueryShape;
+        params?: ParamsShape;
+        body: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }
-    , BodyShape>;
-        }
 
 export const batcherModule = (sdk: any): IController$batcher => ({
-    
+
     request(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
@@ -72,7 +81,7 @@ export const batcherModule = (sdk: any): IController$batcher => ({
             });
 
             return res;
-        });
+        }, data);
     },
-    
+
 });
