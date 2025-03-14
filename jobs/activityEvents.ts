@@ -377,6 +377,7 @@ export default () => {
             currency: Transaction.currency,
             amount: Transaction.amount,
             fromName: Transaction.fromName,
+            account: Transaction.to.toString(),
           },
         });
       } catch {
