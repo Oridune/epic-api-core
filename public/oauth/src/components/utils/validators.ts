@@ -2,14 +2,19 @@ import e from "@oridune/validator";
 import { TFunction } from "i18next";
 
 export const UsernameValidator = (t: TFunction) =>
-  e
-    .string({
+  e.string({
       messages: {
         matchFailed: t("Please provide a valid username format!"),
       },
     })
-    .matches(/^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/)
-    .length(50);
+    .matches(/^\s*(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]\s*$/)
+    .length(50)
+    .custom(ctx => {
+      if(typeof ctx.output !== "string")
+        throw new Error("Something is not right with the username!");
+
+      return ctx.output.trim();
+    });
 
 export const PasswordFormatValidator = (
   t: TFunction,
