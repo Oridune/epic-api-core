@@ -152,6 +152,7 @@ export default class WalletController extends BaseController {
             { username: receiverId },
             { email: receiverId },
             { phone: receiverId },
+            { reference: receiverId },
           ],
         }).project({
           _id: 1,
