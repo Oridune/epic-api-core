@@ -132,9 +132,9 @@ export default class RequestLogsController extends BaseController {
             ...(Query.namespace ? { namespace: Query.namespace } : {}),
             ...RequestLogsBaseFilters,
           })
+          .sort(Query.sort)
           .skip(Query.offset)
-          .limit(Query.limit)
-          .sort(Query.sort);
+          .limit(Query.limit);
 
         if (Query.project) RequestLogsListQuery.project(Query.project);
 

@@ -183,9 +183,9 @@ export default class AccountInvitesController extends BaseController {
               }
               : {}),
           })
+          .sort(Query.sort)
           .skip(Query.offset)
-          .limit(Query.limit)
-          .sort(Query.sort);
+          .limit(Query.limit);
 
         if (Query.project) AccountInvitesListQuery.project(Query.project);
 

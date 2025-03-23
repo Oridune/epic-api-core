@@ -295,9 +295,9 @@ export default class CollaboratorsController extends BaseController {
               }
               : {}),
           })
+          .sort(Query.sort)
           .skip(Query.offset)
           .limit(Query.limit)
-          .sort(Query.sort)
           .populateOne("createdFor", UserModel, {
             project: {
               fname: 1,

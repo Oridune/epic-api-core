@@ -257,9 +257,9 @@ export default class AccountsController extends BaseController {
               }
               : {}),
           })
+          .sort(Query.sort)
           .skip(Query.offset)
-          .limit(Query.limit)
-          .sort(Query.sort);
+          .limit(Query.limit);
 
         if (Query.project) AccountListQuery.project(Query.project);
 

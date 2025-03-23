@@ -621,9 +621,9 @@ export default class UsersController extends BaseController {
             passwordHistory: 0,
             passkeys: 0,
           })
+          .sort(Query.sort)
           .skip(Query.offset)
           .limit(Query.limit)
-          .sort(Query.sort)
           .populate(
             "collaborates",
             CollaboratorModel.populateOne("account", AccountModel),

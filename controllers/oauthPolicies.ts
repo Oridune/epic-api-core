@@ -158,9 +158,9 @@ export default class OauthPoliciesController extends BaseController {
               }
               : {}),
           })
+          .sort(Query.sort)
           .skip(Query.offset)
-          .limit(Query.limit)
-          .sort(Query.sort);
+          .limit(Query.limit);
 
         if (Query.project) OauthPoliciesListQuery.project(Query.project);
 

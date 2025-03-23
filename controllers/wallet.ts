@@ -502,9 +502,9 @@ export default class WalletController extends BaseController {
 
         const TransactionListQuery = TransactionModel.search(Query.search)
           .filter(TransactionListBaseConditions)
+          .sort(Query.sort)
           .skip(Query.offset)
-          .limit(Query.limit)
-          .sort(Query.sort);
+          .limit(Query.limit);
 
         if (Query.project) TransactionListQuery.project(Query.project);
 

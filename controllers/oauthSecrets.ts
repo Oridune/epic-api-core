@@ -236,9 +236,9 @@ export default class OauthSecretsController extends BaseController {
         const OauthSecretsListQuery = OauthSecretModel
           .search(Query.search)
           .filter(OauthSecretsBaseFilters)
+          .sort(Query.sort)
           .skip(Query.offset)
-          .limit(Query.limit)
-          .sort(Query.sort);
+          .limit(Query.limit);
 
         if (Query.project) OauthSecretsListQuery.project(Query.project);
 

@@ -94,9 +94,9 @@ export default class ManageWalletsController extends BaseController {
               }
               : {}),
           })
+          .sort(Query.sort)
           .skip(Query.offset)
-          .limit(Query.limit)
-          .sort(Query.sort);
+          .limit(Query.limit);
 
         if (Query.project) WalletListQuery.project(Query.project);
 
@@ -239,9 +239,9 @@ export default class ManageWalletsController extends BaseController {
 
         const TransactionListQuery = TransactionModel.search(Query.search)
           .filter(TransactionListBaseConditions)
+          .sort(Query.sort)
           .skip(Query.offset)
-          .limit(Query.limit)
-          .sort(Query.sort);
+          .limit(Query.limit);
 
         if (Query.project) TransactionListQuery.project(Query.project);
 

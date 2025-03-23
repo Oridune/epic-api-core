@@ -156,9 +156,9 @@ export default class EnvsController extends BaseController {
               }
               : {}),
           })
+          .sort(Query.sort)
           .skip(Query.offset)
-          .limit(Query.limit)
-          .sort(Query.sort);
+          .limit(Query.limit);
 
         if (Query.project) EnvsListQuery.project(Query.project);
 
