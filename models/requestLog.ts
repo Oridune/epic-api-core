@@ -29,8 +29,9 @@ export const InputRequestLogsSchema = e.object({
     status: e.boolean(),
     messages: e.any(),
     data: e.any(),
-    metrics: e.record(e.any()),
+    metadata: e.record(e.any()),
     errorStack: e.any(),
+    metrics: e.record(e.any()),
   }),
   errorStack: e.any(),
 }, { allowUnexpectedProps: true });

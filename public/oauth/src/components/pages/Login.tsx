@@ -82,6 +82,12 @@ export const LoginPage = () => {
 
   const { t, i18n } = useTranslation();
 
+  React.useEffect(() => {
+    if (LoginWithPassword) {
+      document.getElementById("password")?.focus();
+    }
+  }, [LoginWithPassword]);
+
   const LoginSchema = React.useMemo(
     () =>
       e.object({
@@ -430,7 +436,9 @@ export const LoginPage = () => {
                       variant="contained"
                       disabled={Loading}
                       onClick={async () => {
-                        if (await trigger()) setLoginWithPassword(true);
+                        if (await trigger()) {
+                          setLoginWithPassword(true);
+                        }
                       }}
                     >
                       {t("Continue")}
