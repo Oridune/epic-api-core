@@ -388,6 +388,7 @@ export default class ManageWalletsController extends BaseController {
         const Transfer = await Wallet.refund({
           transactionId: Params.id,
           user: ctx.router.state.auth.userId,
+          allowOverdraft: true,
         });
 
         return Response.data({

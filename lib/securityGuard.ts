@@ -51,7 +51,6 @@ export class SecurityGuard {
 
     return Array.from(new Set(Scopes));
   }
-
   protected RawScopePipeline: Array<TRawStage> = [];
   protected ScopePipeline: Array<Set<string>> = [];
 
@@ -59,6 +58,8 @@ export class SecurityGuard {
   protected DenialScopePipeline: Array<Set<string>> = [];
 
   constructor() {}
+
+  public isSuperUser = false;
 
   public addStage(
     stage: TRawStage,
@@ -75,27 +76,33 @@ export class SecurityGuard {
   ) {
     await Promise.all(
       (["RawScopePipeline", "RawDenialScopePipeline"] as const).map(
-        async (type) => {
+        async (type, typeIndex) => {
           if (this[type].length) {
-            const Resolvers: Array<
-              Promise<Array<string>> | Array<string>
-            > = [];
+            const Pipeline = await Promise.all(
+              this[type].map(async (stage, stageIndex) => {
+                const Stage = stage instanceof Array
+                  ? { scopes: stage }
+                  : stage;
 
-            this[type].forEach((stage) => {
-              const Stage = stage instanceof Array ? { scopes: stage } : stage;
+                const Scopes = Stage.scopes;
+                const ResolveDepth = Stage.resolveDepth ?? Infinity;
 
-              const Scopes = Stage.scopes;
-              const ResolveDepth = Stage.resolveDepth ?? Infinity;
+                const ResolvedScopes = await SecurityGuard.resolveScopes(
+                  Scopes,
+                  {
+                    ...options,
+                    resolveDepth: ResolveDepth,
+                  },
+                );
 
-              Resolvers.push(
-                SecurityGuard.resolveScopes(Scopes, {
-                  ...options,
-                  resolveDepth: ResolveDepth,
-                }),
-              );
-            });
+                if (
+                  typeIndex === 0 && stageIndex === 0 &&
+                  ResolvedScopes.includes("*")
+                ) this.isSuperUser = true;
 
-            const Pipeline = await Promise.all(Resolvers);
+                return ResolvedScopes;
+              }),
+            );
 
             this[
               type.replace(/^Raw/, "") as
