@@ -27,7 +27,7 @@ export default class OauthSecretsController extends BaseController {
     userId: ObjectId | string;
     oauthAppId: ObjectId | string;
     name: string;
-    scopes: Record<string, string[]>;
+    scopes?: Record<string, string[]>;
     payload?: Record<
       string,
       string | string[] | number | boolean | null | undefined
@@ -121,12 +121,13 @@ export default class OauthSecretsController extends BaseController {
             oauthAppId: ctx.router.state.auth.user.oauthApp,
             userId: Body.userId,
             name: Body.name,
-            scopes: (Body.scopes instanceof Array || Body.scopes === undefined)
+            ...(Body.scopes
               ? {
-                [ctx.router.state.auth.accountId]: Body.scopes ??
-                  ctx.router.state.scopePipeline.requested,
+                scopes: Body.scopes instanceof Array
+                  ? { [ctx.router.state.auth.accountId]: Body.scopes }
+                  : Body.scopes,
               }
-              : Body.scopes,
+              : {}),
             expiresInSeconds: Body.ttl,
           }),
         );

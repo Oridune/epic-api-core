@@ -25,10 +25,9 @@ export const UserReferenceValidator = () =>
   });
 
 export const UsernameValidator = () =>
-  e
-    .string()
+  e.string()
     .matches({
-      regex: /^(?=[a-zA-Z0-9._]{4,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/,
+      regex: /^[A-Za-z0-9_]{3,29}$/,
     })
     .custom((ctx) => ctx.output.toLowerCase());
 

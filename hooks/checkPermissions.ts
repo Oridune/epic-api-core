@@ -64,7 +64,7 @@ export const SessionValidator = e.optional(
     )),
     secret: e.optional(e.object(
       {
-        scopes: e.record(e.array(e.string())),
+        scopes: e.optional(e.record(e.array(e.string()))),
         createdBy: e.string({ cast: true }),
       },
       { allowUnexpectedProps: true },
@@ -88,7 +88,12 @@ export default {
 
       if (SessionInfo) {
         const Session = SessionInfo.session ?? SessionInfo.secret;
-        const Scopes = Session?.scopes ?? {};
+
+        if (!Session) {
+          throw new Error("No session details! Something is not correct!");
+        }
+
+        const Scopes = Session.scopes ?? {};
 
         const AccountId = await e
           .instanceOf(ObjectId, { instantiate: true })
@@ -96,14 +101,16 @@ export default {
             ctx.router.request.headers.get("X-Account-ID") ??
               Object.keys(Scopes)[0],
             { name: `${scope}.headers.x-account-id` },
-          );
+          ).catch((cause) => {
+            throw new Error("Missing x-account-id header!", { cause });
+          });
 
         const { auth, scopePipeline } = await Store.cache(
           `checkPermissions:${
             SessionInfo.claims.sessionId ?? SessionInfo.claims.secretId
           }:${AccountId}`,
           async () => {
-            const UserId = new ObjectId(Session?.createdBy);
+            const UserId = new ObjectId(Session.createdBy);
 
             const User = await UserModel.findOne(
               UserId,
@@ -208,7 +215,7 @@ export default {
               scopePipeline: {
                 all: [`role:${GlobalRole}`],
                 available: [`role:${Collaborator.role}`],
-                requested: Scopes[AccountId.toString()] ?? [],
+                requested: Scopes[AccountId.toString()] ?? ["*"],
                 permitted: SessionInfo.claims.scopes ?? ["*"],
               },
             };

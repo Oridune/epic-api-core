@@ -10,7 +10,7 @@ export const OauthSecretSchema = e.object({
   createdBy: e.instanceOf(ObjectId, { instantiate: true }),
   oauthApp: e.instanceOf(ObjectId, { instantiate: true }),
   name: e.string().min(2).max(300),
-  scopes: OauthAccessScopesValidator,
+  scopes: e.optional(OauthAccessScopesValidator),
   isBlocked: e.optional(e.boolean({ cast: true })).default(false),
 });
 
