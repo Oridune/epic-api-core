@@ -194,6 +194,15 @@ export default {
               })) ?? User;
 
               GlobalRole = ParentCollaborator.role;
+
+              if (GlobalRole === "root") {
+                const ParentUser =
+                  (await UserModel.findOne(Collaborator.createdBy).project({
+                    role: 1,
+                  })) ?? User;
+
+                GlobalRole = ParentUser.role;
+              }
             }
 
             return {
