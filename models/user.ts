@@ -153,6 +153,11 @@ UserModel.createIndex(
     background: true,
   },
   {
+    key: { reference: 1 },
+    unique: true,
+    background: true,
+  },
+  {
     key: { email: 1 },
     unique: true,
     partialFilterExpression: { email: { $exists: true } },

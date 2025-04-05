@@ -45,3 +45,11 @@ OauthSessionModel.pre("update", (details) => {
     updatedAt: new Date(),
   };
 });
+
+OauthSessionModel.createIndex({
+  key: {
+    createdBy: 1,
+  },
+  unique: true,
+  background: true,
+});

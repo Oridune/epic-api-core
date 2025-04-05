@@ -35,6 +35,10 @@ CollaboratorModel.pre("update", (details) => {
 
 CollaboratorModel.createIndex(
   {
+    key: { account: 1 },
+    background: true,
+  },
+  {
     key: { createdFor: 1, account: 1 },
     background: true,
   },
