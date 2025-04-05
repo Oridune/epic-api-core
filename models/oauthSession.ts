@@ -47,9 +47,6 @@ OauthSessionModel.pre("update", (details) => {
 });
 
 OauthSessionModel.createIndex({
-  key: {
-    createdBy: 1,
-  },
-  unique: true,
+  key: { createdBy: 1 },
   background: true,
 });
