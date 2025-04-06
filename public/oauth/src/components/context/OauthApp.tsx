@@ -1,6 +1,23 @@
 import React from "react";
 import axios from "../utils/axios";
 
+export interface IOauthConsentThirdPartyApp {
+  name?: string;
+  description?: string;
+  logo?: {
+    url: string;
+  };
+  allowedScopes?: Array<{
+    label: string;
+    description: string;
+    scope: string;
+  }>;
+  homepageURL: string;
+  privacyPolicyURL?: string;
+  termsAndConditionsURL?: string;
+  supportURL?: string;
+}
+
 export interface IOauthConsent {
   availableSignups: number;
   passkeyEnabled?: boolean;
@@ -26,6 +43,7 @@ export interface IOauthConsent {
     minLength?: number;
     maxLength?: number;
   };
+  thirdPartyApp?: IOauthConsentThirdPartyApp;
 }
 
 export const ExpectedIntegrationsMapping = {

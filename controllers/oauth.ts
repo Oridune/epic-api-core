@@ -506,7 +506,9 @@ export default class OauthController extends BaseController {
       createdFor: new ObjectId(userId),
     })
       .sort({ isPrimary: -1 })
-      .populateOne("account", AccountModel);
+      .populateOne("account", AccountModel, {
+        project: { name: 1, description: 1, logo: 1 },
+      });
 
     return await Promise.all(
       // Require account details (name, description etc.)
@@ -541,7 +543,15 @@ export default class OauthController extends BaseController {
           availableScopes: e.array(
             e.object({
               scopes: e.array(e.string()),
-            }).extends(CollaboratorModel.getSchema()),
+            }).extends(
+              e.object({
+                account: e.pick(AccountModel.getSchema(), [
+                  "name",
+                  "description",
+                  "logo",
+                ]),
+              }).extends(e.omit(CollaboratorModel.getSchema(), ["account"])),
+            ),
           ),
         })).toSample(),
       }),

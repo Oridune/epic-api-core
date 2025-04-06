@@ -7,6 +7,7 @@ import {
 import { ErrorBoundary } from "./misc/ErrorBoundary";
 
 import { LoginPage } from "./pages/Login";
+import { ScopesPage } from "./pages/Scopes";
 import { SignupPage } from "./pages/Signup";
 import { ForgotPage } from "./pages/Forgot";
 import { ContactsPage } from "./pages/Contacts";
@@ -26,6 +27,11 @@ export const AppRoutes = () => {
           {
             path: "/login",
             element: <LoginPage />,
+            ErrorBoundary,
+          },
+          {
+            path: "/scopes",
+            element: <ScopesPage />,
             ErrorBoundary,
           },
           {

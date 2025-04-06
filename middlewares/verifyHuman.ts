@@ -26,10 +26,16 @@ export const verifyRecaptchaV3 = async (
 
     const Data = await Response.json();
 
-    return !!(typeof Data === "object" && Data && "success" in Data &&
-      Data.success === true);
-  } catch {
-    return false;
+    return {
+      success: !!(typeof Data === "object" && Data && "success" in Data &&
+        Data.success === true),
+      data: Data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error,
+    };
   }
 };
 
@@ -92,15 +98,15 @@ export default (options?: {
           );
         }
 
-        if (
-          !(await verifyRecaptchaV3(
-            Query.reCaptchaV3Token,
-            ReCaptchaV3.secretKey,
-          ))
-        ) {
-          throw e.error(
-            "Human verification has been failed!",
-          );
+        const { success, data, error } = await verifyRecaptchaV3(
+          Query.reCaptchaV3Token,
+          ReCaptchaV3.secretKey,
+        );
+
+        if (!success) {
+          throw new Error("Human verification has been failed!", {
+            cause: data ?? error,
+          });
         }
       }
     }

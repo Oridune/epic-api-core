@@ -9,9 +9,7 @@ export enum OauthProvider {
 
 export const OauthAccessScopesValidator = e.record(
   e.array(OauthScopeValidator),
-  {
-    key: e.instanceOf(ObjectId, { instantiate: true }),
-  },
+  { key: e.instanceOf(ObjectId, { instantiate: true }) },
 );
 
 export const OauthSessionSchema = e.object({

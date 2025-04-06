@@ -201,13 +201,16 @@ export const LoginPage = () => {
           label: "Login",
         });
 
-        if (false)
-          Navigate("/scopes/", {
+        const RedirectURL = CallbackURL ?? app!.consent.allowedCallbackURLs[0];
+
+        if (app?.consent.thirdPartyApp)
+          await Navigate(`/scopes/${window.location.search}`, {
             state: {
-              appId: app!._id,
+              app,
               codeChallenge: CodeChallenge,
               codeChallengeMethod: CodeChallengeMethod,
-              callbackURL: CallbackURL,
+              callbackURL: RedirectURL,
+              callbackState: CallbackState,
               ...LoginResponse.data.data,
             },
           });
@@ -219,7 +222,12 @@ export const LoginPage = () => {
                 LoginResponse.data.data.authenticationToken.token,
               scopes: (
                 LoginResponse.data.data.availableScopes as Array<{
-                  account: { _id: string };
+                  account: {
+                    _id: string;
+                    name: string;
+                    description?: string;
+                    logo?: { url: string };
+                  };
                 }>
               ).reduce(
                 (obj, collaboration) => ({
@@ -233,9 +241,6 @@ export const LoginPage = () => {
 
           if (ExchangeResponse.data.status) {
             reset();
-
-            const RedirectURL =
-              CallbackURL ?? app!.consent.allowedCallbackURLs[0];
 
             if (RedirectURL) {
               const RedirectURLWithCode = new URL(RedirectURL);

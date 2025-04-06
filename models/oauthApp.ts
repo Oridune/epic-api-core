@@ -2,10 +2,32 @@ import e, { inferInput, inferOutput } from "validator";
 import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 import { FileSchema } from "@Models/file.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
+import { OauthScopeValidator } from "@Models/oauthPolicy.ts";
 
 export const OauthConsentStylingSchema = e.object({
   roundness: e.optional(
     e.number({ cast: true }).amount({ min: 0, max: 100 }),
+  ),
+});
+
+export const OauthConsentThirdPartyAppSchema = e.object({
+  name: e.optional(e.string().length({ min: 2, max: 50 })),
+  description: e.optional(e.string().length({ min: 30, max: 300 })),
+  logo: e.optional(FileSchema),
+  allowedScopes: e.optional(e.array(e.object({
+    label: e.string().length({ min: 2, max: 50 }),
+    description: e.string().length({ min: 30, max: 300 }),
+    scope: OauthScopeValidator,
+  }))),
+  homepageURL: e.string().custom((ctx) => new URL(ctx.output).toString()),
+  privacyPolicyURL: e.optional(
+    e.string().custom((ctx) => new URL(ctx.output).toString()),
+  ),
+  termsAndConditionsURL: e.optional(
+    e.string().custom((ctx) => new URL(ctx.output).toString()),
+  ),
+  supportURL: e.optional(
+    e.string().custom((ctx) => new URL(ctx.output).toString()),
   ),
 });
 
@@ -33,12 +55,10 @@ export const OauthConsentSchema = e.object({
     minLength: e.optional(e.number().min(6)),
     maxLength: e.optional(e.number().min(6)),
   })),
-  allowedCallbackURLs: e
-    .array(
-      e.string().custom((ctx) => new URL(ctx.output).toString()),
-      { cast: true, splitter: /\s*,\s*/ },
-    )
-    .min(1),
+  allowedCallbackURLs: e.array(
+    e.string().custom((ctx) => new URL(ctx.output).toString()),
+    { cast: true, splitter: /\s*,\s*/ },
+  ).min(1),
   homepageURL: e.string().custom((ctx) => new URL(ctx.output).toString()),
   privacyPolicyURL: e.optional(
     e.string().custom((ctx) => new URL(ctx.output).toString()),
@@ -49,6 +69,7 @@ export const OauthConsentSchema = e.object({
   supportURL: e.optional(
     e.string().custom((ctx) => new URL(ctx.output).toString()),
   ),
+  thirdPartyApp: e.optional(OauthConsentThirdPartyAppSchema),
 });
 
 export enum SupportedIntegrationId {
