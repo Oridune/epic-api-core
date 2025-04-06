@@ -161,22 +161,31 @@ export class Wallet {
     options?: {
       type?: string;
       currency?: string;
+      noResolve?: boolean;
       databaseSession?: ClientSession;
     },
   ) {
     const Type = options?.type ?? (await this.getDefaultType());
     const Currency = options?.currency ?? (await this.getDefaultCurrency());
 
+    const filters = {
+      account: new ObjectId(account),
+      type: Type,
+      currency: Currency,
+    };
+
     let Wallet = await WalletModel.findOne(
-      {
-        account: new ObjectId(account),
-        type: Type,
-        currency: Currency,
-      },
+      filters,
       { session: options?.databaseSession },
     ).project({ transactions: 0 });
 
-    if (!Wallet) Wallet = await this.create(account, options);
+    if (!Wallet) {
+      if (options?.noResolve) {
+        throw new Error("Wallet not found!", { cause: filters });
+      }
+
+      Wallet = await this.create(account, options);
+    }
 
     return await this.invalidateTamper(Wallet, options);
   }
@@ -311,6 +320,11 @@ export class Wallet {
     description?: string | Record<string, string>;
 
     /**
+     * Check if the wallet exists than make a transaction else throw an error
+     */
+    checkWalletExist?: boolean;
+
+    /**
      * Which method was used for 3D verification (Also indicates if a 3D verification has been taken or not)
      */
     methodOf3DSecurity?: string;
@@ -391,7 +405,10 @@ export class Wallet {
       const WalletA = await this.get(From, {
         type: Type,
         currency: Currency,
+        noResolve: options.checkWalletExist,
         databaseSession: session,
+      }).catch((cause) => {
+        throw new Error("Sender wallet caused an error!", { cause });
       });
 
       WalletA.balance = this.roundTwo(
@@ -416,7 +433,10 @@ export class Wallet {
       const WalletB = await this.get(To, {
         type: Type,
         currency: Currency,
+        noResolve: options.checkWalletExist,
         databaseSession: session,
+      }).catch((cause) => {
+        throw new Error("Receiver wallet caused an error!", { cause });
       });
 
       WalletB.balance = this.roundTwo(

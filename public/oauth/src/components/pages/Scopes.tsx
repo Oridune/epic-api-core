@@ -31,21 +31,18 @@ import { ConsentFooter } from "../misc/ConsentFooter";
 
 import Logo from "../../assets/logo.png";
 
-export const tryAtob = (text: string) => {
-  try {
-    return atob(text);
-  } catch {
-    return "";
-  }
-};
-
 export const convertScopeMapToObject = (
   map: Map<string, Set<string> | null>
 ) => {
   const obj: Record<string, string[]> = {};
 
   for (const [key, value] of map.entries()) {
-    obj[key] = value === null ? ["*"] : Array.from(value);
+    if (value === null) obj[key] = ["*"];
+    else {
+      value.add("role:unauthenticated");
+
+      obj[key] = Array.from(value);
+    }
   }
 
   return obj;

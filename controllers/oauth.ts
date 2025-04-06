@@ -116,6 +116,7 @@ export const AuthenticationSchema = () =>
         ).project({
           _id: 1,
           "consent.allowedCallbackURLs": 1,
+          "consent.noAuthExpiry": 1,
         });
 
         if (!App) throw new Error("Invalid oauth app id!");
@@ -214,6 +215,7 @@ export default class OauthController extends BaseController {
       string | string[] | number | boolean | null | undefined
     >;
     refreshable?: boolean;
+    unlimited?: boolean;
     issuer?: string;
     audience?: string;
     refreshTokenExpiresInSeconds?: number;
@@ -223,6 +225,7 @@ export default class OauthController extends BaseController {
       version: opts.version,
       sessionId: opts.sessionId.toString(),
       refreshable: !!opts.refreshable,
+      unlimited: !!opts.unlimited,
     };
 
     return {
@@ -241,9 +244,11 @@ export default class OauthController extends BaseController {
         payload: { ...opts.payload, ...Payload },
         issuer: opts.issuer,
         audience: opts.audience,
-        expiresInSeconds: opts.accessTokenExpiresInSeconds ??
-          OauthController.DefaultOauthAccessExpirySeconds *
-            (opts.refreshable ? 1 : 12),
+        expiresInSeconds: opts.unlimited
+          ? undefined
+          : opts.accessTokenExpiresInSeconds ??
+            OauthController.DefaultOauthAccessExpirySeconds *
+              (opts.refreshable ? 1 : 12),
       }),
     };
   }
@@ -417,6 +422,7 @@ export default class OauthController extends BaseController {
     codeChallenge?: string;
     codeChallengeMethod?: string;
     remember?: boolean;
+    unlimited?: boolean;
     payload?: Record<
       string,
       string | string[] | number | boolean | null | undefined
@@ -435,6 +441,7 @@ export default class OauthController extends BaseController {
         ? opts.codeChallengeMethod ?? SupportedHashAlg.SHA_256
         : null,
       remember: opts.remember ?? false,
+      unlimited: opts.unlimited ?? false,
     };
 
     return {
@@ -454,6 +461,7 @@ export default class OauthController extends BaseController {
     codeChallenge?: string;
     codeChallengeMethod?: string;
     remember?: boolean;
+    unlimited?: boolean;
     payload?: Record<
       string,
       string | string[] | number | boolean | null | undefined
@@ -469,6 +477,7 @@ export default class OauthController extends BaseController {
         ? opts.codeChallengeMethod ?? SupportedHashAlg.SHA_256
         : null,
       remember: opts.remember ?? false,
+      unlimited: opts.unlimited ?? false,
     };
 
     return {
@@ -546,6 +555,7 @@ export default class OauthController extends BaseController {
             }).extends(
               e.object({
                 account: e.pick(AccountModel.getSchema(), [
+                  "_id",
                   "name",
                   "description",
                   "logo",
@@ -617,6 +627,7 @@ export default class OauthController extends BaseController {
               codeChallenge: Body.codeChallenge,
               codeChallengeMethod: Body.codeChallengeMethod,
               remember: Body.remember,
+              unlimited: !!Body.oauthApp.consent.noAuthExpiry,
             })),
             availableScopes: await OauthController.getAvailableScopes(User._id),
           });
@@ -648,6 +659,7 @@ export default class OauthController extends BaseController {
             codeChallenge: string;
             codeChallengeMethod: string;
             remember: boolean;
+            unlimited: boolean;
           }>({
             type: OauthTokenType.AUTHENTICATION,
             token: ctx.parent!.output.authenticationToken,
@@ -709,6 +721,7 @@ export default class OauthController extends BaseController {
             codeChallenge: Body.tokenPayload.codeChallenge,
             codeChallengeMethod: Body.tokenPayload.codeChallengeMethod,
             remember: Body.tokenPayload.remember,
+            unlimited: Body.tokenPayload.unlimited,
           }),
         ).statusCode(Status.Created);
       },
@@ -723,7 +736,10 @@ export default class OauthController extends BaseController {
       codePayload: e
         .any()
         .custom((ctx) =>
-          OauthController.verifyToken({
+          OauthController.verifyToken<{
+            remember: boolean;
+            unlimited: boolean;
+          }>({
             type: OauthTokenType.CODE,
             token: ctx.parent!.output.code,
           })
@@ -791,6 +807,7 @@ export default class OauthController extends BaseController {
             sessionId: Session._id.toString(),
             version: Session.version,
             refreshable: !!Body.codePayload.remember,
+            unlimited: !!Body.codePayload.unlimited,
           }),
         );
       },

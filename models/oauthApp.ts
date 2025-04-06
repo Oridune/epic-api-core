@@ -70,6 +70,7 @@ export const OauthConsentSchema = e.object({
     e.string().custom((ctx) => new URL(ctx.output).toString()),
   ),
   thirdPartyApp: e.optional(OauthConsentThirdPartyAppSchema),
+  noAuthExpiry: e.optional(e.boolean()),
 });
 
 export enum SupportedIntegrationId {
