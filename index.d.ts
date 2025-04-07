@@ -4,6 +4,7 @@ import "@Core/common/controller/base.ts";
 import { SecurityGuard } from "@Lib/securityGuard.ts";
 import { TUserOutput } from "@Models/user.ts";
 import { TAccountOutput } from "@Models/account.ts";
+import { TCollaboratorOutput } from "@Models/collaborator.ts";
 
 export interface SessionInfo {
   claims: {
@@ -35,6 +36,7 @@ export interface Authorization {
   resolvedRole: string;
   user: Omit<TUserOutput, "password" | "passwordHistory" | "collaborates">;
   account: TAccountOutput;
+  collaborator: TCollaboratorOutput;
 }
 
 export interface ScopePipeline {

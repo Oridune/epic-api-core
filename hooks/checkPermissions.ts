@@ -220,6 +220,7 @@ export default {
                   : Collaborator.role,
                 user: User,
                 account: Account,
+                collaborator: Collaborator,
               },
               scopePipeline: {
                 all: [`role:${GlobalRole}`],
