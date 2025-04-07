@@ -354,6 +354,7 @@ export default class ManageWalletsController extends BaseController {
           amount: Body.amount,
           description: Body.description,
           metadata: Body.metadata,
+          allowOverdraft: true,
         });
 
         return Response.statusCode(Status.Created).data({
