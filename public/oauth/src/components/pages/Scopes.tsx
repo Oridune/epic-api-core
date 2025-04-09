@@ -452,7 +452,7 @@ export const ScopesPage = () => {
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={Loading || !SelectedScopes.size}
+                  disabled={Loading || !defaultScopeState.length || !SelectedScopes.size}
                 >
                   {t("Continue")}
                 </Button>
