@@ -504,6 +504,8 @@ export class Wallet {
           currency: Currency,
           methodOf3DSecurity: options.methodOf3DSecurity,
           amount: Amount,
+          senderPreviousBalance: WalletA.lastBalance,
+          receiverPreviousBalance: WalletB.lastBalance,
           isRefund: options.isRefund,
           metadata: options.metadata,
           createdBy: options.user ?? options.sender,

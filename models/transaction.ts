@@ -25,6 +25,8 @@ export const TransactionSchema = e.object({
   tags: e.optional(e.array(e.string())),
   currency: e.string(),
   amount: e.number({ cast: true }),
+  senderPreviousBalance: e.optional(e.number({ cast: true })),
+  receiverPreviousBalance: e.optional(e.number({ cast: true })),
   methodOf3DSecurity: e.optional(e.string()),
   status: e.optional(e.in(Object.values(TransactionStatus))).default(
     TransactionStatus.COMPLETED,
