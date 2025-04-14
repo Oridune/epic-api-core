@@ -657,7 +657,12 @@ export default class UsersController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         return: responseValidator(e.object({
-          user: UserModel.getSchema(),
+          user: e.omit(UserModel.getSchema(), [
+            "password",
+            "passwordHistory",
+            "passkeys",
+            "fcmDeviceTokens",
+          ]),
         })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
@@ -678,6 +683,7 @@ export default class UsersController extends BaseController {
             "passkeys.counter": 0,
             "passkeys.deviceType": 0,
             "passkeys.backedUp": 0,
+            fcmDeviceTokens: 0,
           })
           .populate(
             "collaborates",
