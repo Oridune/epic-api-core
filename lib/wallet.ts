@@ -345,6 +345,11 @@ export class Wallet {
     isRefund?: boolean;
 
     /**
+     * Pass any tags to the transaction
+     */
+    tags?: string[];
+
+    /**
      * Pass any metadata to the transaction
      */
     metadata?: Record<string, string | number | boolean>;
@@ -507,6 +512,7 @@ export class Wallet {
           senderPreviousBalance: WalletA.lastBalance,
           receiverPreviousBalance: WalletB.lastBalance,
           isRefund: options.isRefund,
+          tags: options.tags,
           metadata: options.metadata,
           createdBy: options.user ?? options.sender,
         }, { session }),

@@ -260,6 +260,7 @@ export default class WalletController extends BaseController {
       method: e.optional(e.in(Object.values(IdentificationMethod))),
       token: e.string(),
       code: e.number({ cast: true }).length(6),
+      tags: e.optional(e.array(e.string())),
     });
 
     return new Versioned().add("1.0.0", {
@@ -324,6 +325,7 @@ export default class WalletController extends BaseController {
           amount: Payload.transactionDetails.amount,
           description: Payload.transactionDetails.description,
           methodOf3DSecurity: Body.method,
+          tags: Body.tags,
           metadata: Payload.transactionDetails.metadata,
         });
 
@@ -508,7 +510,9 @@ export default class WalletController extends BaseController {
           .filter(TransactionListBaseConditions)
           .sort(Query.sort)
           .skip(Query.offset)
-          .limit(Query.limit);
+          .limit(Query.limit)
+          .populateOne("from", AccountModel, { project: { name: 1, logo: 1 } })
+          .populateOne("to", AccountModel, { project: { name: 1, logo: 1 } });
 
         if (Query.project) TransactionListQuery.project(Query.project);
 
