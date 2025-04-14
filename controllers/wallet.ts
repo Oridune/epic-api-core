@@ -458,13 +458,35 @@ export default class WalletController extends BaseController {
         .default(() => Wallet.getDefaultCurrency()),
     });
 
+    const LimitedAccount = e.pick(AccountModel.getSchema(), ["name", "logo"]);
+    const LimitedUser = e.pick(UserModel.getSchema(), [
+      "fname",
+      "mname",
+      "lname",
+      "avatar",
+    ]);
+
     return Versioned.add("1.0.0", {
       shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
         return: responseValidator(e.object({
           totalCount: e.optional(e.number()),
-          results: e.array(TransactionModel.getSchema()),
+          results: e.array(
+            e.object({
+              from: LimitedAccount,
+              to: LimitedAccount,
+              sender: LimitedUser,
+              receiver: LimitedUser,
+            }).extends(
+              e.omit(TransactionModel.getSchema(), [
+                "sender",
+                "receiver",
+                "from",
+                "to",
+              ]),
+            ),
+          ),
         })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
@@ -512,7 +534,13 @@ export default class WalletController extends BaseController {
           .skip(Query.offset)
           .limit(Query.limit)
           .populateOne("from", AccountModel, { project: { name: 1, logo: 1 } })
-          .populateOne("to", AccountModel, { project: { name: 1, logo: 1 } });
+          .populateOne("sender", UserModel, {
+            project: { fname: 1, mname: 1, lname: 1, avatar: 1 },
+          })
+          .populateOne("to", AccountModel, { project: { name: 1, logo: 1 } })
+          .populateOne("sender", UserModel, {
+            project: { fname: 1, mname: 1, lname: 1, avatar: 1 },
+          });
 
         if (Query.project) TransactionListQuery.project(Query.project);
 
