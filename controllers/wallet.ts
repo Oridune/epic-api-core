@@ -26,6 +26,7 @@ import { TransactionModel } from "@Models/transaction.ts";
 import { AccountModel } from "@Models/account.ts";
 import { FileSchema, TFileOutput } from "@Models/file.ts";
 import { WalletModel } from "@Models/wallet.ts";
+import { CollaboratorModel } from "@Models/collaborator.ts";
 
 @Controller("/wallet/", { group: "Wallet", name: "wallet" })
 export default class WalletController extends BaseController {
@@ -162,28 +163,31 @@ export default class WalletController extends BaseController {
           avatar: 1,
         });
 
-        if (!ReceivingUser) {
+        if (!ReceivingUser?._id) {
           throw e.error(
             `Receiving user not found!`,
             `${route.scope}.query.receiver`,
           );
         }
 
-        const ReceiverAccount = await AccountModel.findOne({
-          ...(ObjectId.isValid(accountId)
-            ? { _id: new ObjectId(accountId) }
-            : {}),
+        const Collaborations = await CollaboratorModel.find({
           createdFor: ReceivingUser._id,
-        }).project({
-          name: 1,
-          logo: 1,
-          isBlocked: 1,
-        });
+          ...(ObjectId.isValid(accountId)
+            ? { account: new ObjectId(accountId) }
+            : {}),
+          isBlocked: { $ne: true },
+        }).project({ account: 1 });
 
-        if (!ReceiverAccount) throw e.error("Receiver account not found!");
-        if (ReceiverAccount.isBlocked) {
-          throw e.error("Receiver account is not available!");
+        if (!Collaborations.length) {
+          throw new Error("No relevant account found!");
         }
+
+        const ReceiverAccount = await AccountModel.findOne({
+          _id: { $in: Collaborations.map(($) => $.account) },
+          isBlocked: { $ne: true },
+        }).project({ name: 1, logo: 1 });
+
+        if (!ReceiverAccount) throw new Error("Receiver account not found!");
 
         const TransferDetails = {
           sender: {

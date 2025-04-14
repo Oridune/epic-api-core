@@ -91,6 +91,7 @@ TransactionModel.createIndex(
       toName: "text",
       description: "text",
       tags: "text",
+      amount: "text",
     },
     background: true,
   },
