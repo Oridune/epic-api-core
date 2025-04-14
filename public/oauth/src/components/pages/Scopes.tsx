@@ -108,12 +108,16 @@ export const ScopesPage = () => {
     };
   });
 
+  const allScopes = (
+    app?.consent.thirdPartyApp?.allowedScopes ?? []
+  ).map(({scope}) => scope);
+
   const defaultScopes = RequestedScopes.length
     ? new Set(RequestedScopes)
-    : null;
+    : new Set(allScopes);
 
   const [SelectedScopes, setSelectedScopes] = React.useState<
-    Map<string, Set<string> | null>
+    Map<string, Set<string>>
   >(new Map([[state.availableScopes[0].account._id, defaultScopes]]));
 
   const [Loading, setLoading] = React.useState(false);
