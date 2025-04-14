@@ -538,7 +538,7 @@ export default class WalletController extends BaseController {
             project: { fname: 1, mname: 1, lname: 1, avatar: 1 },
           })
           .populateOne("to", AccountModel, { project: { name: 1, logo: 1 } })
-          .populateOne("sender", UserModel, {
+          .populateOne("receiver", UserModel, {
             project: { fname: 1, mname: 1, lname: 1, avatar: 1 },
           });
 
