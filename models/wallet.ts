@@ -12,6 +12,7 @@ export const WalletSchema = e.object({
   digest: e.string(),
   lastBalance: e.optional(e.number()),
   lastTxnReference: e.optional(e.string()),
+  negativeAt: e.optional(e.or([e.date(), e.null()])),
 });
 
 export type TWalletInput = InputDocument<inferInput<typeof WalletSchema>>;

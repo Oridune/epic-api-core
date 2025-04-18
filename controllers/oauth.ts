@@ -515,9 +515,7 @@ export default class OauthController extends BaseController {
       createdFor: new ObjectId(userId),
     })
       .sort({ isPrimary: -1 })
-      .populateOne("account", AccountModel, {
-        project: { name: 1, description: 1, logo: 1 },
-      });
+      .populateOne("account", AccountModel);
 
     return await Promise.all(
       // Require account details (name, description etc.)

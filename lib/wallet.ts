@@ -421,6 +421,12 @@ export class Wallet {
       );
       WalletA.lastTxnReference = Reference;
 
+      if (!WalletA.negativeAt && WalletA.balance < 0) {
+        WalletA.negativeAt = new Date();
+      } else if (WalletA.balance >= 0) {
+        WalletA.negativeAt = null;
+      }
+
       if (
         WalletA.balance < 0 &&
         !(await this.hasOverdraftMargin(
@@ -449,10 +455,19 @@ export class Wallet {
       );
       WalletB.lastTxnReference = Reference;
 
+      if (!WalletB.negativeAt && WalletB.balance < 0) {
+        WalletB.negativeAt = new Date();
+      } else if (WalletB.balance >= 0) {
+        WalletB.negativeAt = null;
+      }
+
       const [WalletADigest, WalletBDigest] = await Promise.all([
         this.createBalanceDigest(WalletA),
         this.createBalanceDigest(WalletB),
       ]);
+
+      WalletA.digest = WalletADigest;
+      WalletB.digest = WalletBDigest;
 
       // Debit Balance
       const { modifications: modificationsA } = await WalletModel.updateOne(
@@ -462,9 +477,10 @@ export class Wallet {
         },
         {
           balance: WalletA.balance,
-          digest: WalletADigest,
+          digest: WalletA.digest,
           lastBalance: WalletA.lastBalance,
           lastTxnReference: WalletA.lastTxnReference,
+          negativeAt: WalletA.negativeAt,
         },
         { session },
       );
@@ -479,9 +495,10 @@ export class Wallet {
         },
         {
           balance: WalletB.balance,
-          digest: WalletBDigest,
+          digest: WalletB.digest,
           lastBalance: WalletB.lastBalance,
           lastTxnReference: WalletB.lastTxnReference,
+          negativeAt: WalletB.negativeAt,
         },
         { session },
       );
