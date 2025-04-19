@@ -174,7 +174,12 @@ export default class WalletController extends BaseController {
           createdFor: ReceivingUser._id,
           ...(ObjectId.isValid(accountId)
             ? { account: new ObjectId(accountId) }
-            : {}),
+            : {
+              $or: [
+                { isPrimary: true },
+                { isOwned: true },
+              ],
+            }),
           isBlocked: { $ne: true },
         }).project({ account: 1 });
 
