@@ -14,6 +14,9 @@ export const PermanentlyDeleteUser = TransactionQueue.add<{
 }>(async (ctx, next) => {
   await Database.transaction(async (session) => {
     await UserModel.deleteOneOrFail({ _id: ctx.input.userId }, { session });
+    await CollaboratorModel.deleteOneOrFail({ createdFor: ctx.input.userId }, {
+      session,
+    });
 
     const Accounts = await AccountModel.find(
       { createdFor: ctx.input.userId },
@@ -24,12 +27,18 @@ export const PermanentlyDeleteUser = TransactionQueue.add<{
       await PermanentlyDeleteAccount.exec({
         userId: ctx.input.userId,
         accountId: Account._id,
-        databaseSession: ctx.input.databaseSession,
+        databaseSession: session,
       });
     }
 
     await next();
-  }, ctx.input.databaseSession);
+  }, ctx.input.databaseSession).catch(async (error) => {
+    await UserModel.updateOneOrFail({ _id: ctx.input.userId }, {
+      $unset: { deletionAt: 1 },
+    });
+
+    throw error;
+  });
 });
 
 export const PermanentlyDeleteAccount = TransactionQueue.add<{
@@ -62,7 +71,7 @@ export const PermanentlyDeleteAccount = TransactionQueue.add<{
       if (Wallet.balance !== 0) throw new Error("Wallet balance is not 0!");
     }
 
-    // Just delete Wallet. Transactions cannot be deleted as they are shared.
+    //! Just delete Wallet. Transactions cannot be deleted as they are shared.
     await WalletModel.deleteMany({ account: ctx.input.accountId }, { session });
 
     await next();
