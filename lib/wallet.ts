@@ -6,6 +6,7 @@ import { TWalletOutput, WalletModel } from "@Models/wallet.ts";
 import { TransactionModel } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
 import { Events } from "@Core/common/events.ts";
+import { AccountModel } from "@Models/account.ts";
 
 export class Wallet {
   static getDefaultType() {
@@ -119,6 +120,7 @@ export class Wallet {
   }
 
   static async create(
+    user: ObjectId | string,
     account: ObjectId | string,
     options?: {
       type?: string;
@@ -141,6 +143,7 @@ export class Wallet {
 
     return WalletModel.create(
       {
+        createdBy: new ObjectId(user),
         account: new ObjectId(account),
         type: Type,
         currency: Currency,
@@ -184,7 +187,16 @@ export class Wallet {
         throw new Error("Wallet not found!", { cause: filters });
       }
 
-      Wallet = await this.create(account, options);
+      const Account = await AccountModel.findOne(account).project({
+        _id: 1,
+        createdFor: 1,
+      });
+
+      if (!Account) {
+        throw new Error("Could not create a wallet because account not found!");
+      }
+
+      Wallet = await this.create(Account.createdFor, Account._id, options);
     }
 
     return await this.invalidateTamper(Wallet, options);
