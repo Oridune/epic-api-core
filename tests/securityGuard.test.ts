@@ -256,6 +256,26 @@ Deno.test({
     );
 
     await t.step(
+      "Check deeply nested role permissions with exclude",
+      async () => {
+        const guard = new SecurityGuard();
+
+        guard.addStage(["role:admin?ex=-users.create"]);
+
+        await guard.compile({ resolveScopeRole });
+
+        console.log(guard.toJSON());
+
+        expect(guard.isPermitted("users.create")).toBe(true);
+        expect(guard.isPermitted("posts.read")).toBe(true);
+        expect(guard.isPermitted("posts.write")).toBe(false);
+        expect(guard.isPermitted("posts", "write")).toBe(true);
+        expect(guard.isPermitted("posts")).toBe(true);
+        expect(guard.isPermitted("any")).toBe(false);
+      },
+    );
+
+    await t.step(
       "Check permissions with denial role",
       async () => {
         const guard = new SecurityGuard();

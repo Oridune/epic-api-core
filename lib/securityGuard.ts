@@ -31,13 +31,8 @@ export class SecurityGuard {
       const Params = new URLSearchParams(Match[2]);
       const Excludes = Params.get("ex")?.trim().split(/\s*,\s*/);
 
-      const _scopes = ScopesCache[Role] ??=
-        await options?.resolveScopeRole?.(Role) ?? [];
-
-      const __scopes = await SecurityGuard.resolveScopes(
-        Excludes instanceof Array && Excludes.length
-          ? _scopes.filter((scope) => !Excludes.includes(scope))
-          : _scopes,
+      const _scopes = await SecurityGuard.resolveScopes(
+        ScopesCache[Role] ??= await options?.resolveScopeRole?.(Role) ?? [],
         {
           resolveScopeRole: options?.resolveScopeRole,
           resolveDepth: typeof options?.resolveDepth === "number"
@@ -46,7 +41,11 @@ export class SecurityGuard {
         },
       );
 
-      Scopes.push(...__scopes);
+      Scopes.push(
+        ...(Excludes instanceof Array && Excludes.length
+          ? _scopes.filter((scope) => !Excludes.includes(scope))
+          : _scopes),
+      );
     }));
 
     return Array.from(new Set(Scopes));
