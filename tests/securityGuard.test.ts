@@ -264,8 +264,6 @@ Deno.test({
 
         await guard.compile({ resolveScopeRole });
 
-        console.log(guard.toJSON());
-
         expect(guard.isPermitted("users.create")).toBe(true);
         expect(guard.isPermitted("posts.read")).toBe(true);
         expect(guard.isPermitted("posts.write")).toBe(false);
