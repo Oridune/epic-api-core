@@ -117,7 +117,7 @@ export const UserSchema = CreateUserSchema.extends(
     isBlocked: e.optional(e.boolean({ cast: true })).default(false),
     collaborates: e.array(e.instanceOf(ObjectId, { instantiate: true })),
     deletionAt: e.optional(e.or([e.date(), e.null()])),
-    metadata: e.optional(e.record(e.or([e.number(), e.boolean(), e.string()]))),
+    metadata: e.optional(e.record(e.any())),
   }),
 );
 
