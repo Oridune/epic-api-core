@@ -68,20 +68,20 @@ RequestLogModel.createIndex(
     unique: true,
     background: true,
   },
-  // TTL index to remove >= 4xx status logs after specified days
-  {
-    key: { createdAt: 1 },
-    expireAfterSeconds: 60 * 60 * 24 *
-      (Env.numberSync("REQUEST_LOG_SUCCESS_RETENTION_DAYS") || 7), // 7 days default
-    partialFilterExpression: { responseStatus: { $gte: 400 } },
-    background: true,
-  },
   // TTL index to remove < 4xx status logs after specified days
   {
     key: { createdAt: 1 },
     expireAfterSeconds: 60 * 60 * 24 *
-      (Env.numberSync("REQUEST_LOG_FAILURE_RETENTION_DAYS") || 3), // 3 days default
+      (Env.numberSync("REQUEST_LOG_SUCCESS_RETENTION_DAYS") || 3), // 3 days default
     partialFilterExpression: { responseStatus: { $lt: 400 } },
+    background: true,
+  },
+  // TTL index to remove >= 4xx status logs after specified days
+  {
+    key: { createdAt: 1 },
+    expireAfterSeconds: 60 * 60 * 24 *
+      (Env.numberSync("REQUEST_LOG_FAILURE_RETENTION_DAYS") || 7), // 7 days default
+    partialFilterExpression: { responseStatus: { $gte: 400 } },
     background: true,
   },
 );
