@@ -68,7 +68,10 @@ RequestLogModel.createIndex(
     unique: true,
     background: true,
   },
-  // TTL index to remove < 4xx status logs after specified days
+);
+
+// TTL index to remove < 4xx status logs after specified days
+RequestLogModel.createIndex(
   {
     key: { createdAt: 1 },
     expireAfterSeconds: 60 * 60 * 24 *
@@ -76,7 +79,10 @@ RequestLogModel.createIndex(
     partialFilterExpression: { responseStatus: { $lt: 400 } },
     background: true,
   },
-  // TTL index to remove >= 4xx status logs after specified days
+);
+
+// TTL index to remove >= 4xx status logs after specified days
+RequestLogModel.createIndex(
   {
     key: { createdAt: 1 },
     expireAfterSeconds: 60 * 60 * 24 *
