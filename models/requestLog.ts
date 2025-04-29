@@ -25,14 +25,14 @@ export const InputRequestLogsSchema = e.object({
     ),
   ),
   responseStatus: e.number(),
-  response: e.object({
+  response: e.optional(e.object({
     status: e.boolean(),
     messages: e.any(),
     data: e.any(),
     metadata: e.optional(e.record(e.any())),
     errorStack: e.any(),
     metrics: e.record(e.any()),
-  }),
+  }, { allowUnexpectedProps: true })),
   errorStack: e.any(),
 }, { allowUnexpectedProps: true });
 
