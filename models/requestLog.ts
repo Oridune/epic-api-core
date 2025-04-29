@@ -66,6 +66,20 @@ RequestLogModel.pre("update", (details) => {
 
 RequestLogModel.createIndex(
   {
+    key: { namespace: 1 },
+    background: true,
+  },
+);
+
+RequestLogModel.createIndex(
+  {
+    key: { account: 1 },
+    background: true,
+  },
+);
+
+RequestLogModel.createIndex(
+  {
     key: { requestId: 1 },
     unique: true,
     background: true,
