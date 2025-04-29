@@ -25,14 +25,16 @@ export const InputRequestLogsSchema = e.object({
     ),
   ),
   responseStatus: e.number(),
-  response: e.optional(e.object({
-    status: e.boolean(),
-    messages: e.any(),
-    data: e.any(),
-    metadata: e.optional(e.record(e.any())),
-    errorStack: e.any(),
-    metrics: e.record(e.any()),
-  }, { allowUnexpectedProps: true })),
+  response: e.optional(
+    e.object({
+      status: e.boolean(),
+      messages: e.any(),
+      data: e.any(),
+      metadata: e.optional(e.record(e.any())),
+      errorStack: e.any(),
+      metrics: e.record(e.any()),
+    }, { allowUnexpectedProps: true }),
+  ),
   errorStack: e.any(),
 }, { allowUnexpectedProps: true });
 
@@ -73,6 +75,7 @@ RequestLogModel.createIndex(
 // TTL index to remove < 4xx status logs after specified days
 RequestLogModel.createIndex(
   {
+    name: "removeSuccessLogs",
     key: { createdAt: 1 },
     expireAfterSeconds: 60 * 60 * 24 *
       (Env.numberSync("REQUEST_LOG_SUCCESS_RETENTION_DAYS") || 3), // 3 days default
@@ -84,6 +87,7 @@ RequestLogModel.createIndex(
 // TTL index to remove >= 4xx status logs after specified days
 RequestLogModel.createIndex(
   {
+    name: "removeErrorLogs",
     key: { createdAt: 1 },
     expireAfterSeconds: 60 * 60 * 24 *
       (Env.numberSync("REQUEST_LOG_FAILURE_RETENTION_DAYS") || 7), // 7 days default
