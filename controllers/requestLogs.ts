@@ -69,11 +69,13 @@ export default class RequestLogsController extends BaseController {
           e.record(e.number({ cast: true }).min(0).max(1), { cast: true }),
         ),
         includeTotalCount: e.optional(
-          e
-            .boolean({ cast: true })
+          e.boolean({ cast: true })
             .describe(
               "If `true` is passed, the system will return a total items count for pagination purpose.",
             ),
+        ),
+        filters: e.optional(
+          e.record(e.or([e.string(), e.number(), e.boolean()])),
         ),
       },
       { allowUnexpectedProps: true },
@@ -137,6 +139,10 @@ export default class RequestLogsController extends BaseController {
           .limit(Query.limit);
 
         if (Query.project) RequestLogsListQuery.project(Query.project);
+
+        if (
+          typeof Query.filters === "object" && Object.keys(Query.filters).length
+        ) RequestLogsListQuery.filter(Query.filters);
 
         return Response.data({
           totalCount: Query.includeTotalCount
