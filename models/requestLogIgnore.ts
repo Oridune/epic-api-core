@@ -2,9 +2,9 @@ import e, { inferInput, inferOutput } from "validator";
 import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 
 export const InputRequestLogIgnoreSchema = e.object({
-  method: e.array(e.string()),
-  url: e.string(),
-  responseStatus: e.tuple([e.number(), e.number()]),
+  method: e.optional(e.array(e.string())),
+  url: e.optional(e.string()),
+  responseStatus: e.optional(e.tuple([e.number(), e.number()])),
 });
 
 export const RequestLogIgnoreSchema = e.object({
