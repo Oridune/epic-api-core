@@ -360,29 +360,63 @@ export default () => {
     }
   });
 
-  Events.listen<{ transaction: TTransactionOutput }>(
-    EventChannel.CUSTOM,
-    "wallet.transfer",
-    async (event) => {
-      try {
-        const Transaction = event.detail.transaction;
+  if (Env.enabledSync("WALLET_TRANSFER_NOTIFICATION_TRIGGER_MANUALLY")) {
+    Events.listen<{
+      ctx: IRequestContext<RouterContext<string>>;
+      res: Response<{ transaction: TTransactionOutput }>;
+    }>(
+      EventChannel.REQUEST,
+      "wallet.transfer",
+      async (event) => {
+        try {
+          const Body = event.detail.res.getBody();
+          const Transaction = Body.data?.transaction;
 
-        await Notify.sendWithNovu({
-          template: `wallet-transfer`,
-          subscriberId: Transaction.receiver.toString(),
-          payload: {
-            txnId: Transaction._id.toString(),
-            reference: Transaction.reference,
-            type: Transaction.type,
-            currency: Transaction.currency,
-            amount: Transaction.amount,
-            fromName: Transaction.fromName,
-            account: Transaction.to.toString(),
-          },
-        });
-      } catch {
-        // Do nothing...
-      }
-    },
-  );
+          if (Transaction) {
+            await Notify.sendWithNovu({
+              template: `wallet-transfer`,
+              subscriberId: Transaction.receiver.toString(),
+              payload: {
+                txnId: Transaction._id.toString(),
+                reference: Transaction.reference,
+                type: Transaction.type,
+                currency: Transaction.currency,
+                amount: Transaction.amount,
+                fromName: Transaction.fromName,
+                account: Transaction.to.toString(),
+              },
+            });
+          }
+        } catch {
+          // Do nothing...
+        }
+      },
+    );
+  } else {
+    Events.listen<{ transaction: TTransactionOutput }>(
+      EventChannel.CUSTOM,
+      "wallet.transfer",
+      async (event) => {
+        try {
+          const Transaction = event.detail.transaction;
+
+          await Notify.sendWithNovu({
+            template: `wallet-transfer`,
+            subscriberId: Transaction.receiver.toString(),
+            payload: {
+              txnId: Transaction._id.toString(),
+              reference: Transaction.reference,
+              type: Transaction.type,
+              currency: Transaction.currency,
+              amount: Transaction.amount,
+              fromName: Transaction.fromName,
+              account: Transaction.to.toString(),
+            },
+          });
+        } catch {
+          // Do nothing...
+        }
+      },
+    );
+  }
 };

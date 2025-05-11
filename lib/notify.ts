@@ -15,12 +15,14 @@ export type NovuTriggerOptions = {
   phone?: string;
   template: string;
   payload: NovuTriggerPayload;
+  noIgnore?: boolean;
 };
 
 export type NovuManyTriggerOptions = {
   subscriberIds: string[];
   template: string;
   payload: NovuTriggerPayload;
+  noIgnore?: boolean;
 };
 
 export class Notify {
@@ -42,6 +44,14 @@ export class Notify {
     }
 
     if (!SubscriberId) throw new Error("Recipient not found!");
+
+    if (!options.noIgnore) {
+      const ignoreList = await Env.list("NOTIFY_IGNORE_LIST");
+
+      if (ignoreList.includes(SubscriberId)) {
+        return;
+      }
+    }
 
     const SubscriberData = { email: options.email, phone: options.phone };
 
@@ -72,15 +82,25 @@ export class Notify {
       throw new Error(`No subscriber id provided!`);
     }
 
-    await Novu.trigger(options.template, {
-      to: options.subscriberIds.map((subscriberId) => ({ subscriberId })),
-      payload: options.payload,
-    }).catch((error: any) => {
-      if (error.response.data.message === "workflow_not_found") {
-        throw new Error(`Notification workflow template not found!`, {
-          cause: error,
-        });
-      } else throw new Error(error.response.data.message, { cause: error });
-    });
+    let SubscriberIds = options.subscriberIds;
+
+    if (!options.noIgnore) {
+      const ignoreList = await Env.list("NOTIFY_IGNORE_LIST");
+
+      SubscriberIds = SubscriberIds.filter((id) => !ignoreList.includes(id));
+    }
+
+    if (SubscriberIds.length) {
+      await Novu.trigger(options.template, {
+        to: SubscriberIds.map((subscriberId) => ({ subscriberId })),
+        payload: options.payload,
+      }).catch((error: any) => {
+        if (error.response.data.message === "workflow_not_found") {
+          throw new Error(`Notification workflow template not found!`, {
+            cause: error,
+          });
+        } else throw new Error(error.response.data.message, { cause: error });
+      });
+    }
   }
 }
