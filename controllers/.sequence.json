@@ -18,7 +18,8 @@
     "oauthPasskey.ts",
     "manageWallets.ts",
     "oauthSecrets.ts",
-    "manageUsers.ts"
+    "manageUsers.ts",
+    "requestLogIgnores.ts"
   ],
   "sequence.development": [],
   "sequence.test": [],

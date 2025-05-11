@@ -13,8 +13,12 @@
     "oauthApp.ts",
     "oauthPolicy.ts",
     "oauthSecret.ts",
-    "requestLog.ts"
+    "requestLog.ts",
+    "requestLogIgnore.ts"
   ],
+  "sequence.development": [],
+  "sequence.test": [],
+  "sequence.production": [],
   "excludes": [],
   "sequenceProps": {}
 }

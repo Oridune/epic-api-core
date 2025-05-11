@@ -15,6 +15,7 @@ import e from "validator";
 import { ObjectId } from "mongo";
 
 import { InputRequestLogsSchema, RequestLogModel } from "@Models/requestLog.ts";
+import RequestLogIgnoresController from "@Controllers/requestLogIgnores.ts";
 
 @Controller("/request/logs/", { group: "System", name: "requestLogs" })
 export default class RequestLogsController extends BaseController {
@@ -34,6 +35,10 @@ export default class RequestLogsController extends BaseController {
           await ctx.router.request.body.json(),
           { name: `${route.scope}.body` },
         );
+
+        if (await RequestLogIgnoresController.isIgnored(Body)) {
+          return Response.false().message("Log has been ignored!");
+        }
 
         return Response.statusCode(Status.Created).data(
           await RequestLogModel.create({
