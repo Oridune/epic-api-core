@@ -22,7 +22,10 @@ import {
 } from "@Models/requestLogIgnore.ts";
 import { InputRequestLogsSchema } from "@Models/requestLog.ts";
 
-@Controller("/request/log/ignores/", { name: "requestLogIgnores" })
+@Controller("/request/log/ignores/", {
+  group: "System",
+  name: "requestLogIgnores",
+})
 export default class RequestLogIgnoresController extends BaseController {
   static async isIgnored(log: inferOutput<typeof InputRequestLogsSchema>) {
     const filters = await RequestLogIgnoreModel.find({}, {
@@ -34,11 +37,11 @@ export default class RequestLogIgnoresController extends BaseController {
     for (const filter of filters) {
       if (ignore) break;
 
-      if (filter.method.length && filter.method.includes(log.method)) {
+      if (filter.method?.length && filter.method.includes(log.method)) {
         ignore = true;
       }
 
-      if (filter.responseStatus.length) {
+      if (filter.responseStatus?.length) {
         if (
           log.responseStatus >= filter.responseStatus[0] &&
           log.responseStatus <= filter.responseStatus[1]
