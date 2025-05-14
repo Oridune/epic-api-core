@@ -117,7 +117,7 @@ export type TRoute$oauthSecrets$get = {
                 createdBy: ObjectId;
                 oauthApp: ObjectId;
                 name: string;
-                scopes?: {} & {
+                scopes?: /*(optional)*/ {} & {
                     [K: string]: Array<string>;
                 };
                 isBlocked?: boolean;

@@ -143,6 +143,9 @@ export type TRoute$users$update = {
             isBlocked?: boolean;
             collaborates?: Array<ObjectId>;
             deletionAt: Date | null;
+            metadata?: /*(optional)*/ {} & {
+                [K: string]: any;
+            };
         };
         messages?: Array<{
             message?: string;
@@ -171,7 +174,6 @@ export type TRoute$users$me = {
         data: {
             user: {
                 username: string;
-                password: string;
                 avatar: {
                     _id?: ObjectId;
                     createdBy?: ObjectId;
@@ -201,28 +203,20 @@ export type TRoute$users$me = {
                 updatedAt?: Date;
                 oauthApp: ObjectId;
                 reference?: string;
-                passwordHistory: Array<string>;
                 role: string;
                 isEmailVerified?: boolean;
                 isPhoneVerified?: boolean;
                 lastLogin?: Date;
                 loginCount?: number;
                 failedLoginAttempts?: number;
-                fcmDeviceTokens?: Array<string>;
-                passkeys?: Array<{
-                    id: string;
-                    publicKey: string;
-                    counter: number;
-                    deviceType: string;
-                    backedUp: boolean;
-                    transports: Array<string>;
-                    timestamp?: Date;
-                }>;
                 passkeyEnabled?: boolean;
                 requiresMfa?: boolean;
                 isBlocked?: boolean;
                 collaborates: Array<ObjectId>;
                 deletionAt: Date | null;
+                metadata?: /*(optional)*/ {} & {
+                    [K: string]: any;
+                };
             };
         };
         messages?: Array<{
@@ -402,6 +396,9 @@ export type TRoute$users$get = {
                 isBlocked?: boolean;
                 collaborates: Array<ObjectId>;
                 deletionAt: Date | null;
+                metadata?: /*(optional)*/ {} & {
+                    [K: string]: any;
+                };
             }>;
         };
         messages?: Array<{
@@ -515,6 +512,9 @@ export type TRoute$users$create = {
                 isBlocked?: boolean;
                 collaborates: Array<ObjectId>;
                 deletionAt: Date | null;
+                metadata?: /*(optional)*/ {} & {
+                    [K: string]: any;
+                };
             };
             account: {
                 _id?: ObjectId;

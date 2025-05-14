@@ -128,6 +128,20 @@ export type TRoute$oauth$authenticate = {
 };
 		availableScopes: Array<{
 		scopes: Array<string>;
+		account?: {
+		_id?: ObjectId;
+		logo: /*(optional)*/{
+		_id?: ObjectId;
+		createdBy?: ObjectId;
+		name?: string;
+		url: string;
+		mimeType?: string;
+		sizeInBytes?: number;
+		alt?: string;
+};
+		name?: string;
+		description?: string;
+};
 		_id?: ObjectId;
 		createdAt?: Date;
 		updatedAt?: Date;
@@ -136,7 +150,6 @@ export type TRoute$oauth$authenticate = {
 		role?: string;
 		isOwned: boolean;
 		isPrimary: boolean;
-		account: ObjectId;
 		isBlocked?: boolean;
 }>;
 };

@@ -50,6 +50,29 @@ export type TRoute$oauthApps$getDefault = {
 		privacyPolicyURL?: string;
 		termsAndConditionsURL?: string;
 		supportURL?: string;
+		thirdPartyApp: /*(optional)*/{
+		name?: string;
+		description?: string;
+		logo: /*(optional)*/{
+		_id?: ObjectId;
+		createdBy?: ObjectId;
+		name?: string;
+		url: string;
+		mimeType?: string;
+		sizeInBytes?: number;
+		alt?: string;
+};
+		allowedScopes?: Array<{
+		label: string;
+		description: string;
+		scope: string;
+}>;
+		homepageURL: string;
+		privacyPolicyURL?: string;
+		termsAndConditionsURL?: string;
+		supportURL?: string;
+};
+		noAuthExpiry?: boolean;
 };
 		integrations?: Array<{
 		id: string;
@@ -122,6 +145,29 @@ export type TRoute$oauthApps$create = {
 		privacyPolicyURL?: string;
 		termsAndConditionsURL?: string;
 		supportURL?: string;
+		thirdPartyApp: /*(optional)*/{
+		name?: string;
+		description?: string;
+		logo: /*(optional)*/{
+		_id?: ObjectId;
+		createdBy?: ObjectId;
+		name?: string;
+		url: string;
+		mimeType?: string;
+		sizeInBytes?: number;
+		alt?: string;
+};
+		allowedScopes?: Array<{
+		label: string;
+		description: string;
+		scope: string;
+}>;
+		homepageURL: string;
+		privacyPolicyURL?: string;
+		termsAndConditionsURL?: string;
+		supportURL?: string;
+};
+		noAuthExpiry?: boolean;
 };
 		integrations?: Array<{
 		id: string;
@@ -178,6 +224,29 @@ export type TRoute$oauthApps$create = {
 		privacyPolicyURL?: string;
 		termsAndConditionsURL?: string;
 		supportURL?: string;
+		thirdPartyApp: /*(optional)*/{
+		name?: string;
+		description?: string;
+		logo: /*(optional)*/{
+		_id?: ObjectId;
+		createdBy?: ObjectId;
+		name?: string;
+		url: string;
+		mimeType?: string;
+		sizeInBytes?: number;
+		alt?: string;
+};
+		allowedScopes?: Array<{
+		label: string;
+		description: string;
+		scope: string;
+}>;
+		homepageURL: string;
+		privacyPolicyURL?: string;
+		termsAndConditionsURL?: string;
+		supportURL?: string;
+};
+		noAuthExpiry?: boolean;
 };
 		integrations?: Array<{
 		id: string;
@@ -261,6 +330,29 @@ export type TRoute$oauthApps$list = {
 		privacyPolicyURL?: string;
 		termsAndConditionsURL?: string;
 		supportURL?: string;
+		thirdPartyApp: /*(optional)*/{
+		name?: string;
+		description?: string;
+		logo: /*(optional)*/{
+		_id?: ObjectId;
+		createdBy?: ObjectId;
+		name?: string;
+		url: string;
+		mimeType?: string;
+		sizeInBytes?: number;
+		alt?: string;
+};
+		allowedScopes?: Array<{
+		label: string;
+		description: string;
+		scope: string;
+}>;
+		homepageURL: string;
+		privacyPolicyURL?: string;
+		termsAndConditionsURL?: string;
+		supportURL?: string;
+};
+		noAuthExpiry?: boolean;
 };
 		integrations?: Array<{
 		id: string;
@@ -343,6 +435,29 @@ export type TRoute$oauthApps$getDetails = {
 		privacyPolicyURL?: string;
 		termsAndConditionsURL?: string;
 		supportURL?: string;
+		thirdPartyApp: /*(optional)*/{
+		name?: string;
+		description?: string;
+		logo: /*(optional)*/{
+		_id?: ObjectId;
+		createdBy?: ObjectId;
+		name?: string;
+		url: string;
+		mimeType?: string;
+		sizeInBytes?: number;
+		alt?: string;
+};
+		allowedScopes?: Array<{
+		label: string;
+		description: string;
+		scope: string;
+}>;
+		homepageURL: string;
+		privacyPolicyURL?: string;
+		termsAndConditionsURL?: string;
+		supportURL?: string;
+};
+		noAuthExpiry?: boolean;
 };
 		integrations?: Array<{
 		id: string;
@@ -425,6 +540,29 @@ export type TRoute$oauthApps$get = {
 		privacyPolicyURL?: string;
 		termsAndConditionsURL?: string;
 		supportURL?: string;
+		thirdPartyApp: /*(optional)*/{
+		name?: string;
+		description?: string;
+		logo: /*(optional)*/{
+		_id?: ObjectId;
+		createdBy?: ObjectId;
+		name?: string;
+		url: string;
+		mimeType?: string;
+		sizeInBytes?: number;
+		alt?: string;
+};
+		allowedScopes?: Array<{
+		label: string;
+		description: string;
+		scope: string;
+}>;
+		homepageURL: string;
+		privacyPolicyURL?: string;
+		termsAndConditionsURL?: string;
+		supportURL?: string;
+};
+		noAuthExpiry?: boolean;
 };
 		integrations?: Array<{
 		id: string;

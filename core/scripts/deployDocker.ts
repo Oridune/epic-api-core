@@ -73,8 +73,9 @@ export const deployDocker = async (options: {
   prompt?: boolean;
   noConfirm?: boolean;
   skipBuild?: boolean;
-  skipPush?: boolean;
+  skipPublish?: boolean;
   skipApply?: boolean;
+  skipCommit?: boolean;
   deployDirty?: boolean;
 }) => {
   try {
@@ -172,8 +173,9 @@ export const deployDocker = async (options: {
           dockerOrg: e.optional(e.string()),
           noConfirm: e.optional(e.boolean()),
           skipBuild: e.optional(e.boolean()),
-          skipPush: e.optional(e.boolean()),
+          skipPublish: e.optional(e.boolean()),
           skipApply: e.optional(e.boolean()),
+          skipCommit: e.optional(e.boolean()),
           deployDirty: e.optional(e.boolean()),
         },
         { allowUnexpectedProps: true },
@@ -197,6 +199,9 @@ export const deployDocker = async (options: {
       Options.versionTag,
     ].filter(Boolean).join("-");
     const ImageTag = `${DockerOrg}/${ImageName}:v${ImageVersion}`;
+
+    let built = false;
+    let applied = false;
 
     if (!Options.skipBuild) {
       if (options.prompt) {
@@ -233,7 +238,7 @@ export const deployDocker = async (options: {
         `docker tag ${DefaultImageTag} ${ImageTag}`,
       );
 
-      if (!Options.skipPush) {
+      if (!Options.skipPublish) {
         // Push docker image to docker hub
         const [dockerPushOut, dockerPushErr] = await spawn(
           `docker push ${ImageTag}`,
@@ -245,6 +250,8 @@ export const deployDocker = async (options: {
       }
 
       await saveDeploymentLogs(AllLogs);
+
+      built = true;
     }
 
     if (!Options.skipApply) {
@@ -269,6 +276,19 @@ export const deployDocker = async (options: {
       await spawn(
         `terraform apply -var default_container_image=${DefaultImageTag} -var container_image=${ImageTag} -var image_name=${ImageName} -var image_version=${ImageVersion} -auto-approve`,
         { cwd: TerraformDir },
+      );
+
+      applied = true;
+    }
+
+    // git commit
+    if (!Options.skipCommit && (built || applied)) {
+      await spawn(
+        `git add .`,
+      );
+
+      await spawn(
+        `git commit -m "Automated deployment: ${ImageTag}"`,
       );
     }
 
@@ -296,8 +316,9 @@ if (import.meta.main) {
     t,
     y,
     skipBuild,
-    skipPush,
+    skipPublish,
     skipApply,
+    skipCommit,
     deployDirty,
   } = parse(
     Deno.args,
@@ -318,8 +339,9 @@ if (import.meta.main) {
     prompt: true,
     noConfirm: y,
     skipBuild,
-    skipPush,
+    skipPublish,
     skipApply,
+    skipCommit,
     deployDirty,
   });
 

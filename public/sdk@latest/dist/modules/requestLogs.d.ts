@@ -27,10 +27,13 @@ export type TRoute$requestLogs$create = {
             status: boolean;
             messages: any;
             data: any;
-            metrics?: {} & {
+            metadata?: /*(optional)*/ {} & {
                 [K: string]: any;
             };
             errorStack: any;
+            metrics?: {} & {
+                [K: string]: any;
+            };
         };
         errorStack: any;
     };
@@ -65,10 +68,13 @@ export type TRoute$requestLogs$create = {
                 status: boolean;
                 messages: any;
                 data: any;
-                metrics?: {} & {
+                metadata?: /*(optional)*/ {} & {
                     [K: string]: any;
                 };
                 errorStack: any;
+                metrics?: {} & {
+                    [K: string]: any;
+                };
             };
             errorStack: any;
         };
@@ -115,6 +121,9 @@ export type TRoute$requestLogs$get = {
             [K: string]: number;
         };
         includeTotalCount?: boolean;
+        filters?: /*(optional)*/ {} & {
+            [K: string]: string | number | boolean;
+        };
     };
     params: {
         id?: string;
@@ -153,10 +162,13 @@ export type TRoute$requestLogs$get = {
                     status: boolean;
                     messages: any;
                     data: any;
-                    metrics?: {} & {
+                    metadata?: /*(optional)*/ {} & {
                         [K: string]: any;
                     };
                     errorStack: any;
+                    metrics?: {} & {
+                        [K: string]: any;
+                    };
                 };
                 errorStack: any;
             }>;

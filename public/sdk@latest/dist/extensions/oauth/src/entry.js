@@ -5,8 +5,9 @@ const __1 = require("../../../");
 const base64_arraybuffer_1 = require("base64-arraybuffer");
 const js_sha256_1 = require("js-sha256");
 class oauthEntry {
-    static selectedAccount;
     static auth;
+    static me;
+    static selectedAccount;
     static _refreshRequest;
     static generateRandomString(length) {
         const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

@@ -19,6 +19,7 @@ export type TRoute$manageWallets$balanceList = {
 		_id?: ObjectId;
 		createdAt?: Date;
 		updatedAt?: Date;
+		createdBy: ObjectId;
 		account: ObjectId;
 		type: string;
 		currency: string;
@@ -26,6 +27,7 @@ export type TRoute$manageWallets$balanceList = {
 		digest: string;
 		lastBalance?: number;
 		lastTxnReference?: string;
+		negativeAt: Date | null;
 }>;
 		messages?: Array<{
 		message?: string;
@@ -73,6 +75,7 @@ export type TRoute$manageWallets$getAll = {
 		_id?: ObjectId;
 		createdAt?: Date;
 		updatedAt?: Date;
+		createdBy: ObjectId;
 		account: ObjectId;
 		type: string;
 		currency: string;
@@ -80,6 +83,7 @@ export type TRoute$manageWallets$getAll = {
 		digest: string;
 		lastBalance?: number;
 		lastTxnReference?: string;
+		negativeAt: Date | null;
 }>;
 };
 		messages?: Array<{
@@ -133,6 +137,8 @@ export type TRoute$manageWallets$refund = {
 		tags?: Array<string>;
 		currency: string;
 		amount: number;
+		senderPreviousBalance?: number;
+		receiverPreviousBalance?: number;
 		methodOf3DSecurity?: string;
 		status: string;
 		isRefund?: boolean;
@@ -201,6 +207,8 @@ export type TRoute$manageWallets$charge = {
 		tags?: Array<string>;
 		currency: string;
 		amount: number;
+		senderPreviousBalance?: number;
+		receiverPreviousBalance?: number;
 		methodOf3DSecurity?: string;
 		status: string;
 		isRefund?: boolean;
@@ -278,6 +286,8 @@ export type TRoute$manageWallets$transactions = {
 		tags?: Array<string>;
 		currency: string;
 		amount: number;
+		senderPreviousBalance?: number;
+		receiverPreviousBalance?: number;
 		methodOf3DSecurity?: string;
 		status: string;
 		isRefund?: boolean;

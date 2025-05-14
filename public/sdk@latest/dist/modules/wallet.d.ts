@@ -12,12 +12,14 @@ export type TRoute$wallet$balanceList = {
             _id?: ObjectId;
             createdAt?: Date;
             updatedAt?: Date;
+            createdBy: ObjectId;
             account: ObjectId;
             type: string;
             currency: string;
             balance: number;
             lastBalance?: number;
             lastTxnReference?: string;
+            negativeAt: Date | null;
         }>;
         messages?: Array<{
             message?: string;
@@ -74,6 +76,7 @@ export type TRoute$wallet$transfer = {
         method: string;
         token: string;
         code: number;
+        tags?: Array<string>;
     };
     return: {
         status: boolean;
@@ -100,6 +103,8 @@ export type TRoute$wallet$transfer = {
                 tags?: Array<string>;
                 currency: string;
                 amount: number;
+                senderPreviousBalance?: number;
+                receiverPreviousBalance?: number;
                 methodOf3DSecurity?: string;
                 status: string;
                 isRefund?: boolean;
@@ -217,12 +222,14 @@ export type TRoute$wallet$balance = {
             _id?: ObjectId;
             createdAt?: Date;
             updatedAt?: Date;
+            createdBy: ObjectId;
             account: ObjectId;
             type: string;
             currency: string;
             balance: number;
             lastBalance?: number;
             lastTxnReference?: string;
+            negativeAt: Date | null;
         };
         messages?: Array<{
             message?: string;
@@ -268,6 +275,58 @@ export type TRoute$wallet$transactions = {
         data: {
             totalCount?: number;
             results: Array<{
+                from?: {
+                    logo: {
+                        _id?: ObjectId;
+                        createdBy?: ObjectId;
+                        name?: string;
+                        url: string;
+                        mimeType?: string;
+                        sizeInBytes?: number;
+                        alt?: string;
+                    };
+                    name?: string;
+                };
+                to?: {
+                    logo: {
+                        _id?: ObjectId;
+                        createdBy?: ObjectId;
+                        name?: string;
+                        url: string;
+                        mimeType?: string;
+                        sizeInBytes?: number;
+                        alt?: string;
+                    };
+                    name?: string;
+                };
+                sender: {
+                    avatar: {
+                        _id?: ObjectId;
+                        createdBy?: ObjectId;
+                        name?: string;
+                        url: string;
+                        mimeType?: string;
+                        sizeInBytes?: number;
+                        alt?: string;
+                    };
+                    fname: string;
+                    mname?: string;
+                    lname?: string;
+                };
+                receiver: {
+                    avatar: {
+                        _id?: ObjectId;
+                        createdBy?: ObjectId;
+                        name?: string;
+                        url: string;
+                        mimeType?: string;
+                        sizeInBytes?: number;
+                        alt?: string;
+                    };
+                    fname: string;
+                    mname?: string;
+                    lname?: string;
+                };
                 _id?: ObjectId;
                 createdAt?: Date;
                 updatedAt?: Date;
@@ -277,11 +336,7 @@ export type TRoute$wallet$transactions = {
                 foreignRefType?: string;
                 foreignRef?: string;
                 fromName: string;
-                from: ObjectId;
-                sender: ObjectId;
                 toName: string;
-                to: ObjectId;
-                receiver: ObjectId;
                 type: string;
                 description: (/*(optional)*/ {} & {
                     [K: string]: string;
@@ -289,6 +344,8 @@ export type TRoute$wallet$transactions = {
                 tags?: Array<string>;
                 currency: string;
                 amount: number;
+                senderPreviousBalance?: number;
+                receiverPreviousBalance?: number;
                 methodOf3DSecurity?: string;
                 status: string;
                 isRefund?: boolean;

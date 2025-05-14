@@ -1,3 +1,4 @@
+import { TRoute$users$me } from "epic-api-sdk/src/modules/users";
 export type TAuthToken<T extends "oauth_refresh_token" | "oauth_access_token"> = {
     issuer: string;
     type: T;
@@ -9,8 +10,9 @@ export type TAuthorization = {
     access: TAuthToken<"oauth_access_token">;
 };
 export declare class oauthEntry {
-    static selectedAccount?: string;
     static auth?: TAuthorization;
+    static me?: TRoute$users$me["return"]["data"]["user"];
+    static selectedAccount?: string;
     protected static _refreshRequest?: Promise<TAuthorization>;
     protected static generateRandomString(length: number): string;
     protected static generateCodeChallenge(): {

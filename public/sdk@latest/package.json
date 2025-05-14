@@ -10,11 +10,12 @@
   "license": "MIT",
   "homepage": "https://oridune.com",
   "dependencies": {
-    "axios": "^1.8.2",
+    "axios": "^1.9.0",
     "base64-arraybuffer": "^1.0.2",
+    "epic-api-sdk": "file:.",
     "js-sha256": "^0.11.0"
   },
   "devDependencies": {
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   }
 }

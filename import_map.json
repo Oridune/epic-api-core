@@ -46,7 +46,8 @@
     "blakejs": "npm:blakejs@^1.2.1",
     "queue": "jsr:@oridune/queue@0.0.6",
     "axios": "npm:axios@^1.7.9",
-    "ohash": "npm:ohash@2.0.7"
+    "ohash": "npm:ohash@2.0.7",
+    "shell-args": "npm:shell-args@1.0.0"
   },
   "scopes": {}
 }

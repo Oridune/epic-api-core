@@ -4,26 +4,25 @@ import type { ObjectId, TRequestOptions, TRequestExecutors, TResponseShape } fro
 
 
 
-export type TRoute$oauthSecrets$createFor = {
+export type TRoute$requestLogIgnores$create = {
     query: {},
     params: {},
     body: {
-		userId: string;
-		name: string;
-		scopes: /*(optional)*/{
-} & { [K: string]: Array<string> }
- | Array<string>;
-		ttl?: number;
+		method?: Array<string>;
+		url?: string;
+		responseStatus?: Array<{} | undefined>;
 },
     return: {
 		status: boolean;
-		data: {
-		secret: {
-		issuer: string;
-		type: string;
-		token: string;
-		expiresAtSeconds: number;
-};
+		data?: {
+		_id?: ObjectId;
+		createdAt?: Date;
+		updatedAt?: Date;
+		createdBy?: ObjectId;
+		account?: ObjectId;
+		method?: Array<string>;
+		url?: string;
+		responseStatus?: Array<{} | undefined>;
 };
 		messages?: Array<{
 		message?: string;
@@ -45,59 +44,77 @@ export type TRoute$oauthSecrets$createFor = {
 
 
 
-export type TRoute$oauthSecrets$create = {
-    query: {},
-    params: {},
-    body: {
-		name: string;
-		scopes: /*(optional)*/{
-} & { [K: string]: Array<string> }
- | Array<string>;
-		ttl?: number;
-},
-    return: {
-		status: boolean;
-		data: {
-		secret: {
-		issuer: string;
-		type: string;
-		token: string;
-		expiresAtSeconds: number;
-};
-};
-		messages?: Array<{
-		message?: string;
-		location?: string;
-		name?: string;
-} & { [K: string]: any }
->;
-		metrics: /*(optional)*/{
-		handledInMs?: number;
-		respondInMs?: number;
-} & { [K: string]: any }
-;
-		metadata?: /*(optional)*/{
-} & { [K: string]: any }
-;
-},
-};
-
-
-
-
-export type TRoute$oauthSecrets$delete = {
+export type TRoute$requestLogIgnores$update = {
     query: {},
     params: {
-		id: string;
+		id: ObjectId;
 },
-    body: {},
-    return: { status: boolean; data: undefined },
+    body: {
+		method?: Array<string>;
+		url?: string;
+		responseStatus?: Array<{} | undefined>;
+},
+    return: {
+		status: boolean;
+		data?: {
+		_id?: ObjectId;
+		createdAt?: Date;
+		updatedAt?: Date;
+		createdBy?: ObjectId;
+		account?: ObjectId;
+		method?: Array<string>;
+		url?: string;
+		responseStatus?: Array<{} | undefined>;
+};
+		messages?: Array<{
+		message?: string;
+		location?: string;
+		name?: string;
+} & { [K: string]: any }
+>;
+		metrics: /*(optional)*/{
+		handledInMs?: number;
+		respondInMs?: number;
+} & { [K: string]: any }
+;
+		metadata?: /*(optional)*/{
+} & { [K: string]: any }
+;
+},
 };
 
 
 
 
-export type TRoute$oauthSecrets$get = {
+export type TRoute$requestLogIgnores$delete = {
+    query: {},
+    params: {
+		id: ObjectId;
+},
+    body: {},
+    return: {
+		status: boolean;
+		messages?: Array<{
+		message?: string;
+		location?: string;
+		name?: string;
+} & { [K: string]: any }
+>;
+		metrics: /*(optional)*/{
+		handledInMs?: number;
+		respondInMs?: number;
+} & { [K: string]: any }
+;
+		metadata?: /*(optional)*/{
+} & { [K: string]: any }
+;
+},
+};
+
+
+
+
+export type TRoute$requestLogIgnores$get = {
     query: {
 		search?: string;
 		range?: Array<{} | undefined>;
@@ -112,7 +129,7 @@ export type TRoute$oauthSecrets$get = {
 		includeTotalCount?: boolean;
 },
     params: {
-		id?: string;
+		id?: ObjectId;
 },
     body: {},
     return: {
@@ -123,15 +140,12 @@ export type TRoute$oauthSecrets$get = {
 		_id?: ObjectId;
 		createdAt?: Date;
 		updatedAt?: Date;
-		expiresAt?: Date;
-		createdBy: ObjectId;
-		oauthApp: ObjectId;
-		name: string;
-		scopes?: /*(optional)*/{
-} & { [K: string]: Array<string> }
-;
-		isBlocked?: boolean;
-}>;
+		createdBy?: ObjectId;
+		account?: ObjectId;
+		method?: Array<string>;
+		url?: string;
+		responseStatus?: Array<{} | undefined>;
+} | undefined>;
 };
 		messages?: Array<{
 		message?: string;
@@ -151,50 +165,50 @@ export type TRoute$oauthSecrets$get = {
 };
 
 
-export interface IController$oauthSecrets {
-    createFor<
-        Method extends "post",
-        QueryShape extends TRoute$oauthSecrets$createFor["query"],
-        ParamsShape extends TRoute$oauthSecrets$createFor["params"],
-        BodyShape extends TRoute$oauthSecrets$createFor["body"],
-        ReturnShape extends TResponseShape<any> = TRoute$oauthSecrets$createFor["return"],
-    >(data: {
-        method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
-        body: BodyShape;
-    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+export interface IController$requestLogIgnores {
     create<
         Method extends "post",
-        QueryShape extends TRoute$oauthSecrets$create["query"],
-        ParamsShape extends TRoute$oauthSecrets$create["params"],
-        BodyShape extends TRoute$oauthSecrets$create["body"],
-        ReturnShape extends TResponseShape<any> = TRoute$oauthSecrets$create["return"],
+        QueryShape extends TRoute$requestLogIgnores$create["query"],
+        ParamsShape extends TRoute$requestLogIgnores$create["params"],
+        BodyShape extends TRoute$requestLogIgnores$create["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$requestLogIgnores$create["return"],
     >(data: {
         method?: Method;
         query?: QueryShape;
         params?: ParamsShape;
-        body: BodyShape;
+        body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
-    delete<
-        Method extends "delete",
-        QueryShape extends TRoute$oauthSecrets$delete["query"],
-        ParamsShape extends TRoute$oauthSecrets$delete["params"],
-        BodyShape extends TRoute$oauthSecrets$delete["body"],
-        ReturnShape extends TResponseShape<any> = TRoute$oauthSecrets$delete["return"],
+    update<
+        Method extends "patch",
+        QueryShape extends TRoute$requestLogIgnores$update["query"],
+        ParamsShape extends TRoute$requestLogIgnores$update["params"],
+        BodyShape extends TRoute$requestLogIgnores$update["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$requestLogIgnores$update["return"],
     >(data: {
         method?: Method;
         query?: QueryShape;
         params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
-    get(): TRequestExecutors<TRoute$oauthSecrets$get["return"]>;
+    delete<
+        Method extends "delete",
+        QueryShape extends TRoute$requestLogIgnores$delete["query"],
+        ParamsShape extends TRoute$requestLogIgnores$delete["params"],
+        BodyShape extends TRoute$requestLogIgnores$delete["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$requestLogIgnores$delete["return"],
+    >(data: {
+        method?: Method;
+        query?: QueryShape;
+        params: ParamsShape;
+        body?: BodyShape;
+    } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
+    get(): TRequestExecutors<TRoute$requestLogIgnores$get["return"]>;
     get<
         Method extends "get",
-        QueryShape extends TRoute$oauthSecrets$get["query"],
-        ParamsShape extends TRoute$oauthSecrets$get["params"],
-        BodyShape extends TRoute$oauthSecrets$get["body"],
-        ReturnShape extends TResponseShape<any> = TRoute$oauthSecrets$get["return"],
+        QueryShape extends TRoute$requestLogIgnores$get["query"],
+        ParamsShape extends TRoute$requestLogIgnores$get["params"],
+        BodyShape extends TRoute$requestLogIgnores$get["body"],
+        ReturnShape extends TResponseShape<any> = TRoute$requestLogIgnores$get["return"],
     >(data: {
         method?: Method;
         query?: QueryShape;
@@ -203,17 +217,17 @@ export interface IController$oauthSecrets {
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }
 
-export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
+export const requestLogIgnoresModule = (sdk: any): IController$requestLogIgnores => ({
 
-    createFor(data?: any) {
+    create(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("oauthSecrets", "createFor");
+            sdk.checkPermission("requestLogIgnores", "create");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
-                url: `/api/oauth/secrets/behalf/${Object.values(data?.params ?? {}).join("/")}`,
+                url: `/api/request/log/ignores/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -223,15 +237,15 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
         }, data);
     },
 
-    create(data?: any) {
+    update(data?: any) {
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("oauthSecrets", "create");
+            sdk.checkPermission("requestLogIgnores", "update");
 
             const res = await sdk._axios.request({
-                method: data?.method ?? "post" ?? "get",
-                url: `/api/oauth/secrets/${Object.values(data?.params ?? {}).join("/")}`,
+                method: data?.method ?? "patch" ?? "get",
+                url: `/api/request/log/ignores/:id/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -245,11 +259,11 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("oauthSecrets", "delete");
+            sdk.checkPermission("requestLogIgnores", "delete");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
-                url: `/api/oauth/secrets/:id/${Object.values(data?.params ?? {}).join("/")}`,
+                url: `/api/request/log/ignores/:id/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -263,11 +277,11 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
         return sdk.resolveAxiosResponse(async () => {
             if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("oauthSecrets", "get");
+            sdk.checkPermission("requestLogIgnores", "get");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
-                url: `/api/oauth/secrets/:id?/${Object.values(data?.params ?? {}).join("/")}`,
+                url: `/api/request/log/ignores/:id?/${Object.values(data?.params ?? {}).join("/")}`,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,

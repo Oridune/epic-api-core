@@ -28,6 +28,7 @@ import { oauthPasskeyModule } from "./modules/oauthPasskey";
 import { manageWalletsModule } from "./modules/manageWallets";
 import { oauthSecretsModule } from "./modules/oauthSecrets";
 import { manageUsersModule } from "./modules/manageUsers";
+import { requestLogIgnoresModule } from "./modules/requestLogIgnores";
 
 import { oauthEntry } from "./extensions/oauth/src/entry";
 
@@ -178,6 +179,7 @@ export class EpicSDK {
     static manageWallets = manageWalletsModule(this);
     static oauthSecrets = oauthSecretsModule(this);
     static manageUsers = manageUsersModule(this);
+    static requestLogIgnores = requestLogIgnoresModule(this);
 
     static extensions = {
         oauth: oauthEntry,

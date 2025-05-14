@@ -46,6 +46,7 @@ export declare class EpicSDK {
     static manageWallets: import("./modules/manageWallets").IController$manageWallets;
     static oauthSecrets: import("./modules/oauthSecrets").IController$oauthSecrets;
     static manageUsers: import("./modules/manageUsers").IController$manageUsers;
+    static requestLogIgnores: import("./modules/requestLogIgnores").IController$requestLogIgnores;
     static extensions: {
         oauth: typeof oauthEntry;
     };
