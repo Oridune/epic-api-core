@@ -3,6 +3,7 @@ import { Store } from "@Core/common/store.ts";
 import { Env } from "@Core/common/env.ts";
 import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 import { FileSchema } from "@Models/file.ts";
+import { GeoPointSchema } from "@Models/location.ts";
 
 const AllowedUserReferencePrefix =
   Env.getSync("ALLOWED_USER_REFERENCE_PREFIX", true) ?? "UID";
@@ -92,6 +93,7 @@ export const UserSchema = CreateUserSchema.extends(
           }`,
       ),
     passwordHistory: e.array(e.string()),
+    locationHistory: e.optional(e.array(GeoPointSchema)),
     role: e.string(),
     isEmailVerified: e.optional(e.boolean({ cast: true })).default(false),
     isPhoneVerified: e.optional(e.boolean({ cast: true })).default(false),

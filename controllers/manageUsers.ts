@@ -52,7 +52,10 @@ export default class ManageUsersController extends BaseController {
           {
             password: Body.hashedPassword,
             $push: {
-              passwordHistory: Body.hashedPassword,
+              passwordHistory: {
+                $each: [Body.hashedPassword],
+                $slice: -10,
+              },
             },
             failedLoginAttempts: 0,
             deletionAt: null,

@@ -33,6 +33,7 @@ import { AccountModel } from "@Models/account.ts";
 import { SecurityGuard } from "@Lib/securityGuard.ts";
 import { ResolveScopeRole } from "../hooks/checkPermissions.ts";
 import { Flags } from "@Core/common/flags.ts";
+import { GeoPointSchema } from "@Models/location.ts";
 
 export enum OauthTokenType {
   AUTHENTICATION = "oauth_authentication",
@@ -751,6 +752,7 @@ export default class OauthController extends BaseController {
           }
         }),
       fcmDeviceToken: e.optional(e.string()),
+      geoPoint: e.optional(GeoPointSchema),
     });
 
     return Versioned.add("1.0.0", {
@@ -789,15 +791,28 @@ export default class OauthController extends BaseController {
         if (Session.version > 1) throw e.error("Oauth code has been expired!");
 
         // Push Device Token
-        if (Body.fcmDeviceToken) {
-          // Background event may fetch the data based on this userId
-          ctx.router.state.updateFcmDeviceTokens = Session.createdBy;
-
+        if (Body.fcmDeviceToken || Body.geoPoint) {
           await UserModel.updateOne(Session.createdBy, {
-            $addToSet: {
-              fcmDeviceTokens: Body.fcmDeviceToken,
-            },
+            ...(Body.fcmDeviceToken
+              ? { $addToSet: { fcmDeviceTokens: Body.fcmDeviceToken } }
+              : {}),
+
+            ...(Body.geoPoint
+              ? {
+                $push: {
+                  locationHistory: {
+                    $each: [Body.geoPoint],
+                    $slice: -10,
+                  },
+                },
+              }
+              : {}),
           });
+
+          if (Body.fcmDeviceToken) {
+            // Background event may fetch the data based on this userId
+            ctx.router.state.updateFcmDeviceTokens = Session.createdBy;
+          }
         }
 
         return Response.data(

@@ -14,7 +14,8 @@
     "oauthPolicy.ts",
     "oauthSecret.ts",
     "requestLog.ts",
-    "requestLogIgnore.ts"
+    "requestLogIgnore.ts",
+    "location.ts"
   ],
   "sequence.development": [],
   "sequence.test": [],
