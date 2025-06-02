@@ -287,7 +287,7 @@ export default {
     if (Guard.isDenied(scope, name)) {
       const ErrorResponse = Response.statusCode(Status.Forbidden)
         .message(
-          `You are not limited! Permission '${`${scope}.${name}`}' is denied.`,
+          `You are limited! Permission '${`${scope}.${name}`}' is denied. Try again later.`,
         );
 
       if (!Env.is(EnvType.PRODUCTION)) ErrorResponse.data(Guard);
