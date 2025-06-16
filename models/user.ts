@@ -137,6 +137,7 @@ UserModel.pre("update", (details) => {
 
 UserModel.createIndex(
   {
+    name: "searchUser",
     key: {
       reference: "text",
       username: "text",
@@ -148,6 +149,7 @@ UserModel.createIndex(
       phone: "text",
       role: "text",
     },
+    default_language: "none",
     background: true,
   },
   {

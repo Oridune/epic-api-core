@@ -85,6 +85,7 @@ TransactionModel.createIndex(
     background: true,
   },
   {
+    name: "searchTxn",
     key: {
       reference: "text",
       fromName: "text",
@@ -93,6 +94,7 @@ TransactionModel.createIndex(
       tags: "text",
       amount: "text",
     },
+    default_language: "none",
     background: true,
   },
 );
