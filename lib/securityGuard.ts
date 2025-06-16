@@ -75,10 +75,10 @@ export class SecurityGuard {
   ) {
     await Promise.all(
       (["RawScopePipeline", "RawDenialScopePipeline"] as const).map(
-        async (type, typeIndex) => {
+        async (type, _typeIndex) => {
           if (this[type].length) {
             const Pipeline = await Promise.all(
-              this[type].map(async (stage, stageIndex) => {
+              this[type].map(async (stage, _stageIndex) => {
                 const Stage = stage instanceof Array
                   ? { scopes: stage }
                   : stage;
@@ -94,11 +94,6 @@ export class SecurityGuard {
                   },
                 );
 
-                if (
-                  typeIndex === 0 && stageIndex === 0 &&
-                  ResolvedScopes.includes("*")
-                ) this.isSuperUser = true;
-
                 return ResolvedScopes;
               }),
             );
@@ -112,6 +107,10 @@ export class SecurityGuard {
         },
       ),
     );
+
+    if (!this.ScopePipeline.filter((scopes) => !scopes.has("*")).length) {
+      this.isSuperUser = true;
+    }
   }
 
   public load(
