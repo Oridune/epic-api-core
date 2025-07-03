@@ -52,7 +52,7 @@ export class oauthEntry {
 
         return {
             verifier,
-            method: "sha256",
+            method: "sha-256",
             challenge: base64encode(sha256.arrayBuffer(verifier))
                 .replace(/\+/g, "-")
                 .replace(/\//g, "_")
@@ -73,9 +73,12 @@ export class oauthEntry {
             &codeChallenge=${challenge}
             &callbackURL=${opts.callbackUrl}
             &state=${btoa(JSON.stringify(opts.state))}
-            &theme=${opts.theme}
-            &lng=${opts.lng}
-            ${opts.username ? `&username=${opts.username}` : ""}`,
+            &theme=${opts.theme ?? "system"}
+            &lng=${opts.lng ?? "en"}
+            ${opts.username ? `&username=${opts.username}` : ""}`.replace(
+                /\s*/g,
+                "",
+            ),
             EpicSDK._options?.axiosConfig?.baseURL,
         ).toString();
 
@@ -107,7 +110,12 @@ export class oauthEntry {
 
             if (!verifier) break exchangeCode;
 
-            await this.fetchAccessToken(opts.code, verifier.value);
+            const authorization = await this.fetchAccessToken(
+                opts.code,
+                verifier.value,
+            );
+
+            await EpicSDK.setCache("authorization", authorization);
 
             return;
         }
@@ -135,8 +143,12 @@ export class oauthEntry {
         }).data as TAuthorization;
 
         if (!this._interceptorAdded) {
-            EpicSDK._axios?.interceptors.request.use(
+            console.log("Interceptor added");
+
+            EpicSDK._axios!.interceptors.request.use(
                 async (config) => {
+                    console.log("Interceptor triggered");
+
                     if (!config.headers["Authorization"] && this.auth) {
                         const timeInSeconds = Date.now() / 1000;
 
@@ -175,7 +187,11 @@ export class oauthEntry {
                     return config;
                 },
             );
+
+            this._interceptorAdded = true;
         }
+
+        return this.auth;
     }
 
     static async refreshAccessToken(refreshToken: string) {

@@ -283,9 +283,14 @@ export const accountsModule = (sdk: any): IController$accounts => ({
 
             sdk.checkPermission("accounts", "updateLogo");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/accounts/logo/:account"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
-                url: `/api/accounts/logo/:account/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -301,9 +306,14 @@ export const accountsModule = (sdk: any): IController$accounts => ({
 
             sdk.checkPermission("accounts", "create");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/accounts"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
-                url: `/api/accounts/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -319,9 +329,14 @@ export const accountsModule = (sdk: any): IController$accounts => ({
 
             sdk.checkPermission("accounts", "update");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/accounts/:id"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "patch" ?? "get",
-                url: `/api/accounts/:id/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -337,9 +352,14 @@ export const accountsModule = (sdk: any): IController$accounts => ({
 
             sdk.checkPermission("accounts", "delete");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/accounts/:id"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
-                url: `/api/accounts/:id/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -355,9 +375,14 @@ export const accountsModule = (sdk: any): IController$accounts => ({
 
             sdk.checkPermission("accounts", "get");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/accounts/:id?"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
-                url: `/api/accounts/:id?/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -373,9 +398,14 @@ export const accountsModule = (sdk: any): IController$accounts => ({
 
             sdk.checkPermission("accounts", "toggleBlocked");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/accounts/toggle/blocked/:id/:isBlocked"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "patch" ?? "get",
-                url: `/api/accounts/toggle/blocked/:id/:isBlocked/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,

@@ -37,9 +37,14 @@ export const adminModule = (sdk: any): IController$admin => ({
 
             sdk.checkPermission("admin", "updateCore");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/admin/core"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "patch" ?? "get",
-                url: `/api/admin/core/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,

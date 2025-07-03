@@ -154,9 +154,14 @@ export const accountInvitesModule = (sdk: any): IController$accountInvites => ({
 
             sdk.checkPermission("accountInvites", "create");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/account/invites"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
-                url: `/api/account/invites/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -172,9 +177,14 @@ export const accountInvitesModule = (sdk: any): IController$accountInvites => ({
 
             sdk.checkPermission("accountInvites", "delete");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/account/invites/:id"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
-                url: `/api/account/invites/:id/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -190,9 +200,14 @@ export const accountInvitesModule = (sdk: any): IController$accountInvites => ({
 
             sdk.checkPermission("accountInvites", "get");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/account/invites/:id?"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
-                url: `/api/account/invites/:id?/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,

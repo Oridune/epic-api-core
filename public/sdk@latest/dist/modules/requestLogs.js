@@ -7,9 +7,10 @@ const requestLogsModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("requestLogs", "create");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/request/logs").replace(/:\w+\?\//g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
-                url: `/api/request/logs/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -22,9 +23,10 @@ const requestLogsModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("requestLogs", "delete");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/request/logs/:id").replace(/:\w+\?\//g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
-                url: `/api/request/logs/:id/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -37,9 +39,10 @@ const requestLogsModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("requestLogs", "get");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/request/logs/:id?").replace(/:\w+\?\//g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
-                url: `/api/request/logs/:id?/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,

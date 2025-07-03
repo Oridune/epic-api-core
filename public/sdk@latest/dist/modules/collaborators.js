@@ -7,9 +7,10 @@ const collaboratorsModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("collaborators", "update");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/collaborators/:id").replace(/:\w+\?\//g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "patch" ?? "get",
-                url: `/api/collaborators/:id/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -22,9 +23,10 @@ const collaboratorsModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("collaborators", "delete");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/collaborators/:id").replace(/:\w+\?\//g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
-                url: `/api/collaborators/:id/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -37,9 +39,10 @@ const collaboratorsModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("collaborators", "get");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/collaborators/:id?").replace(/:\w+\?\//g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
-                url: `/api/collaborators/:id?/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -52,9 +55,10 @@ const collaboratorsModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("collaborators", "create");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/collaborators/:token").replace(/:\w+\?\//g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
-                url: `/api/collaborators/:token/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -67,9 +71,10 @@ const collaboratorsModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("collaborators", "toggleBlocked");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/collaborators/toggle/blocked/:id/:isBlocked").replace(/:\w+\?\//g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "patch" ?? "get",
-                url: `/api/collaborators/toggle/blocked/:id/:isBlocked/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,

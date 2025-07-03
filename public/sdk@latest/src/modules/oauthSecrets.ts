@@ -211,9 +211,14 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
 
             sdk.checkPermission("oauthSecrets", "createFor");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/oauth/secrets/behalf"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
-                url: `/api/oauth/secrets/behalf/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -229,9 +234,14 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
 
             sdk.checkPermission("oauthSecrets", "create");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/oauth/secrets"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
-                url: `/api/oauth/secrets/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -247,9 +257,14 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
 
             sdk.checkPermission("oauthSecrets", "delete");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/oauth/secrets/:id"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
-                url: `/api/oauth/secrets/:id/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -265,9 +280,14 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
 
             sdk.checkPermission("oauthSecrets", "get");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/oauth/secrets/:id?"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
-                url: `/api/oauth/secrets/:id?/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,

@@ -23,7 +23,7 @@ class oauthEntry {
         const verifier = this.generateRandomString(128);
         return {
             verifier,
-            method: "sha256",
+            method: "sha-256",
             challenge: (0, base64_arraybuffer_1.encode)(js_sha256_1.sha256.arrayBuffer(verifier))
                 .replace(/\+/g, "-")
                 .replace(/\//g, "_")
@@ -38,9 +38,9 @@ class oauthEntry {
             &codeChallenge=${challenge}
             &callbackURL=${opts.callbackUrl}
             &state=${btoa(JSON.stringify(opts.state))}
-            &theme=${opts.theme}
-            &lng=${opts.lng}
-            ${opts.username ? `&username=${opts.username}` : ""}`, __1.EpicSDK._options?.axiosConfig?.baseURL).toString();
+            &theme=${opts.theme ?? "system"}
+            &lng=${opts.lng ?? "en"}
+            ${opts.username ? `&username=${opts.username}` : ""}`.replace(/\s*/g, ""), __1.EpicSDK._options?.axiosConfig?.baseURL).toString();
         return {
             verifier,
             url,
@@ -56,7 +56,8 @@ class oauthEntry {
             const verifier = await __1.EpicSDK.getCache("verifier");
             if (!verifier)
                 break exchangeCode;
-            await this.fetchAccessToken(opts.code, verifier.value);
+            const authorization = await this.fetchAccessToken(opts.code, verifier.value);
+            await __1.EpicSDK.setCache("authorization", authorization);
             return;
         }
         const { verifier, url } = this.oauth2Login(appId, opts);
@@ -73,7 +74,9 @@ class oauthEntry {
             },
         }).data;
         if (!this._interceptorAdded) {
-            __1.EpicSDK._axios?.interceptors.request.use(async (config) => {
+            console.log("Interceptor added");
+            __1.EpicSDK._axios.interceptors.request.use(async (config) => {
+                console.log("Interceptor triggered");
                 if (!config.headers["Authorization"] && this.auth) {
                     const timeInSeconds = Date.now() / 1000;
                     if (this.auth.access.expiresAtSeconds <= timeInSeconds) {
@@ -98,7 +101,9 @@ class oauthEntry {
                 }
                 return config;
             });
+            this._interceptorAdded = true;
         }
+        return this.auth;
     }
     static async refreshAccessToken(refreshToken) {
         //! this._refreshRequest is used to stop bubbling do not remove it!

@@ -41,6 +41,6 @@ export declare class oauthEntry {
         geoPoint?: {
             coordinates: [number, number];
         };
-    }): Promise<void>;
+    }): Promise<TAuthorization>;
     static refreshAccessToken(refreshToken: string): Promise<void>;
 }

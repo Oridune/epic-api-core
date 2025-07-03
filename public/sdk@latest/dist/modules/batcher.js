@@ -7,9 +7,10 @@ const batcherModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("batcher", "request");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/batcher").replace(/:\w+\?\//g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
-                url: `/api/batcher/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,

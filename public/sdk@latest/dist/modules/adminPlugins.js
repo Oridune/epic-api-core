@@ -7,9 +7,10 @@ const adminPluginsModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("adminPlugins", "toggleEnable");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/admin/plugins/toggle/plugin").replace(/:\w+\?\//g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "patch" ?? "get",
-                url: `/api/admin/plugins/toggle/plugin/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -22,9 +23,10 @@ const adminPluginsModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("adminPlugins", "list");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/admin/plugins").replace(/:\w+\?\//g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
-                url: `/api/admin/plugins/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -37,9 +39,10 @@ const adminPluginsModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("adminPlugins", "add");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/admin/plugins").replace(/:\w+\?\//g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
-                url: `/api/admin/plugins/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -52,9 +55,10 @@ const adminPluginsModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("adminPlugins", "delete");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/admin/plugins/:name").replace(/:\w+\?\//g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
-                url: `/api/admin/plugins/:name/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,

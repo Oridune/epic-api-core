@@ -158,9 +158,14 @@ export const apiModule = (sdk: any): IController$api => ({
 
             sdk.checkPermission("api", "memoryUsage");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/memory/usage"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
-                url: `/api/memory/usage/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -176,9 +181,14 @@ export const apiModule = (sdk: any): IController$api => ({
 
             sdk.checkPermission("api", "postman");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/postman"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
-                url: `/api/postman/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -194,9 +204,14 @@ export const apiModule = (sdk: any): IController$api => ({
 
             sdk.checkPermission("api", "test");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/test"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
-                url: `/api/test/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -212,9 +227,14 @@ export const apiModule = (sdk: any): IController$api => ({
 
             sdk.checkPermission("api", "home");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
-                url: `/api/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
@@ -230,9 +250,14 @@ export const apiModule = (sdk: any): IController$api => ({
 
             sdk.checkPermission("api", "heapSnapshot");
 
+            const url = Object.entries<string>(data?.params ?? {}).reduce(
+                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                "/api/heap/snapshot/:filename?"
+            ).replace(/:\w+\?\//g, "");
+
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
-                url: `/api/heap/snapshot/:filename?/${Object.values(data?.params ?? {}).join("/")}`,
+                url,
                 params: data?.query,
                 data: data?.body,
                 ...data?.axiosConfig,
