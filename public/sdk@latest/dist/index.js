@@ -36,6 +36,17 @@ class EpicSDK {
     static _apiVersion = "latest";
     static _options;
     static _axios;
+    static init(options) {
+        this._options = options;
+        this._axios = axios_1.default.create(options?.axiosConfig);
+    }
+    static isPermitted = (scope, permission) => {
+        return true;
+    };
+    static checkPermission(scope, permission) {
+        if (!this.isPermitted(scope, permission))
+            throw new Error(`You are not authorized to perform this action! Missing permission '${scope}.${permission}'!`);
+    }
     static resolveCacheKey(keys, namespace = "__epic-sdk:cache") {
         return `${namespace}:${(keys instanceof Array ? keys : [keys]).join(":")}`;
     }
@@ -57,21 +68,12 @@ class EpicSDK {
             throw new Error("A cache delete function is not defined!");
         return await this._options.cache.delete(this.resolveCacheKey(keys));
     }
-    static init(options) {
-        this._options = options;
-        this._axios = axios_1.default.create(options?.axiosConfig);
-    }
-    static isPermitted = (scope, permission) => {
-        return true;
-    };
-    static checkPermission(scope, permission) {
-        if (!this.isPermitted(scope, permission))
-            throw new Error(`You are not authorized to perform this action! Missing permission '${scope}.${permission}'!`);
-    }
     static async useCache(callback, options) {
         const Cached = options?.cacheKey ? await this.getCache(options.cacheKey) : null;
         returnCache: if (Cached !== null) {
-            if (options?.cacheTTL && (Cached.timestamp + (typeof options.cacheTTL === "function" ? options.cacheTTL(Cached.value, Cached.timestamp) : options.cacheTTL)) < Date.now()) {
+            if (options?.cacheTTL && (Cached.timestamp + (typeof options.cacheTTL === "function"
+                ? options.cacheTTL(Cached.value, Cached.timestamp)
+                : options.cacheTTL)) < Date.now()) {
                 await this.delCache(options.cacheKey);
                 break returnCache;
             }
@@ -85,7 +87,7 @@ class EpicSDK {
         return Results;
     }
     static resolveAxiosResponse(executor, options) {
-        const verifyData = (res) => {
+        const verifyResponseShape = (res) => {
             // Check if the data object exists
             if (!res.data || typeof res.data !== "object") {
                 throw new Error("Response data is missing or invalid!");
@@ -104,7 +106,7 @@ class EpicSDK {
                     executors.raw
                         .then((res) => {
                         try {
-                            resolve(verifyData(res));
+                            resolve(verifyResponseShape(res));
                         }
                         catch (err) {
                             reject(err);

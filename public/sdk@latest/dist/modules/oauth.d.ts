@@ -20,8 +20,8 @@ export type TRoute$oauth$exchangeAuthentication = {
     params: {};
     body: {
         authenticationToken: string;
-        tokenPayload: any;
-        scopes?: {} & {
+        tokenPayload?: any;
+        scopes: {} & {
             [K: string]: Array<string>;
         };
     };
@@ -42,7 +42,7 @@ export type TRoute$oauth$exchangeAuthentication = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -58,14 +58,18 @@ export type TRoute$oauth$exchangeCode = {
     params: {};
     body: {
         code: string;
-        codePayload: any;
+        codePayload?: any;
         codeVerifier?: string;
         fcmDeviceToken?: string;
+        geoPoint?: {
+            type?: "Point" | (string & {});
+            coordinates: [number, number];
+        };
     };
     return: {
         status: boolean;
         data: {
-            refresh: {
+            refresh?: {
                 issuer: string;
                 type: string;
                 token: string;
@@ -85,7 +89,7 @@ export type TRoute$oauth$exchangeCode = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -101,7 +105,7 @@ export type TRoute$oauth$authenticate = {
     params: {};
     body: {
         oauthAppId: string;
-        oauthApp: any;
+        oauthApp?: any;
         callbackURL: string;
         codeChallenge?: string;
         codeChallengeMethod: string;
@@ -118,9 +122,9 @@ export type TRoute$oauth$authenticate = {
             };
             availableScopes: Array<{
                 scopes: Array<string>;
-                account?: {
+                account: {
                     _id?: ObjectId;
-                    logo: {
+                    logo?: {
                         _id?: ObjectId;
                         createdBy?: ObjectId;
                         name?: string;
@@ -150,7 +154,7 @@ export type TRoute$oauth$authenticate = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -196,7 +200,7 @@ export type TRoute$oauth$createPermit = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -212,12 +216,12 @@ export type TRoute$oauth$refresh = {
     params: {};
     body: {
         refreshToken: string;
-        refreshTokenPayload: any;
+        refreshTokenPayload?: any;
     };
     return: {
         status: boolean;
         data: {
-            refresh: {
+            refresh?: {
                 issuer: string;
                 type: string;
                 token: string;
@@ -237,7 +241,7 @@ export type TRoute$oauth$refresh = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -253,7 +257,7 @@ export interface IController$oauth {
         method?: Method;
         query?: QueryShape;
         params?: ParamsShape;
-        body?: BodyShape;
+        body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     exchangeAuthentication<Method extends "post", QueryShape extends TRoute$oauth$exchangeAuthentication["query"], ParamsShape extends TRoute$oauth$exchangeAuthentication["params"], BodyShape extends TRoute$oauth$exchangeAuthentication["body"], ReturnShape extends TResponseShape<any> = TRoute$oauth$exchangeAuthentication["return"]>(data: {
         method?: Method;
@@ -275,7 +279,7 @@ export interface IController$oauth {
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     logout<Method extends "delete", QueryShape extends TRoute$oauth$logout["query"], ParamsShape extends TRoute$oauth$logout["params"], BodyShape extends TRoute$oauth$logout["body"], ReturnShape extends TResponseShape<any> = TRoute$oauth$logout["return"]>(data: {
         method?: Method;
-        query?: QueryShape;
+        query: QueryShape;
         params?: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;

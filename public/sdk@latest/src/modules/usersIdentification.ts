@@ -23,7 +23,7 @@ export type TRoute$usersIdentification$methods = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -58,7 +58,7 @@ export type TRoute$usersIdentification$publicMethods = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -92,7 +92,7 @@ export type TRoute$usersIdentification$request = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }

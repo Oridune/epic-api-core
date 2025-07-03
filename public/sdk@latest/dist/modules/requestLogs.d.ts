@@ -7,11 +7,11 @@ export type TRoute$requestLogs$create = {
         requestId: string;
         method: string;
         url: string;
-        headers?: {} & {
+        headers: {} & {
             [K: string]: string;
         };
         body?: any;
-        auth: {
+        auth?: {
             secretId?: string;
             sessionId?: string;
             userId?: string;
@@ -23,19 +23,19 @@ export type TRoute$requestLogs$create = {
             resolvedRole?: string;
         };
         responseStatus: number;
-        response: {
+        response?: {
             status: boolean;
-            messages: any;
-            data: any;
+            messages?: any;
+            data?: any;
             metadata?: /*(optional)*/ {} & {
                 [K: string]: any;
             };
-            errorStack: any;
-            metrics?: {} & {
+            errorStack?: any;
+            metrics: {} & {
                 [K: string]: any;
             };
         };
-        errorStack: any;
+        errorStack?: any;
     };
     return: {
         status: boolean;
@@ -48,10 +48,10 @@ export type TRoute$requestLogs$create = {
             requestId: string;
             method: string;
             url: string;
-            headers?: {} & {
+            headers: {} & {
                 [K: string]: string;
             };
-            body: any;
+            body?: any;
             auth?: {
                 secretId?: string;
                 sessionId?: string;
@@ -64,19 +64,19 @@ export type TRoute$requestLogs$create = {
                 resolvedRole?: string;
             };
             responseStatus: number;
-            response: {
+            response?: {
                 status: boolean;
-                messages: any;
-                data: any;
+                messages?: any;
+                data?: any;
                 metadata?: /*(optional)*/ {} & {
                     [K: string]: any;
                 };
-                errorStack: any;
-                metrics?: {} & {
+                errorStack?: any;
+                metrics: {} & {
                     [K: string]: any;
                 };
             };
-            errorStack: any;
+            errorStack?: any;
         };
         messages?: Array<{
             message?: string;
@@ -85,7 +85,7 @@ export type TRoute$requestLogs$create = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -111,7 +111,7 @@ export type TRoute$requestLogs$get = {
     query: {
         namespace?: string;
         search?: string;
-        range?: Array<{} | undefined>;
+        range?: [Date, Date];
         offset?: number;
         limit?: number;
         sort?: /*(optional default:[object Object])*/ {} & {
@@ -142,10 +142,10 @@ export type TRoute$requestLogs$get = {
                 requestId: string;
                 method: string;
                 url: string;
-                headers?: {} & {
+                headers: {} & {
                     [K: string]: string;
                 };
-                body: any;
+                body?: any;
                 auth?: {
                     secretId?: string;
                     sessionId?: string;
@@ -158,19 +158,19 @@ export type TRoute$requestLogs$get = {
                     resolvedRole?: string;
                 };
                 responseStatus: number;
-                response: {
+                response?: {
                     status: boolean;
-                    messages: any;
-                    data: any;
+                    messages?: any;
+                    data?: any;
                     metadata?: /*(optional)*/ {} & {
                         [K: string]: any;
                     };
-                    errorStack: any;
-                    metrics?: {} & {
+                    errorStack?: any;
+                    metrics: {} & {
                         [K: string]: any;
                     };
                 };
-                errorStack: any;
+                errorStack?: any;
             }>;
         };
         messages?: Array<{
@@ -180,7 +180,7 @@ export type TRoute$requestLogs$get = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -207,8 +207,8 @@ export interface IController$requestLogs {
     get(): TRequestExecutors<TRoute$requestLogs$get["return"]>;
     get<Method extends "get", QueryShape extends TRoute$requestLogs$get["query"], ParamsShape extends TRoute$requestLogs$get["params"], BodyShape extends TRoute$requestLogs$get["body"], ReturnShape extends TResponseShape<any> = TRoute$requestLogs$get["return"]>(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }

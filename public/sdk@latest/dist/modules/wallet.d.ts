@@ -28,7 +28,7 @@ export type TRoute$wallet$balanceList = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -58,7 +58,7 @@ export type TRoute$wallet$metadata = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -121,7 +121,7 @@ export type TRoute$wallet$transfer = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -182,7 +182,7 @@ export type TRoute$wallet$signTransfer = {
                 amount: number;
                 fee: number;
                 description: string;
-                metadata?: {} & {
+                metadata: {} & {
                     [K: string]: string | number | boolean;
                 };
             };
@@ -198,7 +198,7 @@ export type TRoute$wallet$signTransfer = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -238,7 +238,7 @@ export type TRoute$wallet$balance = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -254,7 +254,7 @@ export type TRoute$wallet$transactions = {
         search?: string;
         sent?: boolean;
         received?: boolean;
-        range?: Array<{} | undefined>;
+        range?: [Date, Date];
         offset?: number;
         limit?: number;
         sort?: /*(optional default:[object Object])*/ {} & {
@@ -275,8 +275,8 @@ export type TRoute$wallet$transactions = {
         data: {
             totalCount?: number;
             results: Array<{
-                from?: {
-                    logo: {
+                from: {
+                    logo?: {
                         _id?: ObjectId;
                         createdBy?: ObjectId;
                         name?: string;
@@ -287,8 +287,8 @@ export type TRoute$wallet$transactions = {
                     };
                     name?: string;
                 };
-                to?: {
-                    logo: {
+                to: {
+                    logo?: {
                         _id?: ObjectId;
                         createdBy?: ObjectId;
                         name?: string;
@@ -300,7 +300,7 @@ export type TRoute$wallet$transactions = {
                     name?: string;
                 };
                 sender: {
-                    avatar: {
+                    avatar?: {
                         _id?: ObjectId;
                         createdBy?: ObjectId;
                         name?: string;
@@ -314,7 +314,7 @@ export type TRoute$wallet$transactions = {
                     lname?: string;
                 };
                 receiver: {
-                    avatar: {
+                    avatar?: {
                         _id?: ObjectId;
                         createdBy?: ObjectId;
                         name?: string;
@@ -362,7 +362,7 @@ export type TRoute$wallet$transactions = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -378,7 +378,7 @@ export interface IController$wallet {
         method?: Method;
         query?: QueryShape;
         params?: ParamsShape;
-        body?: BodyShape;
+        body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     metadata(): TRequestExecutors<TRoute$wallet$metadata["return"]>;
     metadata<Method extends "get", QueryShape extends TRoute$wallet$metadata["query"], ParamsShape extends TRoute$wallet$metadata["params"], BodyShape extends TRoute$wallet$metadata["body"], ReturnShape extends TResponseShape<any> = TRoute$wallet$metadata["return"]>(data: {
@@ -397,21 +397,21 @@ export interface IController$wallet {
     signTransfer<Method extends "get", QueryShape extends TRoute$wallet$signTransfer["query"], ParamsShape extends TRoute$wallet$signTransfer["params"], BodyShape extends TRoute$wallet$signTransfer["body"], ReturnShape extends TResponseShape<any> = TRoute$wallet$signTransfer["return"]>(data: {
         method?: Method;
         query: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     balance(): TRequestExecutors<TRoute$wallet$balance["return"]>;
     balance<Method extends "get", QueryShape extends TRoute$wallet$balance["query"], ParamsShape extends TRoute$wallet$balance["params"], BodyShape extends TRoute$wallet$balance["body"], ReturnShape extends TResponseShape<any> = TRoute$wallet$balance["return"]>(data: {
         method?: Method;
         query?: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     transactions(): TRequestExecutors<TRoute$wallet$transactions["return"]>;
     transactions<Method extends "get", QueryShape extends TRoute$wallet$transactions["query"], ParamsShape extends TRoute$wallet$transactions["params"], BodyShape extends TRoute$wallet$transactions["body"], ReturnShape extends TResponseShape<any> = TRoute$wallet$transactions["return"]>(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }

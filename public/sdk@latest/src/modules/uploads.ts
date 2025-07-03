@@ -41,7 +41,7 @@ export interface IController$uploads {
     >(data: {
         method?: Method;
         query: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     upload(): TRequestExecutors<TRoute$uploads$upload["return"]>;

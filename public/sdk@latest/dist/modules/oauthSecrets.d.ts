@@ -27,7 +27,7 @@ export type TRoute$oauthSecrets$createFor = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -65,7 +65,7 @@ export type TRoute$oauthSecrets$create = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -90,7 +90,7 @@ export type TRoute$oauthSecrets$delete = {
 export type TRoute$oauthSecrets$get = {
     query: {
         search?: string;
-        range?: Array<{} | undefined>;
+        range?: [Date, Date];
         offset?: number;
         limit?: number;
         sort?: /*(optional default:[object Object]) Provide a sorting information in mongodb sort object format*/ {} & {
@@ -130,7 +130,7 @@ export type TRoute$oauthSecrets$get = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -163,8 +163,8 @@ export interface IController$oauthSecrets {
     get(): TRequestExecutors<TRoute$oauthSecrets$get["return"]>;
     get<Method extends "get", QueryShape extends TRoute$oauthSecrets$get["query"], ParamsShape extends TRoute$oauthSecrets$get["params"], BodyShape extends TRoute$oauthSecrets$get["body"], ReturnShape extends TResponseShape<any> = TRoute$oauthSecrets$get["return"]>(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }

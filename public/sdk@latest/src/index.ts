@@ -37,41 +37,6 @@ export class EpicSDK {
     static _options?: TSDKOptions;
     static _axios?: AxiosInstance;
 
-    protected static resolveCacheKey(keys: TCacheKey, namespace = "__epic-sdk:cache") {
-        return `${namespace}:${(keys instanceof Array ? keys : [keys]).join(":")}`;
-    }
-
-    protected static async setCache(keys: TCacheKey, value: any) {
-        if(typeof this._options?.cache?.setter !== "function")
-            throw new Error("A cache setter is not defined!");
-
-        return await this._options.cache.setter(
-            this.resolveCacheKey(keys),
-            JSON.stringify({ value, timestamp: Date.now() / 1000 })
-        );
-    }
-
-    protected static async getCache<T>(keys: TCacheKey) {
-        if(typeof this._options?.cache?.getter !== "function")
-            throw new Error("A cache getter is not defined!");
-
-        const value = await this._options.cache.getter(this.resolveCacheKey(keys));
-
-        if(!value) return null;
-
-        return JSON.parse(value) as {
-            value: T;
-            timestamp: number;
-        };
-    }
-
-    protected static async delCache(keys: TCacheKey) {
-        if(typeof this._options?.cache?.delete !== "function")
-            throw new Error("A cache delete function is not defined!");
-
-        return await this._options.cache.delete(this.resolveCacheKey(keys));
-    }
-
     static init(options?: TSDKOptions) {
         this._options = options;
         this._axios = axios.create(options?.axiosConfig);
@@ -86,11 +51,54 @@ export class EpicSDK {
             throw new Error(`You are not authorized to perform this action! Missing permission '${scope}.${permission}'!`);
     }
 
+    static resolveCacheKey(keys: TCacheKey, namespace = "__epic-sdk:cache") {
+        return `${namespace}:${(keys instanceof Array ? keys : [keys]).join(":")}`;
+    }
+
+    static async setCache(keys: TCacheKey, value: any) {
+        if(typeof this._options?.cache?.setter !== "function")
+            throw new Error("A cache setter is not defined!");
+
+        return await this._options.cache.setter(
+            this.resolveCacheKey(keys),
+            JSON.stringify({ value, timestamp: Date.now() / 1000 })
+        );
+    }
+
+    static async getCache<T>(keys: TCacheKey) {
+        if(typeof this._options?.cache?.getter !== "function")
+            throw new Error("A cache getter is not defined!");
+
+        const value = await this._options.cache.getter(this.resolveCacheKey(keys));
+
+        if(!value) return null;
+
+        return JSON.parse(value) as {
+            value: T;
+            timestamp: number;
+        };
+    }
+
+    static async delCache(keys: TCacheKey) {
+        if(typeof this._options?.cache?.delete !== "function")
+            throw new Error("A cache delete function is not defined!");
+
+        return await this._options.cache.delete(this.resolveCacheKey(keys));
+    }
+
     static async useCache<T>(callback: () => T | Promise<T>, options?: TCacheOptions<T>) {
         const Cached = options?.cacheKey ? await this.getCache<T>(options.cacheKey) : null;
 
         returnCache: if (Cached !== null) {
-            if(options?.cacheTTL && (Cached.timestamp + (typeof options.cacheTTL === "function" ? options.cacheTTL(Cached.value, Cached.timestamp) : options.cacheTTL)) < Date.now()) {
+            if(
+                options?.cacheTTL && (
+                    Cached.timestamp + (
+                        typeof options.cacheTTL === "function"
+                        ? options.cacheTTL(Cached.value, Cached.timestamp)
+                        : options.cacheTTL
+                    )
+                ) < Date.now()
+            ) {
                 await this.delCache(options.cacheKey!);
 
                 break returnCache;
@@ -110,7 +118,7 @@ export class EpicSDK {
     }
 
     static resolveAxiosResponse<T>(executor: () => Promise<AxiosResponse<T>>, options?: TCacheOptions<T>) {
-        const verifyData = (res: AxiosResponse) => {
+        const verifyResponseShape = (res: AxiosResponse) => {
             // Check if the data object exists
             if (!res.data || typeof res.data !== "object") {
                 throw new Error("Response data is missing or invalid!");
@@ -131,7 +139,7 @@ export class EpicSDK {
                         executors.raw
                             .then((res) => {
                                 try {
-                                    resolve(verifyData(res));
+                                    resolve(verifyResponseShape(res));
                                 } catch (err) {
                                     reject(err);
                                 }

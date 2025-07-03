@@ -10,11 +10,11 @@ export type TRoute$requestLogIgnores$create = {
     body: {
 		method?: Array<string>;
 		url?: string;
-		responseStatus?: Array<{} | undefined>;
+		responseStatus?: [number,number];
 },
     return: {
 		status: boolean;
-		data?: {
+		data: {
 		_id?: ObjectId;
 		createdAt?: Date;
 		updatedAt?: Date;
@@ -22,7 +22,7 @@ export type TRoute$requestLogIgnores$create = {
 		account?: ObjectId;
 		method?: Array<string>;
 		url?: string;
-		responseStatus?: Array<{} | undefined>;
+		responseStatus?: [number,number];
 };
 		messages?: Array<{
 		message?: string;
@@ -30,7 +30,7 @@ export type TRoute$requestLogIgnores$create = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -52,11 +52,11 @@ export type TRoute$requestLogIgnores$update = {
     body: {
 		method?: Array<string>;
 		url?: string;
-		responseStatus?: Array<{} | undefined>;
+		responseStatus?: [number,number];
 },
     return: {
 		status: boolean;
-		data?: {
+		data: {
 		_id?: ObjectId;
 		createdAt?: Date;
 		updatedAt?: Date;
@@ -64,7 +64,7 @@ export type TRoute$requestLogIgnores$update = {
 		account?: ObjectId;
 		method?: Array<string>;
 		url?: string;
-		responseStatus?: Array<{} | undefined>;
+		responseStatus?: [number,number];
 };
 		messages?: Array<{
 		message?: string;
@@ -72,7 +72,7 @@ export type TRoute$requestLogIgnores$update = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -100,7 +100,7 @@ export type TRoute$requestLogIgnores$delete = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -117,7 +117,7 @@ export type TRoute$requestLogIgnores$delete = {
 export type TRoute$requestLogIgnores$get = {
     query: {
 		search?: string;
-		range?: Array<{} | undefined>;
+		range?: [Date,Date];
 		offset?: number;
 		limit?: number;
 		sort?: /*(optional default:[object Object]) Provide a sorting information in mongodb sort object format*/{
@@ -144,8 +144,8 @@ export type TRoute$requestLogIgnores$get = {
 		account?: ObjectId;
 		method?: Array<string>;
 		url?: string;
-		responseStatus?: Array<{} | undefined>;
-} | undefined>;
+		responseStatus?: [number,number];
+}>;
 };
 		messages?: Array<{
 		message?: string;
@@ -153,7 +153,7 @@ export type TRoute$requestLogIgnores$get = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -176,7 +176,7 @@ export interface IController$requestLogIgnores {
         method?: Method;
         query?: QueryShape;
         params?: ParamsShape;
-        body?: BodyShape;
+        body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     update<
         Method extends "patch",
@@ -188,7 +188,7 @@ export interface IController$requestLogIgnores {
         method?: Method;
         query?: QueryShape;
         params: ParamsShape;
-        body?: BodyShape;
+        body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     delete<
         Method extends "delete",
@@ -211,8 +211,8 @@ export interface IController$requestLogIgnores {
         ReturnShape extends TResponseShape<any> = TRoute$requestLogIgnores$get["return"],
     >(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }

@@ -32,7 +32,7 @@ export type TRoute$wallet$balanceList = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -64,7 +64,7 @@ export type TRoute$wallet$metadata = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -129,7 +129,7 @@ export type TRoute$wallet$transfer = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -193,7 +193,7 @@ export type TRoute$wallet$signTransfer = {
 		amount: number;
 		fee: number;
 		description: string;
-		metadata?: {
+		metadata: {
 } & { [K: string]: string | number | boolean }
 ;
 };
@@ -208,7 +208,7 @@ export type TRoute$wallet$signTransfer = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -250,7 +250,7 @@ export type TRoute$wallet$balance = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -269,7 +269,7 @@ export type TRoute$wallet$transactions = {
 		search?: string;
 		sent?: boolean;
 		received?: boolean;
-		range?: Array<{} | undefined>;
+		range?: [Date,Date];
 		offset?: number;
 		limit?: number;
 		sort?: /*(optional default:[object Object])*/{
@@ -290,8 +290,8 @@ export type TRoute$wallet$transactions = {
 		data: {
 		totalCount?: number;
 		results: Array<{
-		from?: {
-		logo: /*(optional)*/{
+		from: {
+		logo?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
 		name?: string;
@@ -302,8 +302,8 @@ export type TRoute$wallet$transactions = {
 };
 		name?: string;
 };
-		to?: {
-		logo: /*(optional)*/{
+		to: {
+		logo?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
 		name?: string;
@@ -315,7 +315,7 @@ export type TRoute$wallet$transactions = {
 		name?: string;
 };
 		sender: {
-		avatar: /*(optional)*/{
+		avatar?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
 		name?: string;
@@ -329,7 +329,7 @@ export type TRoute$wallet$transactions = {
 		lname?: string;
 };
 		receiver: {
-		avatar: /*(optional)*/{
+		avatar?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
 		name?: string;
@@ -376,7 +376,7 @@ export type TRoute$wallet$transactions = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -399,7 +399,7 @@ export interface IController$wallet {
         method?: Method;
         query?: QueryShape;
         params?: ParamsShape;
-        body?: BodyShape;
+        body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     metadata(): TRequestExecutors<TRoute$wallet$metadata["return"]>;
     metadata<
@@ -436,7 +436,7 @@ export interface IController$wallet {
     >(data: {
         method?: Method;
         query: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     balance(): TRequestExecutors<TRoute$wallet$balance["return"]>;
@@ -449,7 +449,7 @@ export interface IController$wallet {
     >(data: {
         method?: Method;
         query?: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     transactions(): TRequestExecutors<TRoute$wallet$transactions["return"]>;
@@ -461,8 +461,8 @@ export interface IController$wallet {
         ReturnShape extends TResponseShape<any> = TRoute$wallet$transactions["return"],
     >(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }

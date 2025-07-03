@@ -12,51 +12,10 @@ export type TRoute$requestLogs$create = {
 		requestId: string;
 		method: string;
 		url: string;
-		headers?: {
+		headers: {
 } & { [K: string]: string }
 ;
 		body?: any;
-		auth: /*(optional)*/{
-		secretId?: string;
-		sessionId?: string;
-		userId?: string;
-		accountId?: string;
-		isAccountOwned?: boolean;
-		isAccountPrimary?: boolean;
-		role?: string;
-		accountRole?: string;
-		resolvedRole?: string;
-};
-		responseStatus: number;
-		response: /*(optional)*/{
-		status: boolean;
-		messages: any;
-		data: any;
-		metadata?: /*(optional)*/{
-} & { [K: string]: any }
-;
-		errorStack: any;
-		metrics?: {
-} & { [K: string]: any }
-;
-};
-		errorStack: any;
-},
-    return: {
-		status: boolean;
-		data: {
-		_id?: ObjectId;
-		createdAt?: Date;
-		createdBy?: ObjectId;
-		account?: ObjectId;
-		namespace?: string;
-		requestId: string;
-		method: string;
-		url: string;
-		headers?: {
-} & { [K: string]: string }
-;
-		body: any;
 		auth?: /*(optional)*/{
 		secretId?: string;
 		sessionId?: string;
@@ -69,19 +28,60 @@ export type TRoute$requestLogs$create = {
 		resolvedRole?: string;
 };
 		responseStatus: number;
-		response: /*(optional)*/{
+		response?: /*(optional)*/{
 		status: boolean;
-		messages: any;
-		data: any;
+		messages?: any;
+		data?: any;
 		metadata?: /*(optional)*/{
 } & { [K: string]: any }
 ;
-		errorStack: any;
-		metrics?: {
+		errorStack?: any;
+		metrics: {
 } & { [K: string]: any }
 ;
 };
-		errorStack: any;
+		errorStack?: any;
+},
+    return: {
+		status: boolean;
+		data: {
+		_id?: ObjectId;
+		createdAt?: Date;
+		createdBy?: ObjectId;
+		account?: ObjectId;
+		namespace?: string;
+		requestId: string;
+		method: string;
+		url: string;
+		headers: {
+} & { [K: string]: string }
+;
+		body?: any;
+		auth?: /*(optional)*/{
+		secretId?: string;
+		sessionId?: string;
+		userId?: string;
+		accountId?: string;
+		isAccountOwned?: boolean;
+		isAccountPrimary?: boolean;
+		role?: string;
+		accountRole?: string;
+		resolvedRole?: string;
+};
+		responseStatus: number;
+		response?: /*(optional)*/{
+		status: boolean;
+		messages?: any;
+		data?: any;
+		metadata?: /*(optional)*/{
+} & { [K: string]: any }
+;
+		errorStack?: any;
+		metrics: {
+} & { [K: string]: any }
+;
+};
+		errorStack?: any;
 };
 		messages?: Array<{
 		message?: string;
@@ -89,7 +89,7 @@ export type TRoute$requestLogs$create = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -119,7 +119,7 @@ export type TRoute$requestLogs$get = {
     query: {
 		namespace?: string;
 		search?: string;
-		range?: Array<{} | undefined>;
+		range?: [Date,Date];
 		offset?: number;
 		limit?: number;
 		sort?: /*(optional default:[object Object])*/{
@@ -150,10 +150,10 @@ export type TRoute$requestLogs$get = {
 		requestId: string;
 		method: string;
 		url: string;
-		headers?: {
+		headers: {
 } & { [K: string]: string }
 ;
-		body: any;
+		body?: any;
 		auth?: /*(optional)*/{
 		secretId?: string;
 		sessionId?: string;
@@ -166,19 +166,19 @@ export type TRoute$requestLogs$get = {
 		resolvedRole?: string;
 };
 		responseStatus: number;
-		response: /*(optional)*/{
+		response?: /*(optional)*/{
 		status: boolean;
-		messages: any;
-		data: any;
+		messages?: any;
+		data?: any;
 		metadata?: /*(optional)*/{
 } & { [K: string]: any }
 ;
-		errorStack: any;
-		metrics?: {
+		errorStack?: any;
+		metrics: {
 } & { [K: string]: any }
 ;
 };
-		errorStack: any;
+		errorStack?: any;
 }>;
 };
 		messages?: Array<{
@@ -187,7 +187,7 @@ export type TRoute$requestLogs$get = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -233,8 +233,8 @@ export interface IController$requestLogs {
         ReturnShape extends TResponseShape<any> = TRoute$requestLogs$get["return"],
     >(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }

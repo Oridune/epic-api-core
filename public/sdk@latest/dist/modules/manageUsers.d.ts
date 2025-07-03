@@ -6,7 +6,7 @@ export type TRoute$manageUsers$updatePassword = {
     };
     body: {
         password: string;
-        hashedPassword: any;
+        hashedPassword?: any;
     };
     return: {
         status: boolean;

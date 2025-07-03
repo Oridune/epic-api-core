@@ -25,7 +25,7 @@ export type TRoute$accountInvites$create = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -50,7 +50,7 @@ export type TRoute$accountInvites$delete = {
 export type TRoute$accountInvites$get = {
     query: {
         search?: string;
-        range?: Array<{} | undefined>;
+        range?: [Date, Date];
         offset?: number;
         limit?: number;
         sort?: /*(optional default:[object Object])*/ {} & {
@@ -87,7 +87,7 @@ export type TRoute$accountInvites$get = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -114,8 +114,8 @@ export interface IController$accountInvites {
     get(): TRequestExecutors<TRoute$accountInvites$get["return"]>;
     get<Method extends "get", QueryShape extends TRoute$accountInvites$get["query"], ParamsShape extends TRoute$accountInvites$get["params"], BodyShape extends TRoute$accountInvites$get["body"], ReturnShape extends TResponseShape<any> = TRoute$accountInvites$get["return"]>(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }

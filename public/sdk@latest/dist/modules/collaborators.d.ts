@@ -26,7 +26,7 @@ export type TRoute$collaborators$delete = {
 export type TRoute$collaborators$get = {
     query: {
         search?: string;
-        range?: Array<{} | undefined>;
+        range?: [Date, Date];
         offset?: number;
         limit?: number;
         sort?: /*(optional default:[object Object])*/ {} & {
@@ -65,7 +65,7 @@ export type TRoute$collaborators$get = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -103,7 +103,7 @@ export type TRoute$collaborators$create = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -142,8 +142,8 @@ export interface IController$collaborators {
     get(): TRequestExecutors<TRoute$collaborators$get["return"]>;
     get<Method extends "get", QueryShape extends TRoute$collaborators$get["query"], ParamsShape extends TRoute$collaborators$get["params"], BodyShape extends TRoute$collaborators$get["body"], ReturnShape extends TResponseShape<any> = TRoute$collaborators$get["return"]>(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     create<Method extends "post", QueryShape extends TRoute$collaborators$create["query"], ParamsShape extends TRoute$collaborators$create["params"], BodyShape extends TRoute$collaborators$create["body"], ReturnShape extends TResponseShape<any> = TRoute$collaborators$create["return"]>(data: {

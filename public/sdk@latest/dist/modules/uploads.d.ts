@@ -31,7 +31,7 @@ export interface IController$uploads {
     sign<Method extends "get", QueryShape extends TRoute$uploads$sign["query"], ParamsShape extends TRoute$uploads$sign["params"], BodyShape extends TRoute$uploads$sign["body"], ReturnShape extends TResponseShape<any> = TRoute$uploads$sign["return"]>(data: {
         method?: Method;
         query: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     upload(): TRequestExecutors<TRoute$uploads$upload["return"]>;

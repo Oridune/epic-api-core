@@ -24,7 +24,7 @@ export type TRoute$batcher$request = {
     return: {
         status: boolean;
         data: {
-            responses: Array<any>;
+            responses: Array<any | undefined>;
         };
         messages?: Array<{
             message?: string;
@@ -33,7 +33,7 @@ export type TRoute$batcher$request = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {

@@ -65,7 +65,7 @@ export type TRoute$users$updateEmail = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -101,7 +101,7 @@ export type TRoute$users$update = {
 		data: {
 		username?: string;
 		password?: string;
-		avatar: /*(optional)*/{
+		avatar?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
 		name?: string;
@@ -131,6 +131,10 @@ export type TRoute$users$update = {
 		oauthApp?: ObjectId;
 		reference?: string;
 		passwordHistory?: Array<string>;
+		locationHistory?: Array<{
+		type?: "Point" | (string & {});
+		coordinates: [number,number];
+}>;
 		role?: string;
 		isEmailVerified?: boolean;
 		isPhoneVerified?: boolean;
@@ -162,7 +166,7 @@ export type TRoute$users$update = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -185,7 +189,7 @@ export type TRoute$users$me = {
 		data: {
 		user: {
 		username: string;
-		avatar: /*(optional)*/{
+		avatar?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
 		name?: string;
@@ -214,6 +218,10 @@ export type TRoute$users$me = {
 		updatedAt?: Date;
 		oauthApp: ObjectId;
 		reference?: string;
+		locationHistory?: Array<{
+		type?: "Point" | (string & {});
+		coordinates: [number,number];
+}>;
 		role: string;
 		isEmailVerified?: boolean;
 		isPhoneVerified?: boolean;
@@ -236,7 +244,7 @@ export type TRoute$users$me = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -258,7 +266,7 @@ export type TRoute$users$updatePassword = {
 		token: string;
 		code: number;
 		password: string;
-		hashedPassword: any;
+		hashedPassword?: any;
 },
     return: { status: boolean; data: undefined },
 };
@@ -285,7 +293,7 @@ export type TRoute$users$updatePhone = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -342,7 +350,7 @@ export type TRoute$users$updateRole = {
 export type TRoute$users$get = {
     query: {
 		search?: string;
-		range?: Array<{} | undefined>;
+		range?: [Date,Date];
 		offset?: number;
 		limit?: number;
 		sort?: /*(optional default:[object Object])*/{
@@ -364,7 +372,7 @@ export type TRoute$users$get = {
 		users: Array<{
 		username: string;
 		password: string;
-		avatar: /*(optional)*/{
+		avatar?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
 		name?: string;
@@ -394,6 +402,10 @@ export type TRoute$users$get = {
 		oauthApp: ObjectId;
 		reference?: string;
 		passwordHistory: Array<string>;
+		locationHistory?: Array<{
+		type?: "Point" | (string & {});
+		coordinates: [number,number];
+}>;
 		role: string;
 		isEmailVerified?: boolean;
 		isPhoneVerified?: boolean;
@@ -426,7 +438,7 @@ export type TRoute$users$get = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -442,16 +454,16 @@ export type TRoute$users$get = {
 
 export type TRoute$users$create = {
     query: {
-		reference: any;
+		reference?: any;
 },
     params: {
 		oauthAppId: string;
-		oauthApp: any;
+		oauthApp?: any;
 },
     body: {
 		username: string;
 		password: string;
-		avatar: /*(optional)*/{
+		avatar?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
 		name?: string;
@@ -482,7 +494,7 @@ export type TRoute$users$create = {
 		user: {
 		username: string;
 		password: string;
-		avatar: /*(optional)*/{
+		avatar?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
 		name?: string;
@@ -512,6 +524,10 @@ export type TRoute$users$create = {
 		oauthApp: ObjectId;
 		reference?: string;
 		passwordHistory: Array<string>;
+		locationHistory?: Array<{
+		type?: "Point" | (string & {});
+		coordinates: [number,number];
+}>;
 		role: string;
 		isEmailVerified?: boolean;
 		isPhoneVerified?: boolean;
@@ -543,7 +559,7 @@ export type TRoute$users$create = {
 		updatedAt?: Date;
 		createdBy: ObjectId;
 		createdFor: ObjectId;
-		logo: /*(optional)*/{
+		logo?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
 		name?: string;
@@ -577,7 +593,7 @@ export type TRoute$users$create = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -613,7 +629,7 @@ export interface IController$users {
     >(data: {
         method?: Method;
         query: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     updateAvatar<
@@ -625,7 +641,7 @@ export interface IController$users {
     >(data: {
         method?: Method;
         query: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     updateAvatar<
@@ -637,7 +653,7 @@ export interface IController$users {
     >(data: {
         method?: Method;
         query: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     setFcmToken<
@@ -745,7 +761,7 @@ export interface IController$users {
         ReturnShape extends TResponseShape<any> = TRoute$users$delete["return"],
     >(data: {
         method?: Method;
-        query?: QueryShape;
+        query: QueryShape;
         params?: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
@@ -758,7 +774,7 @@ export interface IController$users {
     >(data: {
         method?: Method;
         query?: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     get(): TRequestExecutors<TRoute$users$get["return"]>;
@@ -770,8 +786,8 @@ export interface IController$users {
         ReturnShape extends TResponseShape<any> = TRoute$users$get["return"],
     >(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     create<

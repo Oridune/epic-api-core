@@ -99,10 +99,25 @@ export const schemaToTsType = (schema?: IValidatorJSONSchema, content = "") => {
       content += ` & { [K: string]: ${c} }\n`;
     }
 
-    return { optional: !schema.requiredProperties?.length, content };
+    return {
+      optional: schema.optional ?? !schema.requiredProperties?.length,
+      content,
+    };
   }
 
   if (schema.type === "array") {
+    if (schema.tuple instanceof Array && schema.tuple.length) {
+      const types = schema.tuple.map((schema) => {
+        const { optional, content } = schemaToTsType(schema);
+
+        return optional ? `${content} | undefined` : content;
+      });
+
+      content = `[${types}]`;
+
+      return { optional: schema.optional ?? false, content };
+    }
+
     const ItemType = schemaToTsType(schema.items);
 
     content = `Array<${ItemType.content}${
@@ -138,8 +153,8 @@ export const schemaToTsType = (schema?: IValidatorJSONSchema, content = "") => {
   }
 
   return {
-    optional: schema.optional ?? false,
-    content: schema.type,
+    optional: schema.type === "any" ? true : (schema.optional ?? false),
+    content: schema.tsType ?? schema.type,
   };
 };
 
@@ -257,11 +272,15 @@ export const generateSDK = async (options: {
       sdkDir: SDKDir,
     });
 
+    const UniqueExtensions = Array.from(
+      new Map(Extensions.map((item) => [item.name, item])).values(),
+    );
+
     const PackageJSON = createPackageJSON({
       ...(Options.version === "latest" ? {} : { version: Options.version }),
       dependencies: {
         "epic-api-sdk": "file:.",
-        ...Extensions.map(($) => $.package.dependencies).filter(
+        ...UniqueExtensions.map(($) => $.package.dependencies).filter(
           Boolean,
         ).reduce<Record<string, string>>(($, deps) => ({ ...$, ...deps }), {}),
       },
@@ -348,7 +367,7 @@ export const generateSDK = async (options: {
 
         return ModulePath.replace(/\.ts$/, "");
       },
-      extensions: Extensions,
+      extensions: UniqueExtensions,
     };
 
     await Promise.all([
@@ -373,7 +392,13 @@ export const generateSDK = async (options: {
       ),
     ]);
 
-    await exec("npm run build", { cwd: SDKDir });
+    await exec("npm run build", { cwd: SDKDir }).catch((error) => {
+      if (error instanceof Error && "stdout" in error) {
+        console.log(error.stdout);
+      }
+
+      throw error;
+    });
     await exec("npm pack", { cwd: SDKDir });
 
     await Deno.mkdir(SDKPublicDir, { recursive: true }).catch(() => {

@@ -60,7 +60,7 @@ export type TRoute$api$home = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -105,7 +105,7 @@ export interface IController$api {
         ReturnShape extends TResponseShape<any> = TRoute$api$postman["return"],
     >(data: {
         method?: Method;
-        query?: QueryShape;
+        query: QueryShape;
         params?: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;

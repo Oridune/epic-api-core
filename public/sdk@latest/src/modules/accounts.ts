@@ -34,7 +34,7 @@ export type TRoute$accounts$create = {
 		updatedAt?: Date;
 		createdBy: ObjectId;
 		createdFor: ObjectId;
-		logo: /*(optional)*/{
+		logo?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
 		name?: string;
@@ -68,7 +68,7 @@ export type TRoute$accounts$create = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -114,7 +114,7 @@ export type TRoute$accounts$delete = {
 export type TRoute$accounts$get = {
     query: {
 		search?: string;
-		range?: Array<{} | undefined>;
+		range?: [Date,Date];
 		offset?: number;
 		limit?: number;
 		sort?: /*(optional default:[object Object])*/{
@@ -139,7 +139,7 @@ export type TRoute$accounts$get = {
 		updatedAt?: Date;
 		createdBy: ObjectId;
 		createdFor: ObjectId;
-		logo: /*(optional)*/{
+		logo?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
 		name?: string;
@@ -161,7 +161,7 @@ export type TRoute$accounts$get = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -222,7 +222,7 @@ export interface IController$accounts {
         method?: Method;
         query?: QueryShape;
         params?: ParamsShape;
-        body?: BodyShape;
+        body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     update<
         Method extends "patch",
@@ -234,7 +234,7 @@ export interface IController$accounts {
         method?: Method;
         query?: QueryShape;
         params: ParamsShape;
-        body?: BodyShape;
+        body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     delete<
         Method extends "delete",
@@ -257,8 +257,8 @@ export interface IController$accounts {
         ReturnShape extends TResponseShape<any> = TRoute$accounts$get["return"],
     >(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     toggleBlocked<

@@ -26,8 +26,8 @@ export type TRoute$oauth$exchangeAuthentication = {
     params: {},
     body: {
 		authenticationToken: string;
-		tokenPayload: any;
-		scopes?: {
+		tokenPayload?: any;
+		scopes: {
 } & { [K: string]: Array<string> }
 ;
 },
@@ -47,7 +47,7 @@ export type TRoute$oauth$exchangeAuthentication = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -66,14 +66,18 @@ export type TRoute$oauth$exchangeCode = {
     params: {},
     body: {
 		code: string;
-		codePayload: any;
+		codePayload?: any;
 		codeVerifier?: string;
 		fcmDeviceToken?: string;
+		geoPoint?: /*(optional)*/{
+		type?: "Point" | (string & {});
+		coordinates: [number,number];
+};
 },
     return: {
 		status: boolean;
 		data: {
-		refresh: /*(optional)*/{
+		refresh?: /*(optional)*/{
 		issuer: string;
 		type: string;
 		token: string;
@@ -92,7 +96,7 @@ export type TRoute$oauth$exchangeCode = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -111,7 +115,7 @@ export type TRoute$oauth$authenticate = {
     params: {},
     body: {
 		oauthAppId: string;
-		oauthApp: any;
+		oauthApp?: any;
 		callbackURL: string;
 		codeChallenge?: string;
 		codeChallengeMethod: string;
@@ -128,9 +132,9 @@ export type TRoute$oauth$authenticate = {
 };
 		availableScopes: Array<{
 		scopes: Array<string>;
-		account?: {
+		account: {
 		_id?: ObjectId;
-		logo: /*(optional)*/{
+		logo?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
 		name?: string;
@@ -159,7 +163,7 @@ export type TRoute$oauth$authenticate = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -208,7 +212,7 @@ export type TRoute$oauth$createPermit = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -227,12 +231,12 @@ export type TRoute$oauth$refresh = {
     params: {},
     body: {
 		refreshToken: string;
-		refreshTokenPayload: any;
+		refreshTokenPayload?: any;
 },
     return: {
 		status: boolean;
 		data: {
-		refresh: /*(optional)*/{
+		refresh?: /*(optional)*/{
 		issuer: string;
 		type: string;
 		token: string;
@@ -251,7 +255,7 @@ export type TRoute$oauth$refresh = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -274,7 +278,7 @@ export interface IController$oauth {
         method?: Method;
         query?: QueryShape;
         params?: ParamsShape;
-        body?: BodyShape;
+        body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     exchangeAuthentication<
         Method extends "post",
@@ -320,7 +324,7 @@ export interface IController$oauth {
         ReturnShape extends TResponseShape<any> = TRoute$oauth$logout["return"],
     >(data: {
         method?: Method;
-        query?: QueryShape;
+        query: QueryShape;
         params?: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;

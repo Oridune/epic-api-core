@@ -59,7 +59,7 @@ export type TRoute$users$updateEmail = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -92,7 +92,7 @@ export type TRoute$users$update = {
         data: {
             username?: string;
             password?: string;
-            avatar: {
+            avatar?: {
                 _id?: ObjectId;
                 createdBy?: ObjectId;
                 name?: string;
@@ -122,6 +122,10 @@ export type TRoute$users$update = {
             oauthApp?: ObjectId;
             reference?: string;
             passwordHistory?: Array<string>;
+            locationHistory?: Array<{
+                type?: "Point" | (string & {});
+                coordinates: [number, number];
+            }>;
             role?: string;
             isEmailVerified?: boolean;
             isPhoneVerified?: boolean;
@@ -154,7 +158,7 @@ export type TRoute$users$update = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -174,7 +178,7 @@ export type TRoute$users$me = {
         data: {
             user: {
                 username: string;
-                avatar: {
+                avatar?: {
                     _id?: ObjectId;
                     createdBy?: ObjectId;
                     name?: string;
@@ -203,6 +207,10 @@ export type TRoute$users$me = {
                 updatedAt?: Date;
                 oauthApp: ObjectId;
                 reference?: string;
+                locationHistory?: Array<{
+                    type?: "Point" | (string & {});
+                    coordinates: [number, number];
+                }>;
                 role: string;
                 isEmailVerified?: boolean;
                 isPhoneVerified?: boolean;
@@ -226,7 +234,7 @@ export type TRoute$users$me = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -245,7 +253,7 @@ export type TRoute$users$updatePassword = {
         token: string;
         code: number;
         password: string;
-        hashedPassword: any;
+        hashedPassword?: any;
     };
     return: {
         status: boolean;
@@ -272,7 +280,7 @@ export type TRoute$users$updatePhone = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -323,7 +331,7 @@ export type TRoute$users$updateRole = {
 export type TRoute$users$get = {
     query: {
         search?: string;
-        range?: Array<{} | undefined>;
+        range?: [Date, Date];
         offset?: number;
         limit?: number;
         sort?: /*(optional default:[object Object])*/ {} & {
@@ -345,7 +353,7 @@ export type TRoute$users$get = {
             users: Array<{
                 username: string;
                 password: string;
-                avatar: {
+                avatar?: {
                     _id?: ObjectId;
                     createdBy?: ObjectId;
                     name?: string;
@@ -375,6 +383,10 @@ export type TRoute$users$get = {
                 oauthApp: ObjectId;
                 reference?: string;
                 passwordHistory: Array<string>;
+                locationHistory?: Array<{
+                    type?: "Point" | (string & {});
+                    coordinates: [number, number];
+                }>;
                 role: string;
                 isEmailVerified?: boolean;
                 isPhoneVerified?: boolean;
@@ -408,7 +420,7 @@ export type TRoute$users$get = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -421,16 +433,16 @@ export type TRoute$users$get = {
 };
 export type TRoute$users$create = {
     query: {
-        reference: any;
+        reference?: any;
     };
     params: {
         oauthAppId: string;
-        oauthApp: any;
+        oauthApp?: any;
     };
     body: {
         username: string;
         password: string;
-        avatar: {
+        avatar?: {
             _id?: ObjectId;
             createdBy?: ObjectId;
             name?: string;
@@ -461,7 +473,7 @@ export type TRoute$users$create = {
             user: {
                 username: string;
                 password: string;
-                avatar: {
+                avatar?: {
                     _id?: ObjectId;
                     createdBy?: ObjectId;
                     name?: string;
@@ -491,6 +503,10 @@ export type TRoute$users$create = {
                 oauthApp: ObjectId;
                 reference?: string;
                 passwordHistory: Array<string>;
+                locationHistory?: Array<{
+                    type?: "Point" | (string & {});
+                    coordinates: [number, number];
+                }>;
                 role: string;
                 isEmailVerified?: boolean;
                 isPhoneVerified?: boolean;
@@ -522,7 +538,7 @@ export type TRoute$users$create = {
                 updatedAt?: Date;
                 createdBy: ObjectId;
                 createdFor: ObjectId;
-                logo: {
+                logo?: {
                     _id?: ObjectId;
                     createdBy?: ObjectId;
                     name?: string;
@@ -557,7 +573,7 @@ export type TRoute$users$create = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -585,19 +601,19 @@ export interface IController$users {
     updateAvatar<Method extends "get", QueryShape extends TRoute$users$updateAvatar["query"], ParamsShape extends TRoute$users$updateAvatar["params"], BodyShape extends TRoute$users$updateAvatar["body"], ReturnShape extends TResponseShape<any> = TRoute$users$updateAvatar["return"]>(data: {
         method?: Method;
         query: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     updateAvatar<Method extends "delete", QueryShape extends TRoute$users$updateAvatar["query"], ParamsShape extends TRoute$users$updateAvatar["params"], BodyShape extends TRoute$users$updateAvatar["body"], ReturnShape extends TResponseShape<any> = TRoute$users$updateAvatar["return"]>(data: {
         method?: Method;
         query: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     updateAvatar<Method extends "put", QueryShape extends TRoute$users$updateAvatar["query"], ParamsShape extends TRoute$users$updateAvatar["params"], BodyShape extends TRoute$users$updateAvatar["body"], ReturnShape extends TResponseShape<any> = TRoute$users$updateAvatar["return"]>(data: {
         method?: Method;
         query: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     setFcmToken<Method extends "put", QueryShape extends TRoute$users$setFcmToken["query"], ParamsShape extends TRoute$users$setFcmToken["params"], BodyShape extends TRoute$users$setFcmToken["body"], ReturnShape extends TResponseShape<any> = TRoute$users$setFcmToken["return"]>(data: {
@@ -651,21 +667,21 @@ export interface IController$users {
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     delete<Method extends "delete", QueryShape extends TRoute$users$delete["query"], ParamsShape extends TRoute$users$delete["params"], BodyShape extends TRoute$users$delete["body"], ReturnShape extends TResponseShape<any> = TRoute$users$delete["return"]>(data: {
         method?: Method;
-        query?: QueryShape;
+        query: QueryShape;
         params?: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     updateRole<Method extends "patch", QueryShape extends TRoute$users$updateRole["query"], ParamsShape extends TRoute$users$updateRole["params"], BodyShape extends TRoute$users$updateRole["body"], ReturnShape extends TResponseShape<any> = TRoute$users$updateRole["return"]>(data: {
         method?: Method;
         query?: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     get(): TRequestExecutors<TRoute$users$get["return"]>;
     get<Method extends "get", QueryShape extends TRoute$users$get["query"], ParamsShape extends TRoute$users$get["params"], BodyShape extends TRoute$users$get["body"], ReturnShape extends TResponseShape<any> = TRoute$users$get["return"]>(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     create<Method extends "post", QueryShape extends TRoute$users$create["query"], ParamsShape extends TRoute$users$create["params"], BodyShape extends TRoute$users$create["body"], ReturnShape extends TResponseShape<any> = TRoute$users$create["return"]>(data: {

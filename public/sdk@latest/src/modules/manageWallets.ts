@@ -35,7 +35,7 @@ export type TRoute$manageWallets$balanceList = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -52,7 +52,7 @@ export type TRoute$manageWallets$balanceList = {
 export type TRoute$manageWallets$getAll = {
     query: {
 		search?: string;
-		range?: Array<{} | undefined>;
+		range?: [Date,Date];
 		offset?: number;
 		limit?: number;
 		sort?: /*(optional default:[object Object])*/{
@@ -92,7 +92,7 @@ export type TRoute$manageWallets$getAll = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -154,7 +154,7 @@ export type TRoute$manageWallets$refund = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -224,7 +224,7 @@ export type TRoute$manageWallets$charge = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -243,7 +243,7 @@ export type TRoute$manageWallets$transactions = {
 		search?: string;
 		sent?: boolean;
 		received?: boolean;
-		range?: Array<{} | undefined>;
+		range?: [Date,Date];
 		offset?: number;
 		limit?: number;
 		sort?: /*(optional default:[object Object])*/{
@@ -303,7 +303,7 @@ export type TRoute$manageWallets$transactions = {
 		name?: string;
 } & { [K: string]: any }
 >;
-		metrics: /*(optional)*/{
+		metrics?: /*(optional)*/{
 		handledInMs?: number;
 		respondInMs?: number;
 } & { [K: string]: any }
@@ -326,7 +326,7 @@ export interface IController$manageWallets {
         method?: Method;
         query?: QueryShape;
         params: ParamsShape;
-        body?: BodyShape;
+        body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     getAll(): TRequestExecutors<TRoute$manageWallets$getAll["return"]>;
     getAll<
@@ -337,8 +337,8 @@ export interface IController$manageWallets {
         ReturnShape extends TResponseShape<any> = TRoute$manageWallets$getAll["return"],
     >(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     refund<
@@ -362,7 +362,7 @@ export interface IController$manageWallets {
     >(data: {
         method?: Method;
         query?: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     transactions(): TRequestExecutors<TRoute$manageWallets$transactions["return"]>;
@@ -374,7 +374,7 @@ export interface IController$manageWallets {
         ReturnShape extends TResponseShape<any> = TRoute$manageWallets$transactions["return"],
     >(data: {
         method?: Method;
-        query?: QueryShape;
+        query: QueryShape;
         params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;

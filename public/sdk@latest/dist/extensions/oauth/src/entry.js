@@ -8,6 +8,7 @@ class oauthEntry {
     static auth;
     static me;
     static selectedAccount;
+    static _interceptorAdded = false;
     static _refreshRequest;
     static generateRandomString(length) {
         const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -45,38 +46,59 @@ class oauthEntry {
             url,
         };
     }
-    static async getAccessToken(code, verifier, opts) {
+    static async login(appId, opts) {
+        const authorization = await __1.EpicSDK.getCache("authorization");
+        if (authorization) {
+            this.auth = authorization.value;
+            return;
+        }
+        exchangeCode: if (typeof opts?.code === "string") {
+            const verifier = await __1.EpicSDK.getCache("verifier");
+            if (!verifier)
+                break exchangeCode;
+            await this.fetchAccessToken(opts.code, verifier.value);
+            return;
+        }
+        const { verifier, url } = this.oauth2Login(appId, opts);
+        await __1.EpicSDK.setCache("verifier", verifier);
+        opts.onRedirect(url);
+    }
+    static async fetchAccessToken(code, verifier, opts) {
         this.auth = await __1.EpicSDK.oauth.exchangeCode({
             body: {
                 code,
-                codePayload: undefined,
                 codeVerifier: verifier,
-                fcmDeviceToken: opts.deviceToken,
+                fcmDeviceToken: opts?.deviceToken,
+                geoPoint: opts?.geoPoint,
             },
         }).data;
-        __1.EpicSDK._axios?.interceptors.request.use(async (config) => {
-            if (!config.headers["Authorization"] && this.auth) {
-                const timeInSeconds = Date.now() / 1000;
-                if (this.auth.access.expiresAtSeconds <= timeInSeconds) {
-                    if (!this.auth.refresh ||
-                        this.auth.refresh.expiresAtSeconds <= timeInSeconds) {
-                        throw new Error("Access token expired!");
+        if (!this._interceptorAdded) {
+            __1.EpicSDK._axios?.interceptors.request.use(async (config) => {
+                if (!config.headers["Authorization"] && this.auth) {
+                    const timeInSeconds = Date.now() / 1000;
+                    if (this.auth.access.expiresAtSeconds <= timeInSeconds) {
+                        if (!this.auth.refresh ||
+                            this.auth.refresh.expiresAtSeconds <=
+                                timeInSeconds) {
+                            throw new Error("Access token expired!");
+                        }
+                        await this.refreshAccessToken(this.auth.refresh.token);
+                        //! this._refreshRequest is used to stop bubbling do not remove it!
+                        setTimeout(() => {
+                            delete this._refreshRequest;
+                        }, 1000);
                     }
-                    await this.refreshAccessToken(this.auth.refresh.token);
-                    //! this._refreshRequest is used to stop bubbling do not remove it!
-                    setTimeout(() => {
-                        delete this._refreshRequest;
-                    }, 1000);
+                    config.headers["Authorization"] =
+                        `Bearer ${this.auth.access.token}`;
+                    config.headers["X-Account-ID"] = __1.EpicSDK._apiVersion;
+                    if (this.selectedAccount) {
+                        config.headers["X-Account-ID"] =
+                            this.selectedAccount;
+                    }
                 }
-                config.headers["Authorization"] =
-                    `Bearer ${this.auth.access.token}`;
-                config.headers["X-Account-ID"] = __1.EpicSDK._apiVersion;
-                if (this.selectedAccount) {
-                    config.headers["X-Account-ID"] = this.selectedAccount;
-                }
-            }
-            return config;
-        });
+                return config;
+            });
+        }
     }
     static async refreshAccessToken(refreshToken) {
         //! this._refreshRequest is used to stop bubbling do not remove it!

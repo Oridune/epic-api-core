@@ -24,7 +24,7 @@ export type TRoute$envs$create = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -64,7 +64,7 @@ export type TRoute$envs$delete = {
 export type TRoute$envs$get = {
     query: {
         search?: string;
-        range?: Array<{} | undefined>;
+        range?: [Date, Date];
         offset?: number;
         limit?: number;
         sort?: /*(optional default:[object Object])*/ {} & {
@@ -99,7 +99,7 @@ export type TRoute$envs$get = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -132,8 +132,8 @@ export interface IController$envs {
     get(): TRequestExecutors<TRoute$envs$get["return"]>;
     get<Method extends "get", QueryShape extends TRoute$envs$get["query"], ParamsShape extends TRoute$envs$get["params"], BodyShape extends TRoute$envs$get["body"], ReturnShape extends TResponseShape<any> = TRoute$envs$get["return"]>(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }

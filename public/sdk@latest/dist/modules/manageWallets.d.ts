@@ -31,7 +31,7 @@ export type TRoute$manageWallets$balanceList = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -45,7 +45,7 @@ export type TRoute$manageWallets$balanceList = {
 export type TRoute$manageWallets$getAll = {
     query: {
         search?: string;
-        range?: Array<{} | undefined>;
+        range?: [Date, Date];
         offset?: number;
         limit?: number;
         sort?: /*(optional default:[object Object])*/ {} & {
@@ -86,7 +86,7 @@ export type TRoute$manageWallets$getAll = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -146,7 +146,7 @@ export type TRoute$manageWallets$refund = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -214,7 +214,7 @@ export type TRoute$manageWallets$charge = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -230,7 +230,7 @@ export type TRoute$manageWallets$transactions = {
         search?: string;
         sent?: boolean;
         received?: boolean;
-        range?: Array<{} | undefined>;
+        range?: [Date, Date];
         offset?: number;
         limit?: number;
         sort?: /*(optional default:[object Object])*/ {} & {
@@ -291,7 +291,7 @@ export type TRoute$manageWallets$transactions = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -307,13 +307,13 @@ export interface IController$manageWallets {
         method?: Method;
         query?: QueryShape;
         params: ParamsShape;
-        body?: BodyShape;
+        body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     getAll(): TRequestExecutors<TRoute$manageWallets$getAll["return"]>;
     getAll<Method extends "get", QueryShape extends TRoute$manageWallets$getAll["query"], ParamsShape extends TRoute$manageWallets$getAll["params"], BodyShape extends TRoute$manageWallets$getAll["body"], ReturnShape extends TResponseShape<any> = TRoute$manageWallets$getAll["return"]>(data: {
         method?: Method;
-        query?: QueryShape;
-        params?: ParamsShape;
+        query: QueryShape;
+        params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     refund<Method extends "delete", QueryShape extends TRoute$manageWallets$refund["query"], ParamsShape extends TRoute$manageWallets$refund["params"], BodyShape extends TRoute$manageWallets$refund["body"], ReturnShape extends TResponseShape<any> = TRoute$manageWallets$refund["return"]>(data: {
@@ -325,13 +325,13 @@ export interface IController$manageWallets {
     charge<Method extends "post", QueryShape extends TRoute$manageWallets$charge["query"], ParamsShape extends TRoute$manageWallets$charge["params"], BodyShape extends TRoute$manageWallets$charge["body"], ReturnShape extends TResponseShape<any> = TRoute$manageWallets$charge["return"]>(data: {
         method?: Method;
         query?: QueryShape;
-        params?: ParamsShape;
+        params: ParamsShape;
         body: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
     transactions(): TRequestExecutors<TRoute$manageWallets$transactions["return"]>;
     transactions<Method extends "get", QueryShape extends TRoute$manageWallets$transactions["query"], ParamsShape extends TRoute$manageWallets$transactions["params"], BodyShape extends TRoute$manageWallets$transactions["body"], ReturnShape extends TResponseShape<any> = TRoute$manageWallets$transactions["return"]>(data: {
         method?: Method;
-        query?: QueryShape;
+        query: QueryShape;
         params: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;

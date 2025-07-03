@@ -10,16 +10,16 @@ export declare class EpicSDK {
     static _apiVersion: string;
     static _options?: TSDKOptions;
     static _axios?: AxiosInstance;
-    protected static resolveCacheKey(keys: TCacheKey, namespace?: string): string;
-    protected static setCache(keys: TCacheKey, value: any): Promise<boolean>;
-    protected static getCache<T>(keys: TCacheKey): Promise<{
-        value: T;
-        timestamp: number;
-    } | null>;
-    protected static delCache(keys: TCacheKey): Promise<boolean>;
     static init(options?: TSDKOptions): void;
     static isPermitted: (scope: string, permission?: string) => boolean;
     static checkPermission(scope: string, permission?: string): void;
+    static resolveCacheKey(keys: TCacheKey, namespace?: string): string;
+    static setCache(keys: TCacheKey, value: any): Promise<boolean>;
+    static getCache<T>(keys: TCacheKey): Promise<{
+        value: T;
+        timestamp: number;
+    } | null>;
+    static delCache(keys: TCacheKey): Promise<boolean>;
     static useCache<T>(callback: () => T | Promise<T>, options?: TCacheOptions<T>): Promise<T>;
     static resolveAxiosResponse<T>(executor: () => Promise<AxiosResponse<T>>, options?: TCacheOptions<T>): {
         readonly raw: Promise<AxiosResponse<T, any>>;

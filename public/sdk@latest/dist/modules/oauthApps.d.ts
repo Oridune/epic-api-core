@@ -19,7 +19,7 @@ export type TRoute$oauthApps$getDefault = {
                 passkeyEnabled?: boolean;
                 availableCountryCodes?: Array<string>;
                 requiredIdentificationMethods?: Array<string>;
-                logo: {
+                logo?: {
                     _id?: ObjectId;
                     createdBy?: ObjectId;
                     name?: string;
@@ -45,10 +45,10 @@ export type TRoute$oauthApps$getDefault = {
                 privacyPolicyURL?: string;
                 termsAndConditionsURL?: string;
                 supportURL?: string;
-                thirdPartyApp: {
+                thirdPartyApp?: {
                     name?: string;
                     description?: string;
-                    logo: {
+                    logo?: {
                         _id?: ObjectId;
                         createdBy?: ObjectId;
                         name?: string;
@@ -89,7 +89,7 @@ export type TRoute$oauthApps$getDefault = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -112,7 +112,7 @@ export type TRoute$oauthApps$create = {
             passkeyEnabled?: boolean;
             availableCountryCodes?: Array<string>;
             requiredIdentificationMethods?: Array<string>;
-            logo: {
+            logo?: {
                 _id?: ObjectId;
                 createdBy?: ObjectId;
                 name?: string;
@@ -138,10 +138,10 @@ export type TRoute$oauthApps$create = {
             privacyPolicyURL?: string;
             termsAndConditionsURL?: string;
             supportURL?: string;
-            thirdPartyApp: {
+            thirdPartyApp?: {
                 name?: string;
                 description?: string;
-                logo: {
+                logo?: {
                     _id?: ObjectId;
                     createdBy?: ObjectId;
                     name?: string;
@@ -191,7 +191,7 @@ export type TRoute$oauthApps$create = {
                 passkeyEnabled?: boolean;
                 availableCountryCodes?: Array<string>;
                 requiredIdentificationMethods?: Array<string>;
-                logo: {
+                logo?: {
                     _id?: ObjectId;
                     createdBy?: ObjectId;
                     name?: string;
@@ -217,10 +217,10 @@ export type TRoute$oauthApps$create = {
                 privacyPolicyURL?: string;
                 termsAndConditionsURL?: string;
                 supportURL?: string;
-                thirdPartyApp: {
+                thirdPartyApp?: {
                     name?: string;
                     description?: string;
-                    logo: {
+                    logo?: {
                         _id?: ObjectId;
                         createdBy?: ObjectId;
                         name?: string;
@@ -261,7 +261,7 @@ export type TRoute$oauthApps$create = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -295,7 +295,7 @@ export type TRoute$oauthApps$list = {
                 passkeyEnabled?: boolean;
                 availableCountryCodes?: Array<string>;
                 requiredIdentificationMethods?: Array<string>;
-                logo: {
+                logo?: {
                     _id?: ObjectId;
                     createdBy?: ObjectId;
                     name?: string;
@@ -321,10 +321,10 @@ export type TRoute$oauthApps$list = {
                 privacyPolicyURL?: string;
                 termsAndConditionsURL?: string;
                 supportURL?: string;
-                thirdPartyApp: {
+                thirdPartyApp?: {
                     name?: string;
                     description?: string;
-                    logo: {
+                    logo?: {
                         _id?: ObjectId;
                         createdBy?: ObjectId;
                         name?: string;
@@ -365,7 +365,7 @@ export type TRoute$oauthApps$list = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -398,7 +398,7 @@ export type TRoute$oauthApps$getDetails = {
                 passkeyEnabled?: boolean;
                 availableCountryCodes?: Array<string>;
                 requiredIdentificationMethods?: Array<string>;
-                logo: {
+                logo?: {
                     _id?: ObjectId;
                     createdBy?: ObjectId;
                     name?: string;
@@ -424,10 +424,10 @@ export type TRoute$oauthApps$getDetails = {
                 privacyPolicyURL?: string;
                 termsAndConditionsURL?: string;
                 supportURL?: string;
-                thirdPartyApp: {
+                thirdPartyApp?: {
                     name?: string;
                     description?: string;
-                    logo: {
+                    logo?: {
                         _id?: ObjectId;
                         createdBy?: ObjectId;
                         name?: string;
@@ -468,7 +468,7 @@ export type TRoute$oauthApps$getDetails = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -501,7 +501,7 @@ export type TRoute$oauthApps$get = {
                 passkeyEnabled?: boolean;
                 availableCountryCodes?: Array<string>;
                 requiredIdentificationMethods?: Array<string>;
-                logo: {
+                logo?: {
                     _id?: ObjectId;
                     createdBy?: ObjectId;
                     name?: string;
@@ -527,10 +527,10 @@ export type TRoute$oauthApps$get = {
                 privacyPolicyURL?: string;
                 termsAndConditionsURL?: string;
                 supportURL?: string;
-                thirdPartyApp: {
+                thirdPartyApp?: {
                     name?: string;
                     description?: string;
-                    logo: {
+                    logo?: {
                         _id?: ObjectId;
                         createdBy?: ObjectId;
                         name?: string;
@@ -571,7 +571,7 @@ export type TRoute$oauthApps$get = {
         } & {
             [K: string]: any;
         }>;
-        metrics: /*(optional)*/ {
+        metrics?: /*(optional)*/ {
             handledInMs?: number;
             respondInMs?: number;
         } & {
@@ -585,7 +585,7 @@ export type TRoute$oauthApps$get = {
 export type TRoute$oauthApps$delete = {
     query: {};
     params: {
-        appId?: {};
+        appId: {};
     };
     body: {};
     return: {
@@ -610,7 +610,7 @@ export interface IController$oauthApps {
     list(): TRequestExecutors<TRoute$oauthApps$list["return"]>;
     list<Method extends "get", QueryShape extends TRoute$oauthApps$list["query"], ParamsShape extends TRoute$oauthApps$list["params"], BodyShape extends TRoute$oauthApps$list["body"], ReturnShape extends TResponseShape<any> = TRoute$oauthApps$list["return"]>(data: {
         method?: Method;
-        query?: QueryShape;
+        query: QueryShape;
         params?: ParamsShape;
         body?: BodyShape;
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;

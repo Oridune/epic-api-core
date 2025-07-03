@@ -25,13 +25,13 @@ export type TRoute$oauthPasskey$login = {
         credentials: {
             id: string;
             rawId: string;
-            response: any;
+            response?: any;
             authenticatorAttachment: string;
-            clientExtensionResults: any;
+            clientExtensionResults?: any;
             type: string;
         };
         oauthAppId: string;
-        oauthApp: any;
+        oauthApp?: any;
         callbackURL: string;
         codeChallenge?: string;
         codeChallengeMethod: string;
@@ -49,9 +49,9 @@ export type TRoute$oauthPasskey$register = {
         credentials: {
             id: string;
             rawId: string;
-            response: any;
+            response?: any;
             authenticatorAttachment: string;
-            clientExtensionResults: any;
+            clientExtensionResults?: any;
             type: string;
         };
     };
