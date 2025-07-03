@@ -52,7 +52,7 @@ export class oauthEntry {
 
         return {
             verifier,
-            method: "sha256",
+            method: "sha-256",
             challenge: base64encode(sha256.arrayBuffer(verifier))
                 .replace(/\+/g, "-")
                 .replace(/\//g, "_")
