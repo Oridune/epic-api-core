@@ -30,7 +30,7 @@ export class oauthEntry {
     static me?: TRoute$users$me["return"]["data"]["user"];
     static selectedAccount?: string;
 
-    protected static _interceptorAdded = false;
+    protected static _authInterceptorAdded = false;
     protected static _refreshRequest?: Promise<TAuthorization>;
 
     protected static generateRandomString(length: number): string {
@@ -58,6 +58,57 @@ export class oauthEntry {
                 .replace(/\//g, "_")
                 .replace(/=/g, ""),
         };
+    }
+
+    protected static addAuthInterceptor() {
+        if (!this._authInterceptorAdded) {
+            console.log("Interceptor added");
+
+            EpicSDK._axios!.interceptors.request.use(
+                async (config) => {
+                    console.log("Interceptor triggered");
+
+                    if (!config.headers["Authorization"] && this.auth) {
+                        const timeInSeconds = Date.now() / 1000;
+
+                        if (
+                            this.auth.access.expiresAtSeconds <= timeInSeconds
+                        ) {
+                            if (
+                                !this.auth.refresh ||
+                                this.auth.refresh.expiresAtSeconds <=
+                                    timeInSeconds
+                            ) {
+                                throw new Error("Access token expired!");
+                            }
+
+                            await this.refreshAccessToken(
+                                this.auth.refresh.token,
+                            );
+
+                            //! this._refreshRequest is used to stop bubbling do not remove it!
+                            setTimeout(() => {
+                                delete this._refreshRequest;
+                            }, 1000);
+                        }
+
+                        config.headers["Authorization"] =
+                            `Bearer ${this.auth.access.token}`;
+
+                        config.headers["X-Api-Version"] = EpicSDK._apiVersion;
+
+                        if (this.selectedAccount) {
+                            config.headers["X-Account-ID"] =
+                                this.selectedAccount;
+                        }
+                    }
+
+                    return config;
+                },
+            );
+
+            this._authInterceptorAdded = true;
+        }
     }
 
     static oauth2Login(
@@ -102,6 +153,8 @@ export class oauthEntry {
         if (authorization) {
             this.auth = authorization.value;
 
+            this.addAuthInterceptor();
+
             return;
         }
 
@@ -142,54 +195,7 @@ export class oauthEntry {
             },
         }).data as TAuthorization;
 
-        if (!this._interceptorAdded) {
-            console.log("Interceptor added");
-
-            EpicSDK._axios!.interceptors.request.use(
-                async (config) => {
-                    console.log("Interceptor triggered");
-
-                    if (!config.headers["Authorization"] && this.auth) {
-                        const timeInSeconds = Date.now() / 1000;
-
-                        if (
-                            this.auth.access.expiresAtSeconds <= timeInSeconds
-                        ) {
-                            if (
-                                !this.auth.refresh ||
-                                this.auth.refresh.expiresAtSeconds <=
-                                    timeInSeconds
-                            ) {
-                                throw new Error("Access token expired!");
-                            }
-
-                            await this.refreshAccessToken(
-                                this.auth.refresh.token,
-                            );
-
-                            //! this._refreshRequest is used to stop bubbling do not remove it!
-                            setTimeout(() => {
-                                delete this._refreshRequest;
-                            }, 1000);
-                        }
-
-                        config.headers["Authorization"] =
-                            `Bearer ${this.auth.access.token}`;
-
-                        config.headers["X-Account-ID"] = EpicSDK._apiVersion;
-
-                        if (this.selectedAccount) {
-                            config.headers["X-Account-ID"] =
-                                this.selectedAccount;
-                        }
-                    }
-
-                    return config;
-                },
-            );
-
-            this._interceptorAdded = true;
-        }
+        this.addAuthInterceptor();
 
         return this.auth;
     }
