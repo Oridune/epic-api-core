@@ -73,9 +73,12 @@ export class oauthEntry {
             &codeChallenge=${challenge}
             &callbackURL=${opts.callbackUrl}
             &state=${btoa(JSON.stringify(opts.state))}
-            &theme=${opts.theme}
-            &lng=${opts.lng}
-            ${opts.username ? `&username=${opts.username}` : ""}`,
+            &theme=${opts.theme ?? "system"}
+            &lng=${opts.lng ?? "en"}
+            ${opts.username ? `&username=${opts.username}` : ""}`.replace(
+                /\s*/g,
+                "",
+            ),
             EpicSDK._options?.axiosConfig?.baseURL,
         ).toString();
 
