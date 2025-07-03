@@ -110,7 +110,9 @@ export class oauthEntry {
 
             if (!verifier) break exchangeCode;
 
-            await this.fetchAccessToken(opts.code, verifier.value);
+            const authorization = await this.fetchAccessToken(opts.code, verifier.value);
+
+            await EpicSDK.setCache("authorization", authorization);
 
             return;
         }
@@ -179,6 +181,8 @@ export class oauthEntry {
                 },
             );
         }
+
+        return this.auth;
     }
 
     static async refreshAccessToken(refreshToken: string) {
