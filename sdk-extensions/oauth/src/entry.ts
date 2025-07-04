@@ -61,14 +61,10 @@ export class oauthEntry {
         };
     }
 
-    protected static addAuthInterceptor() {
+    protected static async onLogin() {
         if (!this._authInterceptorAdded) {
-            console.log("Interceptor added");
-
             EpicSDK._axios!.interceptors.request.use(
                 async (config) => {
-                    console.log("Interceptor triggered");
-
                     if (!config.headers["Authorization"] && this.auth) {
                         const timeInSeconds = Date.now() / 1000;
 
@@ -110,6 +106,8 @@ export class oauthEntry {
 
             this._authInterceptorAdded = true;
         }
+
+        await this.registerPermissions();
     }
 
     protected static async registerPermissions() {
@@ -164,9 +162,7 @@ export class oauthEntry {
         if (authorization) {
             this.auth = authorization.value;
 
-            this.addAuthInterceptor();
-
-            await this.registerPermissions();
+            await this.onLogin();
 
             return;
         }
@@ -208,7 +204,7 @@ export class oauthEntry {
             },
         }).data as TAuthorization;
 
-        this.addAuthInterceptor();
+        await this.onLogin();
 
         return this.auth;
     }

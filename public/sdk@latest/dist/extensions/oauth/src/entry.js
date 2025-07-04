@@ -31,11 +31,9 @@ class oauthEntry {
                 .replace(/=/g, ""),
         };
     }
-    static addAuthInterceptor() {
+    static async onLogin() {
         if (!this._authInterceptorAdded) {
-            console.log("Interceptor added");
             __1.EpicSDK._axios.interceptors.request.use(async (config) => {
-                console.log("Interceptor triggered");
                 if (!config.headers["Authorization"] && this.auth) {
                     const timeInSeconds = Date.now() / 1000;
                     if (this.auth.access.expiresAtSeconds <= timeInSeconds) {
@@ -62,6 +60,7 @@ class oauthEntry {
             });
             this._authInterceptorAdded = true;
         }
+        await this.registerPermissions();
     }
     static async registerPermissions() {
         const { scopePipeline } = await __1.EpicSDK.oauthPolicies.me().data;
@@ -90,8 +89,7 @@ class oauthEntry {
         const authorization = await __1.EpicSDK.getCache("authorization");
         if (authorization) {
             this.auth = authorization.value;
-            this.addAuthInterceptor();
-            await this.registerPermissions();
+            await this.onLogin();
             return;
         }
         exchangeCode: if (typeof opts?.code === "string") {
@@ -115,7 +113,7 @@ class oauthEntry {
                 geoPoint: opts?.geoPoint,
             },
         }).data;
-        this.addAuthInterceptor();
+        await this.onLogin();
         return this.auth;
     }
     static async refreshAccessToken(refreshToken) {

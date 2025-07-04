@@ -28,7 +28,7 @@ export declare class oauthEntry {
         method: string;
         challenge: string;
     };
-    protected static addAuthInterceptor(): void;
+    protected static onLogin(): Promise<void>;
     protected static registerPermissions(): Promise<void>;
     static oauth2Login(appId: string, opts: TOauth2LoginOptions): {
         verifier: string;
