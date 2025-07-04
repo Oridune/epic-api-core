@@ -7,7 +7,7 @@ const oauthModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("oauth", "quickLogin");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/local/quick/login").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/local/quick/login").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url,
@@ -23,7 +23,7 @@ const oauthModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("oauth", "exchangeAuthentication");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/exchange/authentication").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/exchange/authentication").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url,
@@ -39,7 +39,7 @@ const oauthModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("oauth", "exchangeCode");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/exchange/code").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/exchange/code").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url,
@@ -55,7 +55,7 @@ const oauthModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("oauth", "authenticate");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/local").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/local").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url,
@@ -71,7 +71,7 @@ const oauthModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("oauth", "logout");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/logout").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/logout").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
                 url,
@@ -87,7 +87,7 @@ const oauthModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("oauth", "createPermit");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/permit").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/permit").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url,
@@ -103,7 +103,7 @@ const oauthModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("oauth", "refresh");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/refresh").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/oauth/refresh").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url,

@@ -86,6 +86,18 @@ class EpicSDK {
         }
         return Results;
     }
+    static useCaching(cacheKey, callback, options) {
+        const get = () => this.useCache(callback, {
+            cacheKey,
+            ...options,
+        });
+        const del = () => this.delCache(cacheKey);
+        const invalidate = async () => {
+            await del();
+            return await get();
+        };
+        return { get, del, invalidate };
+    }
     static resolveAxiosResponse(executor, options) {
         const verifyResponseShape = (res) => {
             // Check if the data object exists

@@ -131,7 +131,7 @@ export const oauthPasskeyModule = (sdk: any): IController$oauthPasskey => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/oauth/passkey/challenge/login"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
@@ -154,7 +154,7 @@ export const oauthPasskeyModule = (sdk: any): IController$oauthPasskey => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/oauth/passkey/challenge/register"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
@@ -177,7 +177,7 @@ export const oauthPasskeyModule = (sdk: any): IController$oauthPasskey => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/oauth/passkey/login"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
@@ -200,7 +200,7 @@ export const oauthPasskeyModule = (sdk: any): IController$oauthPasskey => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/oauth/passkey/register"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",

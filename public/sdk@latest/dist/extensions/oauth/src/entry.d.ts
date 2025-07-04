@@ -1,4 +1,4 @@
-import { TRoute$users$me } from "epic-api-sdk/src/modules/users";
+import { SecurityGuard } from "./lib/securityGuard";
 export type TAuthToken<T extends "oauth_refresh_token" | "oauth_access_token"> = {
     issuer: string;
     type: T;
@@ -18,9 +18,9 @@ export type TOauth2LoginOptions = {
 };
 export declare class oauthEntry {
     static auth?: TAuthorization;
-    static me?: TRoute$users$me["return"]["data"]["user"];
+    static guard?: SecurityGuard;
     static selectedAccount?: string;
-    protected static _interceptorAdded: boolean;
+    protected static _authInterceptorAdded: boolean;
     protected static _refreshRequest?: Promise<TAuthorization>;
     protected static generateRandomString(length: number): string;
     protected static generateCodeChallenge(): {
@@ -28,6 +28,8 @@ export declare class oauthEntry {
         method: string;
         challenge: string;
     };
+    protected static addAuthInterceptor(): void;
+    protected static registerPermissions(): Promise<void>;
     static oauth2Login(appId: string, opts: TOauth2LoginOptions): {
         verifier: string;
         url: string;

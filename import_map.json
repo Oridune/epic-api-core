@@ -44,7 +44,7 @@
     "simplewebauthn": "npm:@simplewebauthn/server@13.0.0",
     "simplewebauthn/helpers": "npm:@simplewebauthn/server@13.0.0/helpers",
     "blakejs": "npm:blakejs@^1.2.1",
-    "queue": "jsr:@oridune/queue@1.0.0",
+    "queue": "jsr:@oridune/queue@1.0.1",
     "axios": "npm:axios@^1.7.9",
     "ohash": "npm:ohash@2.0.7",
     "shell-args": "npm:shell-args@1.0.0"

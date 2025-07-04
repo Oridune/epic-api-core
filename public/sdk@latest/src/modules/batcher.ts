@@ -75,7 +75,7 @@ export const batcherModule = (sdk: any): IController$batcher => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/batcher"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",

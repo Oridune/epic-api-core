@@ -21,6 +21,11 @@ export declare class EpicSDK {
     } | null>;
     static delCache(keys: TCacheKey): Promise<boolean>;
     static useCache<T>(callback: () => T | Promise<T>, options?: TCacheOptions<T>): Promise<T>;
+    static useCaching<T>(cacheKey: TCacheKey, callback: () => T | Promise<T>, options?: Omit<TCacheOptions<T>, "cacheKey">): {
+        get: () => Promise<T>;
+        del: () => Promise<boolean>;
+        invalidate: () => Promise<T>;
+    };
     static resolveAxiosResponse<T>(executor: () => Promise<AxiosResponse<T>>, options?: TCacheOptions<T>): {
         readonly raw: Promise<AxiosResponse<T, any>>;
         readonly res: Promise<T>;

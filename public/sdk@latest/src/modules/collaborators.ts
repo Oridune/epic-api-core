@@ -211,7 +211,7 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/collaborators/:id"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "patch" ?? "get",
@@ -234,7 +234,7 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/collaborators/:id"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
@@ -257,7 +257,7 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/collaborators/:id?"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
@@ -280,7 +280,7 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/collaborators/:token"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
@@ -303,7 +303,7 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/collaborators/toggle/blocked/:id/:isBlocked"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "patch" ?? "get",

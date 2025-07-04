@@ -214,7 +214,7 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/oauth/secrets/behalf"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
@@ -237,7 +237,7 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/oauth/secrets"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
@@ -260,7 +260,7 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/oauth/secrets/:id"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
@@ -283,7 +283,7 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/oauth/secrets/:id?"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",

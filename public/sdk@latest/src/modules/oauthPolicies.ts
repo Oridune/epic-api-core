@@ -235,7 +235,7 @@ export const oauthPoliciesModule = (sdk: any): IController$oauthPolicies => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/oauth/policies/me"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
@@ -258,7 +258,7 @@ export const oauthPoliciesModule = (sdk: any): IController$oauthPolicies => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/oauth/policies"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
@@ -281,7 +281,7 @@ export const oauthPoliciesModule = (sdk: any): IController$oauthPolicies => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/oauth/policies/:id"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "patch" ?? "get",
@@ -304,7 +304,7 @@ export const oauthPoliciesModule = (sdk: any): IController$oauthPolicies => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/oauth/policies/:id"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "delete" ?? "get",
@@ -327,7 +327,7 @@ export const oauthPoliciesModule = (sdk: any): IController$oauthPolicies => ({
             const url = Object.entries<string>(data?.params ?? {}).reduce(
                 (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
                 "/api/oauth/policies/:id?"
-            ).replace(/:\w+\?\//g, "");
+            ).replace(/:\w+\?\/?/g, "");
 
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",

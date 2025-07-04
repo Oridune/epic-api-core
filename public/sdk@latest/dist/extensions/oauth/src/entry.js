@@ -4,11 +4,12 @@ exports.oauthEntry = void 0;
 const __1 = require("../../../");
 const base64_arraybuffer_1 = require("base64-arraybuffer");
 const js_sha256_1 = require("js-sha256");
+const securityGuard_1 = require("./lib/securityGuard");
 class oauthEntry {
     static auth;
-    static me;
+    static guard;
     static selectedAccount;
-    static _interceptorAdded = false;
+    static _authInterceptorAdded = false;
     static _refreshRequest;
     static generateRandomString(length) {
         const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -30,6 +31,45 @@ class oauthEntry {
                 .replace(/=/g, ""),
         };
     }
+    static addAuthInterceptor() {
+        if (!this._authInterceptorAdded) {
+            console.log("Interceptor added");
+            __1.EpicSDK._axios.interceptors.request.use(async (config) => {
+                console.log("Interceptor triggered");
+                if (!config.headers["Authorization"] && this.auth) {
+                    const timeInSeconds = Date.now() / 1000;
+                    if (this.auth.access.expiresAtSeconds <= timeInSeconds) {
+                        if (!this.auth.refresh ||
+                            this.auth.refresh.expiresAtSeconds <=
+                                timeInSeconds) {
+                            throw new Error("Access token expired!");
+                        }
+                        await this.refreshAccessToken(this.auth.refresh.token);
+                        //! this._refreshRequest is used to stop bubbling do not remove it!
+                        setTimeout(() => {
+                            delete this._refreshRequest;
+                        }, 1000);
+                    }
+                    config.headers["Authorization"] =
+                        `Bearer ${this.auth.access.token}`;
+                    config.headers["X-Api-Version"] = __1.EpicSDK._apiVersion;
+                    if (this.selectedAccount) {
+                        config.headers["X-Account-ID"] =
+                            this.selectedAccount;
+                    }
+                }
+                return config;
+            });
+            this._authInterceptorAdded = true;
+        }
+    }
+    static async registerPermissions() {
+        const { scopePipeline } = await __1.EpicSDK.oauthPolicies.me().data;
+        this.guard = new securityGuard_1.SecurityGuard().load({
+            scopePipeline: scopePipeline.map(($) => new Set($)),
+        });
+        __1.EpicSDK.isPermitted = this.guard.isPermitted.bind(securityGuard_1.SecurityGuard);
+    }
     static oauth2Login(appId, opts) {
         const { verifier, method, challenge } = this.generateCodeChallenge();
         const url = new URL(`/oauth/login
@@ -50,6 +90,8 @@ class oauthEntry {
         const authorization = await __1.EpicSDK.getCache("authorization");
         if (authorization) {
             this.auth = authorization.value;
+            this.addAuthInterceptor();
+            await this.registerPermissions();
             return;
         }
         exchangeCode: if (typeof opts?.code === "string") {
@@ -73,36 +115,7 @@ class oauthEntry {
                 geoPoint: opts?.geoPoint,
             },
         }).data;
-        if (!this._interceptorAdded) {
-            console.log("Interceptor added");
-            __1.EpicSDK._axios.interceptors.request.use(async (config) => {
-                console.log("Interceptor triggered");
-                if (!config.headers["Authorization"] && this.auth) {
-                    const timeInSeconds = Date.now() / 1000;
-                    if (this.auth.access.expiresAtSeconds <= timeInSeconds) {
-                        if (!this.auth.refresh ||
-                            this.auth.refresh.expiresAtSeconds <=
-                                timeInSeconds) {
-                            throw new Error("Access token expired!");
-                        }
-                        await this.refreshAccessToken(this.auth.refresh.token);
-                        //! this._refreshRequest is used to stop bubbling do not remove it!
-                        setTimeout(() => {
-                            delete this._refreshRequest;
-                        }, 1000);
-                    }
-                    config.headers["Authorization"] =
-                        `Bearer ${this.auth.access.token}`;
-                    config.headers["X-Account-ID"] = __1.EpicSDK._apiVersion;
-                    if (this.selectedAccount) {
-                        config.headers["X-Account-ID"] =
-                            this.selectedAccount;
-                    }
-                }
-                return config;
-            });
-            this._interceptorAdded = true;
-        }
+        this.addAuthInterceptor();
         return this.auth;
     }
     static async refreshAccessToken(refreshToken) {

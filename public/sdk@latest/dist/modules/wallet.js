@@ -7,7 +7,7 @@ const walletModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("wallet", "balanceList");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/wallet/balance/list").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/wallet/balance/list").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url,
@@ -23,7 +23,7 @@ const walletModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("wallet", "metadata");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/wallet/metadata").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/wallet/metadata").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url,
@@ -39,7 +39,7 @@ const walletModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("wallet", "transfer");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/wallet/transfer").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/wallet/transfer").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "post" ?? "get",
                 url,
@@ -55,7 +55,7 @@ const walletModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("wallet", "signTransfer");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/wallet/transfer/sign/:type?/:currency?").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/wallet/transfer/sign/:type?/:currency?").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url,
@@ -71,7 +71,7 @@ const walletModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("wallet", "balance");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/wallet/balance/:type?/:currency?").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/wallet/balance/:type?/:currency?").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url,
@@ -87,7 +87,7 @@ const walletModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("wallet", "transactions");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/wallet/transactions/:type?/:currency?").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/wallet/transactions/:type?/:currency?").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url,

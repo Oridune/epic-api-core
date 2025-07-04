@@ -7,7 +7,7 @@ const apiModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("api", "memoryUsage");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/memory/usage").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/memory/usage").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url,
@@ -23,7 +23,7 @@ const apiModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("api", "postman");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/postman").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/postman").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url,
@@ -39,7 +39,7 @@ const apiModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("api", "test");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/test").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/test").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url,
@@ -55,7 +55,7 @@ const apiModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("api", "home");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url,
@@ -71,7 +71,7 @@ const apiModule = (sdk) => ({
             if (!sdk._axios)
                 throw new Error("Axios not initialized!");
             sdk.checkPermission("api", "heapSnapshot");
-            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/heap/snapshot/:filename?").replace(/:\w+\?\//g, "");
+            const url = Object.entries(data?.params ?? {}).reduce((endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value), "/api/heap/snapshot/:filename?").replace(/:\w+\?\/?/g, "");
             const res = await sdk._axios.request({
                 method: data?.method ?? "get" ?? "get",
                 url,

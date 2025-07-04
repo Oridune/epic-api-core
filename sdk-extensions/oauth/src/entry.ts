@@ -3,6 +3,7 @@ import { TRoute$users$me } from "epic-api-sdk/src/modules/users";
 
 import { encode as base64encode } from "base64-arraybuffer";
 import { sha256 } from "js-sha256";
+import { SecurityGuard } from "./lib/securityGuard";
 
 export type TAuthToken<T extends "oauth_refresh_token" | "oauth_access_token"> =
     {
@@ -27,7 +28,7 @@ export type TOauth2LoginOptions = {
 
 export class oauthEntry {
     static auth?: TAuthorization;
-    static me?: TRoute$users$me["return"]["data"]["user"];
+    static guard?: SecurityGuard;
     static selectedAccount?: string;
 
     protected static _authInterceptorAdded = false;
@@ -111,6 +112,16 @@ export class oauthEntry {
         }
     }
 
+    protected static async registerPermissions() {
+        const { scopePipeline } = await EpicSDK.oauthPolicies.me().data;
+
+        this.guard = new SecurityGuard().load({
+            scopePipeline: scopePipeline.map(($) => new Set($)),
+        });
+
+        EpicSDK.isPermitted = this.guard!.isPermitted.bind(SecurityGuard);
+    }
+
     static oauth2Login(
         appId: string,
         opts: TOauth2LoginOptions,
@@ -154,6 +165,8 @@ export class oauthEntry {
             this.auth = authorization.value;
 
             this.addAuthInterceptor();
+
+            await this.registerPermissions();
 
             return;
         }
