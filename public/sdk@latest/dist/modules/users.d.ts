@@ -177,6 +177,38 @@ export type TRoute$users$me = {
         status: boolean;
         data: {
             user: {
+                collaborates: Array<{
+                    account: {
+                        _id?: ObjectId;
+                        createdAt?: Date;
+                        updatedAt?: Date;
+                        createdBy: ObjectId;
+                        createdFor: ObjectId;
+                        logo?: {
+                            _id?: ObjectId;
+                            createdBy?: ObjectId;
+                            name?: string;
+                            url: string;
+                            mimeType?: string;
+                            sizeInBytes?: number;
+                            alt?: string;
+                        };
+                        isBlocked?: boolean;
+                        name?: string;
+                        description?: string;
+                        email?: string;
+                        phone?: string;
+                    };
+                    _id?: ObjectId;
+                    createdAt?: Date;
+                    updatedAt?: Date;
+                    createdBy: ObjectId;
+                    createdFor: ObjectId;
+                    role?: string;
+                    isOwned: boolean;
+                    isPrimary: boolean;
+                    isBlocked?: boolean;
+                }>;
                 username: string;
                 avatar?: {
                     _id?: ObjectId;
@@ -220,7 +252,6 @@ export type TRoute$users$me = {
                 passkeyEnabled?: boolean;
                 requiresMfa?: boolean;
                 isBlocked?: boolean;
-                collaborates: Array<ObjectId>;
                 deletionAt: Date | null;
                 metadata?: /*(optional)*/ {} & {
                     [K: string]: any;

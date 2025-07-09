@@ -138,6 +138,7 @@ export const oauthPasskeyModule = (sdk: any): IController$oauthPasskey => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -161,6 +162,7 @@ export const oauthPasskeyModule = (sdk: any): IController$oauthPasskey => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -184,6 +186,7 @@ export const oauthPasskeyModule = (sdk: any): IController$oauthPasskey => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -207,6 +210,7 @@ export const oauthPasskeyModule = (sdk: any): IController$oauthPasskey => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

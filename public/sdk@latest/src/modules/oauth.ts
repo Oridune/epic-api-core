@@ -372,6 +372,7 @@ export const oauthModule = (sdk: any): IController$oauth => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -395,6 +396,7 @@ export const oauthModule = (sdk: any): IController$oauth => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -418,6 +420,7 @@ export const oauthModule = (sdk: any): IController$oauth => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -441,6 +444,7 @@ export const oauthModule = (sdk: any): IController$oauth => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -464,6 +468,7 @@ export const oauthModule = (sdk: any): IController$oauth => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -487,6 +492,7 @@ export const oauthModule = (sdk: any): IController$oauth => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -510,6 +516,7 @@ export const oauthModule = (sdk: any): IController$oauth => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

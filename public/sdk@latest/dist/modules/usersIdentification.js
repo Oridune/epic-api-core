@@ -13,6 +13,7 @@ const usersIdentificationModule = (sdk) => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
             return res;
@@ -29,6 +30,7 @@ const usersIdentificationModule = (sdk) => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
             return res;
@@ -45,6 +47,7 @@ const usersIdentificationModule = (sdk) => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
             return res;

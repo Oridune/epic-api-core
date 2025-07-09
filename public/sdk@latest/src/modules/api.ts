@@ -168,6 +168,7 @@ export const apiModule = (sdk: any): IController$api => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -191,6 +192,7 @@ export const apiModule = (sdk: any): IController$api => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -214,6 +216,7 @@ export const apiModule = (sdk: any): IController$api => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -237,6 +240,7 @@ export const apiModule = (sdk: any): IController$api => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -260,6 +264,7 @@ export const apiModule = (sdk: any): IController$api => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

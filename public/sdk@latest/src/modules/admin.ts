@@ -47,6 +47,7 @@ export const adminModule = (sdk: any): IController$admin => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

@@ -33,6 +33,8 @@ import { requestLogIgnoresModule } from "./modules/requestLogIgnores";
 import { oauthEntry } from "./extensions/oauth/src/entry";
 
 export class EpicSDK {
+    protected static _cachingAborts = new Map<string, AbortController>();
+
     static _apiVersion = "latest";
     static _options?: TSDKOptions;
     static _axios?: AxiosInstance;
@@ -117,11 +119,23 @@ export class EpicSDK {
         return Results as T;
     }
 
-    static useCaching<T>(cacheKey: TCacheKey, callback: () => T | Promise<T>, options?: Omit<TCacheOptions<T>, "cacheKey">) {
-        const get = () => this.useCache<T>(callback, {
-            cacheKey,
-            ...options,
-        });
+    static useCaching<T>(cacheKey: TCacheKey, callback: (opts: { signal: AbortSignal }) => T | Promise<T>, options?: Omit<TCacheOptions<T>, "cacheKey">) {
+        const resolvedCacheKey = this.resolveCacheKey(cacheKey);
+
+        const get = () => {
+            return this.useCache<T>(() => {
+                this._cachingAborts.get(resolvedCacheKey)?.abort();
+
+                const controller = new AbortController();
+
+                this._cachingAborts.set(resolvedCacheKey, controller);
+
+                return callback({ signal: controller.signal })
+            }, {
+                cacheKey,
+                ...options,
+            })
+        };
 
         const del = () => this.delCache(cacheKey);
 

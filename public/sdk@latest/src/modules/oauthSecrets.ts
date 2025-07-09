@@ -221,6 +221,7 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -244,6 +245,7 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -267,6 +269,7 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -290,6 +293,7 @@ export const oauthSecretsModule = (sdk: any): IController$oauthSecrets => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

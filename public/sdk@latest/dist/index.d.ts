@@ -7,6 +7,7 @@ import { AxiosInstance, AxiosResponse } from "axios";
 import type { TSDKOptions, TCacheKey, TCacheOptions } from "./types";
 import { oauthEntry } from "./extensions/oauth/src/entry";
 export declare class EpicSDK {
+    protected static _cachingAborts: Map<string, AbortController>;
     static _apiVersion: string;
     static _options?: TSDKOptions;
     static _axios?: AxiosInstance;
@@ -21,7 +22,9 @@ export declare class EpicSDK {
     } | null>;
     static delCache(keys: TCacheKey): Promise<boolean>;
     static useCache<T>(callback: () => T | Promise<T>, options?: TCacheOptions<T>): Promise<T>;
-    static useCaching<T>(cacheKey: TCacheKey, callback: () => T | Promise<T>, options?: Omit<TCacheOptions<T>, "cacheKey">): {
+    static useCaching<T>(cacheKey: TCacheKey, callback: (opts: {
+        signal: AbortSignal;
+    }) => T | Promise<T>, options?: Omit<TCacheOptions<T>, "cacheKey">): {
         get: () => Promise<T>;
         del: () => Promise<boolean>;
         invalidate: () => Promise<T>;

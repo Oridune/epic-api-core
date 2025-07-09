@@ -101,6 +101,7 @@ export const uploadsModule = (sdk: any): IController$uploads => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -124,6 +125,7 @@ export const uploadsModule = (sdk: any): IController$uploads => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

@@ -293,6 +293,7 @@ export const accountsModule = (sdk: any): IController$accounts => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -316,6 +317,7 @@ export const accountsModule = (sdk: any): IController$accounts => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -339,6 +341,7 @@ export const accountsModule = (sdk: any): IController$accounts => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -362,6 +365,7 @@ export const accountsModule = (sdk: any): IController$accounts => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -385,6 +389,7 @@ export const accountsModule = (sdk: any): IController$accounts => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -408,6 +413,7 @@ export const accountsModule = (sdk: any): IController$accounts => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

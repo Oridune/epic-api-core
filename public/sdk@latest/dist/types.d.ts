@@ -18,6 +18,7 @@ export type TCacheOptions<T> = {
 };
 export type TRequestOptions<T> = {
     axiosConfig?: Omit<AxiosRequestConfig<unknown>, "method" | "url" | "data" | "params">;
+    signal?: AbortSignal;
 } & TCacheOptions<T>;
 export type TResponseShape<D> = {
     status: boolean;

@@ -485,6 +485,7 @@ export const walletModule = (sdk: any): IController$wallet => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -508,6 +509,7 @@ export const walletModule = (sdk: any): IController$wallet => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -531,6 +533,7 @@ export const walletModule = (sdk: any): IController$wallet => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -554,6 +557,7 @@ export const walletModule = (sdk: any): IController$wallet => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -577,6 +581,7 @@ export const walletModule = (sdk: any): IController$wallet => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -600,6 +605,7 @@ export const walletModule = (sdk: any): IController$wallet => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

@@ -60,6 +60,7 @@ export const <%- scope %>Module = (sdk: any): IController$<%- scope %> => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

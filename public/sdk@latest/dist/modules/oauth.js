@@ -13,6 +13,7 @@ const oauthModule = (sdk) => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
             return res;
@@ -29,6 +30,7 @@ const oauthModule = (sdk) => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
             return res;
@@ -45,6 +47,7 @@ const oauthModule = (sdk) => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
             return res;
@@ -61,6 +64,7 @@ const oauthModule = (sdk) => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
             return res;
@@ -77,6 +81,7 @@ const oauthModule = (sdk) => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
             return res;
@@ -93,6 +98,7 @@ const oauthModule = (sdk) => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
             return res;
@@ -109,6 +115,7 @@ const oauthModule = (sdk) => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
             return res;

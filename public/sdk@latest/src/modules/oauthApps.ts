@@ -705,6 +705,7 @@ export const oauthAppsModule = (sdk: any): IController$oauthApps => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -728,6 +729,7 @@ export const oauthAppsModule = (sdk: any): IController$oauthApps => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -751,6 +753,7 @@ export const oauthAppsModule = (sdk: any): IController$oauthApps => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -774,6 +777,7 @@ export const oauthAppsModule = (sdk: any): IController$oauthApps => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -797,6 +801,7 @@ export const oauthAppsModule = (sdk: any): IController$oauthApps => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -820,6 +825,7 @@ export const oauthAppsModule = (sdk: any): IController$oauthApps => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

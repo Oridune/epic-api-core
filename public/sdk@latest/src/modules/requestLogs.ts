@@ -257,6 +257,7 @@ export const requestLogsModule = (sdk: any): IController$requestLogs => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -280,6 +281,7 @@ export const requestLogsModule = (sdk: any): IController$requestLogs => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -303,6 +305,7 @@ export const requestLogsModule = (sdk: any): IController$requestLogs => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

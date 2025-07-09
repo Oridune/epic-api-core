@@ -242,6 +242,7 @@ export const oauthPoliciesModule = (sdk: any): IController$oauthPolicies => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -265,6 +266,7 @@ export const oauthPoliciesModule = (sdk: any): IController$oauthPolicies => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -288,6 +290,7 @@ export const oauthPoliciesModule = (sdk: any): IController$oauthPolicies => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -311,6 +314,7 @@ export const oauthPoliciesModule = (sdk: any): IController$oauthPolicies => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -334,6 +338,7 @@ export const oauthPoliciesModule = (sdk: any): IController$oauthPolicies => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

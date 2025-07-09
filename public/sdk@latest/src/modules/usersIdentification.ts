@@ -164,6 +164,7 @@ export const usersIdentificationModule = (sdk: any): IController$usersIdentifica
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -187,6 +188,7 @@ export const usersIdentificationModule = (sdk: any): IController$usersIdentifica
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -210,6 +212,7 @@ export const usersIdentificationModule = (sdk: any): IController$usersIdentifica
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

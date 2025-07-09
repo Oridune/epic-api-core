@@ -82,6 +82,7 @@ export const batcherModule = (sdk: any): IController$batcher => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

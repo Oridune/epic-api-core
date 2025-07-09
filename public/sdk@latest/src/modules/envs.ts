@@ -189,6 +189,7 @@ export const envsModule = (sdk: any): IController$envs => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -212,6 +213,7 @@ export const envsModule = (sdk: any): IController$envs => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -235,6 +237,7 @@ export const envsModule = (sdk: any): IController$envs => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -258,6 +261,7 @@ export const envsModule = (sdk: any): IController$envs => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

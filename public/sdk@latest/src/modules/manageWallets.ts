@@ -398,6 +398,7 @@ export const manageWalletsModule = (sdk: any): IController$manageWallets => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -421,6 +422,7 @@ export const manageWalletsModule = (sdk: any): IController$manageWallets => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -444,6 +446,7 @@ export const manageWalletsModule = (sdk: any): IController$manageWallets => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -467,6 +470,7 @@ export const manageWalletsModule = (sdk: any): IController$manageWallets => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -490,6 +494,7 @@ export const manageWalletsModule = (sdk: any): IController$manageWallets => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

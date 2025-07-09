@@ -660,12 +660,19 @@ export default class UsersController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         return: responseValidator(e.object({
-          user: e.omit(UserModel.getSchema(), [
+          user: e.object({
+            collaborates: e.array(
+              e.object({
+                account: AccountModel.getSchema(),
+              }).extends(e.omit(CollaboratorModel.getSchema(), ["account"])),
+            ),
+          }).extends(e.omit(UserModel.getSchema(), [
             "password",
             "passwordHistory",
             "passkeys",
             "fcmDeviceTokens",
-          ]),
+            "collaborates",
+          ])),
         })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {

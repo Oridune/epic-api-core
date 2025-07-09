@@ -119,6 +119,7 @@ export const adminPluginsModule = (sdk: any): IController$adminPlugins => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -142,6 +143,7 @@ export const adminPluginsModule = (sdk: any): IController$adminPlugins => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -165,6 +167,7 @@ export const adminPluginsModule = (sdk: any): IController$adminPlugins => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -188,6 +191,7 @@ export const adminPluginsModule = (sdk: any): IController$adminPlugins => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

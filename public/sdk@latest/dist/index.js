@@ -33,6 +33,7 @@ const manageUsers_1 = require("./modules/manageUsers");
 const requestLogIgnores_1 = require("./modules/requestLogIgnores");
 const entry_1 = require("./extensions/oauth/src/entry");
 class EpicSDK {
+    static _cachingAborts = new Map();
     static _apiVersion = "latest";
     static _options;
     static _axios;
@@ -87,10 +88,18 @@ class EpicSDK {
         return Results;
     }
     static useCaching(cacheKey, callback, options) {
-        const get = () => this.useCache(callback, {
-            cacheKey,
-            ...options,
-        });
+        const resolvedCacheKey = this.resolveCacheKey(cacheKey);
+        const get = () => {
+            return this.useCache(() => {
+                this._cachingAborts.get(resolvedCacheKey)?.abort();
+                const controller = new AbortController();
+                this._cachingAborts.set(resolvedCacheKey, controller);
+                return callback({ signal: controller.signal });
+            }, {
+                cacheKey,
+                ...options,
+            });
+        };
         const del = () => this.delCache(cacheKey);
         const invalidate = async () => {
             await del();

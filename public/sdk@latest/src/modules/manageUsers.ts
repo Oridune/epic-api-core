@@ -50,6 +50,7 @@ export const manageUsersModule = (sdk: any): IController$manageUsers => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

@@ -235,6 +235,7 @@ export const requestLogIgnoresModule = (sdk: any): IController$requestLogIgnores
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -258,6 +259,7 @@ export const requestLogIgnoresModule = (sdk: any): IController$requestLogIgnores
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -281,6 +283,7 @@ export const requestLogIgnoresModule = (sdk: any): IController$requestLogIgnores
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -304,6 +307,7 @@ export const requestLogIgnoresModule = (sdk: any): IController$requestLogIgnores
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 

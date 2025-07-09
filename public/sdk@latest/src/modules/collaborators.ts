@@ -218,6 +218,7 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -241,6 +242,7 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -264,6 +266,7 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -287,6 +290,7 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
@@ -310,6 +314,7 @@ export const collaboratorsModule = (sdk: any): IController$collaborators => ({
                 url,
                 params: data?.query,
                 data: data?.body,
+                signal: data?.signal,
                 ...data?.axiosConfig,
             });
 
