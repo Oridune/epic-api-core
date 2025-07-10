@@ -218,4 +218,12 @@ export class oauthEntry {
             },
         }).data as Promise<TAuthorization>);
     }
+
+    static async logout(allDevices = false, fcmDeviceToken?: string) {
+        await EpicSDK.delCache("authorization");
+        await EpicSDK.delCache("verifier");
+
+        await EpicSDK.oauth.logout({ query: { allDevices, fcmDeviceToken } })
+            .raw;
+    }
 }

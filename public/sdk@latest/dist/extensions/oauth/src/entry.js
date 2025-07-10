@@ -125,5 +125,11 @@ class oauthEntry {
             },
         }).data);
     }
+    static async logout(allDevices = false, fcmDeviceToken) {
+        await __1.EpicSDK.delCache("authorization");
+        await __1.EpicSDK.delCache("verifier");
+        await __1.EpicSDK.oauth.logout({ query: { allDevices, fcmDeviceToken } })
+            .raw;
+    }
 }
 exports.oauthEntry = oauthEntry;

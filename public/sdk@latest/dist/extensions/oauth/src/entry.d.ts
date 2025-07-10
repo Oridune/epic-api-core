@@ -45,4 +45,5 @@ export declare class oauthEntry {
         };
     }): Promise<TAuthorization>;
     static refreshAccessToken(refreshToken: string): Promise<void>;
+    static logout(allDevices?: boolean, fcmDeviceToken?: string): Promise<void>;
 }
