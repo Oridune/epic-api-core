@@ -117,7 +117,7 @@ export class oauthEntry {
             scopePipeline: scopePipeline.map(($) => new Set($)),
         });
 
-        EpicSDK.isPermitted = this.guard!.isPermitted.bind(SecurityGuard);
+        EpicSDK.isPermitted = this.guard!.isPermitted.bind(this.guard);
     }
 
     static oauth2Login(

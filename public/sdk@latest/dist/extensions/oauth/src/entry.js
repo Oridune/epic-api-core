@@ -67,7 +67,7 @@ class oauthEntry {
         this.guard = new securityGuard_1.SecurityGuard().load({
             scopePipeline: scopePipeline.map(($) => new Set($)),
         });
-        __1.EpicSDK.isPermitted = this.guard.isPermitted.bind(securityGuard_1.SecurityGuard);
+        __1.EpicSDK.isPermitted = this.guard.isPermitted.bind(this.guard);
     }
     static oauth2Login(appId, opts) {
         const { verifier, method, challenge } = this.generateCodeChallenge();
