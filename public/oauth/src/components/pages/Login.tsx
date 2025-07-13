@@ -291,20 +291,31 @@ export const LoginPage = () => {
         ref={challengeVerifier}
         setLoading={setLoading}
         onVerify={async (challengeToken, code) => {
-          const otpResults = await axios.post(
-            "/api/oauth/2fa/totp/authorize/",
-            {
-              challengeToken,
-              code,
-            }
-          );
-
-          if (!otpResults.data.status)
-            throw new Error(
-              otpResults.data.messages?.[0]?.message ?? "Operation has failed!"
+          try {
+            const otpResults = await axios.post(
+              "/api/oauth/2fa/totp/authorize/",
+              {
+                challengeToken,
+                code,
+              }
             );
 
-          return otpResults.data.data.token;
+            if (!otpResults.data.status)
+              throw new Error(
+                otpResults.data.messages?.[0]?.message ??
+                  "Operation has failed!"
+              );
+
+            return otpResults.data.data.token;
+          } catch (error) {
+            if (error instanceof AxiosError)
+              throw new Error(
+                error.response?.data.messages[0].message ?? error.message,
+                { cause: error }
+              );
+
+            throw error;
+          }
         }}
       />
       <Helmet>

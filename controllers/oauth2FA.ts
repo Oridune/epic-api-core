@@ -224,14 +224,14 @@ export default class Oauth2FAController extends BaseController {
         });
 
         if (!totpData) {
-          throw new Error("No authenticator found or has been setup!");
+          throw e.error("No authenticator found or has been setup!");
         }
 
         const totp = new TOTP(totpData.payload);
 
         const delta = totp.validate({ token: Body.code, window: 1 });
 
-        if (delta === null) throw new Error("Invalid OTP code provided!");
+        if (delta === null) throw e.error("Invalid OTP code provided!");
 
         return Response.data(
           await Oauth2FAController.sign(

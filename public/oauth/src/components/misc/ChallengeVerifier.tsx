@@ -127,6 +127,7 @@ export const ChallengeVerifier = React.forwardRef<
               onChange={(e) => {
                 setOTP(e.target.value);
               }}
+              required
             />
           </FormControl>
           <DialogActions>
