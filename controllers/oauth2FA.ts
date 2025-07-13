@@ -229,9 +229,9 @@ export default class Oauth2FAController extends BaseController {
 
         const totp = new TOTP(totpData.payload);
 
-        const isValid = totp.validate({ token: Body.code, window: 1 });
+        const delta = totp.validate({ token: Body.code, window: 1 });
 
-        if (!isValid) throw new Error("Invalid OTP code provided!");
+        if (delta === null) throw new Error("Invalid OTP code provided!");
 
         return Response.data(
           await Oauth2FAController.sign(
