@@ -12,6 +12,7 @@ import { SignupPage } from "./pages/Signup";
 import { ForgotPage } from "./pages/Forgot";
 import { ContactsPage } from "./pages/Contacts";
 import { PasskeyPage } from "./pages/Passkey";
+import { TotpPage } from "./pages/Totp";
 import { NotFoundPage } from "./pages/NotFound";
 
 export const AppRoutes = () => {
@@ -52,6 +53,11 @@ export const AppRoutes = () => {
           {
             path: "/passkey/setup/",
             element: <PasskeyPage />,
+            ErrorBoundary,
+          },
+          {
+            path: "/totp/setup/",
+            element: <TotpPage />,
             ErrorBoundary,
           },
           {

@@ -29,6 +29,7 @@
     "react-helmet": "^6.1.0",
     "react-hook-form": "^7.41.1",
     "react-i18next": "^13.1.2",
+    "react-qr-code": "^2.0.18",
     "react-router-dom": "^7.0.2"
   },
   "devDependencies": {

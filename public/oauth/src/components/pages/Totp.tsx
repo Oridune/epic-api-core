@@ -1,6 +1,6 @@
 import React from "react";
 import ReactGA4 from "react-ga4";
-import { useSearchParams, useLocation, Navigate } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import {
   Box,
   Button,
@@ -10,13 +10,16 @@ import {
   LinearProgress,
   Alert,
   Stack,
+  FormControl,
+  InputLabel,
+  OutlinedInput,
 } from "@mui/material";
 import { Helmet } from "react-helmet";
 import { red, green } from "@mui/material/colors";
 import { motion } from "framer-motion";
 import axios, { AxiosError } from "../utils/axios";
 import { useTranslation } from "react-i18next";
-import { startRegistration } from "@simplewebauthn/browser";
+import QRCode from "react-qr-code";
 
 import { useOauthApp } from "../context/OauthApp";
 
@@ -25,55 +28,77 @@ import { ConsentFooter } from "../misc/ConsentFooter";
 import Logo from "../../assets/logo.png";
 import { Passkey } from "../icons/Passkey";
 
-export const PasskeyPage = () => {
+export const TotpPage = () => {
   const Location = useLocation();
   const [Query] = useSearchParams();
 
   const { app } = useOauthApp();
 
-  if (!app?.consent.passkeyEnabled)
-    return <Navigate to={`/login/${window.location.search}`} />;
-
   React.useEffect(() => {
     ReactGA4.send({
       hitType: "pageview",
       page: Location.pathname,
-      title: "Setup a Passkey",
+      title: "Setup a Authenticator",
     });
   }, []);
 
-  const [PasskeySetup, setPasskeySetup] = React.useState(false);
+  const [TOTPDetails, setTOTPDetails] = React.useState<{
+    _id: string;
+    uri: string;
+  } | null>(null);
+  const [TOTPCode, setTOTPCode] = React.useState("");
+  const [TOTPSetup, setTOTPSetup] = React.useState(false);
   const [Loading, setLoading] = React.useState(false);
   const [ErrorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   const { t } = useTranslation();
 
-  const HandlePasskeySetup = async () => {
+  const GetTOTPUri = async () => {
     setErrorMessage(null);
     setLoading(true);
 
     try {
-      const PasskeyChallenge = await axios.get(
-        "/api/oauth/passkey/challenge/register/",
-        {
-          headers: {
-            Authorization: `Permit ${Query.get("permit")}`,
-          },
-        }
-      );
+      const TOTPChallenge = await axios.post("/api/oauth/2fa/totp/", {
+        headers: {
+          Authorization: `Permit ${Query.get("permit")}`,
+        },
+      });
 
-      if (!PasskeyChallenge.data.status)
+      if (!TOTPChallenge.data.status)
         throw new Error(
-          PasskeyChallenge.data.messages?.[0]?.message ??
+          TOTPChallenge.data.messages?.[0]?.message ??
             t("The operation has failed!")
         );
 
-      const VerifyResponse = await axios.post(
-        "/api/oauth/passkey/register/",
+      ReactGA4.event({
+        category: "Oauth2",
+        action: "Click",
+        label: "Setup totp",
+      });
+
+      setTOTPDetails(TOTPChallenge.data.data);
+    } catch (error: any) {
+      console.error(error);
+      if (error instanceof AxiosError)
+        setErrorMessage(
+          error.response?.data.messages[0].message ?? error.message
+        );
+      else setErrorMessage(error?.message ?? "Something went wrong!!!");
+    }
+
+    setLoading(false);
+  };
+
+  const HandleTOTPSetup = async () => {
+    setErrorMessage(null);
+    setLoading(true);
+
+    try {
+      const TOTPActivate = await axios.post(
+        "/api/oauth/2fa/totp/activate/",
         {
-          credentials: await startRegistration(
-            PasskeyChallenge.data.data.challenge
-          ),
+          id: TOTPDetails?._id,
+          code: TOTPCode,
         },
         {
           headers: {
@@ -82,15 +107,19 @@ export const PasskeyPage = () => {
         }
       );
 
-      if (VerifyResponse.data.status) {
-        ReactGA4.event({
-          category: "Oauth2",
-          action: "Click",
-          label: "Verify passkey",
-        });
+      if (!TOTPActivate.data.status)
+        throw new Error(
+          TOTPActivate.data.messages?.[0]?.message ??
+            t("The operation has failed!")
+        );
 
-        setPasskeySetup(true);
-      } else setErrorMessage(VerifyResponse.data.messages[0].message);
+      ReactGA4.event({
+        category: "Oauth2",
+        action: "Click",
+        label: "Activate totp",
+      });
+
+      setTOTPSetup(true);
     } catch (error: any) {
       console.error(error);
       if (error instanceof AxiosError)
@@ -108,8 +137,8 @@ export const PasskeyPage = () => {
   return (
     <>
       <Helmet>
-        <title>{t("Passkeys")}</title>
-        <meta name="description" content={t("Manage your passkeys")} />
+        <title>{t("Authenticator")}</title>
+        <meta name="description" content={t("Setup authenticator")} />
       </Helmet>
       <LinearProgress style={{ opacity: Loading ? 1 : 0 }} />
       <motion.div
@@ -149,7 +178,7 @@ export const PasskeyPage = () => {
             initial={{ opacity: 0, y: 10 }}
           >
             <Typography component="h1" variant="h6" textAlign="center">
-              {t("Setup a Passkey")}
+              {t("Setup an Authenticator")}
             </Typography>
             <Box sx={{ marginBottom: 3 }}>
               <Grid container spacing={1} sx={{ mb: 2 }}>
@@ -168,7 +197,7 @@ export const PasskeyPage = () => {
 
                         <Typography variant="subtitle2" color="text.secondary">
                           {t(
-                            "Start using passkeys to make getting into your account fast & easy!"
+                            "Secure your account with 2 factor authentication"
                           )}
                         </Typography>
                       </center>
@@ -177,23 +206,59 @@ export const PasskeyPage = () => {
                       {!Query.get("permit") ? (
                         <center>
                           <Typography variant="subtitle2" color={red[500]}>
-                            {t("Passkey is not available!")}
+                            {t("Authenticator is not available!")}
                           </Typography>
                         </center>
-                      ) : !PasskeySetup ? (
-                        <Button
-                          type="button"
-                          fullWidth
-                          variant="contained"
-                          disabled={Loading}
-                          onClick={HandlePasskeySetup}
-                        >
-                          {t("Start setup")}
-                        </Button>
+                      ) : !TOTPSetup ? (
+                        TOTPDetails ? (
+                          <center>
+                            <QRCode value={TOTPDetails.uri} />
+
+                            <FormControl fullWidth variant="outlined">
+                              <InputLabel htmlFor="code">
+                                {t("OTP Code")}
+                              </InputLabel>
+                              <OutlinedInput
+                                id="code"
+                                label={t("OTP Code")}
+                                type="number"
+                                autoComplete="code"
+                                inputProps={{
+                                  min: "100000",
+                                  max: "999999",
+                                }}
+                                value={TOTPCode}
+                                onChange={(e) => {
+                                  setTOTPCode(e.target.value);
+                                }}
+                              />
+                            </FormControl>
+
+                            <Button
+                              type="button"
+                              fullWidth
+                              variant="contained"
+                              disabled={Loading}
+                              onClick={HandleTOTPSetup}
+                            >
+                              {t("Verify")}
+                            </Button>
+                          </center>
+                        ) : (
+                          <Button
+                            type="button"
+                            fullWidth
+                            variant="contained"
+                            disabled={Loading}
+                            onClick={GetTOTPUri}
+                          >
+                            {t("Start setup")}
+                          </Button>
+                        )
                       ) : (
                         <center>
                           <Typography variant="subtitle2" color={green[500]}>
-                            {t("The passkey setup was successful!")}
+                            {t("The authenticator setup was successful!")}
                           </Typography>
                         </center>
                       )}

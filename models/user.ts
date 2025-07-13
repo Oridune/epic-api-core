@@ -114,7 +114,6 @@ export const UserSchema = CreateUserSchema.extends(
       ),
     ),
     passkeyEnabled: e.optional(e.boolean()),
-    requiresMfa: e.optional(e.boolean({ cast: true })).default(false),
     isBlocked: e.optional(e.boolean({ cast: true })).default(false),
     collaborates: e.array(e.instanceOf(ObjectId, { instantiate: true })),
     deletionAt: e.optional(e.or([e.date(), e.null()])),

@@ -19,7 +19,8 @@
     "manageWallets.ts",
     "oauthSecrets.ts",
     "manageUsers.ts",
-    "requestLogIgnores.ts"
+    "requestLogIgnores.ts",
+    "oauth2FA.ts"
   ],
   "sequence.development": [],
   "sequence.test": [],

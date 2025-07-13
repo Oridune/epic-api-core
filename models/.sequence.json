@@ -15,7 +15,8 @@
     "oauthSecret.ts",
     "requestLog.ts",
     "requestLogIgnore.ts",
-    "location.ts"
+    "location.ts",
+    "oauthTOTP.ts"
   ],
   "sequence.development": [],
   "sequence.test": [],

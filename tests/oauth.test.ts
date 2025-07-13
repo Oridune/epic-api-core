@@ -64,7 +64,6 @@ const UserResponseSchema = ResponseWrapperSchema(
     isPhoneVerified: e.boolean(),
     loginCount: e.number(),
     failedLoginAttempts: e.number(),
-    requiresMfa: e.boolean(),
     isBlocked: e.boolean(),
     createdAt: e.string(),
     updatedAt: e.string(),
@@ -112,6 +111,7 @@ const AuthenticationResponseSchema = ResponseWrapperSchema(
         isBlocked: e.boolean(),
       }),
     ),
+    requireTOTP: e.optional(e.boolean()),
   }),
 );
 

@@ -34,6 +34,8 @@ import { SecurityGuard } from "@Lib/securityGuard.ts";
 import { ResolveScopeRole } from "../hooks/checkPermissions.ts";
 import { Flags } from "@Core/common/flags.ts";
 import { GeoPointSchema } from "@Models/location.ts";
+import { OauthTotpModel, TotpStatus } from "@Models/oauthTOTP.ts";
+import Oauth2FAController from "./oauth2FA.ts";
 
 export enum OauthTokenType {
   AUTHENTICATION = "oauth_authentication",
@@ -42,6 +44,10 @@ export enum OauthTokenType {
   ACCESS = "oauth_access_token",
   PERMIT = "oauth_permit",
   SECRET = "oauth_secret",
+}
+
+export enum Oauth2FAMethod {
+  TOTP = "totp",
 }
 
 export type OauthTokenVerifyOptions = JWTVerifyOptions;
@@ -629,6 +635,10 @@ export default class OauthController extends BaseController {
               unlimited: !!Body.oauthApp.consent.noAuthExpiry,
             })),
             availableScopes: await OauthController.getAvailableScopes(User._id),
+            requireTOTP: await OauthTotpModel.exists({
+              createdBy: User._id,
+              status: TotpStatus.ACTIVE,
+            }),
           });
         }
 
@@ -687,6 +697,7 @@ export default class OauthController extends BaseController {
             }),
           );
         }),
+      totpToken: e.optional(e.string()),
     });
 
     return Versioned.add("1.0.0", {
@@ -702,6 +713,22 @@ export default class OauthController extends BaseController {
           await ctx.router.request.body.json(),
           { name: "oauth.body" },
         );
+
+        // TOTP verification
+        if (Body.totpToken) {
+          const { userId } = await Oauth2FAController.verify<
+            { userId: string }
+          >(Body.totpToken);
+
+          if (Body.tokenPayload.userId !== userId) {
+            throw new Error("2fa verification failed!");
+          }
+        } else if (
+          await OauthTotpModel.exists({
+            createdBy: new ObjectId(Body.tokenPayload.userId),
+            status: TotpStatus.ACTIVE,
+          })
+        ) throw new Error("A 2fa verification is required!");
 
         // Create New Session
         const Session = await OauthController.createSession({
