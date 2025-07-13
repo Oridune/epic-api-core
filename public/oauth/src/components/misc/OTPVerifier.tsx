@@ -12,19 +12,18 @@ import {
   OutlinedInput,
 } from "@mui/material";
 
-export interface IChallengeRef {
+export interface IOTPModelRef {
   verify: (totpChallenge: string) => Promise<string>;
 }
 
-export interface IChallengeProps {
-  setLoading: (loading: boolean) => void;
+export interface IOTPModelProps {
   onVerify: (challengeToken: string, code: string) => Promise<string>;
 }
 
-export const ChallengeVerifier = React.forwardRef<
-  IChallengeRef,
-  IChallengeProps
->(({ setLoading, onVerify }, ref) => {
+export const OTPVerifier = React.forwardRef<
+  IOTPModelRef,
+  IOTPModelProps
+>(({ onVerify }, ref) => {
   const { t } = useTranslation();
 
   const [challengeToken, setChallengeToken] = React.useState<string | null>(
@@ -33,7 +32,7 @@ export const ChallengeVerifier = React.forwardRef<
 
   const [otp, setOTP] = React.useState("");
 
-  const [internalLoading, setInternalLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
 
   React.useImperativeHandle(ref, () => ({
     verify(token) {
@@ -65,18 +64,15 @@ export const ChallengeVerifier = React.forwardRef<
 
   const handleClose = () => {
     setChallengeToken(null);
-    setLoading(false);
   };
 
   const handleVerify = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setInternalLoading(true);
-    
+    setLoading(true);
+
     try {
       if (!challengeToken) throw new Error("No challenge token!");
-
-      setLoading(true);
 
       const token = await onVerify(challengeToken, otp);
 
@@ -101,7 +97,7 @@ export const ChallengeVerifier = React.forwardRef<
       handleClose();
     }
 
-    setInternalLoading(false);
+    setLoading(false);
   };
 
   return (
@@ -132,11 +128,7 @@ export const ChallengeVerifier = React.forwardRef<
           </FormControl>
           <DialogActions>
             <Button onClick={handleClose}>{t("Cancel")}</Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={internalLoading}
-            >
+            <Button type="submit" variant="contained" disabled={loading}>
               {t("Verify")}
             </Button>
           </DialogActions>

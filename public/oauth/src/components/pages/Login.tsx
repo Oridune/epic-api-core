@@ -38,7 +38,7 @@ import { useOauthApp } from "../context/OauthApp";
 import { ConsentFooter } from "../misc/ConsentFooter";
 
 import Logo from "../../assets/logo.png";
-import { ChallengeVerifier, IChallengeRef } from "../misc/ChallengeVerifier";
+import { OTPVerifier, IOTPModelRef } from "../misc/OTPVerifier";
 // import Google from "../../assets/google.png";
 // import Facebook from "../../assets/facebook.png";
 // import Github from "../../assets/github.png";
@@ -116,7 +116,7 @@ export const LoginPage = () => {
 
   const LoginData = watch();
 
-  const challengeVerifier = React.useRef<IChallengeRef>(null);
+  const otpVerifier = React.useRef<IOTPModelRef>(null);
 
   const HandleLogin: SubmitHandler<InferOutput<typeof LoginSchema>> = async (
     data
@@ -207,10 +207,10 @@ export const LoginPage = () => {
         let totpToken: string | undefined;
 
         if (LoginResponse.data.data.totpChallenge) {
-          if (!challengeVerifier.current)
+          if (!otpVerifier.current)
             throw new Error("Can't verify the challenge!");
 
-          totpToken = await challengeVerifier.current.verify(
+          totpToken = await otpVerifier.current.verify(
             LoginResponse.data.data.totpChallenge
           );
         }
@@ -287,9 +287,8 @@ export const LoginPage = () => {
 
   return (
     <>
-      <ChallengeVerifier
-        ref={challengeVerifier}
-        setLoading={setLoading}
+      <OTPVerifier
+        ref={otpVerifier}
         onVerify={async (challengeToken, code) => {
           try {
             const otpResults = await axios.post(
