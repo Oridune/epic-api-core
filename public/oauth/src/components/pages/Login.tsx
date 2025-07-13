@@ -206,8 +206,13 @@ export const LoginPage = () => {
 
         let totpToken: string | undefined;
 
+        console.log("TOTP Challenge:", LoginResponse.data.data.totpChallenge);
+
         if (LoginResponse.data.data.totpChallenge) {
-          totpToken = await challengeVerifier.current?.verify(
+          if (!challengeVerifier.current)
+            throw new Error("Can't verify the challenge!");
+
+          totpToken = await challengeVerifier.current.verify(
             LoginResponse.data.data.totpChallenge
           );
         }
