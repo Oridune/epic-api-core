@@ -116,7 +116,7 @@ export const LoginPage = () => {
 
   const LoginData = watch();
 
-  const challengeVerifier = React.createRef<IChallengeRef>();
+  const challengeVerifier = React.useRef<IChallengeRef>(null);
 
   const HandleLogin: SubmitHandler<InferOutput<typeof LoginSchema>> = async (
     data
