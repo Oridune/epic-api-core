@@ -16,7 +16,9 @@ export const OauthTotpSchema = e.object({
     label: e.string(),
     secret: e.string(),
   }),
-  status: e.optional(e.in(Object.values(TotpStatus))).default(TotpStatus),
+  status: e.optional(e.in(Object.values(TotpStatus))).default(
+    TotpStatus.PENDING,
+  ),
 });
 
 export type TOauthTotpInput = InputDocument<
@@ -41,7 +43,8 @@ OauthTotpModel.pre("update", (details) => {
 OauthTotpModel.createIndex(
   {
     name: "uniqueTOTP",
-    key: { createdBy: 1 },
+    key: { createdBy: 1, status: 1 },
+    partialFilterExpression: { status: TotpStatus.ACTIVE },
     unique: true,
     background: true,
   },

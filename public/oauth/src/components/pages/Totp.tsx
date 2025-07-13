@@ -13,6 +13,7 @@ import {
   FormControl,
   InputLabel,
   OutlinedInput,
+  Divider,
 } from "@mui/material";
 import { Helmet } from "react-helmet";
 import { red, green } from "@mui/material/colors";
@@ -26,7 +27,7 @@ import { useOauthApp } from "../context/OauthApp";
 import { ConsentFooter } from "../misc/ConsentFooter";
 
 import Logo from "../../assets/logo.png";
-import { Passkey } from "../icons/Passkey";
+import { Encrypted } from "../icons/Encrypted";
 
 export const TotpPage = () => {
   const Location = useLocation();
@@ -58,11 +59,15 @@ export const TotpPage = () => {
     setLoading(true);
 
     try {
-      const TOTPChallenge = await axios.post("/api/oauth/2fa/totp/", {}, {
-        headers: {
-          Authorization: `Permit ${Query.get("permit")}`,
-        },
-      });
+      const TOTPChallenge = await axios.post(
+        "/api/oauth/2fa/totp/",
+        {},
+        {
+          headers: {
+            Authorization: `Permit ${Query.get("permit")}`,
+          },
+        }
+      );
 
       if (!TOTPChallenge.data.status)
         throw new Error(
@@ -177,7 +182,12 @@ export const TotpPage = () => {
             animate={{ opacity: 1, y: 0, transition: { duration: 0.2 } }}
             initial={{ opacity: 0, y: 10 }}
           >
-            <Typography component="h1" variant="h6" textAlign="center">
+            <Typography
+              component="h1"
+              variant="h6"
+              textAlign="center"
+              marginBottom={3}
+            >
               {t("Setup an Authenticator")}
             </Typography>
             <Box sx={{ marginBottom: 3 }}>
@@ -191,17 +201,22 @@ export const TotpPage = () => {
                 )}
                 {
                   <>
-                    <Grid item xs={12} marginY={3}>
-                      <center>
-                        <Passkey />
+                    {!TOTPDetails && (
+                      <Grid item xs={12}>
+                        <center>
+                          <Encrypted />
 
-                        <Typography variant="subtitle2" color="text.secondary">
-                          {t(
-                            "Secure your account with 2 factor authentication"
-                          )}
-                        </Typography>
-                      </center>
-                    </Grid>
+                          <Typography
+                            variant="subtitle2"
+                            color="text.secondary"
+                          >
+                            {t(
+                              "Secure your account with 2 factor authentication"
+                            )}
+                          </Typography>
+                        </center>
+                      </Grid>
+                    )}
                     <Grid item xs={12}>
                       {!Query.get("permit") ? (
                         <center>
@@ -214,7 +229,20 @@ export const TotpPage = () => {
                           <center>
                             <QRCode value={TOTPDetails.uri} />
 
-                            <FormControl fullWidth variant="outlined">
+                            <Divider sx={{ width: "100%", marginY: 2 }}>
+                              <Typography
+                                variant="subtitle2"
+                                color="text.secondary"
+                              >
+                                {t("Verify setup")}
+                              </Typography>
+                            </Divider>
+
+                            <FormControl
+                              fullWidth
+                              variant="outlined"
+                              sx={{ marginBottom: 2 }}
+                            >
                               <InputLabel htmlFor="code">
                                 {t("OTP Code")}
                               </InputLabel>

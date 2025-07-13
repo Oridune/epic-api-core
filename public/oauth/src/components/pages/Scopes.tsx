@@ -83,6 +83,7 @@ export const ScopesPage = () => {
         logo?: { url: string };
       };
     }>;
+    totpToken?: string;
   };
 
   const app = state.app;
@@ -108,9 +109,9 @@ export const ScopesPage = () => {
     };
   });
 
-  const allScopes = (
-    app?.consent.thirdPartyApp?.allowedScopes ?? []
-  ).map(({scope}) => scope);
+  const allScopes = (app?.consent.thirdPartyApp?.allowedScopes ?? []).map(
+    ({ scope }) => scope
+  );
 
   const defaultScopes = RequestedScopes.length
     ? new Set(RequestedScopes)
@@ -138,6 +139,7 @@ export const ScopesPage = () => {
         {
           authenticationToken: state.authenticationToken.token,
           scopes: convertScopeMapToObject(SelectedScopes),
+          totpToken: state.totpToken,
         }
       );
 
@@ -456,7 +458,9 @@ export const ScopesPage = () => {
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={Loading || !defaultScopeState.length || !SelectedScopes.size}
+                  disabled={
+                    Loading || !defaultScopeState.length || !SelectedScopes.size
+                  }
                 >
                   {t("Continue")}
                 </Button>

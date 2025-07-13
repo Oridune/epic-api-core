@@ -10,6 +10,7 @@ export const DefaultOauthPolicies = {
     "oauth",
     "oauthPasskey.challengeLogin",
     "oauthPasskey.login",
+    "oauth2FA.authorizeTOTP",
     "users.create",
     "users.verify",
     "users.updatePassword",
@@ -47,6 +48,9 @@ export const DefaultOauthPolicies = {
     "accounts.update",
     "accounts.delete",
     "accounts.updateLogo",
+    "oauth2FA.createTOTP",
+    "oauth2FA.activateTOTP",
+    "oauth2FA.getTOTP",
   ],
   user: [
     "role:unverified",

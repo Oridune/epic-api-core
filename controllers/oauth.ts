@@ -35,7 +35,7 @@ import { ResolveScopeRole } from "../hooks/checkPermissions.ts";
 import { Flags } from "@Core/common/flags.ts";
 import { GeoPointSchema } from "@Models/location.ts";
 import { OauthTotpModel, TotpStatus } from "@Models/oauthTOTP.ts";
-import Oauth2FAController from "./oauth2FA.ts";
+import Oauth2FAController, { OTPTokenType } from "./oauth2FA.ts";
 
 export enum OauthTokenType {
   AUTHENTICATION = "oauth_authentication",
@@ -568,6 +568,7 @@ export default class OauthController extends BaseController {
               }).extends(e.omit(CollaboratorModel.getSchema(), ["account"])),
             ),
           ),
+          totpChallenge: e.string(),
         })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
@@ -635,10 +636,15 @@ export default class OauthController extends BaseController {
               unlimited: !!Body.oauthApp.consent.noAuthExpiry,
             })),
             availableScopes: await OauthController.getAvailableScopes(User._id),
-            requireTOTP: await OauthTotpModel.exists({
-              createdBy: User._id,
-              status: TotpStatus.ACTIVE,
-            }),
+            totpChallenge: (
+              await OauthTotpModel.exists({
+                createdBy: User._id,
+                status: TotpStatus.ACTIVE,
+              }) &&
+              (await Oauth2FAController.sign(OTPTokenType.CHALLENGE, {
+                userId: User._id,
+              })).token
+            ) || undefined,
           });
         }
 
@@ -718,7 +724,7 @@ export default class OauthController extends BaseController {
         if (Body.totpToken) {
           const { userId } = await Oauth2FAController.verify<
             { userId: string }
-          >(Body.totpToken);
+          >(OTPTokenType.VERIFIED, Body.totpToken);
 
           if (Body.tokenPayload.userId !== userId) {
             throw new Error("2fa verification failed!");

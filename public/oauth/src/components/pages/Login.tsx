@@ -38,6 +38,7 @@ import { useOauthApp } from "../context/OauthApp";
 import { ConsentFooter } from "../misc/ConsentFooter";
 
 import Logo from "../../assets/logo.png";
+import { ChallengeVerifier, IChallengeRef } from "../misc/ChallengeVerifier";
 // import Google from "../../assets/google.png";
 // import Facebook from "../../assets/facebook.png";
 // import Github from "../../assets/github.png";
@@ -114,6 +115,8 @@ export const LoginPage = () => {
   });
 
   const LoginData = watch();
+
+  const challengeVerifier = React.createRef<IChallengeRef>();
 
   const HandleLogin: SubmitHandler<InferOutput<typeof LoginSchema>> = async (
     data
@@ -201,6 +204,14 @@ export const LoginPage = () => {
           label: "Login",
         });
 
+        let totpToken: string | undefined;
+
+        if (LoginResponse.data.data.totpChallenge) {
+          totpToken = await challengeVerifier.current?.verify(
+            LoginResponse.data.data.totpChallenge
+          );
+        }
+
         const RedirectURL = CallbackURL ?? app!.consent.allowedCallbackURLs[0];
 
         if (app?.consent.thirdPartyApp)
@@ -212,6 +223,7 @@ export const LoginPage = () => {
               callbackURL: RedirectURL,
               callbackState: CallbackState,
               ...LoginResponse.data.data,
+              totpToken,
             },
           });
         else {
@@ -236,6 +248,7 @@ export const LoginPage = () => {
                 }),
                 {}
               ),
+              totpToken,
             }
           );
 
@@ -612,6 +625,27 @@ export const LoginPage = () => {
                       </Link>
                     </Grid>
                   )}
+                  <ChallengeVerifier
+                    ref={challengeVerifier}
+                    setLoading={setLoading}
+                    onVerify={async (challengeToken, code) => {
+                      const otpResults = await axios.post(
+                        "/api/oauth/2fa/totp/authorize/",
+                        {
+                          challengeToken,
+                          code,
+                        }
+                      );
+
+                      if (!otpResults.data.status)
+                        throw new Error(
+                          otpResults.data.messages?.[0]?.message ??
+                            "Operation has failed!"
+                        );
+
+                      return otpResults.data.data.token;
+                    }}
+                  />
                 </>
               )}
             </Grid>

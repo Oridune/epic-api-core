@@ -111,7 +111,7 @@ const AuthenticationResponseSchema = ResponseWrapperSchema(
         isBlocked: e.boolean(),
       }),
     ),
-    requireTOTP: e.optional(e.boolean()),
+    totpChallenge: e.optional(e.string()),
   }),
 );
 
