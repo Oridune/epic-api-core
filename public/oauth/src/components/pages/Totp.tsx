@@ -58,7 +58,7 @@ export const TotpPage = () => {
     setLoading(true);
 
     try {
-      const TOTPChallenge = await axios.post("/api/oauth/2fa/totp/", {
+      const TOTPChallenge = await axios.post("/api/oauth/2fa/totp/", {}, {
         headers: {
           Authorization: `Permit ${Query.get("permit")}`,
         },
