@@ -68,8 +68,11 @@ export const ChallengeVerifier = React.forwardRef<
     setLoading(false);
   };
 
-  const handleVerify = async () => {
+  const handleVerify = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
     setInternalLoading(true);
+    
     try {
       if (!challengeToken) throw new Error("No challenge token!");
 

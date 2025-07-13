@@ -206,8 +206,6 @@ export const LoginPage = () => {
 
         let totpToken: string | undefined;
 
-        console.log(challengeVerifier);
-
         if (LoginResponse.data.data.totpChallenge) {
           if (!challengeVerifier.current)
             throw new Error("Can't verify the challenge!");
