@@ -206,7 +206,7 @@ export const LoginPage = () => {
 
         let totpToken: string | undefined;
 
-        console.log("TOTP Challenge:", LoginResponse.data.data.totpChallenge);
+        console.log(challengeVerifier);
 
         if (LoginResponse.data.data.totpChallenge) {
           if (!challengeVerifier.current)
@@ -289,6 +289,26 @@ export const LoginPage = () => {
 
   return (
     <>
+      <ChallengeVerifier
+        ref={challengeVerifier}
+        setLoading={setLoading}
+        onVerify={async (challengeToken, code) => {
+          const otpResults = await axios.post(
+            "/api/oauth/2fa/totp/authorize/",
+            {
+              challengeToken,
+              code,
+            }
+          );
+
+          if (!otpResults.data.status)
+            throw new Error(
+              otpResults.data.messages?.[0]?.message ?? "Operation has failed!"
+            );
+
+          return otpResults.data.data.token;
+        }}
+      />
       <Helmet>
         <title>{t("Sign In")}</title>
         <meta name="description" content={t("Sign in to continue")} />
@@ -630,27 +650,6 @@ export const LoginPage = () => {
                       </Link>
                     </Grid>
                   )}
-                  <ChallengeVerifier
-                    ref={challengeVerifier}
-                    setLoading={setLoading}
-                    onVerify={async (challengeToken, code) => {
-                      const otpResults = await axios.post(
-                        "/api/oauth/2fa/totp/authorize/",
-                        {
-                          challengeToken,
-                          code,
-                        }
-                      );
-
-                      if (!otpResults.data.status)
-                        throw new Error(
-                          otpResults.data.messages?.[0]?.message ??
-                            "Operation has failed!"
-                        );
-
-                      return otpResults.data.data.token;
-                    }}
-                  />
                 </>
               )}
             </Grid>
