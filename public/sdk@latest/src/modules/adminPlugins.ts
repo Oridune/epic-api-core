@@ -30,7 +30,7 @@ export type TRoute$adminPlugins$add = {
     query: {},
     params: {},
     body: {
-		source: string;
+		source: "git";
 		name: string;
 },
     return: { status: boolean; data: undefined },

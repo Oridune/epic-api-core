@@ -29,6 +29,7 @@ import { manageWalletsModule } from "./modules/manageWallets";
 import { oauthSecretsModule } from "./modules/oauthSecrets";
 import { manageUsersModule } from "./modules/manageUsers";
 import { requestLogIgnoresModule } from "./modules/requestLogIgnores";
+import { oauth2FAModule } from "./modules/oauth2FA";
 
 import { oauthEntry } from "./extensions/oauth/src/entry";
 
@@ -219,6 +220,7 @@ export class EpicSDK {
     static oauthSecrets = oauthSecretsModule(this);
     static manageUsers = manageUsersModule(this);
     static requestLogIgnores = requestLogIgnoresModule(this);
+    static oauth2FA = oauth2FAModule(this);
 
     static extensions = {
         oauth: oauthEntry,

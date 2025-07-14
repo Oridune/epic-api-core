@@ -24,6 +24,7 @@ export type TRoute$oauth$exchangeAuthentication = {
         scopes: {} & {
             [K: string]: Array<string>;
         };
+        totpToken?: string;
     };
     return: {
         status: boolean;
@@ -108,7 +109,7 @@ export type TRoute$oauth$authenticate = {
         oauthApp?: any;
         callbackURL: string;
         codeChallenge?: string;
-        codeChallengeMethod: string;
+        codeChallengeMethod: "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512" | "sha-1" | "sha-256" | "sha-384" | "sha-512";
         remember?: boolean;
     };
     return: {
@@ -146,6 +147,7 @@ export type TRoute$oauth$authenticate = {
                 isPrimary: boolean;
                 isBlocked?: boolean;
             }>;
+            totpChallenge: string;
         };
         messages?: Array<{
             message?: string;

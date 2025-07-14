@@ -26,15 +26,15 @@ export type TRoute$oauthPasskey$login = {
             id: string;
             rawId: string;
             response?: any;
-            authenticatorAttachment: string;
+            authenticatorAttachment: "cross-platform" | "platform";
             clientExtensionResults?: any;
-            type: string;
+            type: "public-key";
         };
         oauthAppId: string;
         oauthApp?: any;
         callbackURL: string;
         codeChallenge?: string;
-        codeChallengeMethod: string;
+        codeChallengeMethod: "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512" | "sha-1" | "sha-256" | "sha-384" | "sha-512";
         remember?: boolean;
     };
     return: {
@@ -50,9 +50,9 @@ export type TRoute$oauthPasskey$register = {
             id: string;
             rawId: string;
             response?: any;
-            authenticatorAttachment: string;
+            authenticatorAttachment: "cross-platform" | "platform";
             clientExtensionResults?: any;
-            type: string;
+            type: "public-key";
         };
     };
     return: {

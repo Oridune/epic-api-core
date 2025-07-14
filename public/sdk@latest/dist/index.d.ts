@@ -55,6 +55,7 @@ export declare class EpicSDK {
     static oauthSecrets: import("./modules/oauthSecrets").IController$oauthSecrets;
     static manageUsers: import("./modules/manageUsers").IController$manageUsers;
     static requestLogIgnores: import("./modules/requestLogIgnores").IController$requestLogIgnores;
+    static oauth2FA: import("./modules/oauth2FA").IController$oauth2FA;
     static extensions: {
         oauth: typeof oauthEntry;
     };

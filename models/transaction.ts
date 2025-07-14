@@ -1,5 +1,6 @@
 import e, { inferInput, inferOutput } from "validator";
 import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
+import { FileSchema } from "./file.ts";
 
 export enum TransactionStatus {
   COMPLETED = "completed",
@@ -34,6 +35,7 @@ export const TransactionSchema = e.object({
   isRefund: e.optional(e.boolean()), // Indicates this transaction is a refund received (Received).
   isRefunded: e.optional(e.boolean()), // Indicates this transaction has been refunded (Sent).
   metadata: e.optional(e.record(e.or([e.number(), e.boolean(), e.string()]))),
+  attachments: e.optional(e.array(FileSchema)),
 });
 
 export type TTransactionInput = InputDocument<

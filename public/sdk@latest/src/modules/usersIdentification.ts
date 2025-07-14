@@ -12,7 +12,7 @@ export type TRoute$usersIdentification$methods = {
 		status: boolean;
 		data: {
 		availableMethods: Array<{
-		type: string;
+		type: "email" | "phone" | "in-app";
 		value: string;
 		verified: boolean;
 }>;
@@ -47,7 +47,7 @@ export type TRoute$usersIdentification$publicMethods = {
 		status: boolean;
 		data: {
 		availableMethods: Array<{
-		type: string;
+		type: "email" | "phone" | "in-app";
 		maskedValue: string;
 		verified: boolean;
 }>;
@@ -75,9 +75,9 @@ export type TRoute$usersIdentification$publicMethods = {
 export type TRoute$usersIdentification$request = {
     query: {},
     params: {
-		purpose: string;
+		purpose: "verification" | "recovery";
 		username: string;
-		method: string;
+		method: "email" | "phone" | "in-app";
 },
     body: {},
     return: {

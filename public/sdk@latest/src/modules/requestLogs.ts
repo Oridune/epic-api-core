@@ -10,7 +10,7 @@ export type TRoute$requestLogs$create = {
     body: {
 		namespace?: string;
 		requestId: string;
-		method: string;
+		method: "get" | "post" | "patch" | "put" | "delete" | "options";
 		url: string;
 		headers: {
 } & { [K: string]: string }
@@ -51,7 +51,7 @@ export type TRoute$requestLogs$create = {
 		account?: ObjectId;
 		namespace?: string;
 		requestId: string;
-		method: string;
+		method: "get" | "post" | "patch" | "put" | "delete" | "options";
 		url: string;
 		headers: {
 } & { [K: string]: string }
@@ -148,7 +148,7 @@ export type TRoute$requestLogs$get = {
 		account?: ObjectId;
 		namespace?: string;
 		requestId: string;
-		method: string;
+		method: "get" | "post" | "patch" | "put" | "delete" | "options";
 		url: string;
 		headers: {
 } & { [K: string]: string }

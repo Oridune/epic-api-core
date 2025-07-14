@@ -10,7 +10,7 @@ export type TRoute$batcher$request = {
     body: {
 		requests: Array<Array<{
 		endpoint?: string;
-		method: string;
+		method: "get" | "post" | "patch" | "put" | "delete" | "options";
 		headers?: /*(optional)*/{
 } & { [K: string]: string }
 ;
@@ -18,7 +18,7 @@ export type TRoute$batcher$request = {
 		disabled?: boolean;
 } | string> | {
 		endpoint?: string;
-		method: string;
+		method: "get" | "post" | "patch" | "put" | "delete" | "options";
 		headers?: /*(optional)*/{
 } & { [K: string]: string }
 ;

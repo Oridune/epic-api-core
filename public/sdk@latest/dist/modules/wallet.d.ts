@@ -73,7 +73,7 @@ export type TRoute$wallet$transfer = {
     query: {};
     params: {};
     body: {
-        method: string;
+        method: "email" | "phone" | "in-app";
         token: string;
         code: number;
         tags?: Array<string>;
@@ -106,7 +106,7 @@ export type TRoute$wallet$transfer = {
                 senderPreviousBalance?: number;
                 receiverPreviousBalance?: number;
                 methodOf3DSecurity?: string;
-                status: string;
+                status: "completed";
                 isRefund?: boolean;
                 isRefunded?: boolean;
                 metadata?: /*(optional)*/ {} & {
@@ -134,7 +134,7 @@ export type TRoute$wallet$transfer = {
 };
 export type TRoute$wallet$signTransfer = {
     query: {
-        method: string;
+        method: "email" | "phone" | "in-app";
         receiver: string;
         amount: number;
         description?: string;
@@ -347,7 +347,7 @@ export type TRoute$wallet$transactions = {
                 senderPreviousBalance?: number;
                 receiverPreviousBalance?: number;
                 methodOf3DSecurity?: string;
-                status: string;
+                status: "completed";
                 isRefund?: boolean;
                 isRefunded?: boolean;
                 metadata?: /*(optional)*/ {} & {

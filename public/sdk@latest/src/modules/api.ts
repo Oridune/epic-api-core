@@ -44,12 +44,12 @@ export type TRoute$api$home = {
     return: {
 		status: boolean;
 		data: {
-		environment: string;
+		environment: "development" | "production" | "test";
 		database: {
 		connected: boolean;
 };
 		store: {
-		type: string;
+		type: "map" | "redis" | "deno-kv";
 		connected: boolean;
 };
 		languages: Array<string>;

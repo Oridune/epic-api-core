@@ -3,7 +3,7 @@ export type TRoute$users$updateAvatar = {
     query: {
         name?: string;
         alt?: string;
-        contentType: string;
+        contentType: "image/png" | "image/jpg" | "image/jpeg" | "image/svg+xml" | "image/webp";
         contentLength: number;
     } & {
         [K: string]: any;
@@ -48,7 +48,7 @@ export type TRoute$users$updateEmail = {
     return: {
         status: boolean;
         data: {
-            type: string;
+            type: "email" | "phone" | "in-app";
             value: string;
             verified: boolean;
         };
@@ -77,7 +77,7 @@ export type TRoute$users$update = {
         fname?: string;
         mname?: string;
         lname?: string;
-        gender: string;
+        gender: "male" | "female" | "other";
         dob?: Date;
         locale?: string;
         country?: string;
@@ -107,7 +107,7 @@ export type TRoute$users$update = {
             fname?: string;
             mname?: string;
             lname?: string;
-            gender: string;
+            gender: "male" | "female" | "other";
             dob?: Date;
             locale?: string;
             country?: string;
@@ -143,7 +143,6 @@ export type TRoute$users$update = {
                 timestamp?: Date;
             }>;
             passkeyEnabled?: boolean;
-            requiresMfa?: boolean;
             isBlocked?: boolean;
             collaborates?: Array<ObjectId>;
             deletionAt: Date | null;
@@ -225,7 +224,7 @@ export type TRoute$users$me = {
                 fname: string;
                 mname?: string;
                 lname?: string;
-                gender: string;
+                gender: "male" | "female" | "other";
                 dob?: Date;
                 locale?: string;
                 country?: string;
@@ -250,7 +249,6 @@ export type TRoute$users$me = {
                 loginCount?: number;
                 failedLoginAttempts?: number;
                 passkeyEnabled?: boolean;
-                requiresMfa?: boolean;
                 isBlocked?: boolean;
                 deletionAt: Date | null;
                 metadata?: /*(optional)*/ {} & {
@@ -280,7 +278,7 @@ export type TRoute$users$updatePassword = {
     query: {};
     params: {};
     body: {
-        method: string;
+        method: "email" | "phone" | "in-app";
         token: string;
         code: number;
         password: string;
@@ -300,7 +298,7 @@ export type TRoute$users$updatePhone = {
     return: {
         status: boolean;
         data: {
-            type: string;
+            type: "email" | "phone" | "in-app";
             value: string;
             verified: boolean;
         };
@@ -326,7 +324,7 @@ export type TRoute$users$verify = {
     query: {};
     params: {};
     body: {
-        method: string;
+        method: "email" | "phone" | "in-app";
         token: string;
         code: number;
     };
@@ -399,7 +397,7 @@ export type TRoute$users$get = {
                 fname: string;
                 mname?: string;
                 lname?: string;
-                gender: string;
+                gender: "male" | "female" | "other";
                 dob?: Date;
                 locale?: string;
                 country?: string;
@@ -435,7 +433,6 @@ export type TRoute$users$get = {
                     timestamp?: Date;
                 }>;
                 passkeyEnabled?: boolean;
-                requiresMfa?: boolean;
                 isBlocked?: boolean;
                 collaborates: Array<ObjectId>;
                 deletionAt: Date | null;
@@ -488,7 +485,7 @@ export type TRoute$users$create = {
         fname: string;
         mname?: string;
         lname?: string;
-        gender: string;
+        gender: "male" | "female" | "other";
         dob?: Date;
         locale?: string;
         country?: string;
@@ -519,7 +516,7 @@ export type TRoute$users$create = {
                 fname: string;
                 mname?: string;
                 lname?: string;
-                gender: string;
+                gender: "male" | "female" | "other";
                 dob?: Date;
                 locale?: string;
                 country?: string;
@@ -555,7 +552,6 @@ export type TRoute$users$create = {
                     timestamp?: Date;
                 }>;
                 passkeyEnabled?: boolean;
-                requiresMfa?: boolean;
                 isBlocked?: boolean;
                 collaborates: Array<ObjectId>;
                 deletionAt: Date | null;

@@ -131,7 +131,7 @@ export type TRoute$manageWallets$refund = {
                 senderPreviousBalance?: number;
                 receiverPreviousBalance?: number;
                 methodOf3DSecurity?: string;
-                status: string;
+                status: "completed";
                 isRefund?: boolean;
                 isRefunded?: boolean;
                 metadata?: /*(optional)*/ {} & {
@@ -199,7 +199,7 @@ export type TRoute$manageWallets$charge = {
                 senderPreviousBalance?: number;
                 receiverPreviousBalance?: number;
                 methodOf3DSecurity?: string;
-                status: string;
+                status: "completed";
                 isRefund?: boolean;
                 isRefunded?: boolean;
                 metadata?: /*(optional)*/ {} & {
@@ -276,7 +276,7 @@ export type TRoute$manageWallets$transactions = {
                 senderPreviousBalance?: number;
                 receiverPreviousBalance?: number;
                 methodOf3DSecurity?: string;
-                status: string;
+                status: "completed";
                 isRefund?: boolean;
                 isRefunded?: boolean;
                 metadata?: /*(optional)*/ {} & {

@@ -266,6 +266,7 @@ export default class WalletController extends BaseController {
       token: e.string(),
       code: e.number({ cast: true }).length(6),
       tags: e.optional(e.array(e.string())),
+      attachments: e.optional(e.array(FileSchema)),
     });
 
     return new Versioned().add("1.0.0", {
@@ -332,6 +333,7 @@ export default class WalletController extends BaseController {
           methodOf3DSecurity: Body.method,
           tags: Body.tags,
           metadata: Payload.transactionDetails.metadata,
+          attachments: Body.attachments,
         });
 
         return Response.statusCode(Status.Created).data({

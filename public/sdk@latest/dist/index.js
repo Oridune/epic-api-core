@@ -31,6 +31,7 @@ const manageWallets_1 = require("./modules/manageWallets");
 const oauthSecrets_1 = require("./modules/oauthSecrets");
 const manageUsers_1 = require("./modules/manageUsers");
 const requestLogIgnores_1 = require("./modules/requestLogIgnores");
+const oauth2FA_1 = require("./modules/oauth2FA");
 const entry_1 = require("./extensions/oauth/src/entry");
 class EpicSDK {
     static _cachingAborts = new Map();
@@ -168,6 +169,7 @@ class EpicSDK {
     static oauthSecrets = (0, oauthSecrets_1.oauthSecretsModule)(this);
     static manageUsers = (0, manageUsers_1.manageUsersModule)(this);
     static requestLogIgnores = (0, requestLogIgnores_1.requestLogIgnoresModule)(this);
+    static oauth2FA = (0, oauth2FA_1.oauth2FAModule)(this);
     static extensions = {
         oauth: entry_1.oauthEntry,
     };

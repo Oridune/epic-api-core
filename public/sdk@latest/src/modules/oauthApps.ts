@@ -23,7 +23,7 @@ export type TRoute$oauthApps$getDefault = {
 		availableSignups?: number;
 		passkeyEnabled?: boolean;
 		availableCountryCodes?: Array<string>;
-		requiredIdentificationMethods?: Array<string>;
+		requiredIdentificationMethods?: Array<"email" | "phone" | "in-app">;
 		logo?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
@@ -75,7 +75,7 @@ export type TRoute$oauthApps$getDefault = {
 		noAuthExpiry?: boolean;
 };
 		integrations?: Array<{
-		id: string;
+		id: "re-captcha-v3";
 		enabled?: boolean;
 		publicKey?: string;
 		secretKey?: string;
@@ -118,7 +118,7 @@ export type TRoute$oauthApps$create = {
 		availableSignups?: number;
 		passkeyEnabled?: boolean;
 		availableCountryCodes?: Array<string>;
-		requiredIdentificationMethods?: Array<string>;
+		requiredIdentificationMethods?: Array<"email" | "phone" | "in-app">;
 		logo?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
@@ -170,7 +170,7 @@ export type TRoute$oauthApps$create = {
 		noAuthExpiry?: boolean;
 };
 		integrations?: Array<{
-		id: string;
+		id: "re-captcha-v3";
 		enabled?: boolean;
 		publicKey?: string;
 		secretKey?: string;
@@ -197,7 +197,7 @@ export type TRoute$oauthApps$create = {
 		availableSignups?: number;
 		passkeyEnabled?: boolean;
 		availableCountryCodes?: Array<string>;
-		requiredIdentificationMethods?: Array<string>;
+		requiredIdentificationMethods?: Array<"email" | "phone" | "in-app">;
 		logo?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
@@ -249,7 +249,7 @@ export type TRoute$oauthApps$create = {
 		noAuthExpiry?: boolean;
 };
 		integrations?: Array<{
-		id: string;
+		id: "re-captcha-v3";
 		enabled?: boolean;
 		publicKey?: string;
 		secretKey?: string;
@@ -303,7 +303,7 @@ export type TRoute$oauthApps$list = {
 		availableSignups?: number;
 		passkeyEnabled?: boolean;
 		availableCountryCodes?: Array<string>;
-		requiredIdentificationMethods?: Array<string>;
+		requiredIdentificationMethods?: Array<"email" | "phone" | "in-app">;
 		logo?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
@@ -355,7 +355,7 @@ export type TRoute$oauthApps$list = {
 		noAuthExpiry?: boolean;
 };
 		integrations?: Array<{
-		id: string;
+		id: "re-captcha-v3";
 		enabled?: boolean;
 		publicKey?: string;
 		secretKey?: string;
@@ -408,7 +408,7 @@ export type TRoute$oauthApps$getDetails = {
 		availableSignups?: number;
 		passkeyEnabled?: boolean;
 		availableCountryCodes?: Array<string>;
-		requiredIdentificationMethods?: Array<string>;
+		requiredIdentificationMethods?: Array<"email" | "phone" | "in-app">;
 		logo?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
@@ -460,7 +460,7 @@ export type TRoute$oauthApps$getDetails = {
 		noAuthExpiry?: boolean;
 };
 		integrations?: Array<{
-		id: string;
+		id: "re-captcha-v3";
 		enabled?: boolean;
 		publicKey?: string;
 		secretKey?: string;
@@ -513,7 +513,7 @@ export type TRoute$oauthApps$get = {
 		availableSignups?: number;
 		passkeyEnabled?: boolean;
 		availableCountryCodes?: Array<string>;
-		requiredIdentificationMethods?: Array<string>;
+		requiredIdentificationMethods?: Array<"email" | "phone" | "in-app">;
 		logo?: /*(optional)*/{
 		_id?: ObjectId;
 		createdBy?: ObjectId;
@@ -565,7 +565,7 @@ export type TRoute$oauthApps$get = {
 		noAuthExpiry?: boolean;
 };
 		integrations?: Array<{
-		id: string;
+		id: "re-captcha-v3";
 		enabled?: boolean;
 		publicKey?: string;
 		secretKey?: string;
