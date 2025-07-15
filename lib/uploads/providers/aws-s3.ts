@@ -178,7 +178,8 @@ export class AwsS3Provider {
     options?: Omit<IObjectLocation, "provider">,
   ): Promise<IParsedObjectUrl> {
     const ResolveUrl = objectUrl.split("?")[0];
-    const Region = options?.region ?? (await Env.get("AWS_S3_REGION"));
+    const Region = options?.region ??
+      (await Env.get("AWS_S3_REGION", true) ?? await Env.get("AWS_REGION"));
     const BucketName = options?.bucketName ??
       (await Env.get("AWS_S3_BUCKET_NAME"));
     const S3Url = new URL(ResolveUrl);
