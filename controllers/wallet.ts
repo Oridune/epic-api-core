@@ -1,12 +1,14 @@
 import {
   BaseController,
   Controller,
+  Delete,
   Env,
   EnvType,
   Get,
   type IRequestContext,
   type IRoute,
   Post,
+  Put,
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
@@ -27,6 +29,7 @@ import { AccountModel } from "@Models/account.ts";
 import { FileSchema, TFileOutput } from "@Models/file.ts";
 import { WalletModel } from "@Models/wallet.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
+import UploadsController from "./uploads.ts";
 
 @Controller("/wallet/", { group: "Wallet", name: "wallet" })
 export default class WalletController extends BaseController {
@@ -560,5 +563,98 @@ export default class WalletController extends BaseController {
         });
       },
     });
+  }
+
+  @Get("/transactions/attach/:id/sign/", {
+    group: "public",
+  })
+  @Put("/transactions/attach/:id/", {
+    group: "public",
+  })
+  @Delete("/transactions/attach/:id/", {
+    group: "public",
+  })
+  public attach(route: IRoute) {
+    // Define Query Schema
+    const QuerySchema = e.deepCast(e.object(
+      { objectUrl: e.url() },
+      { allowUnexpectedProps: true },
+    ));
+
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      id: e.instanceOf(ObjectId, { instantiate: true }),
+    });
+
+    return UploadsController.upload(
+      route,
+      {
+        allowedContentTypes: [
+          "image/png",
+          "image/jpg",
+          "image/jpeg",
+          "image/webp",
+          "application/pdf",
+          "application/vnd.ms-excel",
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ],
+        maxContentLength: 6e+6, // 6mb max size
+        location: (ctx) => `/transactions/${ctx.router.params.id}/attachments/`,
+      },
+      async (ctx, file) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
+
+        const TargetAccount = new ObjectId(ctx.router.state.auth!.accountId);
+
+        await TransactionModel.updateOneOrFail(
+          {
+            _id: Params.id,
+            from: TargetAccount,
+          },
+          {
+            $push: {
+              attachments: file,
+            },
+          },
+        );
+      },
+      async (ctx, deleteObject) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Query Validation
+        const Query = await QuerySchema.validate(
+          Object.fromEntries(ctx.router.request.url.searchParams),
+          { name: `${route.scope}.query` },
+        );
+
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
+
+        const TargetAccount = new ObjectId(ctx.router.state.auth!.accountId);
+        const TargetUser = new ObjectId(ctx.router.state.auth!.userId);
+
+        await TransactionModel.updateOneOrFail({
+          _id: Params.id,
+          from: TargetAccount,
+        }, {
+          $pull: {
+            attachments: {
+              createdBy: TargetUser,
+              url: Query.objectUrl,
+            },
+          },
+        });
+
+        await deleteObject(Query.objectUrl);
+      },
+    );
   }
 }

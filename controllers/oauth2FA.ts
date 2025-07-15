@@ -23,7 +23,7 @@ export enum OTPTokenType {
   VERIFIED = "verified",
 }
 
-@Controller("/oauth/2fa/", { name: "oauth2FA" })
+@Controller("/oauth/2fa/", { group: "Oauth", name: "oauth2FA" })
 export default class Oauth2FAController extends BaseController {
   static base32Encode(input: string) {
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
