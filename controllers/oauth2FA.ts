@@ -80,7 +80,6 @@ export default class Oauth2FAController extends BaseController {
           e.object({
             _id: e.instanceOf(ObjectId, { instantiate: true }),
             uri: e.string(),
-            secret: e.string(),
           }),
         ).toSample(),
       }),
@@ -112,7 +111,6 @@ export default class Oauth2FAController extends BaseController {
         return Response.statusCode(Status.Created).data({
           _id,
           uri: totp.toString(),
-          secret: totp.secret.hex,
         });
       },
     });

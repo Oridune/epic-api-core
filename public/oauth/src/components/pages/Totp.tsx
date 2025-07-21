@@ -49,7 +49,6 @@ export const TotpPage = () => {
   const [TOTPDetails, setTOTPDetails] = React.useState<{
     _id: string;
     uri: string;
-    secret: string;
   } | null>(null);
   const [TOTPCode, setTOTPCode] = React.useState("");
   const [TOTPSetup, setTOTPSetup] = React.useState(false);
@@ -257,7 +256,15 @@ export const TotpPage = () => {
                                   cursor: "pointer",
                                 }}
                                 onClick={async () => {
-                                  await copyToClipboard(TOTPDetails.secret);
+                                  const params = new URLSearchParams(
+                                    TOTPDetails.uri.split("?")[1]
+                                  );
+
+                                  if (!params.get("secret"))
+                                    throw new Error("No secret found!");
+
+                                  await copyToClipboard(params.get("secret")!);
+                                  
                                   setCopied(true);
                                 }}
                               >
