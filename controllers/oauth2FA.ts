@@ -2,6 +2,7 @@
 import {
   BaseController,
   Controller,
+  Env,
   Get,
   type IRequestContext,
   type IRoute,
@@ -97,7 +98,7 @@ export default class Oauth2FAController extends BaseController {
         ) throw e.error("Authenticator already setup!");
 
         const payload = {
-          issuer: DefaultOauthIssuer,
+          issuer: `${DefaultOauthIssuer} (${Env.getType()})`,
           label: ctx.router.state.auth.user.username,
           secret: Oauth2FAController.base32Encode(crypto.randomUUID()),
         };
