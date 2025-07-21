@@ -21,6 +21,8 @@ import { motion } from "framer-motion";
 import axios, { AxiosError } from "../utils/axios";
 import { useTranslation } from "react-i18next";
 import QRCode from "react-qr-code";
+import CopyAllIcon from "@mui/icons-material/CopyAll";
+import CheckIcon from "@mui/icons-material/Check";
 
 import { useOauthApp } from "../context/OauthApp";
 
@@ -28,6 +30,7 @@ import { ConsentFooter } from "../misc/ConsentFooter";
 
 import Logo from "../../assets/logo.png";
 import { Encrypted } from "../icons/Encrypted";
+import { copyToClipboard } from "../utils/copyToClipboard";
 
 export const TotpPage = () => {
   const Location = useLocation();
@@ -50,6 +53,7 @@ export const TotpPage = () => {
   const [TOTPCode, setTOTPCode] = React.useState("");
   const [TOTPSetup, setTOTPSetup] = React.useState(false);
   const [Loading, setLoading] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
   const [ErrorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   const { t } = useTranslation();
@@ -228,6 +232,37 @@ export const TotpPage = () => {
                         TOTPDetails ? (
                           <center>
                             <QRCode value={TOTPDetails.uri} />
+
+                            {copied ? (
+                              <Typography
+                                variant="subtitle2"
+                                mt={1}
+                                sx={{
+                                  color: "success.main",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                }}
+                              >
+                                {t("Code has been copied")} <CheckIcon />
+                              </Typography>
+                            ) : (
+                              <Typography
+                                variant="subtitle2"
+                                mt={1}
+                                sx={{
+                                  color: "primary.main",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  cursor: "pointer",
+                                }}
+                                onClick={async () => {
+                                  await copyToClipboard(TOTPDetails.uri);
+                                  setCopied(true);
+                                }}
+                              >
+                                {t("Copy for manual setup")} <CopyAllIcon />
+                              </Typography>
+                            )}
 
                             <Divider sx={{ width: "100%", marginY: 2 }}>
                               <Typography
