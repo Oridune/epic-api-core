@@ -36,7 +36,7 @@ export const PasswordValidator = () => e.string().min(6);
 
 export const EmailValidator = () =>
   e.string().matches({
-    regex: /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/,
+    regex: /^([a-zA-Z0-9_.+-]+)@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/,
   });
 
 export const PhoneValidator = () =>

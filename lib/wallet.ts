@@ -7,7 +7,6 @@ import { TransactionModel } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
 import { Events } from "@Core/common/events.ts";
 import { AccountModel } from "@Models/account.ts";
-import { TFileInput } from "@Models/file.ts";
 
 export class Wallet {
   static getDefaultType() {
@@ -368,11 +367,6 @@ export class Wallet {
     metadata?: Record<string, string | number | boolean>;
 
     /**
-     * Attachments related to the transaction
-     */
-    attachments?: Array<TFileInput>;
-
-    /**
      * Pass a database transaction session
      */
     databaseSession?: ClientSession;
@@ -549,7 +543,6 @@ export class Wallet {
           isRefund: options.isRefund,
           tags: options.tags,
           metadata: options.metadata,
-          attachments: options.attachments,
           createdBy: options.user ?? options.sender,
         }, { session }),
       };
