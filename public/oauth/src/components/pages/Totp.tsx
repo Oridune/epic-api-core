@@ -49,6 +49,7 @@ export const TotpPage = () => {
   const [TOTPDetails, setTOTPDetails] = React.useState<{
     _id: string;
     uri: string;
+    secret: string;
   } | null>(null);
   const [TOTPCode, setTOTPCode] = React.useState("");
   const [TOTPSetup, setTOTPSetup] = React.useState(false);
@@ -256,7 +257,7 @@ export const TotpPage = () => {
                                   cursor: "pointer",
                                 }}
                                 onClick={async () => {
-                                  await copyToClipboard(TOTPDetails.uri);
+                                  await copyToClipboard(TOTPDetails.secret);
                                   setCopied(true);
                                 }}
                               >

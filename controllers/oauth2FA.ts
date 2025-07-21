@@ -53,10 +53,7 @@ export default class Oauth2FAController extends BaseController {
     return output;
   }
 
-  static async sign(
-    type: OTPTokenType,
-    payload: Record<string, any> = {},
-  ) {
+  static async sign(type: OTPTokenType, payload: Record<string, any> = {}) {
     return {
       token: (
         await OauthController.createToken({
@@ -68,10 +65,7 @@ export default class Oauth2FAController extends BaseController {
     };
   }
 
-  static verify<T extends object>(
-    type: OTPTokenType,
-    token: string,
-  ) {
+  static verify<T extends object>(type: OTPTokenType, token: string) {
     return OauthController.verifyToken<T>({
       type: `otp_${type}`,
       token,
@@ -82,10 +76,13 @@ export default class Oauth2FAController extends BaseController {
   public createTOTP(_: IRoute) {
     return new Versioned().add("1.0.0", {
       shape: () => ({
-        return: responseValidator(e.object({
-          _id: e.instanceOf(ObjectId, { instantiate: true }),
-          uri: e.string(),
-        })).toSample(),
+        return: responseValidator(
+          e.object({
+            _id: e.instanceOf(ObjectId, { instantiate: true }),
+            uri: e.string(),
+            secret: e.string(),
+          }),
+        ).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -95,7 +92,9 @@ export default class Oauth2FAController extends BaseController {
             createdBy: new ObjectId(ctx.router.state.auth.userId),
             status: TotpStatus.ACTIVE,
           })
-        ) throw e.error("Authenticator already setup!");
+        ) {
+          throw e.error("Authenticator already setup!");
+        }
 
         const payload = {
           issuer: `${DefaultOauthIssuer} (${Env.getType()})`,
@@ -113,6 +112,7 @@ export default class Oauth2FAController extends BaseController {
         return Response.statusCode(Status.Created).data({
           _id,
           uri: totp.toString(),
+          secret: totp.secret.hex,
         });
       },
     });
@@ -199,9 +199,11 @@ export default class Oauth2FAController extends BaseController {
     return new Versioned().add("1.0.0", {
       shape: () => ({
         body: BodySchema.toSample(),
-        return: responseValidator(e.object({
-          token: e.string(),
-        })).toSample(),
+        return: responseValidator(
+          e.object({
+            token: e.string(),
+          }),
+        ).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Body Validation
@@ -235,12 +237,9 @@ export default class Oauth2FAController extends BaseController {
         if (delta === null) throw e.error("Invalid OTP code provided!");
 
         return Response.data(
-          await Oauth2FAController.sign(
-            OTPTokenType.VERIFIED,
-            {
-              userId: createdBy.toString(),
-            },
-          ),
+          await Oauth2FAController.sign(OTPTokenType.VERIFIED, {
+            userId: createdBy.toString(),
+          }),
         );
       },
     });
