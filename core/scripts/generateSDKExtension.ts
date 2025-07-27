@@ -6,12 +6,12 @@ import e, { ValidationException } from "validator";
 import { Loader } from "@Core/common/mod.ts";
 import { Confirm, Input } from "cliffy:prompt";
 import { exec } from "@Core/scripts/lib/run.ts";
+import { writeJSONFile } from "@Core/scripts/lib/utility.ts";
 
 import {
   createPackageJSON,
   createTsConfigJSON,
   generateSDK,
-  writeJSONFile,
 } from "@Core/scripts/generateSDK.ts";
 
 export const generateSDKExtension = async (options: {
