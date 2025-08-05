@@ -239,78 +239,90 @@ export interface IController$requestLogs {
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }
 
-export const requestLogsModule = (sdk: any): IController$requestLogs => ({
+export const requestLogsModule = (sdk: any) => {
+    const methods = {
 
-    create(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        create(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("requestLogs", "create");
+                sdk.checkPermission("requestLogs", "create");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/request/logs"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/request/logs"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "post" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "post" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-    delete(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        delete(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("requestLogs", "delete");
+                sdk.checkPermission("requestLogs", "delete");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/request/logs/:id"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/request/logs/:id"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "delete" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "delete" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-    get(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        get(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("requestLogs", "get");
+                sdk.checkPermission("requestLogs", "get");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/request/logs/:id?"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/request/logs/:id?"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "get" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "get" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-});
+    } as IController$requestLogs;
+
+
+    (methods.create as any).__permission = "requestLogs.create";
+
+    (methods.delete as any).__permission = "requestLogs.delete";
+
+    (methods.get as any).__permission = "requestLogs.get";
+
+
+    return methods;
+};

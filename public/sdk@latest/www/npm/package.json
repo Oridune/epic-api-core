@@ -1,10 +1,10 @@
 {
-  "name": "epic-api-sdk",
+  "name": "epic-api-core",
   "version": "0.0.0",
   "author": "Epic API Core",
   "homepage": "https://oridune.com",
   "license": "MIT",
-  "main": "./dist/index.js",
+  "main": "./script/index.js",
   "module": "./esm/index.js",
   "exports": {
     ".": {
@@ -13,10 +13,8 @@
     }
   },
   "scripts": {
-    "test": "node test_runner.js",
-    "build": "tsc"
+    "test": "node test_runner.js"
   },
-  "private": true,
   "dependencies": {
     "axios": "*",
     "base64-arraybuffer": "*",

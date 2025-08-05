@@ -540,174 +540,194 @@ export interface IController$wallet {
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }
 
-export const walletModule = (sdk: any): IController$wallet => ({
+export const walletModule = (sdk: any) => {
+    const methods = {
 
-    balanceList(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        balanceList(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("wallet", "balanceList");
+                sdk.checkPermission("wallet", "balanceList");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/wallet/balance/list"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/wallet/balance/list"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "post" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "post" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-    metadata(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        metadata(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("wallet", "metadata");
+                sdk.checkPermission("wallet", "metadata");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/wallet/metadata"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/wallet/metadata"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "get" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "get" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-    transfer(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        transfer(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("wallet", "transfer");
+                sdk.checkPermission("wallet", "transfer");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/wallet/transfer"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/wallet/transfer"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "post" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "post" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-    attach(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        attach(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("wallet", "attach");
+                sdk.checkPermission("wallet", "attach");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/wallet/transactions/attach/:id/sign"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/wallet/transactions/attach/:id/sign"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "get" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "get" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-    signTransfer(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        signTransfer(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("wallet", "signTransfer");
+                sdk.checkPermission("wallet", "signTransfer");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/wallet/transfer/sign/:type?/:currency?"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/wallet/transfer/sign/:type?/:currency?"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "get" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "get" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-    balance(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        balance(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("wallet", "balance");
+                sdk.checkPermission("wallet", "balance");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/wallet/balance/:type?/:currency?"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/wallet/balance/:type?/:currency?"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "get" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "get" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-    transactions(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        transactions(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("wallet", "transactions");
+                sdk.checkPermission("wallet", "transactions");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/wallet/transactions/:type?/:currency?"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/wallet/transactions/:type?/:currency?"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "get" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "get" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-});
+    } as IController$wallet;
+
+
+    (methods.balanceList as any).__permission = "wallet.balanceList";
+
+    (methods.metadata as any).__permission = "wallet.metadata";
+
+    (methods.transfer as any).__permission = "wallet.transfer";
+
+    (methods.attach as any).__permission = "wallet.attach";
+
+    (methods.signTransfer as any).__permission = "wallet.signTransfer";
+
+    (methods.balance as any).__permission = "wallet.balance";
+
+    (methods.transactions as any).__permission = "wallet.transactions";
+
+
+    return methods;
+};

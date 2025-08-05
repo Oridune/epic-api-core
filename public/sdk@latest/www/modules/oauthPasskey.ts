@@ -120,102 +120,116 @@ export interface IController$oauthPasskey {
     } & TRequestOptions<ReturnShape>): TRequestExecutors<ReturnShape, BodyShape>;
 }
 
-export const oauthPasskeyModule = (sdk: any): IController$oauthPasskey => ({
+export const oauthPasskeyModule = (sdk: any) => {
+    const methods = {
 
-    challengeLogin(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        challengeLogin(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("oauthPasskey", "challengeLogin");
+                sdk.checkPermission("oauthPasskey", "challengeLogin");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/oauth/passkey/challenge/login"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/oauth/passkey/challenge/login"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "get" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "get" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-    challengeRegister(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        challengeRegister(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("oauthPasskey", "challengeRegister");
+                sdk.checkPermission("oauthPasskey", "challengeRegister");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/oauth/passkey/challenge/register"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/oauth/passkey/challenge/register"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "get" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "get" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-    login(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        login(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("oauthPasskey", "login");
+                sdk.checkPermission("oauthPasskey", "login");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/oauth/passkey/login"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/oauth/passkey/login"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "post" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "post" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-    register(data?: any) {
-        return sdk.resolveAxiosResponse(async () => {
-            if (!sdk._axios) throw new Error("Axios not initialized!");
+        register(data?: any) {
+            return sdk.resolveAxiosResponse(async () => {
+                if (!sdk._axios) throw new Error("Axios not initialized!");
 
-            sdk.checkPermission("oauthPasskey", "register");
+                sdk.checkPermission("oauthPasskey", "register");
 
-            const url = Object.entries<string>(data?.params ?? {}).reduce(
-                (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
-                "/api/oauth/passkey/register"
-            ).replace(/:\w+\?\/?/g, "");
+                const url = Object.entries<string>(data?.params ?? {}).reduce(
+                    (endpoint, [key, value]) => endpoint.replace(new RegExp(`:${key}\\??`, "g"), value),
+                    "/api/oauth/passkey/register"
+                ).replace(/:\w+\?\/?/g, "");
 
-            const res = await sdk._axios.request({
-                method: data?.method ?? "post" ?? "get",
-                url,
-                params: data?.query,
-                data: data?.body,
-                signal: data?.signal,
-                ...data?.axiosConfig,
-            });
+                const res = await sdk._axios.request({
+                    method: data?.method ?? "post" ?? "get",
+                    url,
+                    params: data?.query,
+                    data: data?.body,
+                    signal: data?.signal,
+                    ...data?.axiosConfig,
+                });
 
-            return res;
-        }, data);
-    },
+                return res;
+            }, data);
+        },
 
-});
+    } as IController$oauthPasskey;
+
+
+    (methods.challengeLogin as any).__permission = "oauthPasskey.challengeLogin";
+
+    (methods.challengeRegister as any).__permission = "oauthPasskey.challengeRegister";
+
+    (methods.login as any).__permission = "oauthPasskey.login";
+
+    (methods.register as any).__permission = "oauthPasskey.register";
+
+
+    return methods;
+};

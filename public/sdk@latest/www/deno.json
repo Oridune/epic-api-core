@@ -1,5 +1,5 @@
 {
-  "name": "epic-api-sdk",
+  "name": "epic-api-core",
   "version": "0.0.0",
   "exports": {
     ".": "./index.ts",

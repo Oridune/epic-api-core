@@ -4,7 +4,7 @@
  * This is a generated file. Do not edit the contents of this file!
  */
 
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import axios, { type AxiosInstance, type AxiosResponse } from "axios";
 
 import type { TSDKOptions, TCacheKey, TCacheOptions } from "./types.js";
 
@@ -46,11 +46,11 @@ export class EpicSDK {
         this._axios = axios.create(options?.axiosConfig);
     }
 
-    static isPermitted = (scope: string, permission?: string): boolean => {
+    static isPermitted = (scope: string | Function & { __permission?: string }, permission?: string): boolean => {
         return true;
     }
 
-    static checkPermission(scope: string, permission?: string) {
+    static checkPermission(scope: string | Function & { __permission?: string }, permission?: string) {
         if(!this.isPermitted(scope, permission))
             throw new Error(`You are not authorized to perform this action! Missing permission '${scope}.${permission}'!`);
     }

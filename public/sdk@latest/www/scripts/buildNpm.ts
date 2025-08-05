@@ -10,6 +10,6 @@
         // see JS docs for overview and more options
         deno: true,
       },
-      package: {"name":"epic-api-sdk","version":"0.0.0","private":true,"main":"./dist/index.js","scripts":{"build":"tsc"},"author":"Epic API Core","license":"MIT","homepage":"https://oridune.com"},
+      package: {"name":"epic-api-core","version":"0.0.0","author":"Epic API Core","license":"MIT","homepage":"https://oridune.com"},
     });
     

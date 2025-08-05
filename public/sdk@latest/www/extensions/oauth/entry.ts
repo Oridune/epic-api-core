@@ -1,4 +1,4 @@
-import { EpicSDK } from "epic-api-sdk";
+import { EpicSDK } from "../../index.ts";
 
 import { encode as base64encode } from "npm:base64-arraybuffer";
 import { sha256 } from "npm:js-sha256";
@@ -115,7 +115,11 @@ export class oauthEntry {
       scopePipeline: scopePipeline.map(($) => new Set($)),
     });
 
-    EpicSDK.isPermitted = this.guard!.isPermitted.bind(this.guard);
+    EpicSDK.isPermitted = (scope, permission) =>
+      this.guard!.isPermitted(
+        (typeof scope === "function" ? scope.__permission : scope) ?? "",
+        permission,
+      );
   }
 
   static oauth2Login(

@@ -3,7 +3,7 @@
  *
  * This is a generated file. Do not edit the contents of this file!
  */
-import { AxiosInstance, AxiosResponse } from "axios";
+import { type AxiosInstance, type AxiosResponse } from "axios";
 import type { TSDKOptions, TCacheKey, TCacheOptions } from "./types.js";
 import { oauthEntry } from "./extensions/oauth/entry.js";
 export declare class EpicSDK {
@@ -13,8 +13,12 @@ export declare class EpicSDK {
     static _axios?: AxiosInstance;
     static _useCachingMethods: Map<string, unknown>;
     static init(options?: TSDKOptions): void;
-    static isPermitted: (scope: string, permission?: string) => boolean;
-    static checkPermission(scope: string, permission?: string): void;
+    static isPermitted: (scope: string | (Function & {
+        __permission?: string;
+    }), permission?: string) => boolean;
+    static checkPermission(scope: string | Function & {
+        __permission?: string;
+    }, permission?: string): void;
     static resolveCacheKey(keys: TCacheKey, namespace?: string): string;
     static setCache(keys: TCacheKey, value: any): Promise<boolean>;
     static getCache<T>(keys: TCacheKey): Promise<{
