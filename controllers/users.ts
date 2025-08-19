@@ -576,6 +576,8 @@ export default class UsersController extends BaseController {
               "If `true` is passed, the system will return a total items count for pagination purpose.",
             ),
         ),
+        includeTags: e.optional(e.array(e.string()).min(1)),
+        excludeTags: e.optional(e.array(e.string()).min(1)),
       },
       { allowUnexpectedProps: true },
     );
@@ -606,10 +608,26 @@ export default class UsersController extends BaseController {
           name: `${route.scope}.params`,
         });
 
+        let tags: string[] | undefined;
+
+        if (Query.includeTags instanceof Array) {
+          tags = Query.includeTags;
+
+          if (Query.excludeTags instanceof Array) {
+            tags = tags.filter((tag) => !Query.excludeTags?.includes(tag));
+          }
+        } else tags = Query.excludeTags;
+
         // Fetch users
         const UsersListQuery = UserModel.search(Query.search)
           .filter({
             ...(Params.id ? { _id: new ObjectId(Params.id) } : {}),
+            ...(ctx.router.state.auth?.user.username === "root" ? {} : {
+              username: { $ne: "root" },
+            }),
+            ...(tags
+              ? { tags: { [!Query.includeTags ? "$nin" : "$in"]: tags } }
+              : {}),
             ...(Query.range instanceof Array
               ? {
                 createdAt: {
