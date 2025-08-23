@@ -6,8 +6,7 @@ import OauthController, { OauthTokenType } from "@Controllers/oauth.ts";
 import OauthSecretsController from "@Controllers/oauthSecrets.ts";
 
 export const CredentialsValidator = () =>
-  e
-    .string()
+  e.string()
     .throwsFatal()
     .custom((ctx) => new TextDecoder().decode(decode(ctx.output)).split(":"))
     .custom((ctx) => ({
@@ -22,6 +21,12 @@ async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
   if (Authorization) {
     const AuthType = Authorization[0].toLowerCase();
     const Token = Authorization[1];
+
+    const DisableAuthMethods = await Env.list("DISABLED_AUTHORIZATION_METHODS");
+
+    if (DisableAuthMethods.includes(AuthType)) {
+      throw createHttpError(Status.ServiceUnavailable);
+    }
 
     switch (AuthType) {
       case "basic":

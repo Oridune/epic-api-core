@@ -132,12 +132,11 @@ export const AuthenticationSchema = () =>
       .checkpoint(),
     callbackURL: e.string().custom((ctx) => {
       if (
+        Env.is(EnvType.PRODUCTION) &&
         !ctx.parent?.output.oauthApp.consent.allowedCallbackURLs.includes(
           new URL(ctx.output).toString(),
         )
-      ) {
-        throw "Return host not allowed!";
-      }
+      ) throw "Return host not allowed!";
     }),
     codeChallenge: e.optional(e.string().length({ min: 1, max: 500 })),
     codeChallengeMethod: e.optional(e.in(Object.values(SupportedHashAlg))),
