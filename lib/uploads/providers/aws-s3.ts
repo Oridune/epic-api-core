@@ -4,12 +4,12 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ObjectCannedACL,
   PutObjectCommand,
   S3Client,
 } from "aws-s3";
 import { getSignedUrl } from "aws-s3-presigner";
 import {
-  AwsS3ACLs,
   IObjectLocation,
   IParsedObjectUrl,
   ISignUploadUrlOptions,
@@ -50,7 +50,7 @@ export class AwsS3Provider {
       (await Env.get("AWS_S3_BUCKET_NAME"));
     const Location = options?.location ?? "";
     const Key = join(Location, Utils.uuidV4()).replace(/\\/g, "/");
-    const ACL = options?.awsS3ACL ?? AwsS3ACLs.PUBLIC_READ;
+    const ACL = options?.awsS3ACL ?? ObjectCannedACL.public_read;
     const ContentType = options?.contentType;
     const ContentLength = options?.contentLength;
     const ExpiresInSeconds = (options?.expiresInMs ?? 3600000) / 1000; // Default 1 hour
