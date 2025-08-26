@@ -245,7 +245,7 @@ export default class UsersController extends BaseController {
             $inc: {
               "consent.availableSignups": -1,
             },
-          });
+          }, { session });
 
           return user;
         });
