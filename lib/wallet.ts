@@ -1,7 +1,7 @@
 import { Env } from "@Core/common/env.ts";
 import { Database } from "@Database";
 import * as blakejs from "blakejs";
-import { ClientSession, ObjectId } from "mongo";
+import { MongoTransaction, ObjectId } from "mongo";
 import { TWalletOutput, WalletModel } from "@Models/wallet.ts";
 import { TransactionModel } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
@@ -91,7 +91,7 @@ export class Wallet {
   }
 
   static async invalidateTamper(wallet: TWalletOutput, options?: {
-    databaseSession?: ClientSession;
+    databaseSession?: MongoTransaction;
   }) {
     if (await this.compareBalanceDigest(wallet)) return wallet;
 
@@ -125,7 +125,7 @@ export class Wallet {
     options?: {
       type?: string;
       currency?: string;
-      databaseSession?: ClientSession;
+      databaseSession?: MongoTransaction;
     },
   ) {
     const Type = options?.type ?? (await this.getDefaultType());
@@ -165,7 +165,7 @@ export class Wallet {
       type?: string;
       currency?: string;
       noResolve?: boolean;
-      databaseSession?: ClientSession;
+      databaseSession?: MongoTransaction;
     },
   ) {
     const Type = options?.type ?? (await this.getDefaultType());
@@ -207,7 +207,7 @@ export class Wallet {
     options?: {
       types?: string[];
       currencies?: string[];
-      databaseSession?: ClientSession;
+      databaseSession?: MongoTransaction;
     },
   ) {
     const Accounts = (accounts instanceof Array ? accounts : [accounts]).map(
@@ -369,7 +369,7 @@ export class Wallet {
     /**
      * Pass a database transaction session
      */
-    databaseSession?: ClientSession;
+    databaseSession?: MongoTransaction;
   }) {
     if (typeof options.amount !== "number" || options.amount <= 0) {
       throw new Error(`Please provide a valid non-zero positive amount!`);
@@ -612,7 +612,7 @@ export class Wallet {
     /**
      * Pass a database transaction session
      */
-    databaseSession?: ClientSession;
+    databaseSession?: MongoTransaction;
   }) {
     return await Database.transaction(async (session) => {
       const Transaction = await TransactionModel.findAndUpdateOne(

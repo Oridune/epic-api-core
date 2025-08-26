@@ -1,5 +1,5 @@
 import { TransactionQueue } from "@Core/common/mod.ts";
-import { ClientSession, ObjectId } from "mongo";
+import { MongoTransaction, ObjectId } from "mongo";
 import { Database } from "@Database";
 
 import { UserModel } from "@Models/user.ts";
@@ -10,7 +10,7 @@ import { WalletModel } from "@Models/wallet.ts";
 
 export const PermanentlyDeleteUser = TransactionQueue.add<{
   userId: ObjectId;
-  databaseSession?: ClientSession;
+  databaseSession?: MongoTransaction;
 }>(async (ctx, next) => {
   await Database.transaction(async (session) => {
     await UserModel.deleteOneOrFail({ _id: ctx.input.userId }, { session });
@@ -44,7 +44,7 @@ export const PermanentlyDeleteUser = TransactionQueue.add<{
 export const PermanentlyDeleteAccount = TransactionQueue.add<{
   userId: ObjectId;
   accountId: ObjectId;
-  databaseSession?: ClientSession;
+  databaseSession?: MongoTransaction;
 }>(async (ctx, next) => {
   await Database.transaction(async (session) => {
     await AccountModel.deleteOneOrFail(

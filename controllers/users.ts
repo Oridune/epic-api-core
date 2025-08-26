@@ -16,7 +16,7 @@ import { responseValidator } from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { hash as bcryptHash, verify as bcryptVerify } from "bcrypt";
-import { ClientSession, Mongo, ObjectId } from "mongo";
+import { MongoTransaction, ObjectId } from "mongo";
 
 import verifyHuman from "@Middlewares/verifyHuman.ts";
 import {
@@ -47,7 +47,7 @@ export default class UsersController extends BaseController {
   static async create(
     user: Omit<TUserInput, "role" | "passwordHistory" | "collaborates">,
     opts?: {
-      databaseSession?: ClientSession;
+      databaseSession?: MongoTransaction;
     },
   ) {
     if (
@@ -84,7 +84,7 @@ export default class UsersController extends BaseController {
       user.password ?? Math.random().toString(36) + Date.now().toString(36),
     );
 
-    return Mongo.transaction(async (session) => ({
+    return Database.transaction(async (session) => ({
       user: await UserModel.create(
         {
           ...user,

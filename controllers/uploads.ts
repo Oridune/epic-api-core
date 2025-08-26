@@ -12,10 +12,11 @@ import {
 } from "@Core/common/mod.ts";
 import { type RouterContext } from "oak";
 import e from "validator";
-import { AwsS3ACLs, Uploads } from "@Lib/uploads/mod.ts";
+import { Uploads } from "@Lib/uploads/mod.ts";
 import { TFileInput, TFileOutput } from "@Models/file.ts";
 import OauthController, { TokenPayload } from "@Controllers/oauth.ts";
 import { Status } from "https://deno.land/std@0.193.0/http/http_status.ts";
+import { ObjectCannedACL } from "aws-s3";
 
 export type SignUploadOptions = {
   allowedContentTypes?: string[] | RegExp;
@@ -93,7 +94,7 @@ export default class UploadsController extends BaseController {
         const { name, alt, contentType, contentLength, ...restQuery } = Query;
 
         const UploadRequest = await Uploads.signUploadUrl({
-          awsS3ACL: AwsS3ACLs.PUBLIC_READ,
+          awsS3ACL: ObjectCannedACL.public_read,
           contentType,
           contentLength,
           location: Location,
