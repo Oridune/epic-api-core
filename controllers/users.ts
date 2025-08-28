@@ -41,6 +41,7 @@ import UsersIdentificationController, {
 } from "@Controllers/usersIdentification.ts";
 import UploadsController from "@Controllers/uploads.ts";
 import { Database } from "@Database";
+import { allowPopulate } from "@Helpers/utils.ts";
 
 @Controller("/users/", { group: "User", name: "users" })
 export default class UsersController extends BaseController {
@@ -647,7 +648,13 @@ export default class UsersController extends BaseController {
           .limit(Query.limit)
           .populate(
             "collaborates",
-            CollaboratorModel.populateOne("account", AccountModel),
+            CollaboratorModel.populateOne("account", AccountModel, {
+              disabled: !allowPopulate(
+                /^collaborates\.account.*/,
+                Query.project,
+              ),
+            }),
+            { disabled: !allowPopulate(/^collaborates.*/, Query.project) },
           );
 
         if (Query.project) UsersListQuery.project(Query.project);
@@ -715,7 +722,13 @@ export default class UsersController extends BaseController {
           })
           .populate(
             "collaborates",
-            CollaboratorModel.populateOne("account", AccountModel),
+            CollaboratorModel.populateOne("account", AccountModel, {
+              disabled: !allowPopulate(
+                /^collaborates\.account.*/,
+                Query.project,
+              ),
+            }),
+            { disabled: !allowPopulate(/^collaborates.*/, Query.project) },
           );
 
         if (Query.project) UserQuery.project(Query.project);

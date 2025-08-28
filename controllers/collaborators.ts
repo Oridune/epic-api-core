@@ -21,6 +21,7 @@ import { CollaboratorModel } from "@Models/collaborator.ts";
 import { UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauthSession.ts";
 import { OauthSecretModel } from "@Models/oauthSecret.ts";
+import { allowPopulate } from "@Helpers/utils.ts";
 
 @Controller("/collaborators/", { group: "Account", name: "collaborators" })
 export default class CollaboratorsController extends BaseController {
@@ -305,6 +306,7 @@ export default class CollaboratorsController extends BaseController {
               lname: 1,
               avatar: 1,
             },
+            disabled: !allowPopulate(/^createdFor.*/, Query.project),
           });
 
         if (Query.project) CollaboratorsListQuery.project(Query.project);

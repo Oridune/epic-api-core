@@ -30,6 +30,7 @@ import { FileSchema, TFileOutput } from "@Models/file.ts";
 import { WalletModel } from "@Models/wallet.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import UploadsController from "./uploads.ts";
+import { allowPopulate } from "@Helpers/utils.ts";
 
 @Controller("/wallet/", { group: "Wallet", name: "wallet" })
 export default class WalletController extends BaseController {
@@ -541,13 +542,21 @@ export default class WalletController extends BaseController {
           .sort(Query.sort)
           .skip(Query.offset)
           .limit(Query.limit)
-          .populateOne("from", AccountModel, { project: { name: 1, logo: 1 } })
+          .populateOne("from", AccountModel, {
+            project: { name: 1, logo: 1 },
+            disabled: !allowPopulate(/^from.*/, Query.project),
+          })
           .populateOne("sender", UserModel, {
             project: { fname: 1, mname: 1, lname: 1, avatar: 1 },
+            disabled: !allowPopulate(/^sender.*/, Query.project),
           })
-          .populateOne("to", AccountModel, { project: { name: 1, logo: 1 } })
+          .populateOne("to", AccountModel, {
+            project: { name: 1, logo: 1 },
+            disabled: !allowPopulate(/^to.*/, Query.project),
+          })
           .populateOne("receiver", UserModel, {
             project: { fname: 1, mname: 1, lname: 1, avatar: 1 },
+            disabled: !allowPopulate(/^receiver.*/, Query.project),
           });
 
         if (Query.project) TransactionListQuery.project(Query.project);
