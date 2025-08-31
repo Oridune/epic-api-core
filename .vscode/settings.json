@@ -3,11 +3,13 @@
   "deno.lint": true,
   "deno.unstable": true,
   "cSpell.words": [
+    "blakejs",
     "Oridune",
     "refreshable",
     "RPID",
     "Signups",
     "simplewebauthn",
-    "TOTP"
+    "TOTP",
+    "trns"
   ]
 }

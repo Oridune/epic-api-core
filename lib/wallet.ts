@@ -402,7 +402,7 @@ export class Wallet {
       Env.get(`WALLET_MAX_TRANSFER_${SubKey}`, true),
     ]);
 
-    const MinTransferAmount = parseFloat(MinTransfer ?? "1");
+    const MinTransferAmount = parseFloat(MinTransfer ?? "0.01");
     const MaxTransferAmount = parseFloat(MaxTransfer ?? "1e500");
 
     if (Amount < MinTransferAmount) {
@@ -646,12 +646,12 @@ export class Wallet {
           (typeof Transaction.description === "object" &&
               Transaction.description !== null
             ? Object.fromEntries(
-              Object.entries(Transaction.description).map((trns) => {
-                trns[1] = [
+              Object.entries(Transaction.description).map(($) => {
+                $[1] = [
                   RefundMessage,
-                  trns[1].replace(RefundMessage, "").trim(),
+                  $[1].replace(RefundMessage, "").trim(),
                 ].join(" ");
-                return trns;
+                return $;
               }),
             )
             : [
