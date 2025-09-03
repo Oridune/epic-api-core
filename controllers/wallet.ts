@@ -233,6 +233,7 @@ export default class WalletController extends BaseController {
             Query.method,
             { userId: ctx.router.state.auth.userId },
             TransferDetails,
+            ctx.router.lang,
           );
 
           return Response.statusCode(Status.Created).data({
@@ -335,6 +336,7 @@ export default class WalletController extends BaseController {
           description: Payload.transactionDetails.description,
           methodOf3DSecurity: Body.method,
           tags: Body.tags,
+          backgroundEvent: true,
           metadata: Payload.transactionDetails.metadata,
         });
 

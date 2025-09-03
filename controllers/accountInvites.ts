@@ -16,9 +16,9 @@ import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
 
-import { Notify } from "@Lib/notify.ts";
 import { AccountInviteModel } from "@Models/accountInvite.ts";
-import { EmailValidator, PhoneValidator } from "@Models/user.ts";
+import { UserModel } from "@Models/user.ts";
+import { getNotify } from "@Lib/notifications.ts";
 
 export const InputAccountInviteSchema = e.object({
   recipient: e.string(),
@@ -54,41 +54,83 @@ export default class AccountInvitesController extends BaseController {
             ctx.router.state.auth.user.email,
             ctx.router.state.auth.user.phone,
           ].includes(Body.recipient)
-        ) {
-          throw e.error("You cannot invite yourself!");
-        }
+        ) throw e.error("You cannot invite yourself!");
 
         const Token = crypto.randomUUID();
 
         if (!Env.is(EnvType.TEST)) {
-          const [isEmail, isPhone] = await Promise.all([
-            e.is(EmailValidator(), Body.recipient),
-            e.is(PhoneValidator(), Body.recipient),
-          ]);
+          const invitedUser = await UserModel.findOne({
+            $or: [
+              { username: Body.recipient },
+              { email: Body.recipient },
+              { phone: Body.recipient },
+            ],
+          }).project({ _id: 1 });
 
-          await Notify.sendWithNovu({
-            userFilter: {
-              $or: [
-                { username: Body.recipient },
-                { email: Body.recipient },
-                { phone: Body.recipient },
-              ],
+          if (!invitedUser) throw new Error("Recipient not registered!");
+
+          const metadata = {
+            sender: [
+              ctx.router.state.auth.user.fname,
+              ctx.router.state.auth.user.mname,
+              ctx.router.state.auth.user.lname,
+            ]
+              .filter(Boolean)
+              .join(" "),
+            role: Body.role,
+            token: Token,
+          };
+
+          const notify = await getNotify();
+
+          await notify.triggers.trigger({
+            body: {
+              recipient: {
+                sseTarget: {
+                  group: await Env.get("NOTIFY_APP_ID"),
+                  reference: invitedUser._id.toString(),
+                },
+              },
+              messages: [{
+                channel: "sse",
+                sse: {
+                  title: "You have an invite!",
+                  body: ctx.router.t(
+                    "You have been invited by {{ sender }} to collaborate on his account with permissions: {{ role }}",
+                    {
+                      sender: metadata.sender,
+                      role: metadata.role,
+                    },
+                  ),
+                  metadata,
+                },
+              }],
             },
-            email: isEmail ? Body.recipient : undefined,
-            phone: isPhone ? Body.recipient : undefined,
-            template: "account-invitation-token",
-            payload: {
-              sender: [
-                ctx.router.state.auth.user.fname,
-                ctx.router.state.auth.user.mname,
-                ctx.router.state.auth.user.lname,
-              ]
-                .filter(Boolean)
-                .join(" "),
-              role: Body.role,
-              token: Token,
-            },
-          });
+          }).raw;
+
+          // await Notify.sendWithNovu({
+          //   userFilter: {
+          //     $or: [
+          //       { username: Body.recipient },
+          //       { email: Body.recipient },
+          //       { phone: Body.recipient },
+          //     ],
+          //   },
+          //   email: isEmail ? Body.recipient : undefined,
+          //   phone: isPhone ? Body.recipient : undefined,
+          //   template: "account-invitation-token",
+          //   payload: {
+          //     sender: [
+          //       ctx.router.state.auth.user.fname,
+          //       ctx.router.state.auth.user.mname,
+          //       ctx.router.state.auth.user.lname,
+          //     ]
+          //       .filter(Boolean)
+          //       .join(" "),
+          //     role: Body.role,
+          //     token: Token,
+          //   },
+          // });
         }
 
         const Invite = await AccountInviteModel.create({

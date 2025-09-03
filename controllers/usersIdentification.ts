@@ -14,7 +14,8 @@ import e from "validator";
 import { type RouterContext, Status } from "oak";
 import { UserModel, UsernameValidator } from "@Models/user.ts";
 import OauthController from "@Controllers/oauth.ts";
-import { Notify } from "@Lib/notify.ts";
+import { getNotify } from "@Lib/notifications.ts";
+import { I18next } from "@I18n";
 
 export enum IdentificationPurpose {
   VERIFICATION = "verification",
@@ -79,7 +80,12 @@ export default class UsersIdentificationController extends BaseController {
     method: IdentificationMethod,
     userFilter: Parameters<(typeof UserModel)["findOne"]>[0],
     metadata?: Record<string, any>,
+    language?: string,
   ) {
+    if (method === "email") {
+      throw new Error("Email notification provider not available yet!");
+    }
+
     const User = await UserModel.findOne(userFilter).project({
       _id: 1,
       [method]: 1,
@@ -94,14 +100,36 @@ export default class UsersIdentificationController extends BaseController {
     );
 
     if (!Env.is(EnvType.TEST)) {
-      await Notify.sendWithNovu({
-        subscriberId: User._id.toString(),
-        [method]: User[method as "email" | "phone"],
-        template: method + "-identification-otp",
-        payload: {
-          otp: Challenge.otp,
+      const notify = await getNotify();
+      const t = I18next.translator(language);
+
+      await notify.triggers.trigger({
+        body: {
+          recipient: {
+            contacts: [User.phone!],
+          },
+          messages: [{
+            channel: "sms",
+            sms: {
+              body: t(
+                `Please use this code to verify your account {{otp}}`,
+                {
+                  otp: Challenge.otp,
+                },
+              ),
+            },
+          }],
         },
-      });
+      }).raw;
+
+      // await Notify.sendWithNovu({
+      //   subscriberId: User._id.toString(),
+      //   [method]: User[method as "email" | "phone"],
+      //   template: method + "-identification-otp",
+      //   payload: {
+      //     otp: Challenge.otp,
+      //   },
+      // });
     }
 
     return Challenge;
@@ -224,6 +252,8 @@ export default class UsersIdentificationController extends BaseController {
           Params.purpose,
           Params.method,
           { username: Params.username },
+          {},
+          ctx.router.lang,
         );
 
         return Response.data({

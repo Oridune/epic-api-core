@@ -362,6 +362,11 @@ export class Wallet {
     tags?: string[];
 
     /**
+     * Trigger background event
+     */
+    backgroundEvent?: boolean;
+
+    /**
      * Pass any metadata to the transaction
      */
     metadata?: Record<string, string | number | boolean>;
@@ -548,7 +553,9 @@ export class Wallet {
       };
     }, options.databaseSession);
 
-    Events.dispatch("wallet.transfer", { detail: Result });
+    if (options.backgroundEvent) {
+      Events.dispatch("wallet.transfer", { detail: Result });
+    }
 
     return Result;
   }
