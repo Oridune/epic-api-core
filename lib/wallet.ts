@@ -6,6 +6,7 @@ import { TWalletOutput, WalletModel } from "@Models/wallet.ts";
 import { TransactionModel } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
 import { Events } from "@Core/common/events.ts";
+import { hash as ohash } from "ohash";
 import { AccountModel } from "@Models/account.ts";
 
 export class Wallet {
@@ -528,7 +529,26 @@ export class Wallet {
         // Create a Transaction
         transaction: await TransactionModel.create({
           _id: options.transactionId,
-          sessionId: options.sessionId,
+          sessionId: options.sessionId ?? ohash({
+            type: Type,
+            currency: Currency,
+            amount: Amount,
+            currentMinute: new Intl.DateTimeFormat("en-US", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+              timeZoneName: "short",
+              timeZone: "UTC",
+            }).format(new Date()),
+            from: From.toString(),
+            to: To.toString(),
+            description: options.description,
+            foreignRefType: options.foreignRefType,
+            foreignRef: options.foreignRef,
+          }),
           reference: Reference,
           foreignRefType: options.foreignRefType,
           foreignRef: options.foreignRef,
