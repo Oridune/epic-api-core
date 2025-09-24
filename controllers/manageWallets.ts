@@ -5,6 +5,7 @@ import {
   Get,
   type IRequestContext,
   type IRoute,
+  parseQueryParams,
   Post,
   Response,
   Versioned,
@@ -18,7 +19,11 @@ import { WalletModel } from "@Models/wallet.ts";
 import { TransactionModel } from "@Models/transaction.ts";
 import { UserModel } from "@Models/user.ts";
 import { AccountModel } from "@Models/account.ts";
-import { responseValidator } from "@Core/common/validators.ts";
+import {
+  normalizeFilters,
+  queryValidator,
+  responseValidator,
+} from "@Core/common/validators.ts";
 
 @Controller("/manage/wallets/", { group: "Wallet", name: "manageWallets" })
 export default class ManageWalletsController extends BaseController {
@@ -67,7 +72,7 @@ export default class ManageWalletsController extends BaseController {
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
         const Query = await QuerySchema.validate(
-          Object.fromEntries(ctx.router.request.url.searchParams),
+          parseQueryParams(ctx.router.request.url.search),
           { name: `${route.scope}.query` },
         );
 
@@ -151,35 +156,16 @@ export default class ManageWalletsController extends BaseController {
 
   @Get("/transactions/:accountId/:type?/:currency?/")
   public transactions(route: IRoute) {
-    const CurrentTimestamp = Date.now();
-
     // Define Query Schema
-    const QuerySchema = e.deepCast(e.object(
-      {
-        search: e.optional(e.string()),
-        sent: e.optional(e.boolean()),
-        received: e.optional(e.boolean()),
-        range: e.optional(
-          e.tuple([e.date().end(CurrentTimestamp), e.date()], { cast: true }),
-        ),
-        offset: e.optional(e.number({ cast: true }).min(0)).default(0),
-        limit: e.optional(e.number({ cast: true }).max(2000)).default(2000),
-        sort: e.optional(
-          e.record(e.number({ cast: true }).min(-1).max(1), { cast: true }),
-        ).default({ _id: -1 }),
-        project: e.optional(
-          e.record(e.number({ cast: true }).min(0).max(1), { cast: true }),
-        ),
-        includeTotalCount: e.optional(
-          e
-            .boolean({ cast: true })
-            .describe(
-              "If `true` is passed, the system will return a total items count for pagination purpose.",
-            ),
-        ),
-      },
-      { allowUnexpectedProps: true },
-    ));
+    const QuerySchema = e.deepCast(
+      e.object(
+        {
+          sent: e.optional(e.boolean()),
+          received: e.optional(e.boolean()),
+        },
+        { allowUnexpectedProps: true },
+      ).extends(queryValidator()),
+    );
 
     // Define Params Schema
     const ParamsSchema = e.object({
@@ -202,7 +188,7 @@ export default class ManageWalletsController extends BaseController {
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
         const Query = await QuerySchema.validate(
-          Object.fromEntries(ctx.router.request.url.searchParams),
+          parseQueryParams(ctx.router.request.url.search),
           { name: `${route.scope}.query` },
         );
 
@@ -219,6 +205,7 @@ export default class ManageWalletsController extends BaseController {
         ];
 
         const TransactionListBaseConditions = {
+          ...normalizeFilters(Query.filters),
           ...(targets.length === 1 ? targets[0] : {
             $or: targets.length ? targets : [
               { from: TargetAccountId },

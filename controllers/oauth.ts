@@ -10,6 +10,7 @@ import {
   HashAlg,
   type IRequestContext,
   type IRoute,
+  parseQueryParams,
   Post,
   Response,
   SupportedHashAlg,
@@ -1166,7 +1167,7 @@ export default class OauthController extends BaseController {
 
         // Query Validation
         const Query = await QuerySchema.validate(
-          Object.fromEntries(ctx.router.request.url.searchParams),
+          parseQueryParams(ctx.router.request.url.search),
           { name: "users.query" },
         );
 

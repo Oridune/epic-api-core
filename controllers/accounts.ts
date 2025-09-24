@@ -6,13 +6,18 @@ import {
   Get,
   type IRequestContext,
   type IRoute,
+  parseQueryParams,
   Patch,
   Post,
   Put,
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
-import { responseValidator } from "@Core/common/validators.ts";
+import {
+  normalizeFilters,
+  queryValidator,
+  responseValidator,
+} from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
@@ -179,35 +184,8 @@ export default class AccountsController extends BaseController {
     group: "public",
   })
   public get(route: IRoute) {
-    const CurrentTimestamp = Date.now();
-
     // Define Query Schema
-    const QuerySchema = e.object(
-      {
-        search: e.optional(e.string()),
-        range: e.optional(
-          e.tuple([e.date().end(CurrentTimestamp), e.date()], { cast: true }),
-        ),
-        offset: e.optional(e.number({ cast: true }).min(0)).default(0),
-        limit: e.optional(e.number({ cast: true }).max(2000)).default(2000),
-        sort: e
-          .optional(
-            e.record(e.number({ cast: true }).min(-1).max(1), { cast: true }),
-          )
-          .default({ _id: -1 }),
-        project: e.optional(
-          e.record(e.number({ cast: true }).min(0).max(1), { cast: true }),
-        ),
-        includeTotalCount: e.optional(
-          e
-            .boolean({ cast: true })
-            .describe(
-              "If `true` is passed, the system will return a total items count for pagination purpose.",
-            ),
-        ),
-      },
-      { allowUnexpectedProps: true },
-    );
+    const QuerySchema = queryValidator();
 
     // Define Params Schema
     const ParamsSchema = e.object({
@@ -228,7 +206,7 @@ export default class AccountsController extends BaseController {
 
         // Query Validation
         const Query = await QuerySchema.validate(
-          Object.fromEntries(ctx.router.request.url.searchParams),
+          parseQueryParams(ctx.router.request.url.search),
           { name: `${route.scope}.query` },
         );
 
@@ -246,6 +224,7 @@ export default class AccountsController extends BaseController {
 
         const AccountListQuery = AccountModel.search(Query.search)
           .filter({
+            ...normalizeFilters(Query.filters),
             ...(Params.id ? { _id: new ObjectId(Params.id) } : {}),
             $or: [{ createdBy: TargetUser }, { createdFor: TargetUser }],
             ...(Query.range instanceof Array

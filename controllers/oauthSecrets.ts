@@ -5,11 +5,16 @@ import {
   Get,
   type IRequestContext,
   type IRoute,
+  parseQueryParams,
   Post,
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
-import { queryValidator, responseValidator } from "@Core/common/validators.ts";
+import {
+  normalizeFilters,
+  queryValidator,
+  responseValidator,
+} from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
@@ -207,7 +212,7 @@ export default class OauthSecretsController extends BaseController {
 
         // Query Validation
         const Query = await QuerySchema.validate(
-          Object.fromEntries(ctx.router.request.url.searchParams),
+          parseQueryParams(ctx.router.request.url.search),
           { name: `${route.scope}.query` },
         );
 
@@ -222,6 +227,7 @@ export default class OauthSecretsController extends BaseController {
         });
 
         const OauthSecretsBaseFilters = {
+          ...normalizeFilters(Query.filters),
           ...(Params.id ? { _id: new ObjectId(Params.id) } : {}),
           createdBy: new ObjectId(ctx.router.state.auth.userId),
           ...(Query.range instanceof Array

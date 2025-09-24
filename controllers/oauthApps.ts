@@ -5,6 +5,7 @@ import {
   Env,
   Get,
   type IRequestContext,
+  parseQueryParams,
   Post,
   Response,
   Versioned,
@@ -68,7 +69,7 @@ export default class OauthAppsController extends BaseController {
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
         const Query = await QuerySchema.validate(
-          Object.fromEntries(ctx.router.request.url.searchParams),
+          parseQueryParams(ctx.router.request.url.search),
           { name: "oauthApps.query" },
         );
 

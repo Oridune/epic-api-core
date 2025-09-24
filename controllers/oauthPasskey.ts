@@ -6,6 +6,7 @@ import {
   Get,
   type IRequestContext,
   type IRoute,
+  parseQueryParams,
   Post,
   Response,
   Store,
@@ -185,7 +186,7 @@ export default class OauthPasskeyController extends BaseController {
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
         const Query = await QuerySchema.validate(
-          Object.fromEntries(ctx.router.request.url.searchParams),
+          parseQueryParams(ctx.router.request.url.search),
           { name: `${route.scope}.query` },
         );
 

@@ -17,8 +17,8 @@
     "dfs": "jsr:@std/fs@1.0.19",
     "stringcase": "https://deno.land/x/case@2.2.0/mod.ts",
     "reflect": "https://deno.land/x/reflect_metadata@v0.1.12/mod.ts",
-    "mongo": "jsr:@oridune/mongo@0.2.2",
-    "validator": "jsr:@oridune/mongo@0.2.2/validator",
+    "mongo": "jsr:@oridune/mongo@0.2.3",
+    "validator": "jsr:@oridune/mongo@0.2.3/validator",
     "pluralize": "https://deno.land/x/deno_plural@2.0.0/mod.ts",
     "bcrypt": "jsr:@ts-rex/bcrypt@1.0.3",
     "cliffy:prompt": "https://deno.land/x/cliffy@v0.25.7/prompt/mod.ts",
@@ -43,13 +43,14 @@
     "simplewebauthn": "npm:@simplewebauthn/server@13.1.2",
     "simplewebauthn/helpers": "npm:@simplewebauthn/server@13.1.2/helpers",
     "blakejs": "npm:blakejs@^1.2.1",
-    "queue": "jsr:@oridune/queue@1.0.1",
+    "queue": "jsr:@oridune/queue@1.1.1",
     "axios": "npm:axios@^1.7.9",
     "ohash": "npm:ohash@2.0.11",
     "shell-args": "npm:shell-args@1.0.0",
     "encoding/": "https://deno.land/std@0.199.0/encoding/",
     "totp": "jsr:@hectorm/otpauth@9.4.1",
-    "notify": "https://notify.sabil.ly/sdk@0.0.1/index.ts"
+    "notify": "https://notify.sabil.ly/sdk@0.0.1/index.ts",
+    "qs": "npm:qs@6.14.0"
   },
   "scopes": {}
 }
