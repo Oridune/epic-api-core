@@ -410,7 +410,15 @@ export default () => {
                     channel: "sse",
                     sse: {
                       ...payload,
-                      metadata,
+                      metadata: {
+                        ...metadata,
+
+                        actions: [{
+                          type: "redirect",
+                          endpoint:
+                            `/wallet?type=${Transaction.type}&currency=${Transaction.currency}&search=${Transaction.reference}&source=${Transaction.to}`,
+                        }],
+                      },
                     },
                   },
                   ...(doPush
@@ -492,7 +500,15 @@ export default () => {
                     channel: "sse",
                     sse: {
                       ...payload,
-                      metadata,
+                      metadata: {
+                        ...metadata,
+
+                        actions: [{
+                          type: "redirect",
+                          endpoint:
+                            `/wallet?type=${Transaction.type}&currency=${Transaction.currency}&search=${Transaction.reference}&source=${Transaction.to}`,
+                        }],
+                      },
                     },
                   },
                   ...(doPush

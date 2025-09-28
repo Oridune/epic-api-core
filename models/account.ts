@@ -4,8 +4,8 @@ import { FileSchema } from "@Models/file.ts";
 import { EmailValidator, PhoneValidator } from "@Models/user.ts";
 
 export const InputAccountSchema = e.object({
-  name: e.optional(e.string()),
-  description: e.optional(e.string()),
+  name: e.optional(e.string().max(50)),
+  description: e.optional(e.string().max(300)),
   email: e.optional(EmailValidator()),
   phone: e.optional(PhoneValidator()),
 });

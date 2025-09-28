@@ -23,7 +23,7 @@ export const UserReferenceValidator = () =>
         )
       })[0-9]{${UserReferenceMinLength},}$`,
     ),
-  });
+  }).max(50);
 
 export const UsernameValidator = () =>
   e.string()
@@ -32,12 +32,12 @@ export const UsernameValidator = () =>
     })
     .custom((ctx) => ctx.output.toLowerCase());
 
-export const PasswordValidator = () => e.string().min(6);
+export const PasswordValidator = () => e.string().min(6).max(300);
 
 export const EmailValidator = () =>
   e.string().matches({
     regex: /^([a-zA-Z0-9_.+-]+)@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/,
-  });
+  }).max(300);
 
 export const PhoneValidator = () =>
   e.string().matches({
@@ -51,18 +51,18 @@ export enum Gender {
 }
 
 export const UpdateUserSchema = e.object({
-  fname: e.string(),
-  mname: e.optional(e.string()),
-  lname: e.optional(e.string()),
+  fname: e.string().max(50),
+  mname: e.optional(e.string().max(50)),
+  lname: e.optional(e.string().max(50)),
   gender: e.optional(e.in(Object.values(Gender))),
   dob: e.optional(e.date()),
-  locale: e.optional(e.string()),
-  country: e.optional(e.string()),
-  state: e.optional(e.string()),
-  city: e.optional(e.string()),
-  address_1: e.optional(e.string()),
-  address_2: e.optional(e.string()),
-  postalCode: e.optional(e.string()),
+  locale: e.optional(e.string().max(50)),
+  country: e.optional(e.string().max(50)),
+  state: e.optional(e.string().max(50)),
+  city: e.optional(e.string().max(50)),
+  address_1: e.optional(e.string().max(300)),
+  address_2: e.optional(e.string().max(300)),
+  postalCode: e.optional(e.string().max(50)),
 });
 
 export const CreateUserSchema = e
@@ -70,7 +70,8 @@ export const CreateUserSchema = e
     username: UsernameValidator(),
     password: PasswordValidator(),
     avatar: e.optional(FileSchema),
-    tags: e.optional(e.array(e.string(), { cast: true })).default([]),
+    tags: e.optional(e.array(e.string().max(50), { cast: true }).max(100))
+      .default([]),
     email: e.optional(EmailValidator()),
     phone: e.optional(PhoneValidator()),
   })
@@ -93,7 +94,7 @@ export const UserSchema = CreateUserSchema.extends(
       ),
     passwordHistory: e.array(e.string()),
     locationHistory: e.optional(e.array(GeoPointSchema)),
-    role: e.string(),
+    role: e.string().max(50),
     isEmailVerified: e.optional(e.boolean({ cast: true })).default(false),
     isPhoneVerified: e.optional(e.boolean({ cast: true })).default(false),
     lastLogin: e.optional(e.date()),

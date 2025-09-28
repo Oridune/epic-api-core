@@ -84,6 +84,10 @@ export default class AccountInvitesController extends BaseController {
               .join(" "),
             role: Body.role,
             token: Token,
+            actions: [{
+              type: "redirect",
+              endpoint: `/invite/${Token}`,
+            }],
           };
 
           const notify = await getNotify();
