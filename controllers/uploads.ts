@@ -54,13 +54,9 @@ export default class UploadsController extends BaseController {
       })
       .rest(e.any);
 
-    // Define Params Schema
-    const ParamsSchema = e.record(e.string());
-
     return Versioned.add("1.0.0", {
       shape: () => ({
         query: QuerySchema.toSample(),
-        params: ParamsSchema.toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
@@ -68,11 +64,6 @@ export default class UploadsController extends BaseController {
           parseQueryParams(ctx.router.request.url.search),
           { name: `${route.scope}.query` },
         );
-
-        // Params Validation
-        const Params = await ParamsSchema.validate(ctx.router.params, {
-          name: `${route.scope}.params`,
-        });
 
         let Location = typeof options?.location === "function"
           ? await options.location(ctx)
@@ -83,7 +74,7 @@ export default class UploadsController extends BaseController {
         const Injection: Record<string, unknown> = {
           ...ctx.router.state.auth,
           ...Query,
-          ...Params,
+          ...ctx.router.params,
         };
 
         Location = Location.replace(
@@ -115,7 +106,7 @@ export default class UploadsController extends BaseController {
                 alt,
                 metadata: {
                   ...restQuery,
-                  ...Params,
+                  ...ctx.router.params,
                 } as Record<string, string>,
               },
               secret:
