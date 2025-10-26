@@ -22,6 +22,7 @@ export const TransactionSchema = e.object({
   to: e.instanceOf(ObjectId, { instantiate: true }),
   receiver: e.instanceOf(ObjectId, { instantiate: true }),
   type: e.string(),
+  purpose: e.optional(e.string()),
   description: e.optional(e.or([e.record(e.string()), e.string()])),
   tags: e.optional(e.array(e.string())),
   currency: e.string(),

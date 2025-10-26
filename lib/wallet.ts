@@ -9,6 +9,200 @@ import { Events } from "@Core/common/events.ts";
 import { hash as ohash } from "ohash";
 import { AccountModel } from "@Models/account.ts";
 
+export interface IWalletTransferOptions {
+  /**
+   * A sessionId can be used to identify a unique payment session.
+   */
+  sessionId?: string;
+
+  /**
+   * Provide a custom transactionId.
+   */
+  transactionId?: ObjectId;
+
+  /**
+   * Reference is calculated automatically by default (TX10001). But you can pass a custom reference also.
+   */
+  reference?: string;
+
+  /**
+   * You can optionally pass a foreignRefType and a foreignRef to reference an external object that is linked to this transaction.
+   */
+  foreignRefType?: string;
+
+  /**
+   * You can optionally pass a foreignRefType and a foreignRef to reference an external object that is linked to this transaction.
+   */
+  foreignRef?: string;
+
+  /**
+   * Full name of the payment sender
+   */
+  fromName: string | string[];
+
+  /**
+   * Sender's accountId
+   */
+  from: ObjectId | string;
+
+  /**
+   * Sender's userId
+   */
+  sender: ObjectId | string;
+
+  /**
+   * Full name of the payment receiver
+   */
+  toName: string | string[];
+
+  /**
+   * Receiver's accountId
+   */
+  to: ObjectId | string;
+
+  /**
+   * Receiver's userId
+   */
+  receiver: ObjectId | string;
+
+  /**
+   * Executer's userId
+   */
+  user?: ObjectId | string;
+
+  /**
+   * Wallet type
+   */
+  type?: string;
+
+  /**
+   * Wallet currency
+   */
+  currency?: string;
+
+  /**
+   * Amount to be transferred
+   */
+  amount: number;
+
+  /**
+   * Purpose of transaction
+   */
+  purpose?: string;
+
+  /**
+   * Description of the transfer
+   */
+  description?: string | Record<string, string>;
+
+  /**
+   * Check if the wallet exists than make a transaction else throw an error
+   */
+  checkWalletExist?: boolean;
+
+  /**
+   * Which method was used for 3D verification (Also indicates if a 3D verification has been taken or not)
+   */
+  methodOf3DSecurity?: string;
+
+  /**
+   * A negative transaction will be performed in case of insufficient balance
+   */
+  allowOverdraft?: boolean;
+
+  /**
+   * How much negative transaction is allowed?
+   */
+  overdraftLimit?: number;
+
+  /**
+   * Is this transfer a refund?
+   */
+  isRefund?: boolean;
+
+  /**
+   * Pass any tags to the transaction
+   */
+  tags?: string[];
+
+  /**
+   * Trigger background event
+   */
+  backgroundEvent?: boolean;
+
+  /**
+   * Pass any metadata to the transaction
+   */
+  metadata?: Record<string, string | number | boolean>;
+
+  /**
+   * Pass a database transaction session
+   */
+  databaseSession?: MongoTransaction;
+}
+
+export interface IWalletRefundOptions {
+  /**
+   * A sessionId can be used to identify a unique payment session.
+   */
+  sessionId?: string;
+
+  /**
+   * Provide a custom transactionId for the refund transaction.
+   */
+  refundTransactionId?: ObjectId;
+
+  /**
+   * Reference is calculated automatically by default (TX10001). But you can pass a custom reference also.
+   */
+  reference?: string;
+
+  /**
+   * You can optionally pass a foreignRefType and a foreignRef to reference an external object that is linked to this transaction.
+   */
+  foreignRefType?: string;
+
+  /**
+   * You can optionally pass a foreignRefType and a foreignRef to reference an external object that is linked to this transaction.
+   */
+  foreignRef?: string;
+
+  /**
+   * Transaction ID to be refunded
+   */
+  transactionId: ObjectId | string;
+
+  /**
+   * Executer's userId
+   */
+  user: ObjectId | string;
+
+  /**
+   * Description of the transfer
+   */
+  description?: string | Record<string, string>;
+
+  /**
+   * A negative transaction will be performed in case of insufficient balance
+   */
+  allowOverdraft?: boolean;
+
+  /**
+   * How much negative transaction is allowed?
+   */
+  overdraftLimit?: number;
+
+  /**
+   * Pass any metadata to the transaction
+   */
+  metadata?: Record<string, string | number | boolean>;
+
+  /**
+   * Pass a database transaction session
+   */
+  databaseSession?: MongoTransaction;
+}
+
 export class Wallet {
   static getDefaultType() {
     return Env.get("DEFAULT_WALLET_TYPE");
@@ -251,132 +445,15 @@ export class Wallet {
     return Math.round((amount + Number.EPSILON) * 100) / 100;
   }
 
-  static async transfer(options: {
-    /**
-     * A sessionId can be used to identify a unique payment session.
-     */
-    sessionId?: string;
+  static getTransferApproval?: (
+    opts: {
+      wallet: TWalletOutput;
+      overdraft: boolean;
+      transferOpts: IWalletTransferOptions;
+    },
+  ) => Promise<boolean> | boolean;
 
-    /**
-     * Provide a custom transactionId.
-     */
-    transactionId?: ObjectId;
-
-    /**
-     * Reference is calculated automatically by default (TX10001). But you can pass a custom reference also.
-     */
-    reference?: string;
-
-    /**
-     * You can optionally pass a foreignRefType and a foreignRef to reference an external object that is linked to this transaction.
-     */
-    foreignRefType?: string;
-
-    /**
-     * You can optionally pass a foreignRefType and a foreignRef to reference an external object that is linked to this transaction.
-     */
-    foreignRef?: string;
-
-    /**
-     * Full name of the payment sender
-     */
-    fromName: string | string[];
-
-    /**
-     * Sender's accountId
-     */
-    from: ObjectId | string;
-
-    /**
-     * Sender's userId
-     */
-    sender: ObjectId | string;
-
-    /**
-     * Full name of the payment receiver
-     */
-    toName: string | string[];
-
-    /**
-     * Receiver's accountId
-     */
-    to: ObjectId | string;
-
-    /**
-     * Receiver's userId
-     */
-    receiver: ObjectId | string;
-
-    /**
-     * Executer's userId
-     */
-    user?: ObjectId | string;
-
-    /**
-     * Wallet type
-     */
-    type?: string;
-
-    /**
-     * Wallet currency
-     */
-    currency?: string;
-
-    /**
-     * Amount to be transferred
-     */
-    amount: number;
-
-    /**
-     * Description of the transfer
-     */
-    description?: string | Record<string, string>;
-
-    /**
-     * Check if the wallet exists than make a transaction else throw an error
-     */
-    checkWalletExist?: boolean;
-
-    /**
-     * Which method was used for 3D verification (Also indicates if a 3D verification has been taken or not)
-     */
-    methodOf3DSecurity?: string;
-
-    /**
-     * A negative transaction will be performed in case of insufficient balance
-     */
-    allowOverdraft?: boolean;
-
-    /**
-     * How much negative transaction is allowed?
-     */
-    overdraftLimit?: number;
-
-    /**
-     * Is this transfer a refund?
-     */
-    isRefund?: boolean;
-
-    /**
-     * Pass any tags to the transaction
-     */
-    tags?: string[];
-
-    /**
-     * Trigger background event
-     */
-    backgroundEvent?: boolean;
-
-    /**
-     * Pass any metadata to the transaction
-     */
-    metadata?: Record<string, string | number | boolean>;
-
-    /**
-     * Pass a database transaction session
-     */
-    databaseSession?: MongoTransaction;
-  }) {
+  static async transfer(options: IWalletTransferOptions) {
     if (typeof options.amount !== "number" || options.amount <= 0) {
       throw new Error(`Please provide a valid non-zero positive amount!`);
     }
@@ -445,9 +522,10 @@ export class Wallet {
         WalletA.negativeAt = null;
       }
 
-      if (
-        WalletA.balance < 0 &&
-        !(await this.hasOverdraftMargin(
+      let overdraft = false;
+
+      if (WalletA.balance < 0) {
+        overdraft = await this.hasOverdraftMargin(
           From,
           Type,
           Currency,
@@ -456,8 +534,17 @@ export class Wallet {
             skipAccountCheck: options.allowOverdraft,
             overdraftLimit: options.overdraftLimit,
           },
-        ))
-      ) throw new Error(`Insufficient balance!`);
+        );
+
+        if (!overdraft) throw new Error(`Insufficient balance!`);
+      }
+
+      // Pass through approval step
+      await Wallet.getTransferApproval?.({
+        wallet: WalletA,
+        overdraft,
+        transferOpts: options,
+      });
 
       const WalletB = await this.get(To, {
         type: Type,
@@ -558,6 +645,7 @@ export class Wallet {
           toName: ToName,
           to: To,
           receiver: options.receiver,
+          purpose: options.purpose,
           description: options.description,
           type: Type,
           currency: Currency,
@@ -580,67 +668,7 @@ export class Wallet {
     return Result;
   }
 
-  static async refund(options: {
-    /**
-     * A sessionId can be used to identify a unique payment session.
-     */
-    sessionId?: string;
-
-    /**
-     * Provide a custom transactionId for the refund transaction.
-     */
-    refundTransactionId?: ObjectId;
-
-    /**
-     * Reference is calculated automatically by default (TX10001). But you can pass a custom reference also.
-     */
-    reference?: string;
-
-    /**
-     * You can optionally pass a foreignRefType and a foreignRef to reference an external object that is linked to this transaction.
-     */
-    foreignRefType?: string;
-
-    /**
-     * You can optionally pass a foreignRefType and a foreignRef to reference an external object that is linked to this transaction.
-     */
-    foreignRef?: string;
-
-    /**
-     * Transaction ID to be refunded
-     */
-    transactionId: ObjectId | string;
-
-    /**
-     * Executer's userId
-     */
-    user: ObjectId | string;
-
-    /**
-     * Description of the transfer
-     */
-    description?: string | Record<string, string>;
-
-    /**
-     * A negative transaction will be performed in case of insufficient balance
-     */
-    allowOverdraft?: boolean;
-
-    /**
-     * How much negative transaction is allowed?
-     */
-    overdraftLimit?: number;
-
-    /**
-     * Pass any metadata to the transaction
-     */
-    metadata?: Record<string, string | number | boolean>;
-
-    /**
-     * Pass a database transaction session
-     */
-    databaseSession?: MongoTransaction;
-  }) {
+  static async refund(options: IWalletRefundOptions) {
     return await Database.transaction(async (session) => {
       const Transaction = await TransactionModel.findAndUpdateOne(
         options.transactionId,
@@ -669,6 +697,7 @@ export class Wallet {
         user: options.user,
         currency: Transaction.currency,
         amount: Transaction.amount,
+        purpose: Transaction.purpose,
         description: options.description ??
           (typeof Transaction.description === "object" &&
               Transaction.description !== null
@@ -686,6 +715,7 @@ export class Wallet {
               Transaction.description?.replace(RefundMessage, "")?.trim() ??
                 Transaction.reference,
             ].join(" ")),
+        tags: ["refund"],
         metadata: options.metadata,
         allowOverdraft: options.allowOverdraft,
         overdraftLimit: options.overdraftLimit,
