@@ -22,8 +22,8 @@ import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { hash as bcryptHash, verify as bcryptVerify } from "bcrypt";
 import { MongoTransaction, ObjectId } from "mongo";
-import {Queue} from "queue";
-import {TUpdateVerifiedStatus} from "@Types/activityEvents.ts"
+import { Queue } from "queue";
+import { TUpdatePassword, TUpdateVerifiedStatus, TVerifyUser } from "@Types/activityEvents.ts";
 
 import verifyHuman from "@Middlewares/verifyHuman.ts";
 import {
@@ -93,42 +93,42 @@ export default class UsersController extends BaseController {
     );
 
     return Database.transaction(async (session) => ({
-      user: await UserModel.create(
-        {
-          ...user,
-          _id: UserId,
-          password: Password,
-          passwordHistory: [Password],
-          role: ["", undefined].includes(
+        user: await UserModel.create(
+          {
+            ...user,
+            _id: UserId,
+            password: Password,
+            passwordHistory: [Password],
+            role: ["", undefined].includes(
               await Env.get("VERIFIED_ROLE_POLICY", true),
             )
-            ? "user"
-            : "unverified",
-          collaborates: [CollaboratorId],
-        },
+              ? "user"
+              : "unverified",
+            collaborates: [CollaboratorId],
+          },
         { session },
-      ),
-      account: await AccountModel.create(
-        {
-          _id: AccountId,
-          createdBy: UserId,
-          createdFor: UserId,
-          email: user.email,
-          phone: user.phone,
-        },
+        ),
+        account: await AccountModel.create(
+          {
+            _id: AccountId,
+            createdBy: UserId,
+            createdFor: UserId,
+            email: user.email,
+            phone: user.phone,
+          },
         { session },
-      ),
-      collaborator: await CollaboratorModel.create(
-        {
-          _id: CollaboratorId,
-          createdBy: UserId,
-          createdFor: UserId,
-          account: AccountId,
-          isOwned: true,
-          isPrimary: true,
-        },
+        ),
+        collaborator: await CollaboratorModel.create(
+          {
+            _id: CollaboratorId,
+            createdBy: UserId,
+            createdFor: UserId,
+            account: AccountId,
+            isOwned: true,
+            isPrimary: true,
+          },
         { session },
-      ),
+        ),
     }), opts?.databaseSession);
   }
 
@@ -185,21 +185,21 @@ export default class UsersController extends BaseController {
       oauthApp: e
         .any()
         .custom(async (ctx) => {
-          const App = await OauthAppModel.findOne(
+        const App = await OauthAppModel.findOne(
             ctx.parent!.output.oauthAppId,
-          ).project({
-            _id: 1,
-            "consent.availableSignups": 1,
-          });
+        ).project({
+          _id: 1,
+          "consent.availableSignups": 1,
+        });
 
-          if (!App) throw new Error("Invalid oauth app id!");
+        if (!App) throw new Error("Invalid oauth app id!");
 
-          if (!App.consent.availableSignups) {
-            throw new Error("Signup is not available!");
-          }
+        if (!App.consent.availableSignups) {
+          throw new Error("Signup is not available!");
+        }
 
-          return App;
-        }),
+        return App;
+      }),
     });
 
     // Define Body Schema
@@ -211,9 +211,9 @@ export default class UsersController extends BaseController {
         params: ParamsSchema.toSample(),
         body: BodySchema.toSample(),
         return: responseValidator(e.object({
-          user: UserModel.getSchema(),
-          account: AccountModel.getSchema(),
-          collaborator: CollaboratorModel.getSchema(),
+            user: UserModel.getSchema(),
+            account: AccountModel.getSchema(),
+            collaborator: CollaboratorModel.getSchema(),
         })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
@@ -243,16 +243,16 @@ export default class UsersController extends BaseController {
             ...user
           } = (
             await UsersController.create({
-              oauthApp: new ObjectId(Params.oauthAppId),
-              reference: Query.reference,
-              ...Body,
+                oauthApp: new ObjectId(Params.oauthAppId),
+                reference: Query.reference,
+                ...Body,
             }, { databaseSession: session })
           ).user;
 
           await OauthAppModel.updateOneOrFail(Params.oauthAppId, {
-            $inc: {
-              "consent.availableSignups": -1,
-            },
+              $inc: {
+                "consent.availableSignups": -1,
+              },
           }, { session });
 
           return user;
@@ -307,7 +307,7 @@ export default class UsersController extends BaseController {
       shape: () => ({
         body: BodySchema.toSample(),
       }),
-      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+      handler: async (ctx: IRequestContext<RouterContext<string>>, res: Response) => {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body.json(),
@@ -316,14 +316,14 @@ export default class UsersController extends BaseController {
 
         const Payload =
           (ctx.router.state.verifyTokenPayload =
-            await UsersIdentificationController.verify<{
-              userId: string;
-            }>(
-              Body.token,
-              Body.code,
-              IdentificationPurpose.RECOVERY,
+          await UsersIdentificationController.verify<{
+            userId: string;
+          }>(
+            Body.token,
+            Body.code,
+            IdentificationPurpose.RECOVERY,
               Body.method,
-            ).catch(e.error));
+          ).catch(e.error));
 
         const User = await UserModel.findOne(Payload.userId).project({
           passwordHistory: 1,
@@ -352,6 +352,18 @@ export default class UsersController extends BaseController {
           },
         );
 
+        const queuePayload: TUpdatePassword = {
+          status: res.getBody().status.toString(),
+          verifyTokenPayload: ctx.router.state.verifyTokenPayload,
+        };
+        await Queue.enqueue<TVerifyUser>(
+          "activityEvents:users.updatePassword",
+          {
+            id: crypto.randomUUID(),
+            data: queuePayload,
+          }
+        );
+
         return Response.true();
       },
     });
@@ -372,9 +384,9 @@ export default class UsersController extends BaseController {
       shape: () => ({
         body: BodySchema.toSample(),
         return: responseValidator(e.object({
-          type: e.in(Object.values(IdentificationMethod)),
-          value: e.string(),
-          verified: e.boolean(),
+            type: e.in(Object.values(IdentificationMethod)),
+            value: e.string(),
+            verified: e.boolean(),
         })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
@@ -393,10 +405,10 @@ export default class UsersController extends BaseController {
           isEmailVerified: Verified,
         });
 
-        await Queue.enqueue<TUpdateVerifiedStatus>("activityEvents:updateVerifiedStatus", {
-          id: crypto.randomUUID(),
-          data: { userId: ctx.router.state.auth.userId },
-        });
+        await Queue.enqueue<TUpdateVerifiedStatus>("activityEvents:users.updateVerifiedStatus", {
+            id: crypto.randomUUID(),
+            data: { userId: ctx.router.state.auth.userId },
+          });
 
         return Response.data({
           type: IdentificationMethod.EMAIL,
@@ -422,9 +434,9 @@ export default class UsersController extends BaseController {
       shape: () => ({
         body: BodySchema.toSample(),
         return: responseValidator(e.object({
-          type: e.in(Object.values(IdentificationMethod)),
-          value: e.string(),
-          verified: e.boolean(),
+            type: e.in(Object.values(IdentificationMethod)),
+            value: e.string(),
+            verified: e.boolean(),
         })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
@@ -442,11 +454,11 @@ export default class UsersController extends BaseController {
           phone: Body.phone,
           isPhoneVerified: Verified,
         });
-        
-        await Queue.enqueue<TUpdateVerifiedStatus>("activityEvents:updateVerifiedStatus", {
-          id: crypto.randomUUID(),
-          data: { userId: ctx.router.state.auth.userId },
-        });
+
+        await Queue.enqueue<TUpdateVerifiedStatus>( "activityEvents:users.updateVerifiedStatus", {
+            id: crypto.randomUUID(),
+            data: { userId: ctx.router.state.auth.userId },
+          });
 
         return Response.data({
           type: IdentificationMethod.PHONE,
@@ -541,7 +553,7 @@ export default class UsersController extends BaseController {
       shape: () => ({
         body: BodySchema.toSample(),
       }),
-      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+      handler: async (ctx: IRequestContext<RouterContext<string>>, res: Response ) => {
         // Body Validation
         const Body = await BodySchema.validate(
           await ctx.router.request.body.json(),
@@ -550,16 +562,28 @@ export default class UsersController extends BaseController {
 
         const Payload =
           (ctx.router.state.verifyTokenPayload =
-            await UsersIdentificationController.verify<{
-              userId: string;
-            }>(
-              Body.token,
-              Body.code,
-              IdentificationPurpose.VERIFICATION,
+          await UsersIdentificationController.verify<{
+            userId: string;
+          }>(
+            Body.token,
+            Body.code,
+            IdentificationPurpose.VERIFICATION,
               Body.method,
-            ).catch(e.error));
+          ).catch(e.error));
 
         await UsersController.verify(Body.method, Payload.userId);
+
+        const queuePayload: TVerifyUser = {
+          status: res.getBody().status.toString(),
+          sessionId: ctx.router.state.sessionInfo?.claims.sessionId,
+          secretId: ctx.router.state.sessionInfo?.claims.secretId,
+          accountId: ctx.router.state.auth?.accountId,
+          verifyTokenPayload: ctx.router.state.verifyTokenPayload,
+        };
+        await Queue.enqueue<TVerifyUser>("activityEvents:users.verify", {
+          id: crypto.randomUUID(),
+          data: queuePayload,
+        });
 
         return Response.true();
       },
@@ -571,10 +595,10 @@ export default class UsersController extends BaseController {
     // Define Query Schema
     const QuerySchema = e.deepCast(
       e.object(
-        {
-          includeTags: e.optional(e.array(e.string()).min(1)),
-          excludeTags: e.optional(e.array(e.string()).min(1)),
-        },
+          {
+            includeTags: e.optional(e.array(e.string()).min(1)),
+            excludeTags: e.optional(e.array(e.string()).min(1)),
+          },
         { allowUnexpectedProps: true },
       ).extends(queryValidator()),
     );
@@ -589,8 +613,8 @@ export default class UsersController extends BaseController {
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
         return: responseValidator(e.object({
-          totalCount: e.optional(e.number()),
-          users: e.array(UserModel.getSchema()),
+            totalCount: e.optional(e.number()),
+            users: e.array(UserModel.getSchema()),
         })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
@@ -621,18 +645,18 @@ export default class UsersController extends BaseController {
             ...normalizeFilters(Query.filters),
             ...(Params.id ? { _id: new ObjectId(Params.id) } : {}),
             ...(ctx.router.state.auth?.user.username === "root" ? {} : {
-              username: { $ne: "root" },
-            }),
+                  username: { $ne: "root" },
+                }),
             ...(tags
               ? { tags: { [!Query.includeTags ? "$nin" : "$in"]: tags } }
               : {}),
             ...(Query.range instanceof Array
               ? {
-                createdAt: {
-                  $gt: new Date(Query.range[0]),
-                  $lt: new Date(Query.range[1]),
-                },
-              }
+                  createdAt: {
+                    $gt: new Date(Query.range[0]),
+                    $lt: new Date(Query.range[1]),
+                  },
+                }
               : {}),
           })
           .project({
@@ -684,16 +708,16 @@ export default class UsersController extends BaseController {
         return: responseValidator(e.object({
           user: e.object({
             collaborates: e.array(
-              e.object({
-                account: AccountModel.getSchema(),
+          e.object({
+                      account: AccountModel.getSchema(),
               }).extends(e.omit(CollaboratorModel.getSchema(), ["account"])),
-            ),
+                ),
           }).extends(e.omit(UserModel.getSchema(), [
-            "password",
-            "passwordHistory",
-            "passkeys",
-            "fcmDeviceTokens",
-            "collaborates",
+                  "password",
+                  "passwordHistory",
+                  "passkeys",
+                  "fcmDeviceTokens",
+                  "collaborates",
           ])),
         })).toSample(),
       }),
