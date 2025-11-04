@@ -13,8 +13,9 @@ import { OauthSessionModel } from "@Models/oauthSession.ts";
 import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 import { TTransactionOutput } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
-import OauthController from "@Controllers/oauth.ts";
 import { getNotify } from "@Lib/notifications.ts";
+import { Queue } from "queue";
+import { TOauthLogout, TUpdateVerifiedStatus } from "@Types/activityEvents.ts";
 
 export const isUserVerified = async (input: {
   isEmailVerified?: boolean;
@@ -67,7 +68,7 @@ export const syncUserVerifiedRole = async (
   };
 };
 
-export default () => {
+export default async () => {
   // Events.listen<{
   //   ctx: IRequestContext<RouterContext<string>>;
   //   res: Response<
@@ -126,82 +127,114 @@ export default () => {
   //   },
   // );
 
-  Events.listen<{
-    ctx: IRequestContext<RouterContext<string>>;
-    res: Response<ReturnType<typeof OauthController.createOauthAccessTokens>>;
-  }>(
-    EventChannel.REQUEST,
-    "oauth.logout",
-    async (event) => {
-      const { ctx } = event.detail;
+  const logoutQueue = await Queue.subscribe<TOauthLogout>(
+    "activityEvents:oauth.logout",
+    {
+      handler: async (task) => {
+        const { sessionId, secretId, accountId } = task.details.data;
 
-      // if (ctx.router.state.updateFcmDeviceTokens) {
-      //   const User = await UserModel.findOne(
-      //     ctx.router.state.updateFcmDeviceTokens,
-      //   ).project({ _id: 1, fcmDeviceTokens: 1 });
-
-      //   if (User) {
-      //     const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
-
-      //     await Notifier.subscribers.setCredentials(
-      //       User._id.toString(),
-      //       PushProviderIdEnum.FCM,
-      //       { deviceTokens: User.fcmDeviceTokens },
-      //     );
-      //   }
-      // }
-
-      // Invalidate Cached Session
-      await Store.del(
-        `checkPermissions:${
-          ctx.router.state.sessionInfo?.claims.sessionId ??
-            ctx.router.state.sessionInfo?.claims.secretId
-        }:${ctx.router.state.auth?.accountId}`,
-      );
+        // Invalidate Cached Session
+        await Store.del(
+          `checkPermissions:${sessionId ?? secretId}:${accountId}`,
+        );
+      },
     },
   );
 
-  Events.listen<{
-    ctx: IRequestContext<RouterContext<string>>;
-    res: Response<{
-      type: IdentificationMethod;
-      value: string;
-      verified: boolean;
-    }>;
-  }>(
-    EventChannel.REQUEST,
-    ["users.updateEmail", "users.updatePhone"],
-    async (event) => {
-      try {
-        const Request = event.detail.ctx;
+  const updateVerifiedStatus = await Queue.subscribe<TUpdateVerifiedStatus>(
+    "activityEvents:updateVerifiedStatus",
+    {
+      handler: async (task) => {
+        const {userId} = task.details.data;
 
-        if (typeof Request.router.state.auth?.userId === "string") {
-          await syncUserVerifiedRole(Request.router.state.auth.userId);
-
-          // const Body = event.detail.res.getBody();
-
-          // if (Body.status && Body.data) {
-          //   const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
-
-          //   await Notifier.subscribers
-          //     .update(Request.router.state.auth.userId, {
-          //       [Body.data.type]: Body.data.value,
-          //     })
-          //     .catch(() =>
-          //       Notifier.subscribers.identify(
-          //         Request.router.state.auth!.userId,
-          //         {
-          //           [Body.data!.type]: Body.data!.value,
-          //         },
-          //       )
-          //     );
-          // }
-        }
-      } catch {
-        // Do nothing...
-      }
+        await syncUserVerifiedRole(userId).catch(() => {
+          // Do nothing...
+        });
+      },
     },
   );
+
+  return async () => {
+    await logoutQueue.unsubscribe();
+    await updateVerifiedStatus.unsubscribe();
+  };
+
+  // Events.listen<{
+  //   ctx: IRequestContext<RouterContext<string>>;
+  //   res: Response<ReturnType<typeof OauthController.createOauthAccessTokens>>;
+  // }>(
+  //   EventChannel.REQUEST,
+  //   "oauth.logout",
+  //   async (event) => {
+  //     const { ctx } = event.detail;
+
+  //     // if (ctx.router.state.updateFcmDeviceTokens) {
+  //     //   const User = await UserModel.findOne(
+  //     //     ctx.router.state.updateFcmDeviceTokens,
+  //     //   ).project({ _id: 1, fcmDeviceTokens: 1 });
+
+  //     //   if (User) {
+  //     //     const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
+
+  //     //     await Notifier.subscribers.setCredentials(
+  //     //       User._id.toString(),
+  //     //       PushProviderIdEnum.FCM,
+  //     //       { deviceTokens: User.fcmDeviceTokens },
+  //     //     );
+  //     //   }
+  //     // }
+
+  //     // Invalidate Cached Session
+  //     await Store.del(
+  //       `checkPermissions:${
+  //         ctx.router.state.sessionInfo?.claims.sessionId ??
+  //           ctx.router.state.sessionInfo?.claims.secretId
+  //       }:${ctx.router.state.auth?.accountId}`,
+  //     );
+  //   },
+  // );
+
+  // Events.listen<{
+  //   ctx: IRequestContext<RouterContext<string>>;
+  //   res: Response<{
+  //     type: IdentificationMethod;
+  //     value: string;
+  //     verified: boolean;
+  //   }>;
+  // }>(
+  //   EventChannel.REQUEST,
+  //   ["users.updateEmail", "users.updatePhone"],
+  //   async (event) => {
+  //     try {
+  //       const Request = event.detail.ctx;
+
+  //       if (typeof Request.router.state.auth?.userId === "string") {
+  //         await syncUserVerifiedRole(Request.router.state.auth.userId);
+
+  //         // const Body = event.detail.res.getBody();
+
+  //         // if (Body.status && Body.data) {
+  //         //   const Notifier = new Novu(await Env.get("NOVU_API_KEY"));
+
+  //         //   await Notifier.subscribers
+  //         //     .update(Request.router.state.auth.userId, {
+  //         //       [Body.data.type]: Body.data.value,
+  //         //     })
+  //         //     .catch(() =>
+  //         //       Notifier.subscribers.identify(
+  //         //         Request.router.state.auth!.userId,
+  //         //         {
+  //         //           [Body.data!.type]: Body.data!.value,
+  //         //         },
+  //         //       )
+  //         //     );
+  //         // }
+  //       }
+  //     } catch {
+  //       // Do nothing...
+  //     }
+  //   },
+  // );
 
   Events.listen<{
     ctx: IRequestContext<RouterContext<string>>;

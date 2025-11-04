@@ -9,6 +9,7 @@
     "@Lib/": "./lib/",
     "@Middlewares/": "./middlewares/",
     "@Helpers/": "./helpers/",
+    "@Types/": "./types/",
     "collections": "jsr:@std/collections@1.1.3",
     "dotenv": "jsr:@std/dotenv@0.225.5",
     "path": "jsr:@std/path@1.1.2",

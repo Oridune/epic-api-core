@@ -22,6 +22,8 @@ import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { hash as bcryptHash, verify as bcryptVerify } from "bcrypt";
 import { MongoTransaction, ObjectId } from "mongo";
+import {Queue} from "queue";
+import {TUpdateVerifiedStatus} from "@Types/activityEvents.ts"
 
 import verifyHuman from "@Middlewares/verifyHuman.ts";
 import {
@@ -391,6 +393,11 @@ export default class UsersController extends BaseController {
           isEmailVerified: Verified,
         });
 
+        await Queue.enqueue<TUpdateVerifiedStatus>("activityEvents:updateVerifiedStatus", {
+          id: crypto.randomUUID(),
+          data: { userId: ctx.router.state.auth.userId },
+        });
+
         return Response.data({
           type: IdentificationMethod.EMAIL,
           value: Body.email,
@@ -434,6 +441,11 @@ export default class UsersController extends BaseController {
         await UserModel.updateOne(ctx.router.state.auth.userId, {
           phone: Body.phone,
           isPhoneVerified: Verified,
+        });
+        
+        await Queue.enqueue<TUpdateVerifiedStatus>("activityEvents:updateVerifiedStatus", {
+          id: crypto.randomUUID(),
+          data: { userId: ctx.router.state.auth.userId },
         });
 
         return Response.data({
