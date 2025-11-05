@@ -10,12 +10,17 @@ import e from "validator";
 import { ObjectId } from "mongo";
 import { UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauthSession.ts";
-import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
+// import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 import { TTransactionOutput } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
 import { getNotify } from "@Lib/notifications.ts";
 import { Queue } from "queue";
-import { TOauthLogout, TUpdateVerifiedStatus, TVerifyUser, TUpdatePassword } from "@Types/activityEvents.ts";
+import {
+  TOauthLogout,
+  TUpdatePassword,
+  TUpdateVerifiedStatus,
+  TVerifyUser,
+} from "@Types/activityEvents.ts";
 
 export const isUserVerified = async (input: {
   isEmailVerified?: boolean;
@@ -141,18 +146,20 @@ export default async () => {
     },
   );
 
-  const updateVerifiedStatusQueue = await Queue.subscribe<TUpdateVerifiedStatus>(
-      "activityEvents:users.updateVerifiedStatus",
-      {
-        handler: async (task) => {
-          const { userId } = task.details.data;
+  const updateVerifiedStatusQueue = await Queue.subscribe<
+    TUpdateVerifiedStatus
+  >(
+    "activityEvents:users.updateVerifiedStatus",
+    {
+      handler: async (task) => {
+        const { userId } = task.details.data;
 
-          await syncUserVerifiedRole(userId).catch(() => {
-            // Do nothing...
-          });
-        },
-      }
-    );
+        await syncUserVerifiedRole(userId).catch(() => {
+          // Do nothing...
+        });
+      },
+    },
+  );
 
   const verifyUserQueue = await Queue.subscribe<TVerifyUser>(
     "activityEvents:users.verify",
@@ -160,40 +167,33 @@ export default async () => {
       handler: async (task) => {
         try {
           const {
-            status,
             sessionId,
             secretId,
             accountId,
             verifyTokenPayload: verifyTokenPayloadData,
           } = task.details.data;
 
-          // const { ctx, res } = event.detail;
+          const VerifyTokenPayload = await e
+            .object(
+              {
+                method: e.string(),
+                userId: e.string(),
+              },
+              { allowUnexpectedProps: true },
+            )
+            .validate(verifyTokenPayloadData);
 
-          // const Body = res.getBody();
+          await syncUserVerifiedRole(VerifyTokenPayload.userId);
 
-          if (status) {
-            const VerifyTokenPayload = await e
-              .object(
-                {
-                  method: e.string(),
-                  userId: e.string(),
-                },
-                { allowUnexpectedProps: true }
-              )
-              .validate(verifyTokenPayloadData);
-
-            await syncUserVerifiedRole(VerifyTokenPayload.userId);
-
-            // Invalidate Cached Session
-            await Store.del(
-              `checkPermissions:${sessionId ?? secretId}:${accountId}`
-            );
-          }
+          // Invalidate Cached Session
+          await Store.del(
+            `checkPermissions:${sessionId ?? secretId}:${accountId}`,
+          );
         } catch {
           // Do nothing...
         }
       },
-    }
+    },
   );
 
   const updatePasswordQueue = await Queue.subscribe<TUpdatePassword>(
@@ -201,37 +201,28 @@ export default async () => {
     {
       handler: async (task) => {
         try {
-          const { status, verifyTokenPayload: verifyTokenPayloadData } =
+          const { verifyTokenPayload: verifyTokenPayloadData } =
             task.details.data;
 
-          if (status) {
-            const VerifyTokenPayload = await e
-              .object(
-                {
-                  method: e.string(),
-                  userId: e.string(),
-                },
-                { allowUnexpectedProps: true }
-              )
-              .validate(verifyTokenPayloadData);
+          const VerifyTokenPayload = await e
+            .object(
+              {
+                method: e.string(),
+                userId: e.string(),
+              },
+              { allowUnexpectedProps: true },
+            )
+            .validate(verifyTokenPayloadData);
 
-            await OauthSessionModel.deleteMany({
-              createdBy: new ObjectId(VerifyTokenPayload.userId),
-            });
-          }
+          await OauthSessionModel.deleteMany({
+            createdBy: new ObjectId(VerifyTokenPayload.userId),
+          });
         } catch {
           // Do nothing...
         }
       },
-    }
+    },
   );
-
-  return async () => {
-    await logoutQueue.unsubscribe();
-    await updateVerifiedStatusQueue.unsubscribe();
-    await verifyUserQueue.unsubscribe();
-    await updatePasswordQueue.unsubscribe();
-  };
 
   // Events.listen<{
   //   ctx: IRequestContext<RouterContext<string>>;
@@ -472,92 +463,92 @@ export default async () => {
       EventChannel.REQUEST,
       "wallet.transfer",
       async (event) => {
-      try {
-        const Body = event.detail.res.getBody();
-        const Transaction = Body.data?.transaction;
+        try {
+          const Body = event.detail.res.getBody();
+          const Transaction = Body.data?.transaction;
 
-        if (Transaction) {
-          const notify = await getNotify();
+          if (Transaction) {
+            const notify = await getNotify();
 
-          const metadata = {
-            txnId: Transaction._id.toString(),
-            reference: Transaction.reference,
-            type: Transaction.type,
-            currency: Transaction.currency,
-            amount: Transaction.amount.toString(),
-            fromName: Transaction.fromName,
-            account: Transaction.to.toString(),
-          };
+            const metadata = {
+              txnId: Transaction._id.toString(),
+              reference: Transaction.reference,
+              type: Transaction.type,
+              currency: Transaction.currency,
+              amount: Transaction.amount.toString(),
+              fromName: Transaction.fromName,
+              account: Transaction.to.toString(),
+            };
 
-          const payload = {
-            title: event.detail.ctx.router.t("You received money!"),
-            body: event.detail.ctx.router.t(
-              `You have received {{amount}} <span style="text-transform:uppercase">{{currency}}</span> from {{fromName}}.`,
+            const payload = {
+              title: event.detail.ctx.router.t("You received money!"),
+              body: event.detail.ctx.router.t(
+                `You have received {{amount}} <span style="text-transform:uppercase">{{currency}}</span> from {{fromName}}.`,
                 metadata,
-            ),
-          };
+              ),
+            };
 
-          const User = await UserModel.findOne(Transaction.receiver).project({
-            fcmDeviceTokens: 1,
-          });
+            const User = await UserModel.findOne(Transaction.receiver).project({
+              fcmDeviceTokens: 1,
+            });
 
-          const doPush = !!User?.fcmDeviceTokens?.length;
+            const doPush = !!User?.fcmDeviceTokens?.length;
 
-          await notify.triggers.trigger({
-            body: {
-              recipient: {
-                sseTarget: {
-                  group: await Env.get("NOTIFY_APP_ID"),
-                  reference: Transaction.receiver.toString(),
+            await notify.triggers.trigger({
+              body: {
+                recipient: {
+                  sseTarget: {
+                    group: await Env.get("NOTIFY_APP_ID"),
+                    reference: Transaction.receiver.toString(),
+                  },
+                  targets: User?.fcmDeviceTokens,
                 },
-                targets: User?.fcmDeviceTokens,
-              },
-              messages: [
-                {
-                  channel: "sse",
-                  sse: {
-                    ...payload,
-                    metadata: {
-                      ...metadata,
+                messages: [
+                  {
+                    channel: "sse",
+                    sse: {
+                      ...payload,
+                      metadata: {
+                        ...metadata,
 
                         actions: [{
                           type: "redirect",
                           endpoint:
                             `/wallet?type=${Transaction.type}&currency=${Transaction.currency}&search=${Transaction.reference}&source=${Transaction.to}`,
                         }],
+                      },
                     },
                   },
-                },
-                ...(doPush
+                  ...(doPush
                     ? [{
-                        channel: "push",
-                        push: {
-                          ...payload,
-                          metadata,
-                        },
+                      channel: "push",
+                      push: {
+                        ...payload,
+                        metadata,
+                      },
                     }] as const
-                  : []),
-              ],
-            },
-          }).raw;
+                    : []),
+                ],
+              },
+            }).raw;
 
-          // await Notify.sendWithNovu({
-          //   template: `wallet-transfer`,
-          //   subscriberId: Transaction.receiver.toString(),
-          //   payload: {
-          //     txnId: Transaction._id.toString(),
-          //     reference: Transaction.reference,
-          //     type: Transaction.type,
-          //     currency: Transaction.currency,
-          //     amount: Transaction.amount,
-          //     fromName: Transaction.fromName,
-          //     account: Transaction.to.toString(),
-          //   },
-          // });
+            // await Notify.sendWithNovu({
+            //   template: `wallet-transfer`,
+            //   subscriberId: Transaction.receiver.toString(),
+            //   payload: {
+            //     txnId: Transaction._id.toString(),
+            //     reference: Transaction.reference,
+            //     type: Transaction.type,
+            //     currency: Transaction.currency,
+            //     amount: Transaction.amount,
+            //     fromName: Transaction.fromName,
+            //     account: Transaction.to.toString(),
+            //   },
+            // });
+          }
+        } catch {
+          // Do nothing...
         }
-      } catch {
-        // Do nothing...
-      }
       },
     );
   } else {
@@ -611,7 +602,7 @@ export default async () => {
                         ...metadata,
 
                         actions: [{
-                            type: "redirect",
+                          type: "redirect",
                           endpoint:
                             `/wallet?type=${Transaction.type}&currency=${Transaction.currency}&search=${Transaction.reference}&source=${Transaction.to}`,
                         }],
@@ -620,11 +611,11 @@ export default async () => {
                   },
                   ...(doPush
                     ? [{
-                          channel: "push",
-                          push: {
-                            ...payload,
-                            metadata,
-                          },
+                      channel: "push",
+                      push: {
+                        ...payload,
+                        metadata,
+                      },
                     }] as const
                     : []),
                 ],
@@ -651,4 +642,11 @@ export default async () => {
       },
     );
   }
+
+  return async () => {
+    await logoutQueue.unsubscribe();
+    await updateVerifiedStatusQueue.unsubscribe();
+    await verifyUserQueue.unsubscribe();
+    await updatePasswordQueue.unsubscribe();
+  };
 };

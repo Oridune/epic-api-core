@@ -5,18 +5,16 @@ export type TOauthLogout = {
 };
 
 export type TUpdateVerifiedStatus = {
-  userId: string
-}
+  userId: string;
+};
 
 export type TVerifyUser = {
-  status: string;
   sessionId?: string;
   secretId?: string;
   accountId?: string;
   verifyTokenPayload: string;
-}
+};
 
 export type TUpdatePassword = {
-  status: string;
   verifyTokenPayload: string;
-}
+};
