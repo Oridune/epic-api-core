@@ -10,12 +10,17 @@ import e from "validator";
 import { ObjectId } from "mongo";
 import { UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauthSession.ts";
-import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
+// import { IdentificationMethod } from "@Controllers/usersIdentification.ts";
 import { TTransactionOutput } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
 import { getNotify } from "@Lib/notifications.ts";
 import { Queue } from "queue";
-import { TOauthLogout, TUpdateVerifiedStatus } from "@Types/activityEvents.ts";
+import {
+  TOauthLogout,
+  TUpdatePassword,
+  TUpdateVerifiedStatus,
+  TVerifyUser,
+} from "@Types/activityEvents.ts";
 
 export const isUserVerified = async (input: {
   isEmailVerified?: boolean;
@@ -141,11 +146,13 @@ export default async () => {
     },
   );
 
-  const updateVerifiedStatus = await Queue.subscribe<TUpdateVerifiedStatus>(
-    "activityEvents:updateVerifiedStatus",
+  const updateVerifiedStatusQueue = await Queue.subscribe<
+    TUpdateVerifiedStatus
+  >(
+    "activityEvents:users.updateVerifiedStatus",
     {
       handler: async (task) => {
-        const {userId} = task.details.data;
+        const { userId } = task.details.data;
 
         await syncUserVerifiedRole(userId).catch(() => {
           // Do nothing...
@@ -154,10 +161,68 @@ export default async () => {
     },
   );
 
-  return async () => {
-    await logoutQueue.unsubscribe();
-    await updateVerifiedStatus.unsubscribe();
-  };
+  const verifyUserQueue = await Queue.subscribe<TVerifyUser>(
+    "activityEvents:users.verify",
+    {
+      handler: async (task) => {
+        try {
+          const {
+            sessionId,
+            secretId,
+            accountId,
+            verifyTokenPayload: verifyTokenPayloadData,
+          } = task.details.data;
+
+          const VerifyTokenPayload = await e
+            .object(
+              {
+                method: e.string(),
+                userId: e.string(),
+              },
+              { allowUnexpectedProps: true },
+            )
+            .validate(verifyTokenPayloadData);
+
+          await syncUserVerifiedRole(VerifyTokenPayload.userId);
+
+          // Invalidate Cached Session
+          await Store.del(
+            `checkPermissions:${sessionId ?? secretId}:${accountId}`,
+          );
+        } catch {
+          // Do nothing...
+        }
+      },
+    },
+  );
+
+  const updatePasswordQueue = await Queue.subscribe<TUpdatePassword>(
+    "activityEvents:users.updatePassword",
+    {
+      handler: async (task) => {
+        try {
+          const { verifyTokenPayload: verifyTokenPayloadData } =
+            task.details.data;
+
+          const VerifyTokenPayload = await e
+            .object(
+              {
+                method: e.string(),
+                userId: e.string(),
+              },
+              { allowUnexpectedProps: true },
+            )
+            .validate(verifyTokenPayloadData);
+
+          await OauthSessionModel.deleteMany({
+            createdBy: new ObjectId(VerifyTokenPayload.userId),
+          });
+        } catch {
+          // Do nothing...
+        }
+      },
+    },
+  );
 
   // Events.listen<{
   //   ctx: IRequestContext<RouterContext<string>>;
@@ -236,40 +301,40 @@ export default async () => {
   //   },
   // );
 
-  Events.listen<{
-    ctx: IRequestContext<RouterContext<string>>;
-    res: Response;
-  }>(EventChannel.REQUEST, "users.verify", async (event) => {
-    try {
-      const { ctx, res } = event.detail;
+  // Events.listen<{
+  //   ctx: IRequestContext<RouterContext<string>>;
+  //   res: Response;
+  // }>(EventChannel.REQUEST, "users.verify", async (event) => {
+  //   try {
+  //     const { ctx, res } = event.detail;
 
-      const Body = res.getBody();
+  //     const Body = res.getBody();
 
-      if (Body.status) {
-        const VerifyTokenPayload = await e
-          .object(
-            {
-              method: e.string(),
-              userId: e.string(),
-            },
-            { allowUnexpectedProps: true },
-          )
-          .validate(ctx.router.state.verifyTokenPayload);
+  //     if (Body.status) {
+  //       const VerifyTokenPayload = await e
+  //         .object(
+  //           {
+  //             method: e.string(),
+  //             userId: e.string(),
+  //           },
+  //           { allowUnexpectedProps: true }
+  //         )
+  //         .validate(ctx.router.state.verifyTokenPayload);
 
-        await syncUserVerifiedRole(VerifyTokenPayload.userId);
+  //       await syncUserVerifiedRole(VerifyTokenPayload.userId);
 
-        // Invalidate Cached Session
-        await Store.del(
-          `checkPermissions:${
-            ctx.router.state.sessionInfo?.claims.sessionId ??
-              ctx.router.state.sessionInfo?.claims.secretId
-          }:${ctx.router.state.auth?.accountId}`,
-        );
-      }
-    } catch {
-      // Do nothing...
-    }
-  });
+  //       // Invalidate Cached Session
+  //       await Store.del(
+  //         `checkPermissions:${
+  //           ctx.router.state.sessionInfo?.claims.sessionId ??
+  //           ctx.router.state.sessionInfo?.claims.secretId
+  //         }:${ctx.router.state.auth?.accountId}`
+  //       );
+  //     }
+  //   } catch {
+  //     // Do nothing...
+  //   }
+  // });
 
   // Events.listen<{
   //   ctx: IRequestContext<RouterContext<string>>;
@@ -362,33 +427,33 @@ export default async () => {
   //   }
   // });
 
-  Events.listen<{
-    ctx: IRequestContext<RouterContext<string>>;
-    res: Response;
-  }>(EventChannel.REQUEST, "users.updatePassword", async (event) => {
-    try {
-      const Request = event.detail.ctx;
-      const Body = event.detail.res.getBody();
+  // Events.listen<{
+  //   ctx: IRequestContext<RouterContext<string>>;
+  //   res: Response;
+  // }>(EventChannel.REQUEST, "users.updatePassword", async (event) => {
+  //   try {
+  //     const Request = event.detail.ctx;
+  //     const Body = event.detail.res.getBody();
 
-      if (Body.status) {
-        const VerifyTokenPayload = await e
-          .object(
-            {
-              method: e.string(),
-              userId: e.string(),
-            },
-            { allowUnexpectedProps: true },
-          )
-          .validate(Request.router.state.verifyTokenPayload);
+  //     if (Body.status) {
+  //       const VerifyTokenPayload = await e
+  //         .object(
+  //           {
+  //             method: e.string(),
+  //             userId: e.string(),
+  //           },
+  //           { allowUnexpectedProps: true }
+  //         )
+  //         .validate(Request.router.state.verifyTokenPayload);
 
-        await OauthSessionModel.deleteMany({
-          createdBy: new ObjectId(VerifyTokenPayload.userId),
-        });
-      }
-    } catch {
-      // Do nothing...
-    }
-  });
+  //       await OauthSessionModel.deleteMany({
+  //         createdBy: new ObjectId(VerifyTokenPayload.userId),
+  //       });
+  //     }
+  //   } catch {
+  //     // Do nothing...
+  //   }
+  // });
 
   if (!Env.enabledSync("WALLET_TRANSFER_NOTIFICATION_TRIGGER_MANUALLY")) {
     Events.listen<{
@@ -577,4 +642,11 @@ export default async () => {
       },
     );
   }
+
+  return async () => {
+    await logoutQueue.unsubscribe();
+    await updateVerifiedStatusQueue.unsubscribe();
+    await verifyUserQueue.unsubscribe();
+    await updatePasswordQueue.unsubscribe();
+  };
 };

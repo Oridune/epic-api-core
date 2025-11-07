@@ -22,8 +22,12 @@ import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { hash as bcryptHash, verify as bcryptVerify } from "bcrypt";
 import { MongoTransaction, ObjectId } from "mongo";
-import {Queue} from "queue";
-import {TUpdateVerifiedStatus} from "@Types/activityEvents.ts"
+import { Queue } from "queue";
+import {
+  TUpdatePassword,
+  TUpdateVerifiedStatus,
+  TVerifyUser,
+} from "@Types/activityEvents.ts";
 
 import verifyHuman from "@Middlewares/verifyHuman.ts";
 import {
@@ -352,6 +356,17 @@ export default class UsersController extends BaseController {
           },
         );
 
+        const queuePayload: TUpdatePassword = {
+          verifyTokenPayload: ctx.router.state.verifyTokenPayload,
+        };
+        await Queue.enqueue<TVerifyUser>(
+          "activityEvents:users.updatePassword",
+          {
+            id: crypto.randomUUID(),
+            data: queuePayload,
+          },
+        );
+
         return Response.true();
       },
     });
@@ -393,10 +408,13 @@ export default class UsersController extends BaseController {
           isEmailVerified: Verified,
         });
 
-        await Queue.enqueue<TUpdateVerifiedStatus>("activityEvents:updateVerifiedStatus", {
-          id: crypto.randomUUID(),
-          data: { userId: ctx.router.state.auth.userId },
-        });
+        await Queue.enqueue<TUpdateVerifiedStatus>(
+          "activityEvents:users.updateVerifiedStatus",
+          {
+            id: crypto.randomUUID(),
+            data: { userId: ctx.router.state.auth.userId },
+          },
+        );
 
         return Response.data({
           type: IdentificationMethod.EMAIL,
@@ -442,11 +460,14 @@ export default class UsersController extends BaseController {
           phone: Body.phone,
           isPhoneVerified: Verified,
         });
-        
-        await Queue.enqueue<TUpdateVerifiedStatus>("activityEvents:updateVerifiedStatus", {
-          id: crypto.randomUUID(),
-          data: { userId: ctx.router.state.auth.userId },
-        });
+
+        await Queue.enqueue<TUpdateVerifiedStatus>(
+          "activityEvents:users.updateVerifiedStatus",
+          {
+            id: crypto.randomUUID(),
+            data: { userId: ctx.router.state.auth.userId },
+          },
+        );
 
         return Response.data({
           type: IdentificationMethod.PHONE,
@@ -560,6 +581,17 @@ export default class UsersController extends BaseController {
             ).catch(e.error));
 
         await UsersController.verify(Body.method, Payload.userId);
+
+        const queuePayload: TVerifyUser = {
+          sessionId: ctx.router.state.sessionInfo?.claims.sessionId,
+          secretId: ctx.router.state.sessionInfo?.claims.secretId,
+          accountId: ctx.router.state.auth?.accountId,
+          verifyTokenPayload: ctx.router.state.verifyTokenPayload,
+        };
+        await Queue.enqueue<TVerifyUser>("activityEvents:users.verify", {
+          id: crypto.randomUUID(),
+          data: queuePayload,
+        });
 
         return Response.true();
       },
