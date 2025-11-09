@@ -455,8 +455,13 @@ export default class WalletController extends BaseController {
         .default(() => Wallet.getDefaultCurrency()),
     });
 
-    const LimitedAccount = e.pick(AccountModel.getSchema(), ["name", "logo"]);
+    const LimitedAccount = e.pick(AccountModel.getSchema(), [
+      "_id",
+      "name",
+      "logo",
+    ]);
     const LimitedUser = e.pick(UserModel.getSchema(), [
+      "_id",
       "fname",
       "mname",
       "lname",
