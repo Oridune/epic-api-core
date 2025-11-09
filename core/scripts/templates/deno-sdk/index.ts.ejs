@@ -172,16 +172,21 @@ export class EpicSDK {
             invalidateCallbacks.delete(callback);
         }
 
-        const invalidate = async () => {
-            const baseKey = cacheKey instanceof Array ? cacheKey[0] : cacheKey;
+        const invalidate = async (options?: { stopPropagation?: boolean }) => {
+            if(!options?.stopPropagation) {
+                const baseKey = cacheKey instanceof Array ? cacheKey[0] : cacheKey;
+                const cacheKeys = Array.from(this._useCachingMethods.keys());
+            
+                await Promise.all(cacheKeys.map(async (key) => {
+                    if(resolvedCacheKey !== key && new RegExp(`^${this.resolveCacheKey(baseKey)}($|:.*)`).test(key)) {
+                        const cachingMethods = this._useCachingMethods.get(key) as typeof methods;
 
-            if(baseKey) {
-                await Promise.all(Array.from(this._useCachingMethods.keys()).map(async (key) => {
-                    if(key.startsWith(this.resolveCacheKey(baseKey))) {
-                        await (this._useCachingMethods.get(key) as typeof methods).expire();
+                        await cachingMethods.invalidate({ stopPropagation: true });
                     }
                 }));
-            } else await expire();
+            }
+
+            await expire();
             
             const data = await get();
 
