@@ -37,8 +37,7 @@ import { Flags } from "@Core/common/flags.ts";
 import { GeoPointSchema } from "@Models/location.ts";
 import { OauthTotpModel, TotpStatus } from "@Models/oauthTOTP.ts";
 import Oauth2FAController, { OTPTokenType } from "./oauth2FA.ts";
-import { Queue } from "queue";
-import { TOauthLogout } from "@Types/activityEvents.ts";
+import { logoutQueue } from "@Jobs/activityEvents.ts";
 
 export enum OauthTokenType {
   AUTHENTICATION = "oauth_authentication",
@@ -1196,14 +1195,13 @@ export default class OauthController extends BaseController {
           );
         }
 
-        await Queue.enqueue<TOauthLogout>(
-          "activityEvents:oauth.logout",
-          { id: crypto.randomUUID(), data: {
+        await logoutQueue.enqueue({
+          data: {
             sessionId: ctx.router.state.auth.sessionId,
             secretId: ctx.router.state.auth.secretId,
             accountId: ctx.router.state.auth.accountId,
-          } },
-        );
+          },
+        });
 
         return Response.true();
       },

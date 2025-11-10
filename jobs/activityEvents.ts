@@ -15,8 +15,7 @@ import { TTransactionOutput } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
 import { getNotify } from "@Lib/notifications.ts";
 import { Queue } from "queue";
-import {
-  TOauthLogout,
+import type {
   TUpdatePassword,
   TUpdateVerifiedStatus,
   TVerifyUser,
@@ -72,6 +71,12 @@ export const syncUserVerifiedRole = async (
     role: Role,
   };
 };
+
+export const logoutQueue = Queue.prepare<{
+  sessionId?: string;
+  secretId?: string;
+  accountId: string;
+}>("activityEvents:oauth.logout");
 
 export default async () => {
   // Events.listen<{
@@ -132,19 +137,16 @@ export default async () => {
   //   },
   // );
 
-  const logoutQueue = await Queue.subscribe<TOauthLogout>(
-    "activityEvents:oauth.logout",
-    {
-      handler: async (task) => {
-        const { sessionId, secretId, accountId } = task.details.data;
+  logoutQueue.subscribe({
+    handler: async (task) => {
+      const { sessionId, secretId, accountId } = task.details.data;
 
-        // Invalidate Cached Session
-        await Store.del(
-          `checkPermissions:${sessionId ?? secretId}:${accountId}`,
-        );
-      },
+      // Invalidate Cached Session
+      await Store.del(
+        `checkPermissions:${sessionId ?? secretId}:${accountId}`,
+      );
     },
-  );
+  });
 
   const updateVerifiedStatusQueue = await Queue.subscribe<
     TUpdateVerifiedStatus
