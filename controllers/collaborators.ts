@@ -239,7 +239,16 @@ export default class CollaboratorsController extends BaseController {
         params: ParamsSchema.toSample(),
         return: responseValidator(e.object({
           totalCount: e.optional(e.number()),
-          results: e.array(CollaboratorModel.getSchema()),
+          results: e.array(
+            e.object({
+              createdFor: e.pick(UserModel.getSchema(), [
+                "fname",
+                "mname",
+                "lname",
+                "avatar",
+              ]),
+            }).extends(e.omit(CollaboratorModel.getSchema(), ["createdFor"])),
+          ),
         })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {

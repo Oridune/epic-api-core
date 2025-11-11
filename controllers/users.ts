@@ -616,13 +616,21 @@ export default class UsersController extends BaseController {
       id: e.optional(e.string()),
     });
 
+    const PopulatedUser = e.object({
+      collaborates: e.array(
+        e.object({
+          account: AccountModel.getSchema(),
+        }).extends(e.omit(CollaboratorModel.getSchema(), ["account"])),
+      ),
+    }).extends(e.omit(UserModel.getSchema(), ["collaborates"]));
+
     return Versioned.add("1.0.0", {
       shape: () => ({
         query: QuerySchema.toSample(),
         params: ParamsSchema.toSample(),
         return: responseValidator(e.object({
           totalCount: e.optional(e.number()),
-          users: e.array(UserModel.getSchema()),
+          users: e.array(PopulatedUser),
         })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
