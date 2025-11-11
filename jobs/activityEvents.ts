@@ -15,11 +15,6 @@ import { TTransactionOutput } from "@Models/transaction.ts";
 import { Store } from "@Core/common/store.ts";
 import { getNotify } from "@Lib/notifications.ts";
 import { Queue } from "queue";
-import type {
-  TUpdatePassword,
-  TUpdateVerifiedStatus,
-  TVerifyUser,
-} from "@Types/activityEvents.ts";
 
 export const isUserVerified = async (input: {
   isEmailVerified?: boolean;
@@ -78,7 +73,22 @@ export const logoutQueue = Queue.prepare<{
   accountId: string;
 }>("activityEvents:oauth.logout");
 
-export default async () => {
+export const updateVerifiedStatusQueue = Queue.prepare<{
+  userId: string;
+}>("activityEvents:users.updateVerifiedStatus");
+
+export const verifyUserQueue = Queue.prepare<{
+  sessionId?: string;
+  secretId?: string;
+  accountId?: string;
+  verifyTokenPayload: string;
+}>("activityEvents:users.verify");
+
+export const updatePasswordQueue = Queue.prepare<{
+  verifyTokenPayload: string;
+}>("activityEvents:users.updatePassword");
+
+export default () => {
   // Events.listen<{
   //   ctx: IRequestContext<RouterContext<string>>;
   //   res: Response<
@@ -148,83 +158,72 @@ export default async () => {
     },
   });
 
-  const updateVerifiedStatusQueue = await Queue.subscribe<
-    TUpdateVerifiedStatus
-  >(
-    "activityEvents:users.updateVerifiedStatus",
-    {
-      handler: async (task) => {
-        const { userId } = task.details.data;
+  updateVerifiedStatusQueue.subscribe({
+    handler: async (task) => {
+      const { userId } = task.details.data;
 
-        await syncUserVerifiedRole(userId).catch(() => {
-          // Do nothing...
+      await syncUserVerifiedRole(userId).catch(() => {
+        // Do nothing...
+      });
+    },
+  });
+
+  verifyUserQueue.subscribe({
+    handler: async (task) => {
+      try {
+        const {
+          sessionId,
+          secretId,
+          accountId,
+          verifyTokenPayload: verifyTokenPayloadData,
+        } = task.details.data;
+
+        const VerifyTokenPayload = await e
+          .object(
+            {
+              method: e.string(),
+              userId: e.string(),
+            },
+            { allowUnexpectedProps: true },
+          )
+          .validate(verifyTokenPayloadData);
+
+        await syncUserVerifiedRole(VerifyTokenPayload.userId);
+
+        // Invalidate Cached Session
+        await Store.del(
+          `checkPermissions:${sessionId ?? secretId}:${accountId}`,
+        );
+      } catch {
+        // Do nothing...
+      }
+    },
+  });
+
+  updatePasswordQueue.subscribe({
+    handler: async (task) => {
+      try {
+        const { verifyTokenPayload: verifyTokenPayloadData } =
+          task.details.data;
+
+        const VerifyTokenPayload = await e
+          .object(
+            {
+              method: e.string(),
+              userId: e.string(),
+            },
+            { allowUnexpectedProps: true },
+          )
+          .validate(verifyTokenPayloadData);
+
+        await OauthSessionModel.deleteMany({
+          createdBy: new ObjectId(VerifyTokenPayload.userId),
         });
-      },
+      } catch {
+        // Do nothing...
+      }
     },
-  );
-
-  const verifyUserQueue = await Queue.subscribe<TVerifyUser>(
-    "activityEvents:users.verify",
-    {
-      handler: async (task) => {
-        try {
-          const {
-            sessionId,
-            secretId,
-            accountId,
-            verifyTokenPayload: verifyTokenPayloadData,
-          } = task.details.data;
-
-          const VerifyTokenPayload = await e
-            .object(
-              {
-                method: e.string(),
-                userId: e.string(),
-              },
-              { allowUnexpectedProps: true },
-            )
-            .validate(verifyTokenPayloadData);
-
-          await syncUserVerifiedRole(VerifyTokenPayload.userId);
-
-          // Invalidate Cached Session
-          await Store.del(
-            `checkPermissions:${sessionId ?? secretId}:${accountId}`,
-          );
-        } catch {
-          // Do nothing...
-        }
-      },
-    },
-  );
-
-  const updatePasswordQueue = await Queue.subscribe<TUpdatePassword>(
-    "activityEvents:users.updatePassword",
-    {
-      handler: async (task) => {
-        try {
-          const { verifyTokenPayload: verifyTokenPayloadData } =
-            task.details.data;
-
-          const VerifyTokenPayload = await e
-            .object(
-              {
-                method: e.string(),
-                userId: e.string(),
-              },
-              { allowUnexpectedProps: true },
-            )
-            .validate(verifyTokenPayloadData);
-
-          await OauthSessionModel.deleteMany({
-            createdBy: new ObjectId(VerifyTokenPayload.userId),
-          });
-        } catch {
-          // Do nothing...
-        }
-      },
-    },
-  );
+  });
 
   // Events.listen<{
   //   ctx: IRequestContext<RouterContext<string>>;
