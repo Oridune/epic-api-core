@@ -242,6 +242,7 @@ export default class CollaboratorsController extends BaseController {
           results: e.array(
             e.object({
               createdFor: e.pick(UserModel.getSchema(), [
+                "_id",
                 "fname",
                 "mname",
                 "lname",

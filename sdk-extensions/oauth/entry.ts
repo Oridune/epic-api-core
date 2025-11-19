@@ -166,7 +166,7 @@ export class oauthEntry {
 
       await this.onLogin();
 
-      return;
+      return authorization.value;
     }
 
     exchangeCode: if (typeof opts?.code === "string") {
@@ -181,7 +181,7 @@ export class oauthEntry {
 
       await EpicSDK.setCache("authorization", authorization);
 
-      return;
+      return authorization;
     }
 
     const { verifier, url } = this.oauth2Login(appId, opts);
