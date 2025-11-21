@@ -20,7 +20,9 @@
     "oauthSecrets.ts",
     "manageUsers.ts",
     "requestLogIgnores.ts",
-    "oauth2FA.ts"
+    "oauth2FA.ts",
+    "walletAddresses.ts",
+    "walletMonitoring.ts"
   ],
   "sequence.development": [],
   "sequence.test": [],

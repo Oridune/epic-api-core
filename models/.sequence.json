@@ -16,7 +16,8 @@
     "requestLog.ts",
     "requestLogIgnore.ts",
     "location.ts",
-    "oauthTOTP.ts"
+    "oauthTOTP.ts",
+    "walletAddress.ts"
   ],
   "sequence.development": [],
   "sequence.test": [],
