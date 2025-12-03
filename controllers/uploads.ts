@@ -11,13 +11,13 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
-import { type RouterContext } from "oak";
+import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { Uploads } from "@Lib/uploads/mod.ts";
 import { TFileInput, TFileOutput } from "@Models/file.ts";
 import OauthController, { TokenPayload } from "@Controllers/oauth.ts";
-import { Status } from "https://deno.land/std@0.193.0/http/http_status.ts";
 import { ObjectCannedACL } from "aws-s3";
+import { responseValidator } from "@Core/common/validators.ts";
 
 export type SignUploadOptions = {
   allowedContentTypes?: string[] | RegExp;
@@ -57,6 +57,13 @@ export default class UploadsController extends BaseController {
     return Versioned.add("1.0.0", {
       shape: () => ({
         query: QuerySchema.toSample(),
+        return: responseValidator(e.object({
+          method: e.string(),
+          url: e.optional(e.string()),
+          getUrl: e.string(),
+          expiresInSeconds: e.number(),
+          token: e.string(),
+        })).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         // Query Validation
