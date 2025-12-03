@@ -28,7 +28,6 @@ export type TOauth2LoginOptions = {
 export class oauthEntry {
   static auth?: TAuthorization;
   static guard?: SecurityGuard;
-  static selectedAccount?: string;
 
   protected static _authInterceptorAdded = false;
   protected static _refreshRequest?: Promise<TAuthorization>;
@@ -93,8 +92,12 @@ export class oauthEntry {
 
             config.headers["X-Api-Version"] = EpicSDK._apiVersion;
 
-            if (this.selectedAccount) {
-              config.headers["X-Account-ID"] = this.selectedAccount;
+            const selectedAccount = await EpicSDK.getCache<string>(
+              "selectedAccount",
+            );
+
+            if (selectedAccount) {
+              config.headers["X-Account-ID"] = selectedAccount.value;
             }
           }
 
@@ -221,9 +224,16 @@ export class oauthEntry {
     }).data as Promise<TAuthorization>);
   }
 
+  static async switchAccount(accountId: string) {
+    await EpicSDK.setCache("selectedAccount", accountId);
+
+    await this.registerPermissions();
+  }
+
   static async logout(allDevices = false, fcmDeviceToken?: string) {
     await EpicSDK.delCache("authorization");
     await EpicSDK.delCache("verifier");
+    await EpicSDK.delCache("selectedAccount");
 
     await EpicSDK.oauth.logout({ query: { allDevices, fcmDeviceToken } })
       .raw;
