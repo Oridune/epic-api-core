@@ -92,12 +92,10 @@ export class oauthEntry {
 
             config.headers["X-Api-Version"] = EpicSDK._apiVersion;
 
-            const selectedAccount = await EpicSDK.getCache<string>(
-              "selectedAccount",
-            );
+            const selectedAccount = await this.selectedAccount();
 
             if (selectedAccount) {
-              config.headers["X-Account-ID"] = selectedAccount.value;
+              config.headers["X-Account-ID"] = selectedAccount;
             }
           }
 
@@ -228,6 +226,12 @@ export class oauthEntry {
     await EpicSDK.setCache("selectedAccount", accountId);
 
     await this.registerPermissions();
+  }
+
+  static async selectedAccount() {
+    const selectedAccount = await EpicSDK.getCache<string>("selectedAccount");
+
+    return selectedAccount?.value;
   }
 
   static async logout(allDevices = false, fcmDeviceToken?: string) {
