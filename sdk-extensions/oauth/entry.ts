@@ -88,13 +88,13 @@ export class oauthEntry {
               }, 1000);
             }
 
-            config.headers["Authorization"] =
+            config.headers["Authorization"] ??=
               `Bearer ${this.auth.access.token}`;
 
-            config.headers["X-Api-Version"] = EpicSDK._apiVersion;
+            config.headers["X-Api-Version"] ??= EpicSDK._apiVersion;
 
             if (this.accountId) {
-              config.headers["X-Account-ID"] = this.accountId;
+              config.headers["X-Account-ID"] ??= this.accountId;
             }
           }
 
