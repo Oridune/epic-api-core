@@ -5,6 +5,6 @@
     ".": "./entry.ts"
   },
   "imports": {
-    "epic-api-sdk": "../../public/sdk@latest/www/index.ts"
+    "epic-api-sdk": "../../public/sdk@0.0.1/www/index.ts"
   }
 }

@@ -159,6 +159,7 @@ export default class OauthPoliciesController extends BaseController {
     return new Versioned().add("1.0.0", {
       shape: () => ({
         return: responseValidator(e.object({
+          accountId: e.string(),
           policy: OauthPolicyModel.getSchema(),
           scopePipeline: e.array(e.array(e.string())),
         })).toSample(),
@@ -173,6 +174,7 @@ export default class OauthPoliciesController extends BaseController {
         if (!Policy) throw e.error("Policy not found!");
 
         return Response.data({
+          accountId: ctx.router.state.auth.accountId,
           policy: Policy,
           scopePipeline: ctx.router.state.guard.toJSON().scopePipeline,
         });

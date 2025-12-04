@@ -2,7 +2,8 @@
   "sequence": [
     "admin",
     "oauth",
-    "sdk@latest"
+    "sdk@latest",
+    "sdk@0.0.1"
   ],
   "sequence.development": [],
   "sequence.test": [],

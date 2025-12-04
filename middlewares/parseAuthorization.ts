@@ -28,50 +28,49 @@ async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
       throw createHttpError(Status.ServiceUnavailable);
     }
 
-    switch (AuthType) {
-      case "basic":
-        ctx.state.credentials = await CredentialsValidator().validate(Token, {
-          name: "oauth.header.authorization",
-        });
-        break;
+    if (AuthType === "bearer") {
+      ctx.state.sessionInfo = await OauthController.verifySession({
+        type: OauthTokenType.ACCESS,
+        token: Token,
+        useragent: ctx.request.headers.get("User-Agent") ?? "",
+      }).catch(console.error);
+    } else {
+      // Other auth types
+      switch (AuthType) {
+        case "basic":
+          ctx.state.credentials = await CredentialsValidator().validate(Token, {
+            name: "oauth.header.authorization",
+          });
+          break;
 
-      case "bearer":
-        ctx.state.sessionInfo = await OauthController.verifySession({
-          type: OauthTokenType.ACCESS,
-          token: Token,
-          useragent: ctx.request.headers.get("User-Agent") ?? "",
-        }).catch((error: Error) => {
-          throw createHttpError(Status.Unauthorized, error.message ?? error);
-        });
-        break;
+        case "permit":
+          ctx.state.sessionInfo = await OauthController.verifySession({
+            type: OauthTokenType.PERMIT,
+            token: Token,
+            useragent: ctx.request.headers.get("User-Agent") ?? "",
+            useragentCheck: false,
+          }).catch((error: Error) => {
+            throw createHttpError(Status.Unauthorized, error.message ?? error);
+          });
+          break;
 
-      case "permit":
-        ctx.state.sessionInfo = await OauthController.verifySession({
-          type: OauthTokenType.PERMIT,
-          token: Token,
-          useragent: ctx.request.headers.get("User-Agent") ?? "",
-          useragentCheck: false,
-        }).catch((error: Error) => {
-          throw createHttpError(Status.Unauthorized, error.message ?? error);
-        });
-        break;
+        case "apikey":
+          ctx.state.sessionInfo = await OauthSecretsController.verifySecret({
+            token: Token,
+          }).catch((error: Error) => {
+            throw createHttpError(Status.Unauthorized, error.message ?? error);
+          });
+          break;
 
-      case "apikey":
-        ctx.state.sessionInfo = await OauthSecretsController.verifySecret({
-          token: Token,
-        }).catch((error: Error) => {
-          throw createHttpError(Status.Unauthorized, error.message ?? error);
-        });
-        break;
+        case "bypass": {
+          if (Token !== await Env.get("ENCRYPTION_KEY")) {
+            throw createHttpError(Status.Unauthorized, "Invalid bypass token");
+          }
 
-      case "bypass": {
-        if (Token !== await Env.get("ENCRYPTION_KEY")) {
-          throw createHttpError(Status.Unauthorized, "Invalid bypass token");
+          ctx.state.authBypass = true;
+
+          break;
         }
-
-        ctx.state.authBypass = true;
-
-        break;
       }
     }
   }

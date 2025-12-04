@@ -28,6 +28,7 @@ export type TOauth2LoginOptions = {
 export class oauthEntry {
   static auth?: TAuthorization;
   static guard?: SecurityGuard;
+  static accountId?: string;
 
   protected static _authInterceptorAdded = false;
   protected static _refreshRequest?: Promise<TAuthorization>;
@@ -92,10 +93,8 @@ export class oauthEntry {
 
             config.headers["X-Api-Version"] = EpicSDK._apiVersion;
 
-            const selectedAccount = await this.selectedAccount();
-
-            if (selectedAccount) {
-              config.headers["X-Account-ID"] = selectedAccount;
+            if (this.accountId) {
+              config.headers["X-Account-ID"] = this.accountId;
             }
           }
 
@@ -106,21 +105,15 @@ export class oauthEntry {
       this._authInterceptorAdded = true;
     }
 
-    await this.registerPermissions();
+    await this.switchAccount();
   }
 
-  protected static async registerPermissions() {
-    const { scopePipeline } = await EpicSDK.oauthPolicies.me().data;
+  static get selectedAccount() {
+    if (!this.accountId) {
+      throw new Error("No account selected");
+    }
 
-    this.guard = new SecurityGuard().load({
-      scopePipeline: scopePipeline.map(($) => new Set($)),
-    });
-
-    EpicSDK.isPermitted = (scope, permission) =>
-      this.guard!.isPermitted(
-        (typeof scope === "function" ? scope.__permission : scope) ?? "",
-        permission,
-      );
+    return this.accountId;
   }
 
   static oauth2Login(
@@ -222,22 +215,54 @@ export class oauthEntry {
     }).data as Promise<TAuthorization>);
   }
 
-  static async switchAccount(accountId: string) {
-    await EpicSDK.setCache("selectedAccount", accountId);
+  static async setAccount(accountId: string) {
+    if (this.accountId === accountId) return;
 
-    await this.registerPermissions();
+    this.accountId = accountId;
+
+    await EpicSDK.setCache("selectedAccount", accountId);
   }
 
-  static async selectedAccount() {
-    const selectedAccount = await EpicSDK.getCache<string>("selectedAccount");
+  static async getAccount() {
+    return await EpicSDK.getCache<string>("selectedAccount");
+  }
 
-    return selectedAccount?.value;
+  static async switchAccount(switchAccountId?: string) {
+    if (switchAccountId) {
+      await this.setAccount(switchAccountId);
+    }
+
+    if (!this.accountId) {
+      const accountId = await this.getAccount();
+
+      if (accountId) {
+        await this.setAccount(accountId.value);
+      }
+    }
+
+    const { accountId, scopePipeline } = await EpicSDK.oauthPolicies.me().data;
+
+    if (!this.accountId) {
+      await this.setAccount(accountId);
+    }
+
+    this.guard = new SecurityGuard().load({
+      scopePipeline: scopePipeline.map(($) => new Set($)),
+    });
+
+    EpicSDK.isPermitted = (scope, permission) =>
+      this.guard!.isPermitted(
+        (typeof scope === "function" ? scope.__permission : scope) ?? "",
+        permission,
+      );
   }
 
   static async logout(allDevices = false, fcmDeviceToken?: string) {
-    await EpicSDK.delCache("authorization");
-    await EpicSDK.delCache("verifier");
-    await EpicSDK.delCache("selectedAccount");
+    await Promise.all([
+      EpicSDK.delCache("authorization"),
+      EpicSDK.delCache("verifier"),
+      EpicSDK.delCache("selectedAccount"),
+    ]);
 
     await EpicSDK.oauth.logout({ query: { allDevices, fcmDeviceToken } })
       .raw;

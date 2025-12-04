@@ -17,7 +17,11 @@ import { <%- name %>Entry } from "<%- entry %>.ts";
 <% } -%>
 
 export class EpicSDK {
-    protected static _cachingAborts = new Map<string, AbortController>();
+    protected static _cachingActivity = new Map<string, {
+        controller: AbortController,
+        resultPromise: unknown,
+        timestamp: number,
+    }>();
 
     static _apiVersion = "<%- apiVersion %>";
     static _options?: TSDKOptions;
@@ -144,14 +148,31 @@ export class EpicSDK {
         if(_methods && !freshMethods) return _methods;
 
         const get = () => {
-            return this.useCache<T>(() => {
-                this._cachingAborts.get(resolvedCacheKey)?.abort();
+            return this.useCache<T>(async () => {
+                const activity = this._cachingActivity.get(resolvedCacheKey);
+
+                if(activity) {
+                    if(Date.now() - activity.timestamp > 1000) {
+                        activity.controller.abort("Repeated request!");
+                    } else {
+                        return activity.resultPromise as Promise<T>;
+                    }
+                }
 
                 const controller = new AbortController();
+                const resultPromise = callback({ signal: controller.signal });
 
-                this._cachingAborts.set(resolvedCacheKey, controller);
+                this._cachingActivity.set(resolvedCacheKey, {
+                    controller,
+                    resultPromise,
+                    timestamp: Date.now(),
+                });
 
-                return callback({ signal: controller.signal })
+                const result = await resultPromise;
+
+                this._cachingActivity.delete(resolvedCacheKey);
+
+                return result;
             }, {
                 cacheKey,
                 ...options,
@@ -202,6 +223,15 @@ export class EpicSDK {
         this._useCachingMethods.set(resolvedCacheKey, methods);
 
         return methods;
+    }
+
+    static async withCaching(callback: (methods: ReturnType<typeof EpicSDK.useCaching>, key: string) => void | Promise<void>, options?: { matcher?: RegExp }) {
+        for (const [key, methods] of this._useCachingMethods) {
+            if(options && options.matcher instanceof RegExp && !options.matcher.test(key))
+                continue;
+
+            await callback(methods as any, key);
+        }
     }
 
     static resolveAxiosResponse<T>(executor: () => Promise<AxiosResponse<T>>, options?: TCacheOptions<T>) {
