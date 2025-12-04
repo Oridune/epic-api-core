@@ -250,11 +250,16 @@ export class oauthEntry {
       scopePipeline: scopePipeline.map(($) => new Set($)),
     });
 
-    EpicSDK.isPermitted = (scope, permission) =>
-      this.guard!.isPermitted(
-        (typeof scope === "function" ? scope.__permission : scope) ?? "",
-        permission,
+    EpicSDK.isPermitted = (scope, permission) => {
+      const rawScope =
+        (typeof scope === "function" ? scope.__permission : scope) ?? "";
+      const [_scope, _permission] = rawScope.split(".");
+
+      return this.guard!.isPermitted(
+        _scope,
+        _permission ?? permission,
       );
+    };
   }
 
   static async logout(allDevices = false, fcmDeviceToken?: string) {
