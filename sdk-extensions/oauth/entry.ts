@@ -88,13 +88,23 @@ export class oauthEntry {
               }, 1000);
             }
 
-            config.headers["Authorization"] ??=
-              `Bearer ${this.auth.access.token}`;
+            const targetKeyRegex =
+              /^Authorization|X-(Api-Version|Account-ID)$/i;
+            const targetKeys = Object.keys(config.headers).filter((key) =>
+              targetKeyRegex.test(key)
+            ).map((key) => key.toLowerCase());
 
-            config.headers["X-Api-Version"] ??= EpicSDK._apiVersion;
+            if (!targetKeys.includes("authorization")) {
+              config.headers["Authorization"] =
+                `Bearer ${this.auth.access.token}`;
+            }
 
-            if (this.accountId) {
-              config.headers["X-Account-ID"] ??= this.accountId;
+            if (!targetKeys.includes("x-api-version")) {
+              config.headers["X-Api-Version"] = EpicSDK._apiVersion;
+            }
+
+            if (this.accountId && !targetKeys.includes("x-account-id")) {
+              config.headers["X-Account-ID"] = this.accountId;
             }
           }
 
