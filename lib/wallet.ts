@@ -121,6 +121,11 @@ export interface IWalletTransferOptions {
   isRefund?: boolean;
 
   /**
+   * If this transfer is a refund then what is the original transaction ID?
+   */
+  refundedTransaction?: ObjectId;
+
+  /**
    * Pass any tags to the transaction
    */
   tags?: string[];
@@ -458,6 +463,12 @@ export class Wallet {
       throw new Error(`Please provide a valid non-zero positive amount!`);
     }
 
+    if (options.isRefund && !options.refundedTransaction) {
+      throw new Error(
+        `Please provide the original transaction ID for the refund!`,
+      );
+    }
+
     // Fix floating-point errors
     const Amount = this.roundTwo(options.amount);
 
@@ -654,6 +665,7 @@ export class Wallet {
           senderPreviousBalance: WalletA.lastBalance,
           receiverPreviousBalance: WalletB.lastBalance,
           isRefund: options.isRefund,
+          refundedTransaction: options.refundedTransaction,
           tags: options.tags,
           metadata: options.metadata,
           createdBy: options.user ?? options.sender,
@@ -669,10 +681,12 @@ export class Wallet {
   }
 
   static async refund(options: IWalletRefundOptions) {
+    const refundTransactionId = options.refundTransactionId ?? new ObjectId();
+
     return await Database.transaction(async (session) => {
       const Transaction = await TransactionModel.findAndUpdateOne(
         options.transactionId,
-        { isRefunded: true },
+        { isRefunded: true, refundTransaction: refundTransactionId },
         { session },
       );
 
@@ -683,7 +697,7 @@ export class Wallet {
 
       return await Wallet.transfer({
         sessionId: options.sessionId,
-        transactionId: options.refundTransactionId,
+        transactionId: refundTransactionId,
         reference: options.reference,
         foreignRefType: options.foreignRefType,
         foreignRef: options.foreignRef,
@@ -720,6 +734,7 @@ export class Wallet {
         allowOverdraft: options.allowOverdraft,
         overdraftLimit: options.overdraftLimit,
         isRefund: true,
+        refundedTransaction: Transaction._id,
         databaseSession: session,
       });
     }, options.databaseSession);

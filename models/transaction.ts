@@ -34,7 +34,13 @@ export const TransactionSchema = e.object({
     TransactionStatus.COMPLETED,
   ),
   isRefund: e.optional(e.boolean()), // Indicates this transaction is a refund received (Received).
+  refundedTransaction: e.optional(
+    e.instanceOf(ObjectId, { instantiate: true }),
+  ),
+
   isRefunded: e.optional(e.boolean()), // Indicates this transaction has been refunded (Sent).
+  refundTransaction: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+
   metadata: e.optional(e.record(e.or([e.number(), e.boolean(), e.string()]))),
   attachments: e.optional(e.array(FileSchema)),
 });
