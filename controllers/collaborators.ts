@@ -191,17 +191,61 @@ export default class CollaboratorsController extends BaseController {
     });
   }
 
+  @Patch("/toggle/primary/:id/")
+  public togglePrimary(route: IRoute) {
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      id: e.instanceOf(ObjectId, { instantiate: true }),
+    });
+
+    return new Versioned().add("1.0.0", {
+      shape: () => ({
+        params: ParamsSchema.toSample(),
+        return: responseValidator().toSample(),
+      }),
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
+
+        const UserId = new ObjectId(ctx.router.state.auth.userId);
+
+        await Database.transaction(async (session) => {
+          await CollaboratorModel.updateOneOrFail({
+            createdFor: UserId,
+            isPrimary: true,
+          }, {
+            isPrimary: false,
+          }, { session });
+
+          await CollaboratorModel.updateOneOrFail({
+            _id: Params.id,
+            createdFor: UserId,
+          }, {
+            isPrimary: true,
+          });
+        });
+
+        return Response.true();
+      },
+    });
+  }
+
   @Patch("/toggle/blocked/:id/:isBlocked/")
   public toggleBlocked(route: IRoute) {
     // Define Params Schema
     const ParamsSchema = e.object({
-      id: e.string(),
+      id: e.instanceOf(ObjectId, { instantiate: true }),
       isBlocked: e.boolean({ cast: true }),
     });
 
     return new Versioned().add("1.0.0", {
       shape: () => ({
         params: ParamsSchema.toSample(),
+        return: responseValidator().toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
@@ -319,7 +363,7 @@ export default class CollaboratorsController extends BaseController {
   public delete(route: IRoute) {
     // Define Params Schema
     const ParamsSchema = e.object({
-      id: e.string(),
+      id: e.instanceOf(ObjectId, { instantiate: true }),
     });
 
     return Versioned.add("1.0.0", {
@@ -334,33 +378,49 @@ export default class CollaboratorsController extends BaseController {
           name: `${route.scope}.params`,
         });
 
-        const CollaboratorId = new ObjectId(Params.id);
         const AccountId = new ObjectId(ctx.router.state.auth.accountId);
         const UserId = new ObjectId(ctx.router.state.auth.userId);
 
         await Database.transaction(async (session) => {
+          const collaborator = await CollaboratorModel.findOne({
+            _id: Params.id,
+            account: AccountId,
+          }, { session }).project({
+            _id: 1,
+            createdBy: 1,
+            createdFor: 1,
+            isPrimary: 1,
+          });
+
+          if (!collaborator) throw new Error("Collaborator id is not correct!");
+
+          if (
+            !collaborator.createdBy.equals(UserId) &&
+            !collaborator.createdFor.equals(UserId)
+          ) {
+            throw new Error(
+              "You are not authorized to delete this collaborator!",
+            );
+          }
+
           // Either the account owner or the collaboration creator should be able to delete
-          await CollaboratorModel.deleteOneOrFail(
-            ctx.router.state.auth!.isAccountOwned
-              ? {
-                _id: CollaboratorId,
-                account: AccountId,
-                isPrimary: false,
-              }
-              : {
-                _id: CollaboratorId,
-                account: AccountId,
-                createdBy: UserId,
-                isPrimary: false,
-              },
-            { session },
-          );
+          await CollaboratorModel.deleteOneOrFail(collaborator._id, {
+            session,
+          });
+
+          if (collaborator.isPrimary) {
+            await CollaboratorModel.updateOne(
+              { createdFor: collaborator.createdFor },
+              { isPrimary: true },
+              { session },
+            );
+          }
 
           await UserModel.updateOne(
             ctx.router.state.auth!.userId,
             {
               $pull: {
-                collaborates: CollaboratorId,
+                collaborates: collaborator._id,
               },
             },
             { session },
