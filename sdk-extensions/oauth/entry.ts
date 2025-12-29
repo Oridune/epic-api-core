@@ -60,7 +60,7 @@ export class oauthEntry {
     };
   }
 
-  protected static async onLogin() {
+  protected static async onLogin(onExpired?: () => void | Promise<void>) {
     if (!this._authInterceptorAdded) {
       EpicSDK._axios!.interceptors.request.use(
         async (config) => {
@@ -75,7 +75,11 @@ export class oauthEntry {
                 this.auth.refresh.expiresAtSeconds <=
                   timeInSeconds
               ) {
-                throw new Error("Access token expired!");
+                if (typeof onExpired === "function") {
+                  await onExpired();
+                } else {
+                  throw new Error("Access token expired!");
+                }
               }
 
               await this.refreshAccessToken(
@@ -148,6 +152,7 @@ export class oauthEntry {
     appId: string,
     opts: {
       onRedirect: (url: string) => void;
+      onExpired?: () => void | Promise<void>;
       code?: string;
     } & TOauth2LoginOptions,
   ) {
@@ -158,7 +163,7 @@ export class oauthEntry {
     if (authorization) {
       this.auth = authorization.value;
 
-      await this.onLogin();
+      await this.onLogin(opts.onExpired);
 
       return authorization.value;
     }
