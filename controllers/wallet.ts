@@ -185,7 +185,7 @@ export default class WalletController extends BaseController {
             ? { account: new ObjectId(accountId) }
             : {
               $or: [
-                { isPrimary: true },
+                { isOwned: true, isPrimary: true },
                 { isOwned: true },
               ],
             }),
