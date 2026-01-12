@@ -33,9 +33,10 @@ async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
         type: OauthTokenType.ACCESS,
         token: Token,
         useragent: ctx.request.headers.get("User-Agent") ?? "",
-      }).catch((error) => {
-        console.error(ctx.request.ip, error);
-      });
+      })
+      // .catch((error) => {
+      //   console.error(ctx.request.ip, error);
+      // });
     } else {
       // Other auth types
       switch (AuthType) {
