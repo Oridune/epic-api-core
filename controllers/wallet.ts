@@ -206,17 +206,17 @@ export default class WalletController extends BaseController {
         const TransferDetails = {
           sender: {
             accountId: ctx.router.state.auth.accountId,
-            userId: ctx.router.state.auth.user._id,
+            userId: ctx.router.state.auth.user._id.toString(),
             fname: ctx.router.state.auth.user.fname,
             mname: ctx.router.state.auth.user.mname,
             lname: ctx.router.state.auth.user.lname,
             avatar: ctx.router.state.auth.user.avatar,
           },
           receiver: {
-            accountId: ReceiverAccount._id,
+            accountId: ReceiverAccount._id.toString(),
             accountName: ReceiverAccount.name,
             accountLogo: ReceiverAccount.logo,
-            userId: ReceivingUser._id,
+            userId: ReceivingUser._id.toString(),
             fname: ReceivingUser.fname,
             mname: ReceivingUser.mname,
             lname: ReceivingUser.lname,

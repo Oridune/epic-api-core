@@ -1,14 +1,16 @@
 import { createHttpError, type RouterContext, Status } from "oak";
 import e from "validator";
 import { Env } from "@Core/common/env.ts";
-import { decode } from "encoding/base64.ts";
+import { decodeBase64 } from "encoding/base64.ts";
 import OauthController, { OauthTokenType } from "@Controllers/oauth.ts";
 import OauthSecretsController from "@Controllers/oauthSecrets.ts";
 
 export const CredentialsValidator = () =>
   e.string()
     .throwsFatal()
-    .custom((ctx) => new TextDecoder().decode(decode(ctx.output)).split(":"))
+    .custom((ctx) =>
+      new TextDecoder().decode(decodeBase64(ctx.output)).split(":")
+    )
     .custom((ctx) => ({
       username: ctx.output[0] as string,
       password: ctx.output[1] as string,
@@ -33,10 +35,9 @@ async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
         type: OauthTokenType.ACCESS,
         token: Token,
         useragent: ctx.request.headers.get("User-Agent") ?? "",
-      })
-      // .catch((error) => {
-      //   console.error(ctx.request.ip, error);
-      // });
+      }).catch((error: Error) => {
+        throw createHttpError(Status.Unauthorized, String(error));
+      });
     } else {
       // Other auth types
       switch (AuthType) {
@@ -53,7 +54,7 @@ async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
             useragent: ctx.request.headers.get("User-Agent") ?? "",
             useragentCheck: false,
           }).catch((error: Error) => {
-            throw createHttpError(Status.Unauthorized, error.message ?? error);
+            throw createHttpError(Status.Unauthorized, String(error));
           });
           break;
 
@@ -61,7 +62,7 @@ async (ctx: RouterContext<string>, next: () => Promise<unknown>) => {
           ctx.state.sessionInfo = await OauthSecretsController.verifySecret({
             token: Token,
           }).catch((error: Error) => {
-            throw createHttpError(Status.Unauthorized, error.message ?? error);
+            throw createHttpError(Status.Unauthorized, String(error));
           });
           break;
 

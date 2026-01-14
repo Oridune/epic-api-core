@@ -267,7 +267,7 @@ export default {
 
       Guard.addStage({
         scopes: [`role:${role}`],
-        resolveDepth: depth ? parseInt(depth) : undefined,
+        resolveDepth: depth ? parseInt(depth) : 10, // Default depth 5
       }, { denial: true });
     });
 
