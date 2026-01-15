@@ -80,7 +80,7 @@ export class EpicSDK {
 
         const value = await this._options.cache.getter(this.resolveCacheKey(keys));
 
-        if(!value) return false;
+        if(!value || /^{\s*"expired"/.test(value)) return false;
 
         return await this._options.cache.setter(
             this.resolveCacheKey(keys),
@@ -179,7 +179,38 @@ export class EpicSDK {
             })
         };
 
-        const expire = () => this.expireCache(cacheKey);
+        const expireCallbacks = new Set<() => void>();
+
+        const onExpire = (callback: () => void) => {
+            expireCallbacks.add(callback);
+        }
+
+        const offExpire = (callback: () => void) => {
+            expireCallbacks.delete(callback);
+        }
+
+        const expire = async (options?: { stopPropagation?: boolean }) => {
+            if(!options?.stopPropagation) {
+                const baseKey = cacheKey instanceof Array ? cacheKey[0] : cacheKey;
+                const cacheKeys = Array.from(this._useCachingMethods.keys());
+            
+                await Promise.all(cacheKeys.map(async (key) => {
+                    if(resolvedCacheKey !== key && new RegExp(`^${this.resolveCacheKey(baseKey)}($|:.*)`).test(key)) {
+                        const cachingMethods = this._useCachingMethods.get(key) as typeof methods;
+
+                        await cachingMethods.expire({ stopPropagation: true });
+                    }
+                }));
+            }
+
+            const expired = await this.expireCache(cacheKey);
+
+            for (const callback of expireCallbacks) {
+                callback();
+            }
+
+            return expired;
+        }
 
         const del = () => this.delCache(cacheKey);
 
@@ -218,7 +249,7 @@ export class EpicSDK {
             return data;
         }
 
-        const methods = { get, expire, del, invalidate, onInvalidate, offInvalidate };
+        const methods = { key: resolvedCacheKey, get, expire, del, invalidate, onInvalidate, offInvalidate, onExpire, offExpire };
 
         this._useCachingMethods.set(resolvedCacheKey, methods);
 
@@ -275,10 +306,17 @@ export class EpicSDK {
                         typeof res === "object" && res !== null && "data" in res
                     ) return res.data;
 
-                    throw new Error(
-                        "Unexpected response! Data is not available or valid!",
-                    );
+                    return;
                 })();
+            },
+            then(resolve: any, reject: any) {
+                return executors.data.then(resolve, reject);
+            },
+            catch(reject: any) {
+                return executors.data.catch(reject);
+            },
+            finally(result: any) {
+                return executors.data.finally(result);
             },
         };
 
