@@ -643,7 +643,7 @@ export default class OauthController extends BaseController {
                 status: TotpStatus.ACTIVE,
               }) &&
               (await Oauth2FAController.sign(OTPTokenType.CHALLENGE, {
-                userId: User._id,
+                userId: User._id.toString(),
               })).token
             ) || undefined,
           });

@@ -96,7 +96,7 @@ export default class UsersIdentificationController extends BaseController {
     const Challenge = await UsersIdentificationController.sign(
       purpose,
       method,
-      { userId: User._id, ...metadata },
+      { userId: User._id.toString(), ...metadata },
     );
 
     if (!Env.is(EnvType.TEST)) {
