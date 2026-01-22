@@ -49,7 +49,7 @@ export class AwsS3Provider {
     const BucketName = options?.bucketName ??
       (await Env.get("AWS_S3_BUCKET_NAME"));
     const Location = options?.location ?? "";
-    const Key = join(Location, Utils.uuidV4()).replace(/\\/g, "/");
+    const Key = join(Location, Utils.uuidV4()).replace(/\\/g, "/").split("/").filter(Boolean).join("/");
     const ACL = options?.awsS3ACL ?? ObjectCannedACL.public_read;
     const ContentType = options?.contentType;
     const ContentLength = options?.contentLength;

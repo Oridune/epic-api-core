@@ -33,7 +33,9 @@ export class MinioProvider {
     const BucketName = options?.bucketName ??
       (await Env.get("MINIO_BUCKET_NAME"));
     const Location = options?.location ?? "";
-    const Key = join(Location, Utils.uuidV4()).trim().replace(/\\/g, "/")
+    const Key = join(Location, Utils.uuidV4()).trim().replace(/\\/g, "/").split(
+      "/",
+    ).filter(Boolean).join("/")
       .replace(/^\//, "");
     const ContentType = options?.contentType;
     const ContentLength = options?.contentLength;
