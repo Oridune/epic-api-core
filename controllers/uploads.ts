@@ -40,8 +40,8 @@ export default class UploadsController extends BaseController {
     // Define Query Schema
     const QuerySchema = e
       .object({
-        name: e.optional(e.string().max(50)),
-        alt: e.optional(e.string().max(50)),
+        name: e.optional(e.string().max(150)),
+        alt: e.optional(e.string().max(300)),
         contentType: options?.allowedContentTypes instanceof Array
           ? e.in(options.allowedContentTypes)
           : e
