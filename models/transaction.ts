@@ -42,6 +42,8 @@ export const TransactionSchema = e.object({
   refundTransaction: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
 
   metadata: e.optional(e.record(e.or([e.number(), e.boolean(), e.string()]))),
+  refData: e.optional(e.record(e.any())),
+
   attachments: e.optional(e.array(FileSchema)),
 });
 
