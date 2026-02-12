@@ -141,6 +141,11 @@ export interface IWalletTransferOptions {
   metadata?: Record<string, string | number | boolean>;
 
   /**
+   * Pass any refData to the transaction
+   */
+  refData?: Record<string, unknown>;
+
+  /**
    * Pass a database transaction session
    */
   databaseSession?: MongoTransaction;
@@ -201,6 +206,11 @@ export interface IWalletRefundOptions {
    * Pass any metadata to the transaction
    */
   metadata?: Record<string, string | number | boolean>;
+
+  /**
+   * Pass any refData to the transaction
+   */
+  refData?: Record<string, unknown>;
 
   /**
    * Pass a database transaction session
@@ -668,6 +678,7 @@ export class Wallet {
           refundedTransaction: options.refundedTransaction,
           tags: options.tags,
           metadata: options.metadata,
+          refData: options.refData,
           createdBy: options.user ?? options.sender,
         }, { session }),
       };
@@ -731,6 +742,7 @@ export class Wallet {
             ].join(" ")),
         tags: ["refund"],
         metadata: options.metadata,
+        refData: options.refData,
         allowOverdraft: options.allowOverdraft,
         overdraftLimit: options.overdraftLimit,
         isRefund: true,
