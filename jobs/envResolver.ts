@@ -4,7 +4,7 @@ import { MapStore } from "@Core/common/store/map.ts";
 
 export default {
   pre: () => {
-    // Following function override will resolve undefined env varables from database.
+    // Following function override will resolve undefined env variables from database.
     Env.onGetFailed = async (key: string) =>
       await Store.cache(
         ["envCache", Env.getType(), key], // Env variable cache key

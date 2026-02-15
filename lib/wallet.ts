@@ -218,6 +218,29 @@ export interface IWalletRefundOptions {
   databaseSession?: MongoTransaction;
 }
 
+export type TWalletFeeOptions = {
+  category: string;
+  from: ObjectId | string;
+  to: ObjectId | string;
+  sender: ObjectId | string;
+  receiver: ObjectId | string;
+  type?: string;
+  currency?: string;
+  amount: number;
+};
+
+export type TWalletFeeBreakdown = {
+  account: ObjectId | string;
+  user: ObjectId | string;
+  name: string;
+  amount: number;
+};
+
+export type TWalletFeeStructure = {
+  breakdown: Array<TWalletFeeBreakdown>;
+  total: number;
+};
+
 export class Wallet {
   static getDefaultType() {
     return Env.get("DEFAULT_WALLET_TYPE");
@@ -467,6 +490,23 @@ export class Wallet {
       transferOpts: IWalletTransferOptions;
     },
   ) => Promise<boolean> | boolean;
+
+  static onCalculateFee?: (
+    options: TWalletFeeOptions,
+  ) => TWalletFeeStructure | Promise<TWalletFeeStructure>;
+
+  static async calculateFee(
+    options: TWalletFeeOptions,
+  ): Promise<TWalletFeeStructure> {
+    if (typeof this.onCalculateFee === "function") {
+      return await this.onCalculateFee(options);
+    }
+
+    return {
+      total: 0,
+      breakdown: [],
+    };
+  }
 
   static async transfer(options: IWalletTransferOptions) {
     if (typeof options.amount !== "number" || options.amount <= 0) {

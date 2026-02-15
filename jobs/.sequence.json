@@ -4,8 +4,12 @@
     "envResolver.ts",
     "deleteUsers.ts",
     "syncOauthPolicies.ts",
-    "logRequest.ts"
+    "logRequest.ts",
+    "feeResolver.ts"
   ],
+  "sequence.development": [],
+  "sequence.test": [],
+  "sequence.production": [],
   "excludes": [],
   "sequenceProps": {}
 }

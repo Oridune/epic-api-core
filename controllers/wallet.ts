@@ -22,7 +22,7 @@ import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
 
-import { Wallet } from "@Lib/wallet.ts";
+import { TWalletFeeStructure, Wallet } from "@Lib/wallet.ts";
 import UsersIdentificationController, {
   IdentificationMethod,
   IdentificationPurpose,
@@ -36,6 +36,7 @@ import { WalletModel } from "@Models/wallet.ts";
 import { CollaboratorModel } from "@Models/collaborator.ts";
 import UploadsController from "./uploads.ts";
 import { allowPopulate } from "@Helpers/utils.ts";
+import { Database } from "@Database";
 
 @Controller("/wallet/", { group: "Wallet", name: "wallet" })
 export default class WalletController extends BaseController {
@@ -203,6 +204,20 @@ export default class WalletController extends BaseController {
 
         if (!ReceiverAccount) throw new Error("Receiver account not found!");
 
+        const feeStructure = await Wallet.calculateFee({
+          category:
+            ctx.router.state.guard.isPermitted("wallet", "signInternalTransfer")
+              ? "internal"
+              : "external",
+          from: ctx.router.state.auth.accountId,
+          sender: ctx.router.state.auth.user._id,
+          to: ReceiverAccount._id,
+          receiver: ReceivingUser._id,
+          type: Params.type,
+          currency: Params.currency,
+          amount: Query.amount,
+        });
+
         const TransferDetails = {
           sender: {
             accountId: ctx.router.state.auth.accountId,
@@ -226,7 +241,8 @@ export default class WalletController extends BaseController {
             type: Params.type,
             currency: Params.currency,
             amount: Query.amount,
-            fee: 0,
+            fee: feeStructure.total,
+            feeStructure,
             description: Query.description,
             metadata: Query.metadata,
           },
@@ -307,10 +323,11 @@ export default class WalletController extends BaseController {
           sender: TransferEntity;
           receiver: TransferEntity;
           transactionDetails: {
-            type: string;
-            currency: string;
+            type?: string;
+            currency?: string;
             amount: number;
             fee: number;
+            feeStructure?: TWalletFeeStructure;
             description: string;
             metadata?: Record<string, string | number | boolean>;
           };
@@ -318,35 +335,70 @@ export default class WalletController extends BaseController {
           e.error,
         );
 
-        const Transfer = await Wallet.transfer({
-          sessionId: Payload.challengeId,
-          fromName: [
-            Payload.sender.fname,
-            Payload.sender.mname,
-            Payload.sender.lname,
-          ],
-          from: Payload.sender.accountId,
-          sender: Payload.sender.userId,
-          toName: [
-            Payload.receiver.fname,
-            Payload.receiver.mname,
-            Payload.receiver.lname,
-          ],
-          to: Payload.receiver.accountId,
-          receiver: Payload.receiver.userId,
-          user: ctx.router.state.auth.userId,
-          type: Payload.transactionDetails.type,
-          currency: Payload.transactionDetails.currency,
-          amount: Payload.transactionDetails.amount,
-          description: Payload.transactionDetails.description,
-          methodOf3DSecurity: Body.method,
-          tags: Body.tags,
-          backgroundEvent: true,
-          metadata: Payload.transactionDetails.metadata,
+        const { transaction } = await Database.transaction(async (session) => {
+          const MainTransfer = await Wallet.transfer({
+            sessionId: Payload.challengeId,
+            fromName: [
+              Payload.sender.fname,
+              Payload.sender.mname,
+              Payload.sender.lname,
+            ],
+            from: Payload.sender.accountId,
+            sender: Payload.sender.userId,
+            toName: [
+              Payload.receiver.fname,
+              Payload.receiver.mname,
+              Payload.receiver.lname,
+            ],
+            to: Payload.receiver.accountId,
+            receiver: Payload.receiver.userId,
+            user: ctx.router.state.auth!.userId,
+            type: Payload.transactionDetails.type,
+            currency: Payload.transactionDetails.currency,
+            amount: Payload.transactionDetails.amount,
+            description: Payload.transactionDetails.description,
+            methodOf3DSecurity: Body.method,
+            tags: Body.tags,
+            backgroundEvent: true,
+            metadata: Payload.transactionDetails.metadata,
+            databaseSession: session,
+          });
+
+          const FeeBreakdown: TWalletFeeStructure =
+            Payload.transactionDetails.feeStructure;
+
+          if (FeeBreakdown.breakdown instanceof Array) {
+            for (
+              const { account, user, name, amount } of FeeBreakdown.breakdown
+            ) {
+              await Wallet.transfer({
+                fromName: [
+                  Payload.sender.fname,
+                  Payload.sender.mname,
+                  Payload.sender.lname,
+                ],
+                from: Payload.sender.accountId,
+                sender: Payload.sender.userId,
+                toName: name,
+                to: account,
+                receiver: user,
+                user: ctx.router.state.auth!.userId,
+                type: Payload.transactionDetails.type,
+                currency: Payload.transactionDetails.currency,
+                amount,
+                description: ctx.router.t("Fund transfer fee charges"),
+                databaseSession: session,
+              });
+            }
+          }
+
+          return {
+            transaction: MainTransfer.transaction,
+          };
         });
 
         return Response.statusCode(Status.Created).data({
-          transaction: Transfer.transaction,
+          transaction,
         });
       },
     });
