@@ -2,6 +2,7 @@ import {
   BaseController,
   Controller,
   Delete,
+  Env,
   Get,
   type IRequestContext,
   type IRoute,
@@ -11,6 +12,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { Store } from "@Core/common/store.ts";
 import {
   normalizeFilters,
   queryValidator,
@@ -143,8 +145,11 @@ export default class EnvsController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            //? Make sure to pass any limiting conditions for count if needed.
-            ? await EnvModel.count()
+            ? await Store.cache(
+              ["totalCount", "Env"],
+              () => EnvModel.count(),
+              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+            )
             : undefined,
           results: await EnvsListQuery,
         });

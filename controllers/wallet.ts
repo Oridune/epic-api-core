@@ -13,6 +13,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { Store } from "@Core/common/store.ts";
 import {
   normalizeFilters,
   queryValidator,
@@ -21,6 +22,7 @@ import {
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
+import { hash } from "ohash";
 
 import { TWalletFeeStructure, Wallet } from "@Lib/wallet.ts";
 import UsersIdentificationController, {
@@ -609,8 +611,15 @@ export default class WalletController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            //? Make sure to pass any limiting conditions for count if needed.
-            ? await TransactionModel.count(TransactionListBaseConditions)
+            ? await Store.cache(
+              [
+                "totalCount",
+                "Transaction",
+                hash(TransactionListBaseConditions),
+              ],
+              () => TransactionModel.count(TransactionListBaseConditions),
+              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+            )
             : undefined,
           results: await TransactionListQuery,
         });

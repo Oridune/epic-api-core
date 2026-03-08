@@ -2,6 +2,7 @@ import {
   BaseController,
   Controller,
   Delete,
+  Env,
   Get,
   type IRequestContext,
   type IRoute,
@@ -10,6 +11,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { Store } from "@Core/common/store.ts";
 import {
   normalizeFilters,
   queryValidator,
@@ -18,6 +20,7 @@ import {
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
+import { hash } from "ohash";
 
 import OauthController, {
   OauthTokenType,
@@ -251,8 +254,11 @@ export default class OauthSecretsController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            //? Make sure to pass any limiting conditions for count if needed.
-            ? await OauthSecretModel.count(OauthSecretsBaseFilters)
+            ? await Store.cache(
+              ["totalCount", "OauthSecret", hash(OauthSecretsBaseFilters)],
+              () => OauthSecretModel.count(OauthSecretsBaseFilters),
+              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+            )
             : undefined,
           results: await OauthSecretsListQuery,
         });

@@ -2,6 +2,7 @@ import {
   BaseController,
   Controller,
   Delete,
+  Env,
   Get,
   type IRequestContext,
   type IRoute,
@@ -11,6 +12,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { Store } from "@Core/common/store.ts";
 import {
   normalizeFilters,
   queryValidator,
@@ -19,6 +21,7 @@ import {
 import { type RouterContext, Status } from "oak";
 import e, { inferOutput } from "validator";
 import { ObjectId } from "mongo";
+import { hash } from "ohash";
 
 import {
   InputRequestLogIgnoreSchema,
@@ -193,8 +196,15 @@ export default class RequestLogIgnoresController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            //? Make sure to pass any limiting conditions for count if needed.
-            ? await RequestLogIgnoreModel.count(RequestLogIgnoresBaseFilters)
+            ? await Store.cache(
+              [
+                "totalCount",
+                "RequestLogIgnore",
+                hash(RequestLogIgnoresBaseFilters),
+              ],
+              () => RequestLogIgnoreModel.count(RequestLogIgnoresBaseFilters),
+              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+            )
             : undefined,
           results: await RequestLogIgnoresListQuery,
         });

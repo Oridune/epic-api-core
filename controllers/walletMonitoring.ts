@@ -1,16 +1,19 @@
 import {
   BaseController,
   Controller,
+  Env,
   Get,
   type IRequestContext,
   type IRoute,
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { Store } from "@Core/common/store.ts";
 import { queryValidator, responseValidator } from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
+import { hash } from "ohash";
 import { WalletModel } from "@Models/wallet.ts";
 import { AccountModel } from "@Models/account.ts";
 import { UserModel } from "@Models/user.ts";
@@ -102,8 +105,16 @@ export default class WalletMonitoringController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            //? Make sure to pass any limiting conditions for count if needed.
-            ? await WalletModel.count(WalletBaseFilters)
+            ? await Store.cache(
+              [
+                "totalCount",
+                "WalletMonitoring",
+                "allNegative",
+                hash(WalletBaseFilters),
+              ],
+              () => WalletModel.count(WalletBaseFilters),
+              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+            )
             : undefined,
           results: await WalletAddressesListQuery,
         });
@@ -201,8 +212,16 @@ export default class WalletMonitoringController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            //? Make sure to pass any limiting conditions for count if needed.
-            ? await WalletModel.count(WalletBaseFilters)
+            ? await Store.cache(
+              [
+                "totalCount",
+                "WalletMonitoring",
+                "negative",
+                hash(WalletBaseFilters),
+              ],
+              () => WalletModel.count(WalletBaseFilters),
+              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+            )
             : undefined,
           results: await WalletAddressesListQuery,
         });

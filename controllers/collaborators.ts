@@ -2,6 +2,7 @@ import {
   BaseController,
   Controller,
   Delete,
+  Env,
   Get,
   type IRequestContext,
   type IRoute,
@@ -11,6 +12,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { Store } from "@Core/common/store.ts";
 import {
   normalizeFilters,
   queryValidator,
@@ -346,10 +348,14 @@ export default class CollaboratorsController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            //? Make sure to pass any limiting conditions for count if needed.
-            ? await CollaboratorModel.count({
-              account: new ObjectId(ctx.router.state.auth.accountId),
-            })
+            ? await Store.cache(
+              ["totalCount", "Collaborator", ctx.router.state.auth.accountId],
+              () =>
+                CollaboratorModel.count({
+                  account: new ObjectId(ctx.router.state.auth.accountId),
+                }),
+              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+            )
             : undefined,
           results: await CollaboratorsListQuery,
         });

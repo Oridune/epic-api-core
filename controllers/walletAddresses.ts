@@ -2,6 +2,7 @@ import {
   BaseController,
   Controller,
   Delete,
+  Env,
   Get,
   type IRequestContext,
   type IRoute,
@@ -10,11 +11,13 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { Store } from "@Core/common/store.ts";
 import { responseValidator } from "@Core/common/validators.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { queryValidator } from "@Core/common/validators.ts";
 import { ObjectId } from "mongo";
+import { hash } from "ohash";
 
 import {
   InputWalletAddressSchema,
@@ -158,8 +161,11 @@ export default class WalletAddressesController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            //? Make sure to pass any limiting conditions for count if needed.
-            ? await WalletAddressModel.count(WalletAddressesBaseFilters)
+            ? await Store.cache(
+              ["totalCount", "WalletAddress", hash(WalletAddressesBaseFilters)],
+              () => WalletAddressModel.count(WalletAddressesBaseFilters),
+              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+            )
             : undefined,
           results: await WalletAddressesListQuery,
         });

@@ -13,6 +13,7 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { Store } from "@Core/common/store.ts";
 import {
   normalizeFilters,
   queryValidator,
@@ -244,8 +245,11 @@ export default class AccountsController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            //? Make sure to pass any limiting conditions for count if needed.
-            ? await AccountModel.count()
+            ? await Store.cache(
+              ["totalCount", "Account"],
+              () => AccountModel.count(),
+              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+            )
             : undefined,
           results: await AccountListQuery,
         });

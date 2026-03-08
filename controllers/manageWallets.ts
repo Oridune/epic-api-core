@@ -2,6 +2,7 @@ import {
   BaseController,
   Controller,
   Delete,
+  Env,
   Get,
   type IRequestContext,
   type IRoute,
@@ -10,9 +11,11 @@ import {
   Response,
   Versioned,
 } from "@Core/common/mod.ts";
+import { Store } from "@Core/common/store.ts";
 import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
+import { hash } from "ohash";
 import { Wallet } from "@Lib/wallet.ts";
 
 import { WalletModel } from "@Models/wallet.ts";
@@ -107,8 +110,11 @@ export default class ManageWalletsController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            //? Make sure to pass any limiting conditions for count if needed.
-            ? await WalletModel.count()
+            ? await Store.cache(
+              ["totalCount", "Wallet"],
+              () => WalletModel.count(),
+              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+            )
             : undefined,
           results: await WalletListQuery,
         });
@@ -234,8 +240,16 @@ export default class ManageWalletsController extends BaseController {
 
         return Response.data({
           totalCount: Query.includeTotalCount
-            //? Make sure to pass any limiting conditions for count if needed.
-            ? await TransactionModel.count(TransactionListBaseConditions)
+            ? await Store.cache(
+              [
+                "totalCount",
+                "Transaction",
+                "manage",
+                hash(TransactionListBaseConditions),
+              ],
+              () => TransactionModel.count(TransactionListBaseConditions),
+              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+            )
             : undefined,
           results: await TransactionListQuery,
         });
