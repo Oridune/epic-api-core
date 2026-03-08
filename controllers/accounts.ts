@@ -248,7 +248,7 @@ export default class AccountsController extends BaseController {
             ? await Store.cache(
               ["totalCount", "Account"],
               () => AccountModel.count(),
-              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+              (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,
           results: await AccountListQuery,

@@ -148,7 +148,7 @@ export default class EnvsController extends BaseController {
             ? await Store.cache(
               ["totalCount", "Env"],
               () => EnvModel.count(),
-              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+              (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,
           results: await EnvsListQuery,

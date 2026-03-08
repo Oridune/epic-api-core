@@ -686,7 +686,7 @@ export default class UsersController extends BaseController {
             ? await Store.cache(
               ["totalCount", "User"],
               () => UserModel.count(),
-              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+              (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,
           users: await UsersListQuery,

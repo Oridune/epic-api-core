@@ -113,7 +113,7 @@ export default class WalletMonitoringController extends BaseController {
                 hash(WalletBaseFilters),
               ],
               () => WalletModel.count(WalletBaseFilters),
-              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+              (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,
           results: await WalletAddressesListQuery,
@@ -220,7 +220,7 @@ export default class WalletMonitoringController extends BaseController {
                 hash(WalletBaseFilters),
               ],
               () => WalletModel.count(WalletBaseFilters),
-              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+              (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,
           results: await WalletAddressesListQuery,

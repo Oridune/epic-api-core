@@ -150,7 +150,7 @@ export default class OauthPoliciesController extends BaseController {
             ? await Store.cache(
               ["totalCount", "OauthPolicy"],
               () => OauthPolicyModel.count(),
-              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+              (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,
           results: await OauthPoliciesListQuery,

@@ -354,7 +354,7 @@ export default class CollaboratorsController extends BaseController {
                 CollaboratorModel.count({
                   account: new ObjectId(ctx.router.state.auth.accountId),
                 }),
-              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+              (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,
           results: await CollaboratorsListQuery,

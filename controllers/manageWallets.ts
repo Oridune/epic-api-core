@@ -113,7 +113,7 @@ export default class ManageWalletsController extends BaseController {
             ? await Store.cache(
               ["totalCount", "Wallet"],
               () => WalletModel.count(),
-              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+              (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,
           results: await WalletListQuery,
@@ -248,7 +248,7 @@ export default class ManageWalletsController extends BaseController {
                 hash(TransactionListBaseConditions),
               ],
               () => TransactionModel.count(TransactionListBaseConditions),
-              (await Env.number("GLOBAL_PAGINATION_TTL")) * 1000,
+              (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,
           results: await TransactionListQuery,
