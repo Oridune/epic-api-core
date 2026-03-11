@@ -37,16 +37,27 @@ export default class AccountInvitesController extends BaseController {
     group: "public",
   })
   public create(route: IRoute) {
+    const QuerySchema = e.deepCast(e.object({
+      customPath: e.optional(e.string()),
+    }, { allowUnexpectedProps: true }));
+
     // Define Body Schema
     const BodySchema = InputAccountInviteSchema;
 
     return new Versioned().add("1.0.0", {
       shape: () => ({
+        query: QuerySchema.toSample(),
         body: BodySchema.toSample(),
         return: responseValidator(AccountInviteModel.getSchema()).toSample(),
       }),
       handler: async (ctx: IRequestContext<RouterContext<string>>) => {
         if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Query Validation
+        const Query = await QuerySchema.validate(
+          parseQueryParams(ctx.router.request.url.search),
+          { name: `${route.scope}.query` },
+        );
 
         // Body Validation
         const Body = await BodySchema.validate(
@@ -87,7 +98,9 @@ export default class AccountInvitesController extends BaseController {
             token: Token,
             actions: [{
               type: "redirect",
-              endpoint: `/invite/${Token}`,
+              endpoint: Query.customPath
+                ? Query.customPath.replace(/{{\s*token\s*}}/, Token)
+                : `/invite/${Token}`,
             }],
           };
 
