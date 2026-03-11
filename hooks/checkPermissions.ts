@@ -185,7 +185,15 @@ export default {
                 );
             }
 
-            if (!Collaborator.createdBy.equals(User._id)) {
+            rbacCascade: if (!Collaborator.createdBy.equals(User._id)) {
+              const noCascade = await Env.enabled("RBAC_NO_CASCADE");
+
+              if (noCascade) {
+                GlobalRole = "root";
+
+                break rbacCascade;
+              }
+
               const ParentCollaborator = (await CollaboratorModel.findOne({
                 account: AccountId,
                 createdFor: Collaborator.createdBy,
