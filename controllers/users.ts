@@ -372,7 +372,7 @@ export default class UsersController extends BaseController {
     // Define Body Schema
     const BodySchema = e.object({
       email: EmailValidator().custom(async (ctx) => {
-        if (await UserModel.count({ email: ctx.output })) {
+        if (await UserModel.countDocuments({ email: ctx.output })) {
           throw "Please provide a different email!";
         }
       }),
@@ -421,7 +421,7 @@ export default class UsersController extends BaseController {
     // Define Body Schema
     const BodySchema = e.object({
       phone: PhoneValidator().custom(async (ctx) => {
-        if (await UserModel.count({ phone: ctx.output })) {
+        if (await UserModel.countDocuments({ phone: ctx.output })) {
           throw "Please provide a different phone!";
         }
       }),
@@ -685,7 +685,7 @@ export default class UsersController extends BaseController {
           totalCount: Query.includeTotalCount
             ? await Store.cache(
               ["totalCount", "User"],
-              () => UserModel.count(),
+              () => UserModel.countDocuments(),
               (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,

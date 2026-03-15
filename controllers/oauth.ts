@@ -692,7 +692,7 @@ export default class OauthController extends BaseController {
           await Promise.all(
             AccountIds.map(async (account) => {
               if (
-                !(await CollaboratorModel.count({
+                !(await CollaboratorModel.countDocuments({
                   account: new ObjectId(account),
                   createdFor: new ObjectId(
                     ctx.parent?.output.tokenPayload.userId ?? "",

@@ -256,7 +256,7 @@ export default class OauthSecretsController extends BaseController {
           totalCount: Query.includeTotalCount
             ? await Store.cache(
               ["totalCount", "OauthSecret", hash(OauthSecretsBaseFilters)],
-              () => OauthSecretModel.count(OauthSecretsBaseFilters),
+              () => OauthSecretModel.countDocuments(OauthSecretsBaseFilters),
               (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,

@@ -233,7 +233,7 @@ export default class AccountInvitesController extends BaseController {
             ? await Store.cache(
               ["totalCount", "AccountInvite", ctx.router.state.auth.accountId],
               () =>
-                AccountInviteModel.count({
+                AccountInviteModel.countDocuments({
                   account: new ObjectId(ctx.router.state.auth.accountId),
                 }),
               (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,

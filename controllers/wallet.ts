@@ -617,7 +617,7 @@ export default class WalletController extends BaseController {
                 "Transaction",
                 hash(TransactionListBaseConditions),
               ],
-              () => TransactionModel.count(TransactionListBaseConditions),
+              () => TransactionModel.countDocuments(TransactionListBaseConditions),
               (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,

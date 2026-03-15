@@ -147,7 +147,7 @@ export default class EnvsController extends BaseController {
           totalCount: Query.includeTotalCount
             ? await Store.cache(
               ["totalCount", "Env"],
-              () => EnvModel.count(),
+              () => EnvModel.countDocuments(),
               (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,

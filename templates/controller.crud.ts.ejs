@@ -147,7 +147,7 @@ export default class <%- utils.pascalCase(name) %>Controller extends BaseControl
         return Response.data({
           totalCount: Query.includeTotalCount
             //? Make sure to pass any limiting conditions for count if needed.
-            ? await <%- utils.pascalCase(utils.singular(name)) %>Model.count(<%- utils.pascalCase(name) %>BaseFilters)
+            ? await <%- utils.pascalCase(utils.singular(name)) %>Model.countDocuments(<%- utils.pascalCase(name) %>BaseFilters)
             : undefined,
           results: await <%- utils.pascalCase(name) %>ListQuery,
         });

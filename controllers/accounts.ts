@@ -58,7 +58,7 @@ export default class AccountsController extends BaseController {
           { name: `${route.scope}.body` },
         );
 
-        const AccountCount = await AccountModel.count({
+        const AccountCount = await AccountModel.countDocuments({
           createdFor: new ObjectId(ctx.router.state.auth!.userId),
         });
 
@@ -247,7 +247,7 @@ export default class AccountsController extends BaseController {
           totalCount: Query.includeTotalCount
             ? await Store.cache(
               ["totalCount", "Account"],
-              () => AccountModel.count(),
+              () => AccountModel.countDocuments(),
               (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,

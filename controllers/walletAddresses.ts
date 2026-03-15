@@ -163,7 +163,7 @@ export default class WalletAddressesController extends BaseController {
           totalCount: Query.includeTotalCount
             ? await Store.cache(
               ["totalCount", "WalletAddress", hash(WalletAddressesBaseFilters)],
-              () => WalletAddressModel.count(WalletAddressesBaseFilters),
+              () => WalletAddressModel.countDocuments(WalletAddressesBaseFilters),
               (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,

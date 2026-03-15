@@ -351,7 +351,7 @@ export default class CollaboratorsController extends BaseController {
             ? await Store.cache(
               ["totalCount", "Collaborator", ctx.router.state.auth.accountId],
               () =>
-                CollaboratorModel.count({
+                CollaboratorModel.countDocuments({
                   account: new ObjectId(ctx.router.state.auth.accountId),
                 }),
               (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,

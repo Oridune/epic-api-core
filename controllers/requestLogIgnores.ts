@@ -202,7 +202,7 @@ export default class RequestLogIgnoresController extends BaseController {
                 "RequestLogIgnore",
                 hash(RequestLogIgnoresBaseFilters),
               ],
-              () => RequestLogIgnoreModel.count(RequestLogIgnoresBaseFilters),
+              () => RequestLogIgnoreModel.countDocuments(RequestLogIgnoresBaseFilters),
               (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,

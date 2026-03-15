@@ -135,7 +135,7 @@ export default class RequestLogsController extends BaseController {
           totalCount: Query.includeTotalCount
             ? await Store.cache(
               ["totalCount", "RequestLog", hash(RequestLogsBaseFilters)],
-              () => RequestLogModel.count(RequestLogsBaseFilters),
+              () => RequestLogModel.countDocuments(RequestLogsBaseFilters),
               (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
             : undefined,
