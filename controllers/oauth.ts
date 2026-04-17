@@ -480,6 +480,7 @@ export default class OauthController extends BaseController {
     expiresInSeconds?: number;
   }) {
     const Payload = {
+      userId: opts.userId,
       sessionId: opts.sessionId,
       codeChallenge: opts.codeChallenge ?? null,
       codeChallengeMethod: opts.codeChallenge
