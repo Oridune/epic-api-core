@@ -465,6 +465,7 @@ export default class OauthController extends BaseController {
   }
 
   static async createOauthCode(opts: {
+    userId: string;
     sessionId: string;
     codeChallenge?: string;
     codeChallengeMethod?: string;
@@ -750,6 +751,7 @@ export default class OauthController extends BaseController {
 
         return Response.data(
           await OauthController.createOauthCode({
+            userId: Body.tokenPayload.userId,
             sessionId: Session._id.toString(),
             codeChallenge: Body.tokenPayload.codeChallenge,
             codeChallengeMethod: Body.tokenPayload.codeChallengeMethod,
