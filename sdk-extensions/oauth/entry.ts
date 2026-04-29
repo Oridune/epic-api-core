@@ -317,6 +317,10 @@ export class oauthEntry {
       EpicSDK.delCache("selectedAccount"),
     ]);
 
+    delete this.auth;
+    delete this.accountId;
+    delete this.guard;
+
     await EpicSDK.oauth.logout({ query: { allDevices, fcmDeviceToken } })
       .raw;
   }
