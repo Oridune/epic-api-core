@@ -13,12 +13,13 @@ export default (app: Application) => {
     EventChannel.CUSTOM,
     "response",
     // Note: Using non-async function to avoid holding references while awaiting
-    ({ detail: { ctx, res, err } }) => {
+    async ({ detail: { ctx, res, err } }) => {
       // Log error cases
       const LogEndpoint = "/api/request/logs/";
 
       // Check conditions synchronously where possible
       if (Env.is(EnvType.TEST)) return;
+      if (!await Env.enabled("REQUEST_LOG_ENABLED")) return;
 
       const method = ctx.request.method.toLowerCase();
       const pathname = ctx.request.url.pathname.replace(/^\/|\/$/g, "");
@@ -61,8 +62,6 @@ export default (app: Application) => {
       // Fire-and-forget async logging with timeout
       (async () => {
         try {
-          if (!await Env.enabled("REQUEST_LOG_ENABLED")) return;
-
           const HostUrl = await Env.get("REQUEST_LOG_HOST", true);
           const Url = new URL(
             LogEndpoint,

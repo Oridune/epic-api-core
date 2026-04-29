@@ -3,6 +3,7 @@ import { EpicSDK } from "epic-api-sdk";
 import { encode as base64encode } from "npm:base64-arraybuffer";
 import { sha256 } from "npm:js-sha256";
 import { SecurityGuard } from "./lib/securityGuard.ts";
+import axios, { AxiosResponse } from "npm:axios";
 
 export type TAuthToken<T extends "oauth_refresh_token" | "oauth_access_token"> =
   {
@@ -31,7 +32,12 @@ export class oauthEntry {
   static accountId?: string;
 
   protected static _authInterceptorAdded = false;
-  protected static _refreshRequest?: Promise<TAuthorization>;
+  protected static _refreshRequest?: Promise<
+    AxiosResponse<{
+      status: boolean;
+      data: TAuthorization;
+    }>
+  >;
 
   protected static generateRandomString(length: number): string {
     const characters =
@@ -78,7 +84,7 @@ export class oauthEntry {
                 if (typeof onExpired === "function") {
                   delete this.auth;
                   delete config.headers["Authorization"];
-                  
+
                   await onExpired();
 
                   return config;
@@ -213,14 +219,22 @@ export class oauthEntry {
       coordinates: [number, number];
     };
   }) {
-    this.auth = await EpicSDK.oauth.exchangeCode({
-      body: {
+    const res = await axios.post<{ status: boolean; data: TAuthorization }>(
+      "/api/oauth/exchange/code",
+      {
         code,
         codeVerifier: verifier,
         fcmDeviceToken: opts?.deviceToken,
         geoPoint: opts?.geoPoint,
       },
-    }).data as TAuthorization;
+      {
+        baseURL: EpicSDK._options?.axiosConfig?.baseURL,
+      },
+    );
+
+    if (res.data.status && res.data.data) {
+      this.auth = res.data.data;
+    }
 
     await this.onLogin();
 
@@ -228,13 +242,21 @@ export class oauthEntry {
   }
 
   static async refreshAccessToken(refreshToken: string) {
-    //! this._refreshRequest is used to stop bubbling do not remove it!
-    this.auth = await (this._refreshRequest ??= EpicSDK.oauth.refresh({
-      body: {
-        refreshToken,
-        refreshTokenPayload: undefined,
-      },
-    }).data as Promise<TAuthorization>);
+    const req = this._refreshRequest ??
+      axios.post<{ status: boolean; data: TAuthorization }>(
+        "/api/oauth/refresh",
+        {
+          refreshToken,
+          refreshTokenPayload: undefined,
+        },
+        { baseURL: EpicSDK._options?.axiosConfig?.baseURL },
+      );
+
+    const res = await req;
+
+    if (res.data.status && res.data.data) {
+      this.auth = res.data.data;
+    }
   }
 
   static async setAccount(accountId: string) {
