@@ -13,7 +13,7 @@ export type TAuthToken<T extends "oauth_refresh_token" | "oauth_access_token"> =
   };
 
 export type TAuthorization = {
-  refresh: TAuthToken<"oauth_refresh_token">;
+  refresh?: TAuthToken<"oauth_refresh_token">;
   access: TAuthToken<"oauth_access_token">;
 };
 
@@ -76,7 +76,12 @@ export class oauthEntry {
                   timeInSeconds
               ) {
                 if (typeof onExpired === "function") {
+                  delete this.auth;
+                  delete config.headers["Authorization"];
+                  
                   await onExpired();
+
+                  return config;
                 } else {
                   throw new Error("Access token expired!");
                 }
@@ -160,7 +165,19 @@ export class oauthEntry {
       "authorization",
     );
 
-    if (authorization) {
+    existingAuth: if (authorization) {
+      const now = Date.now();
+      const hasValidAccess = authorization.value.access.expiresAtSeconds > now;
+
+      if (!hasValidAccess) {
+        const hasValidRefresh = !!authorization.value.refresh &&
+          authorization.value.refresh.expiresAtSeconds > now;
+
+        if (!hasValidRefresh) {
+          break existingAuth;
+        }
+      }
+
       this.auth = authorization.value;
 
       await this.onLogin(opts.onExpired);
