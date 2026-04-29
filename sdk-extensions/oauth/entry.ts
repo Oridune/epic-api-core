@@ -175,12 +175,12 @@ export class oauthEntry {
     );
 
     existingAuth: if (authorization) {
-      const now = Date.now();
-      const hasValidAccess = authorization.value.access.expiresAtSeconds > now;
+      const timeInSeconds = Date.now() / 1000;
+      const hasValidAccess = authorization.value.access.expiresAtSeconds > timeInSeconds;
 
       if (!hasValidAccess) {
         const hasValidRefresh = !!authorization.value.refresh &&
-          authorization.value.refresh.expiresAtSeconds > now;
+          authorization.value.refresh.expiresAtSeconds > timeInSeconds;
 
         if (!hasValidRefresh) {
           break existingAuth;
