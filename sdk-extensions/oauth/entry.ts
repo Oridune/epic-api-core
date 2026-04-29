@@ -85,7 +85,9 @@ export class oauthEntry {
                   delete this.auth;
                   delete this.accountId;
                   delete this.guard;
+
                   delete config.headers["Authorization"];
+                  delete config.headers["x-account-id"];
 
                   await onExpired();
 
