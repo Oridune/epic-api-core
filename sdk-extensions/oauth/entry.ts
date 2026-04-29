@@ -83,6 +83,8 @@ export class oauthEntry {
               ) {
                 if (typeof onExpired === "function") {
                   delete this.auth;
+                  delete this.accountId;
+                  delete this.guard;
                   delete config.headers["Authorization"];
 
                   await onExpired();
