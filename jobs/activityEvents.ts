@@ -156,6 +156,8 @@ export default () => {
         `checkPermissions:${sessionId ?? secretId}:${accountId}`,
       );
     },
+    completedCap: 1000,
+    failedCap: 5000,
   });
 
   updateVerifiedStatusQueue.subscribe({
@@ -166,6 +168,8 @@ export default () => {
         // Do nothing...
       });
     },
+    completedCap: 1000,
+    failedCap: 5000,
   });
 
   verifyUserQueue.subscribe({
@@ -198,6 +202,8 @@ export default () => {
         // Do nothing...
       }
     },
+    completedCap: 1000,
+    failedCap: 5000,
   });
 
   updatePasswordQueue.subscribe({
@@ -223,6 +229,8 @@ export default () => {
         // Do nothing...
       }
     },
+    completedCap: 1000,
+    failedCap: 5000,
   });
 
   // Events.listen<{
