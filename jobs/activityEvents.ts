@@ -156,6 +156,8 @@ export default () => {
         `checkPermissions:${sessionId ?? secretId}:${accountId}`,
       );
     },
+    completedCap: 1000,
+    failedCap: 5000,
   });
 
   updateVerifiedStatusQueue.subscribe({
@@ -166,6 +168,8 @@ export default () => {
         // Do nothing...
       });
     },
+    completedCap: 1000,
+    failedCap: 5000,
   });
 
   verifyUserQueue.subscribe({
@@ -198,6 +202,8 @@ export default () => {
         // Do nothing...
       }
     },
+    completedCap: 1000,
+    failedCap: 5000,
   });
 
   updatePasswordQueue.subscribe({
@@ -223,6 +229,8 @@ export default () => {
         // Do nothing...
       }
     },
+    completedCap: 1000,
+    failedCap: 5000,
   });
 
   // Events.listen<{
@@ -484,11 +492,8 @@ export default () => {
             const payload = {
               title: event.detail.ctx.router.t("You received money!"),
               body: event.detail.ctx.router.t(
-                `You have received {{amount}} {{currency}} from {{fromName}}.`,
-                {
-                  ...metadata, 
-                  currency: metadata.currency.toUpperCase()
-                },
+                `You have received {{amount}} <span style="text-transform:uppercase">{{currency}}</span> from {{fromName}}.`,
+                metadata,
               ),
             };
 
