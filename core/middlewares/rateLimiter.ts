@@ -28,8 +28,18 @@ export const rateLimiter = (options?: RateLimitOptions) => {
     ctx: Context<Record<string, any>, Record<string, any>>,
     next: () => Promise<unknown>,
   ) => {
-    const ip =
-      ctx.request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    // Each proxy appends to x-forwarded-for, so the entries our own proxies
+    // added are at the end. Anything before them was set by the client and
+    // would otherwise hand them a fresh "IP" on every request.
+    const ForwardedFor = ctx.request.headers.get("x-forwarded-for")
+      ?.split(",").map((_) => _.trim()).filter(Boolean) ?? [];
+
+    const RawTrustedProxies = parseInt(
+      Env.getSync("TRUSTED_PROXY_COUNT", true) ?? "1",
+    );
+    const TrustedProxies = isNaN(RawTrustedProxies) ? 1 : RawTrustedProxies;
+
+    const ip = ForwardedFor[ForwardedFor.length - TrustedProxies] ||
       ctx.request.ip;
 
     const rateLimitKey = `rateLimitIp:${ip}`;

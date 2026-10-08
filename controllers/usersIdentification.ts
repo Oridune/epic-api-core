@@ -7,8 +7,10 @@ import {
   Get,
   type IRequestContext,
   Response,
+  Store,
   Versioned,
 } from "@Core/common/mod.ts";
+import { hash } from "ohash";
 import { responseValidator } from "@Core/common/validators.ts";
 import e from "validator";
 import { type RouterContext, Status } from "oak";
@@ -16,6 +18,7 @@ import { UserModel, UsernameValidator } from "@Models/user.ts";
 import OauthController from "@Controllers/oauth.ts";
 import { getNotify } from "@Lib/notifications.ts";
 import { I18next } from "@I18n";
+import verifyHuman from "@Middlewares/verifyHuman.ts";
 
 export enum IdentificationPurpose {
   VERIFICATION = "verification",
@@ -33,37 +36,84 @@ export enum IdentificationMethod {
   name: "usersIdentification",
 })
 export default class UsersIdentificationController extends BaseController {
+  /** A 6 digit code has 900,000 values. Keep the window short. */
+  static ChallengeExpiryInSeconds = 60 * 10;
+
+  /** Wrong codes allowed on a single challenge before it is burnt. */
+  static MaxWrongAttempts = 5;
+
+  /** Minimum wait between two codes for the same user. */
+  static ResendCooldownInMs = 60 * 1000;
+
+  // ponytail: the hourly counter's TTL is refreshed on every send (both store
+  // backends do this), so it is a sliding hour rather than a fixed one. That
+  // is stricter than the spec, not weaker. Use a fixed window if users complain.
+  static MaxSendsPerHour = 5;
+
+  /**
+   * The server-side half of a challenge. The token alone is a stateless JWT:
+   * nothing burns it after use and nothing counts wrong codes, so the code can
+   * be brute forced and a used token replayed until it expires.
+   */
+  static challengeKey(token: string) {
+    return `otpChallenge:${hash(token)}`;
+  }
+
   static async sign(
     purpose: IdentificationPurpose | (string & {}),
     method?: IdentificationMethod | null,
     payload?: Record<string, any>,
   ) {
     const OTP = Math.floor(100000 + Math.random() * 900000);
+    const ExpiresInMs = UsersIdentificationController
+      .ChallengeExpiryInSeconds * 1000;
 
-    return {
-      token: (
-        await OauthController.createToken({
-          type: (method ?? "direct") + "_identification_" + purpose,
-          payload: {
-            challengeId: crypto.randomUUID(),
-            method,
-            ...payload,
-          },
-          secret: OTP.toString(),
-          expiresInSeconds: 60 * 60, // Expires in 1 hour.
-        })
-      ).token,
-      otp: OTP,
-    };
+    const Token = (
+      await OauthController.createToken({
+        type: (method ?? "direct") + "_identification_" + purpose,
+        payload: {
+          challengeId: crypto.randomUUID(),
+          method,
+          ...payload,
+        },
+        secret: OTP.toString(),
+        expiresInSeconds:
+          UsersIdentificationController.ChallengeExpiryInSeconds,
+      })
+    ).token;
+
+    const Key = UsersIdentificationController.challengeKey(Token);
+
+    await Store.set(Key, 1, { expiresInMs: ExpiresInMs });
+
+    if (typeof payload?.userId === "string") {
+      const CurrentKey = `otpCurrentChallenge:${purpose}:${payload.userId}`;
+      const Previous = await Store.get<string>(CurrentKey);
+
+      // Requesting a new code cancels the previous one.
+      if (Previous) await Store.del(Previous, `${Previous}:attempts`);
+
+      await Store.set(CurrentKey, Key, { expiresInMs: ExpiresInMs });
+    }
+
+    return { token: Token, otp: OTP };
   }
 
-  static verify<T extends object>(
+  static async verify<T extends object>(
     token: string,
     code: string | number,
     purpose: IdentificationPurpose,
     method?: IdentificationMethod | null,
   ) {
-    return OauthController.verifyToken<
+    const Key = UsersIdentificationController.challengeKey(token);
+
+    if (!(await Store.get(Key))) {
+      throw new Error(
+        "This code has expired, has already been used, or was cancelled by a newer one! Please request a new code.",
+      );
+    }
+
+    const Payload = await OauthController.verifyToken<
       T & {
         challengeId: string;
         method?: IdentificationMethod | null;
@@ -72,7 +122,24 @@ export default class UsersIdentificationController extends BaseController {
       type: (method ?? "direct") + "_identification_" + purpose,
       token,
       secret: code.toString(),
+    }).catch(async (error) => {
+      const Attempts = await Store.incr(`${Key}:attempts`, {
+        expiresInMs: UsersIdentificationController.ChallengeExpiryInSeconds *
+          1000,
+      });
+
+      // Too many wrong codes, this challenge is done.
+      if (Attempts >= UsersIdentificationController.MaxWrongAttempts) {
+        await Store.del(Key, `${Key}:attempts`);
+      }
+
+      throw error;
     });
+
+    // A code is single use.
+    await Store.del(Key, `${Key}:attempts`);
+
+    return Payload;
   }
 
   static async request(
@@ -92,6 +159,39 @@ export default class UsersIdentificationController extends BaseController {
     });
 
     if (!User) throw new Error(`User not found!`);
+
+    // Every code costs us an SMS, so limit how often one can be asked for.
+    const CooldownKey = `otpCooldown:${purpose}:${User._id}`;
+    const CooldownAt = await Store.timestamp(CooldownKey);
+
+    if (typeof CooldownAt === "number") {
+      throw Response.statusCode(Status.TooManyRequests).message(
+        "Please wait before requesting another code!",
+        {
+          retryAfterSeconds: Math.max(
+            Math.ceil(
+              (CooldownAt + UsersIdentificationController.ResendCooldownInMs -
+                Date.now()) / 1000,
+            ),
+            1,
+          ),
+        },
+      );
+    }
+
+    const Sends = await Store.incr(`otpSends:${purpose}:${User._id}`, {
+      expiresInMs: 60 * 60 * 1000,
+    });
+
+    if (Sends > UsersIdentificationController.MaxSendsPerHour) {
+      throw Response.statusCode(Status.TooManyRequests).message(
+        "You have requested too many codes! Please try again later.",
+      );
+    }
+
+    await Store.set(CooldownKey, 1, {
+      expiresInMs: UsersIdentificationController.ResendCooldownInMs,
+    });
 
     const Challenge = await UsersIdentificationController.sign(
       purpose,
@@ -168,7 +268,11 @@ export default class UsersIdentificationController extends BaseController {
     });
   }
 
-  @Get("/methods/:username/")
+  @Get("/methods/:username/", {
+    middlewares: () => [
+      verifyHuman({ required: true, action: "identificationMethods" }),
+    ],
+  })
   public publicMethods() {
     // Define Params Schema
     const ParamsSchema = e.object({
@@ -225,7 +329,15 @@ export default class UsersIdentificationController extends BaseController {
     });
   }
 
-  @Get("/:purpose/:username/:method/")
+  @Get("/:purpose/:username/:method/", {
+    middlewares: () => [
+      verifyHuman({
+        required: true,
+        // `recovery` or `verification`.
+        action: (ctx) => ctx.params.purpose,
+      }),
+    ],
+  })
   public request() {
     // Define Params Schema
     const ParamsSchema = e.object({

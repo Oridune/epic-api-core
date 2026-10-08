@@ -29,6 +29,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
 import axios, { AxiosError } from "../utils/axios";
 import { useTranslation } from "react-i18next";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
 import {
@@ -47,7 +48,21 @@ export const ForgotPage = () => {
   const Location = useLocation();
   const [Query, setQuery] = useSearchParams();
 
-  const { app } = useOauthApp();
+  const { app, integrations } = useOauthApp();
+  const { executeRecaptcha } = integrations.reCaptchaV3
+    ? useGoogleReCaptcha()
+    : { executeRecaptcha: undefined };
+
+  // These routes require an app id and, when the app has reCaptcha enabled, a
+  // fresh single use token. Each call gets its own.
+  const HumanParams = async (action: string) => ({
+    oauthAppId: app?._id,
+    ...(typeof executeRecaptcha === "function"
+      ? { reCaptchaV3Token: await executeRecaptcha(action) }
+      : {}),
+  });
+
+  const HumanReady = !!app && (!integrations.reCaptchaV3 || !!executeRecaptcha);
 
   React.useEffect(() => {
     ReactGA4.send({
@@ -127,7 +142,8 @@ export const ForgotPage = () => {
 
     try {
       const Response = await axios.get(
-        `/api/users/identification/methods/${data.username}`
+        `/api/users/identification/methods/${data.username}`,
+        { params: await HumanParams("identificationMethods") }
       );
 
       if (Response.data.status) {
@@ -162,7 +178,8 @@ export const ForgotPage = () => {
 
     try {
       const Response = await axios.get(
-        `/api/users/identification/recovery/${Username}/${RecoveryMethod}`
+        `/api/users/identification/recovery/${Username}/${RecoveryMethod}`,
+        { params: await HumanParams("recovery") }
       );
 
       if (Response.data.status) {
@@ -195,12 +212,16 @@ export const ForgotPage = () => {
     setLoading(true);
 
     try {
-      const Response = await axios.put(`/api/users/password/`, {
-        method: RecoveryMethod,
-        token: Token,
-        code: data.code,
-        password: data.password,
-      });
+      const Response = await axios.put(
+        `/api/users/password/`,
+        {
+          method: RecoveryMethod,
+          token: Token,
+          code: data.code,
+          password: data.password,
+        },
+        { params: await HumanParams("resetPassword") }
+      );
 
       if (Response.data.status) {
         ReactGA4.event({
@@ -228,8 +249,11 @@ export const ForgotPage = () => {
   const QueryReturnURL = Query.get("returnUrl");
 
   React.useEffect(() => {
-    if (QueryUsername) HandleForgot({ username: QueryUsername });
-  }, [QueryUsername]);
+    // Links built from the login form carry the username exactly as typed, and
+    // mobile keyboards like to append a space the validator then rejects.
+    if (QueryUsername && HumanReady)
+      HandleForgot({ username: QueryUsername.trim() });
+  }, [QueryUsername, HumanReady]);
 
   React.useEffect(() => {
     const Interval = setInterval(() => setResendCounter((c) => c + 1), 1000);

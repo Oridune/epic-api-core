@@ -26,10 +26,10 @@ export const UserReferenceValidator = () =>
   }).max(50);
 
 export const UsernameValidator = () =>
-  e.string()
-    .matches({
-      regex: /^[A-Za-z0-9_]{3,29}$/,
-    })
+  e.string({
+    messages: { matchFailed: "Please provide a valid username format!" },
+  })
+    .matches({ regex: /^[A-Za-z0-9_]{3,29}$/ })
     .custom((ctx) => ctx.output.toLowerCase());
 
 export const PasswordValidator = () => e.string().min(6).max(300);
