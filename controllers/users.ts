@@ -342,7 +342,11 @@ export default class UsersController extends BaseController {
     });
   }
 
-  @Put("/password/")
+  @Put("/password/", {
+    middlewares: () => [
+      verifyHuman({ required: true, action: "resetPassword" }),
+    ],
+  })
   public updatePassword(route: IRoute) {
     // Define Body Schema
     const BodySchema = e.object({
