@@ -28,6 +28,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import e, { InferOutput } from "@oridune/validator";
 import axios, { AxiosError } from "../utils/axios";
 import { useTranslation } from "react-i18next";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 import { ValidatorResolver } from "../utils/validatorResolver";
 import { EmailValidator, PhoneValidator } from "../utils/validators";
@@ -44,7 +45,21 @@ export const ContactsPage = () => {
   const Location = useLocation();
   const [Query] = useSearchParams();
 
-  const { app } = useOauthApp();
+  const { app, integrations } = useOauthApp();
+  const { executeRecaptcha } = integrations.reCaptchaV3
+    ? useGoogleReCaptcha()
+    : { executeRecaptcha: undefined };
+
+  // These routes require an app id and, when the app has reCaptcha enabled, a
+  // fresh single use token. Each call gets its own.
+  const HumanParams = async (action: string) => ({
+    oauthAppId: app?._id,
+    ...(typeof executeRecaptcha === "function"
+      ? { reCaptchaV3Token: await executeRecaptcha(action) }
+      : {}),
+  });
+
+  const HumanReady = !!app && (!integrations.reCaptchaV3 || !!executeRecaptcha);
 
   React.useEffect(() => {
     ReactGA4.send({
@@ -188,7 +203,10 @@ export const ContactsPage = () => {
   };
 
   React.useEffect(() => {
-    if (Params.username) fetchContacts(Params.username);
+    if (Params.username && HumanReady) fetchContacts(Params.username);
+  }, [HumanReady]);
+
+  React.useEffect(() => {
     const Interval = setInterval(() => setResendCounter((c) => c + 1), 1000);
 
     return () => {
@@ -202,7 +220,8 @@ export const ContactsPage = () => {
 
     try {
       const Response = await axios.get(
-        `/api/users/identification/methods/${username}`
+        `/api/users/identification/methods/${username}`,
+        { params: await HumanParams("identificationMethods") }
       );
 
       if (Response.data.status) {
@@ -227,7 +246,8 @@ export const ContactsPage = () => {
 
     try {
       const Response = await axios.get(
-        `/api/users/identification/verification/${username}/${method}`
+        `/api/users/identification/verification/${username}/${method}`,
+        { params: await HumanParams("verification") }
       );
 
       if (Response.data.status) {
