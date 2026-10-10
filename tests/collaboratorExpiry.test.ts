@@ -26,9 +26,11 @@ const { AccountModel } = await import("@Models/account.ts");
 const { CollaboratorModel } = await import("@Models/collaborator.ts");
 const { OauthPolicyModel } = await import("@Models/oauthPolicy.ts");
 // Hooks have no import map alias, the Loader picks them up by path.
-const { default: checkPermissions } = await import(
+const { default: checkPermissions, ResolveScopeRole } = await import(
   "../hooks/checkPermissions.ts"
 );
+const { SecurityGuard } = await import("@Lib/securityGuard.ts");
+const { SyncOauthPolicies } = await import("@Jobs/syncOauthPolicies.ts");
 const { AccountInviteModel } = await import("@Models/accountInvite.ts");
 const { default: AccountInvitesController } = await import(
   "@Controllers/accountInvites.ts"
@@ -291,10 +293,11 @@ Deno.test({
     };
 
     /** Create an invite for our test user, as somebody else. */
-    const invite = (
+    const inviteAs = (
       // deno-lint-ignore no-explicit-any
       body: Record<string, any>,
-      permitted = true,
+      // deno-lint-ignore no-explicit-any
+      guard: any,
     ) =>
       createInvite({
         router: {
@@ -304,7 +307,7 @@ Deno.test({
               accountId: new ObjectId(),
               user: { username: "inviter", email: null, phone: null },
             },
-            guard: { isPermitted: () => permitted },
+            guard,
           },
           request: {
             url: { search: "" },
@@ -313,6 +316,28 @@ Deno.test({
         },
         // deno-lint-ignore no-explicit-any
       }) as Promise<any>;
+
+    /** The cheap stub, for cases that are not about the guard itself. */
+    const invite = (
+      // deno-lint-ignore no-explicit-any
+      body: Record<string, any>,
+      permitted = true,
+    ) => inviteAs(body, { isPermitted: () => permitted });
+
+    /** A real guard, compiled from the policies the app actually ships. */
+    const realGuard = async (extraScopes: string[] = []) => {
+      const Scopes = ["role:user", ...extraScopes];
+
+      const Guard = new SecurityGuard()
+        .addStage(Scopes)
+        .addStage(Scopes)
+        .addStage(["*"])
+        .addStage(["*"]);
+
+      await Guard.compile({ resolveScopeRole: ResolveScopeRole });
+
+      return Guard;
+    };
 
     await t.step(
       "an invite carries its period to the collaborator",
@@ -395,6 +420,44 @@ Deno.test({
         expect(Res.getBody().data.role).toBe("user");
       },
     );
+
+    await t.step("the default user policy cannot set a period", async () => {
+      await SyncOauthPolicies();
+
+      const Guard = await realGuard();
+
+      // The trap. `accountInvites` is granted whole to `unverified`, which
+      // every role inherits, and `isAllowed` takes a whole scope as implying
+      // every permission under it. Gating on this route's own scope would
+      // therefore have gated nobody at all.
+      expect(Guard.isPermitted("accountInvites", "accessDays")).toBe(true);
+      expect(Guard.isPermitted("collaboratorExpiry", "override")).toBe(false);
+
+      for (const accessDays of [30, null]) {
+        const Refusal = await refusal(
+          inviteAs(
+            { recipient: "collaborator", role: "user", accessDays },
+            Guard,
+          ),
+        );
+
+        expect(Refusal?.getStatusCode?.()).toBe(403);
+        expect(Refusal?.getBody?.()?.data?.code).toBe(
+          "access_override_forbidden",
+        );
+      }
+    });
+
+    await t.step("an explicit override grant may set a period", async () => {
+      const Guard = await realGuard(["collaboratorExpiry.override"]);
+
+      const Res = await inviteAs(
+        { recipient: "collaborator", role: "user", accessDays: 30 },
+        Guard,
+      );
+
+      expect(Res.getBody().data.accessDays).toBe(30);
+    });
 
     setEnv("COLLABORATOR_EXPIRY_ENABLED");
 

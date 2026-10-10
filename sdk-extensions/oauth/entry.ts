@@ -175,12 +175,12 @@ export class oauthEntry {
     );
 
     existingAuth: if (authorization) {
-      const now = Date.now();
-      const hasValidAccess = authorization.value.access.expiresAtSeconds > now;
+      const timeInSeconds = Date.now() / 1000;
+      const hasValidAccess = authorization.value.access.expiresAtSeconds > timeInSeconds;
 
       if (!hasValidAccess) {
         const hasValidRefresh = !!authorization.value.refresh &&
-          authorization.value.refresh.expiresAtSeconds > now;
+          authorization.value.refresh.expiresAtSeconds > timeInSeconds;
 
         if (!hasValidRefresh) {
           break existingAuth;
@@ -316,10 +316,14 @@ export class oauthEntry {
       EpicSDK.delCache("selectedAccount"),
     ]);
 
+    try {
+      await EpicSDK.oauth.logout({ query: { allDevices, fcmDeviceToken } })
+        .raw;
+    } catch (error) {
+      console.error(error);
+    }
+
     delete this.auth;
     delete this.accountId;
-
-    await EpicSDK.oauth.logout({ query: { allDevices, fcmDeviceToken } })
-      .raw;
   }
 }
