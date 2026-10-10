@@ -69,9 +69,10 @@ export default class AccountInvitesController extends BaseController {
 
         // Setting a period at all is privileged, otherwise any inviter could
         // hand out access that never lapses. Refuse it, never drop it quietly.
+
         if (
           Body.accessDays !== undefined &&
-          !ctx.router.state.guard.isPermitted(route.scope, "accessDays")
+          !ctx.router.state.guard.isPermitted("collaboratorExpiry", "override")
         ) {
           throw Response.statusCode(Status.Forbidden)
             .message(
