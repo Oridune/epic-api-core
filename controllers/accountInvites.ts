@@ -23,12 +23,14 @@ import e from "validator";
 import { ObjectId } from "mongo";
 
 import { AccountInviteModel } from "@Models/accountInvite.ts";
+import { AccessDaysValidator } from "@Models/collaborator.ts";
 import { UserModel } from "@Models/user.ts";
 import { getNotify } from "@Lib/notifications.ts";
 
 export const InputAccountInviteSchema = e.object({
   recipient: e.string(),
   role: e.string(),
+  accessDays: AccessDaysValidator(),
 });
 
 @Controller("/account/invites/", { group: "Account", name: "accountInvites" })
@@ -64,6 +66,19 @@ export default class AccountInvitesController extends BaseController {
           await ctx.router.request.body.json(),
           { name: `${route.scope}.body` },
         );
+
+        // Setting a period at all is privileged, otherwise any inviter could
+        // hand out access that never lapses. Refuse it, never drop it quietly.
+        if (
+          Body.accessDays !== undefined &&
+          !ctx.router.state.guard.isPermitted(route.scope, "accessDays")
+        ) {
+          throw Response.statusCode(Status.Forbidden)
+            .message(
+              "You are not allowed to set the access period for this invite!",
+            )
+            .data({ code: "access_override_forbidden" });
+        }
 
         if (
           [
@@ -234,7 +249,7 @@ export default class AccountInvitesController extends BaseController {
               ["totalCount", "AccountInvite", ctx.router.state.auth.accountId],
               () =>
                 AccountInviteModel.countDocuments({
-                  account: new ObjectId(ctx.router.state.auth.accountId),
+                  account: new ObjectId(ctx.router.state.auth!.accountId),
                 }),
               (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )
