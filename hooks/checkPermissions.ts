@@ -105,10 +105,12 @@ export default {
             throw new Error("Missing x-account-id header!", { cause });
           });
 
+        const CacheKey = `checkPermissions:${
+          SessionInfo.claims.sessionId ?? SessionInfo.claims.secretId
+        }:${AccountId}`;
+
         const { auth, scopePipeline } = await Store.cache(
-          `checkPermissions:${
-            SessionInfo.claims.sessionId ?? SessionInfo.claims.secretId
-          }:${AccountId}`,
+          CacheKey,
           async () => {
             const UserId = new ObjectId(Session.createdBy);
 
@@ -142,6 +144,7 @@ export default {
                 isOwned: 1,
                 isPrimary: 1,
                 isBlocked: 1,
+                expiresAt: 1,
               });
 
             if (!Collaborator || Collaborator.isBlocked) {
@@ -244,6 +247,47 @@ export default {
 
         ctx.router.state.auth = auth;
         ctx.router.state.scopePipeline = scopePipeline;
+
+        // Collaborator access expiry. Deliberately outside the cached callback
+        // above: the exemption is per route while that cache is per session and
+        // account, so a throw in there could not let a single route through.
+        // Out here the comparison is also exact, rather than up to a minute late.
+        if (
+          auth.collaborator.expiresAt &&
+          await Env.enabled("COLLABORATOR_EXPIRY_ENABLED")
+        ) {
+          const Exempt = ((await Env.get("COLLABORATOR_EXPIRY_EXEMPT", true)) ??
+            "").split(/\s*,\s*/);
+
+          if (
+            !Exempt.includes(`${scope}.${name}`) &&
+            // The cached copy is JSON in production, so this may be a string.
+            new Date(auth.collaborator.expiresAt) <= new Date()
+          ) {
+            // Re-read before refusing, so a renewal takes effect on the next
+            // request instead of once the session cache lapses. Only costs a
+            // lookup for those whose cached copy already says expired.
+            const Fresh = await CollaboratorModel.findOne(
+              new ObjectId(auth.collaborator._id),
+            ).project({ expiresAt: 1 });
+
+            if (Fresh?.expiresAt && Fresh.expiresAt <= new Date()) {
+              // 403, not 401: the client shows a renewal screen rather than
+              // logging the user out. Other accounts of theirs still work.
+              throw Response.statusCode(Status.Forbidden)
+                .message(
+                  "Your access to this account has expired. Please contact the account owner to renew it.",
+                )
+                .data({
+                  code: "collaborator_expired",
+                  expiresAt: Fresh.expiresAt,
+                });
+            }
+
+            auth.collaborator.expiresAt = Fresh?.expiresAt;
+            await Store.del(CacheKey);
+          }
+        }
       }
 
       const DefaultScopePipeline = {

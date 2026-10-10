@@ -165,6 +165,7 @@ export default class OauthPoliciesController extends BaseController {
       shape: () => ({
         return: responseValidator(e.object({
           accountId: e.string(),
+          expiresAt: e.optional(e.date()),
           policy: OauthPolicyModel.getSchema(),
           scopePipeline: e.array(e.array(e.string())),
         })).toSample(),
@@ -180,6 +181,9 @@ export default class OauthPoliciesController extends BaseController {
 
         return Response.data({
           accountId: ctx.router.state.auth.accountId,
+          // From the cached auth, so after an early renewal this can lag by
+          // up to the cache's lifetime.
+          expiresAt: ctx.router.state.auth.collaborator.expiresAt,
           policy: Policy,
           scopePipeline: ctx.router.state.guard.toJSON().scopePipeline,
         });

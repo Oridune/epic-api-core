@@ -21,6 +21,12 @@
     "lyd": "د.ل",
     "LYD": "د.ل",
     "usd": "دولار",
-    "USD": "دولار"
+    "USD": "دولار",
+    "Your access to this account has expired. Please contact the account owner to renew it.": "انتهت صلاحية وصولك إلى هذا الحساب. يرجى التواصل مع مالك الحساب لتجديده.",
+    "You are not allowed to set the access period for this invite!": "ليس لديك صلاحية لتحديد مدة الوصول لهذه الدعوة!",
+    "You don't have access to this account or it is blocked!": "ليس لديك صلاحية الوصول إلى هذا الحساب أو تم حظره!",
+    "Account not found or is blocked!": "الحساب غير موجود أو تم حظره!",
+    "Authorized user not found or is blocked!": "المستخدم غير موجود أو تم حظره!",
+    "You don't have a role assigned!": "لم يتم تعيين دور لحسابك!"
   }
 }

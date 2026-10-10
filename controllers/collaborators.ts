@@ -93,6 +93,19 @@ export default class CollaboratorsController extends BaseController {
                 role: Invite.role,
                 isOwned: false,
                 isPrimary: false,
+
+                // An invite that carries no period creates a collaborator with
+                // no expiry, as before. The host applies its own default after.
+                ...(Invite.accessDays !== undefined
+                  ? { accessDays: Invite.accessDays }
+                  : {}),
+                ...(typeof Invite.accessDays === "number"
+                  ? {
+                    expiresAt: new Date(
+                      Date.now() + Invite.accessDays * 86400000,
+                    ),
+                  }
+                  : {}),
               },
               { session },
             );
@@ -352,7 +365,7 @@ export default class CollaboratorsController extends BaseController {
               ["totalCount", "Collaborator", ctx.router.state.auth.accountId],
               () =>
                 CollaboratorModel.countDocuments({
-                  account: new ObjectId(ctx.router.state.auth.accountId),
+                  account: new ObjectId(ctx.router.state.auth!.accountId),
                 }),
               (await Env.number("GLOBAL_PAGINATION_COUNT_TTL")) * 1000,
             )

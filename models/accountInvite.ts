@@ -5,6 +5,7 @@ import {
   PhoneValidator,
   UsernameValidator,
 } from "@Models/user.ts";
+import { AccessDaysValidator } from "@Models/collaborator.ts";
 
 export const AccountInviteSchema = e.object({
   _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
@@ -13,6 +14,7 @@ export const AccountInviteSchema = e.object({
   createdBy: e.instanceOf(ObjectId, { instantiate: true }),
   recipient: e.or([PhoneValidator(), EmailValidator(), UsernameValidator()]),
   role: e.string(),
+  accessDays: AccessDaysValidator(),
   account: e.instanceOf(ObjectId, { instantiate: true }),
   token: e.optional(e.string()).default(() => crypto.randomUUID()),
 });
