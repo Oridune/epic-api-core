@@ -1,11 +1,15 @@
 import e, { inferInput, inferOutput } from "validator";
 import { InputDocument, Mongo, ObjectId, OutputDocument } from "mongo";
 import { FileSchema } from "@Models/file.ts";
-import { EmailValidator, PhoneValidator } from "@Models/user.ts";
+import {
+  EmailValidator,
+  PhoneValidator,
+  SafeTextValidator,
+} from "@Models/user.ts";
 
 export const InputAccountSchema = e.object({
-  name: e.optional(e.string().max(50)),
-  description: e.optional(e.string().max(300)),
+  name: e.optional(SafeTextValidator(50)),
+  description: e.optional(SafeTextValidator(300)),
   email: e.optional(EmailValidator()),
   phone: e.optional(PhoneValidator()),
 });
