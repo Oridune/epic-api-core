@@ -27,6 +27,9 @@
     "You don't have access to this account or it is blocked!": "ليس لديك صلاحية الوصول إلى هذا الحساب أو تم حظره!",
     "Account not found or is blocked!": "الحساب غير موجود أو تم حظره!",
     "Authorized user not found or is blocked!": "المستخدم غير موجود أو تم حظره!",
-    "You don't have a role assigned!": "لم يتم تعيين دور لحسابك!"
+    "You don't have a role assigned!": "لم يتم تعيين دور لحسابك!",
+    "Please provide a valid name!": "يرجى إدخال اسم صحيح. يُسمح بالحروف والمسافات والفاصلة العليا والشرطة والنقطة فقط.",
+    "Please avoid the characters < > and \" in this field!": "يرجى تجنب استخدام الرموز < و > و \" في هذا الحقل.",
+    "Please provide a valid username format!": "يرجى إدخال اسم مستخدم بصيغة صحيحة. يُسمح بالحروف الإنجليزية والأرقام والشرطة السفلية فقط."
   }
 }

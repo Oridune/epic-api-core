@@ -34,6 +34,24 @@ export const UsernameValidator = () =>
 
 export const PasswordValidator = () => e.string().min(6).max(300);
 
+export const PersonNameValidator = (max = 50) =>
+  e.string({
+    messages: { matchFailed: "Please provide a valid name!" },
+  })
+    .matches({ regex: /^\s*[\p{L}\p{M}][\p{L}\p{M} '.-]*$/u })
+    .max(max)
+    .custom((ctx) => ctx.output.trim());
+
+export const SafeTextValidator = (max: number) =>
+  e.string({
+    messages: {
+      matchFailed: 'Please avoid the characters < > and " in this field!',
+    },
+  })
+    .matches({ regex: /^[^<>"]*$/ })
+    .max(max)
+    .custom((ctx) => ctx.output.trim());
+
 export const EmailValidator = () =>
   e.string().matches({
     regex: /^([a-zA-Z0-9_.+-]+)@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/,
@@ -51,18 +69,18 @@ export enum Gender {
 }
 
 export const UpdateUserSchema = e.object({
-  fname: e.string().max(50),
-  mname: e.optional(e.string().max(50)),
-  lname: e.optional(e.string().max(50)),
+  fname: PersonNameValidator(),
+  mname: e.optional(PersonNameValidator()),
+  lname: e.optional(PersonNameValidator()),
   gender: e.optional(e.in(Object.values(Gender))),
   dob: e.optional(e.date()),
-  locale: e.optional(e.string().max(50)),
-  country: e.optional(e.string().max(50)),
-  state: e.optional(e.string().max(50)),
-  city: e.optional(e.string().max(50)),
-  address_1: e.optional(e.string().max(300)),
-  address_2: e.optional(e.string().max(300)),
-  postalCode: e.optional(e.string().max(50)),
+  locale: e.optional(SafeTextValidator(50)),
+  country: e.optional(SafeTextValidator(50)),
+  state: e.optional(SafeTextValidator(50)),
+  city: e.optional(SafeTextValidator(50)),
+  address_1: e.optional(SafeTextValidator(300)),
+  address_2: e.optional(SafeTextValidator(300)),
+  postalCode: e.optional(SafeTextValidator(50)),
 });
 
 export const CreateUserSchema = e
@@ -70,7 +88,7 @@ export const CreateUserSchema = e
     username: UsernameValidator(),
     password: PasswordValidator(),
     avatar: e.optional(FileSchema),
-    tags: e.optional(e.array(e.string().max(50), { cast: true }).max(100))
+    tags: e.optional(e.array(SafeTextValidator(50), { cast: true }).max(100))
       .default([]),
     email: e.optional(EmailValidator()),
     phone: e.optional(PhoneValidator()),
