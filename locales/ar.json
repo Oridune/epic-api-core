@@ -30,6 +30,8 @@
     "You don't have a role assigned!": "لم يتم تعيين دور لحسابك!",
     "Please provide a valid name!": "يرجى إدخال اسم صحيح. يُسمح بالحروف والمسافات والفاصلة العليا والشرطة والنقطة فقط.",
     "Please avoid the characters < > and \" in this field!": "يرجى تجنب استخدام الرموز < و > و \" في هذا الحقل.",
-    "Please provide a valid username format!": "يرجى إدخال اسم مستخدم بصيغة صحيحة. يُسمح بالحروف الإنجليزية والأرقام والشرطة السفلية فقط."
+    "Please provide a valid username format!": "يرجى إدخال اسم مستخدم بصيغة صحيحة. يُسمح بالحروف الإنجليزية والأرقام والشرطة السفلية فقط.",
+    "Policy not found!": "الدور غير موجود!",
+    "Layout config must not exceed 32 KB!": "يجب ألا يتجاوز حجم إعدادات الواجهة 32 كيلوبايت!"
   }
 }

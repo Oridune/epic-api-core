@@ -22,7 +22,11 @@ import { type RouterContext, Status } from "oak";
 import e from "validator";
 import { ObjectId } from "mongo";
 
-import { OauthPolicyModel } from "@Models/oauthPolicy.ts";
+import {
+  OauthPolicyLayoutConfigSchema,
+  OauthPolicyModel,
+} from "@Models/oauthPolicy.ts";
+import { UserModel } from "@Models/user.ts";
 
 export const InputOauthPolicySchema = e.object({
   role: e.string(),
@@ -90,6 +94,57 @@ export default class OauthPoliciesController extends BaseController {
     });
   }
 
+  @Patch("/:id/layout/")
+  public updateLayout(route: IRoute) {
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      id: e.string(),
+    });
+
+    // Define Body Schema
+    const BodySchema = e.object({
+      config: e.or([OauthPolicyLayoutConfigSchema, e.null()]),
+    });
+
+    return new Versioned().add("1.0.0", {
+      shape: () => ({
+        params: ParamsSchema.toSample(),
+        body: BodySchema.toSample(),
+        return: responseValidator(OauthPolicyModel.getSchema()).toSample(),
+      }),
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
+
+        // Body Validation
+        const Body = await BodySchema.validate(
+          await ctx.router.request.body.json(),
+          { name: `${route.scope}.body` },
+        );
+
+        // Replaces the whole layout, never merges.
+        const Policy = await OauthPolicyModel.updateAndFindOne(
+          Params.id,
+          {
+            layout: Body.config
+              ? {
+                config: Body.config,
+                updatedBy: new ObjectId(ctx.router.state.auth!.userId),
+                updatedAt: new Date(),
+              }
+              : null,
+          },
+        );
+
+        if (!Policy) ctx.router.throw(Status.NotFound, "Policy not found!");
+
+        return Response.data(Policy);
+      },
+    });
+  }
+
   @Get("/:id?/")
   public get(route: IRoute) {
     // Define Query Schema
@@ -141,7 +196,10 @@ export default class OauthPoliciesController extends BaseController {
           })
           .sort(Query.sort)
           .skip(Query.offset)
-          .limit(Query.limit);
+          .limit(Query.limit)
+          .fetchOne("layout.updatedBy", UserModel, {
+            project: { fname: 1, mname: 1, lname: 1 },
+          });
 
         if (Query.project) OauthPoliciesListQuery.project(Query.project);
 
