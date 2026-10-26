@@ -24,7 +24,10 @@ import { ObjectId } from "mongo";
 import { Database } from "@Database";
 
 import { AccountInviteModel } from "@Models/accountInvite.ts";
-import { CollaboratorModel } from "@Models/collaborator.ts";
+import {
+  AccessDaysValidator,
+  CollaboratorModel,
+} from "@Models/collaborator.ts";
 import { UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauthSession.ts";
 import { OauthSecretModel } from "@Models/oauthSecret.ts";
@@ -202,6 +205,119 @@ export default class CollaboratorsController extends BaseController {
         );
 
         return Response.true();
+      },
+    });
+  }
+
+  @Post("/:id/renew/", {
+    group: "public",
+  })
+  public renew(route: IRoute) {
+    // Define Params Schema
+    const ParamsSchema = e.object({
+      id: e.string(),
+    });
+
+    // Define Body Schema
+    const BodySchema = e.object({
+      accessDays: AccessDaysValidator(),
+    });
+
+    return new Versioned().add("1.0.0", {
+      shape: () => ({
+        params: ParamsSchema.toSample(),
+        body: BodySchema.toSample(),
+        return: responseValidator(CollaboratorModel.getSchema()).toSample(),
+      }),
+      handler: async (ctx: IRequestContext<RouterContext<string>>) => {
+        if (!ctx.router.state.auth) ctx.router.throw(Status.Unauthorized);
+
+        // Params Validation
+        const Params = await ParamsSchema.validate(ctx.router.params, {
+          name: `${route.scope}.params`,
+        });
+
+        // Body Validation
+        const Body = await BodySchema.validate(
+          ctx.router.request.hasBody
+            ? await ctx.router.request.body.json()
+            : {},
+          { name: `${route.scope}.body` },
+        );
+
+        // The same permission that sets a period on an invite, and for the
+        // same reason: handing out access that never lapses is privileged.
+        if (
+          !ctx.router.state.guard.isPermitted("collaboratorExpiry", "override")
+        ) {
+          throw Response.statusCode(Status.Forbidden)
+            .message(
+              "You are not allowed to renew access for this collaborator!",
+            )
+            .data({ code: "access_override_forbidden" });
+        }
+
+        const Collaborator = await CollaboratorModel.findOne({
+          _id: new ObjectId(Params.id),
+          account: new ObjectId(ctx.router.state.auth.accountId),
+        });
+
+        if (!Collaborator) {
+          throw Response.statusCode(Status.NotFound).message(
+            "Collaborator not found!",
+          );
+        }
+
+        if (
+          Collaborator.createdFor.toString() === ctx.router.state.auth.userId
+        ) {
+          throw Response.statusCode(Status.Forbidden)
+            .message("You cannot renew your own access!")
+            .data({ code: "renew_self_forbidden" });
+        }
+
+        if (Collaborator.isOwned) {
+          throw Response.statusCode(Status.BadRequest)
+            .message("The account owner's access does not expire!")
+            .data({ code: "renew_owner_forbidden" });
+        }
+
+        // An omitted period means "the same again", which needs one on record.
+        if (
+          Body.accessDays === undefined &&
+          (Collaborator.accessDays ?? null) === null
+        ) {
+          throw Response.statusCode(Status.BadRequest)
+            .message("This collaborator has no access period to renew!")
+            .data({ code: "no_access_period" });
+        }
+
+        const AccessDays: number | null = Body.accessDays !== undefined
+          ? Body.accessDays
+          : Collaborator.accessDays ?? null;
+
+        // Renewing early adds to what is left, it never shortens access.
+        const Expires = AccessDays === null ? null : new Date(
+          Math.max(Collaborator.expiresAt?.getTime() ?? 0, Date.now()) +
+            AccessDays * 86400000,
+        );
+
+        await CollaboratorModel.updateOneOrFail(Collaborator._id, {
+          accessDays: AccessDays,
+          renewedAt: new Date(),
+          renewedBy: new ObjectId(ctx.router.state.auth.userId),
+          ...(Expires ? { expiresAt: Expires } : {}),
+
+          // Warn again about the new expiry; drop it entirely when permanent.
+          $unset: Expires
+            ? { expiryWarnedFor: 1 }
+            : { expiryWarnedFor: 1, expiresAt: 1 },
+        });
+
+        // updateOneOrFail returns modifications, not the document.
+        const Updated = await CollaboratorModel.findOne(Collaborator._id);
+
+        return Response.data(Updated!);
       },
     });
   }
