@@ -38,6 +38,8 @@
     "Collaborator not found!": "المتعاون غير موجود!",
     "Invalid or expired invitation token!": "رمز الدعوة غير صالح أو منتهي الصلاحية!",
     "You cannot consume an invite token by yourself!": "لا يمكنك استخدام رمز دعوة أرسلته بنفسك!",
-    "You already have access to this account!": "لديك صلاحية الوصول إلى هذا الحساب بالفعل!"
+    "You already have access to this account!": "لديك صلاحية الوصول إلى هذا الحساب بالفعل!",
+    "Policy not found!": "الدور غير موجود!",
+    "Layout config must not exceed 32 KB!": "يجب ألا يتجاوز حجم إعدادات الواجهة 32 كيلوبايت!"
   }
 }
