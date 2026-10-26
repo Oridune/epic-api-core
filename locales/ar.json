@@ -31,6 +31,14 @@
     "Please provide a valid name!": "يرجى إدخال اسم صحيح. يُسمح بالحروف والمسافات والفاصلة العليا والشرطة والنقطة فقط.",
     "Please avoid the characters < > and \" in this field!": "يرجى تجنب استخدام الرموز < و > و \" في هذا الحقل.",
     "Please provide a valid username format!": "يرجى إدخال اسم مستخدم بصيغة صحيحة. يُسمح بالحروف الإنجليزية والأرقام والشرطة السفلية فقط.",
+    "You are not allowed to renew access for this collaborator!": "ليس لديك صلاحية لتجديد وصول هذا المتعاون!",
+    "You cannot renew your own access!": "لا يمكنك تجديد وصولك بنفسك. يرجى التواصل مع مالك الحساب.",
+    "The account owner's access does not expire!": "وصول مالك الحساب لا تنتهي صلاحيته!",
+    "This collaborator has no access period to renew!": "لا توجد مدة وصول محددة لهذا المتعاون لتجديدها. يرجى تحديد مدة.",
+    "Collaborator not found!": "المتعاون غير موجود!",
+    "Invalid or expired invitation token!": "رمز الدعوة غير صالح أو منتهي الصلاحية!",
+    "You cannot consume an invite token by yourself!": "لا يمكنك استخدام رمز دعوة أرسلته بنفسك!",
+    "You already have access to this account!": "لديك صلاحية الوصول إلى هذا الحساب بالفعل!",
     "Policy not found!": "الدور غير موجود!",
     "Layout config must not exceed 32 KB!": "يجب ألا يتجاوز حجم إعدادات الواجهة 32 كيلوبايت!"
   }

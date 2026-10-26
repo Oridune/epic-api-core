@@ -42,6 +42,7 @@ export const DefaultOauthPolicies = {
     "accountInvites",
     "collaborators.create",
     "collaborators.update",
+    "collaborators.renew",
     "collaborators.get",
     "collaborators.delete",
     "accounts.get",
