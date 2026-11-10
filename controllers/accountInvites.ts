@@ -31,6 +31,7 @@ export const InputAccountInviteSchema = e.object({
   recipient: e.string(),
   role: e.string(),
   accessDays: AccessDaysValidator(),
+  isCreatedFor: e.optional(e.boolean()),
 });
 
 @Controller("/account/invites/", { group: "Account", name: "accountInvites" })
@@ -66,6 +67,12 @@ export default class AccountInvitesController extends BaseController {
           await ctx.router.request.body.json(),
           { name: `${route.scope}.body` },
         );
+
+        if (Body.isCreatedFor && !ctx.router.state.guard.isPermitted("accountInvites", "overrideCreatedFor")) {
+          throw Response.statusCode(Status.Forbidden)
+            .message("You are not allowed to create accounts for others!")
+            .data({ code: "account_creation_forbidden" });
+        }
 
         // Setting a period at all is privileged, otherwise any inviter could
         // hand out access that never lapses. Refuse it, never drop it quietly.

@@ -17,6 +17,7 @@ export const AccountInviteSchema = e.object({
   accessDays: AccessDaysValidator(),
   account: e.instanceOf(ObjectId, { instantiate: true }),
   token: e.optional(e.string()).default(() => crypto.randomUUID()),
+  isCreatedFor: e.optional(e.boolean()),
 });
 
 export type TAccountInviteInput = InputDocument<

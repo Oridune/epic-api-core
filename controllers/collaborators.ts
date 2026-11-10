@@ -32,6 +32,7 @@ import { UserModel } from "@Models/user.ts";
 import { OauthSessionModel } from "@Models/oauthSession.ts";
 import { OauthSecretModel } from "@Models/oauthSecret.ts";
 import { allowPopulate } from "@Helpers/utils.ts";
+import { AccountModel } from "@Models/account.ts";
 
 @Controller("/collaborators/", { group: "Account", name: "collaborators" })
 export default class CollaboratorsController extends BaseController {
@@ -88,6 +89,16 @@ export default class CollaboratorsController extends BaseController {
           await Database.transaction(async (session) => {
             await AccountInviteModel.deleteOne(Invite._id, { session });
 
+            if (Invite.isCreatedFor) {
+              await AccountModel.updateOne({
+                _id: Invite.account,
+              }, {
+                $set: {
+                  createdFor: CreatedFor,
+                },
+              }, { session });
+            }
+            
             const Collaborator = await CollaboratorModel.create(
               {
                 createdBy: Invite.createdBy,
